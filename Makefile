@@ -6,17 +6,24 @@ C_OBJS = $(C_SRC:.c=.o)
 CPP_OBJS = $(CPP_SRC:.cpp=.o)
 BOOT_OBJS = $(BOOT_SRC:.s=.o)
 
+C_DEPS = $(C_OBJS:.o=.d)
 CPP_DEPS = $(CPP_OBJS:.o=.d)
 
 
+WARNINGS_FLAGS += -Wall
+WARNINGS_FLAGS += -Wextra
+#WARNINGS_FLAGS += -fpermissive
+#WARNINGS_FLAGS += --pedantic
+#WARNINGS_FLAGS += -Werror
+#WARNINGS_FLAGS += -Wfatal-errors
 
 CC = i686-elf-gcc
 CXX = i686-elf-g++
 ASM = i686-elf-as
 
-CC_FLAGS = -ffreestanding -O2 -Wall -Wextra
-CXX_FLAGS = -ffreestanding -O2 -Wall -Wextra -MMD -I. #-fno-exceptions -fno-rtti
-ASM_FLAGS = 
+CC_FLAGS	= $(WARNINGS_FLAGS) -ffreestanding -O2 -MMD -I.
+CXX_FLAGS	= $(WARNINGS_FLAGS) -ffreestanding -O2 -MMD -I. #-fno-exceptions -fno-rtti
+ASM_FLAGS	= 
 
 all: myos.iso
 	@echo $(CPP_DEPS)
@@ -42,3 +49,4 @@ myos.bin: $(BOOT_OBJS) $(CPP_OBJS) $(C_OBJS) linker.ld
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
 
 -include $(CPP_DEPS)
+-include $(C_DEPS)

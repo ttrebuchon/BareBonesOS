@@ -7,6 +7,9 @@
 
 namespace Utils
 {
+    
+
+
     template <class Char_t, class CharTraits, class Alloc>
     class Basic_String
     {
@@ -15,16 +18,17 @@ namespace Utils
 
 
         public:
-        typedef CharTraits                                  traits_type;
-        typedef typename CharTraits::char_type              value_type;
-        typedef Alloc                                       allocator_type;
-        typedef typename _CharT_alloc_type::size_type       size_type;
-        typedef typename _CharT_alloc_type::difference_type difference_type;
-        typedef typename _CharT_alloc_type::reference       reference;
-        typedef typename _CharT_alloc_type::const_reference const_reference;
-        typedef typename _CharT_alloc_type::pointer         pointer;
-        typedef typename _CharT_alloc_type::const_pointer   const_pointer;
-
+        typedef CharTraits                                                  traits_type;
+        typedef typename CharTraits::char_type                              value_type;
+        typedef Alloc                                                       allocator_type;
+        typedef typename _CharT_alloc_type::size_type                       size_type;
+        typedef typename _CharT_alloc_type::difference_type                 difference_type;
+        typedef typename _CharT_alloc_type::reference                       reference;
+        typedef typename _CharT_alloc_type::const_reference                 const_reference;
+        typedef typename _CharT_alloc_type::pointer                         pointer;
+        typedef typename _CharT_alloc_type::const_pointer                   const_pointer;
+        typedef __gnu_cxx::__normal_iterator<pointer, Basic_String>         iterator; 
+        typedef __gnu_cxx::__normal_iterator<const_pointer, Basic_String>   const_iterator;
 
 
 
@@ -117,9 +121,9 @@ namespace Utils
                     }
             }
 
-            void _M_destroy(const Alloc&) throw;
+            void _M_destroy(const Alloc&);
 
-            Char_t* _M_refcopy() throw()
+            Char_t* _M_refcopy()
             {
                 #ifndef _GLIBCXX_FULLY_DYNAMIC_STRING
                     if (__builtin_expect(this != &_S_empty_rep(), false))
@@ -134,9 +138,9 @@ namespace Utils
         };
 
         // Use empty-base optimization: http://www.cantrip.org/emptyopt.html
-        struct _Alloc_hider : _Alloc_hider
+        struct _Alloc_hider : Alloc
         {
-            _Alloc_hider(Char_t* __dat, const Alloc& __a) : _Alloc(__a), _M_p(__dat)
+            _Alloc_hider(Char_t* __dat, const Alloc& __a) : Alloc(__a), _M_p(__dat)
             {}
 
             Char_t* _M_p; //The actual data
@@ -193,7 +197,7 @@ namespace Utils
         {
             if (this->max_size() - (this->size() - __n1) < __n2)
             {
-                __throw_length_error(__N(__ss));
+                __throw_length_error(__N(__s));
             }
         }
 
@@ -208,7 +212,7 @@ namespace Utils
             return (less<const Char_t*>()(__s, _M_data()) || less<const Char_t*>()(_M_data() + this->size(), __s));
         }
 
-        static void _M_copy(Char_t* __d, const Char_t* __s, size_type n)
+        static void _M_copy(Char_t* __d, const Char_t* __s, size_type __n)
         {
             if (__n == 1)
             {
@@ -220,7 +224,7 @@ namespace Utils
             }
         }
 
-        static void _M_move(Char_t* __d, const Char_t* __s, size_type n)
+        static void _M_move(Char_t* __d, const Char_t* __s, size_type __n)
         {
             if (__n == 1)
             {
@@ -253,7 +257,52 @@ namespace Utils
             }
         }
 
-        protected:
+         static void _S_copy_chars(Char_t* __p, iterator __k1, iterator __k2)
+        {
+            _S_copy_chars(__p, __k1.base(), __k2.base());
+        }
+
+        static void _S_copy_chars(Char_t* __p, const_iterator __k1, const_iterator __k2)
+        {
+            _S_copy_chars(__p, __k1.base(), __k2.base());
+        }
+
+        static void _S_copy_chars(Char_t* __p, Char_t* __k1, Char_t* __k2)
+        {
+            _S_copy_chars(__p, __k1, __k2 - __k1);
+        }
+
+        static void _S_copy_chars(Char_t* __p, const Char_t* __k1, const Char_t* __k2)
+        {
+            _S_copy_chars(__p, __k1, __k2 - __k1);
+        }
+
+        static int _S_compare(size_type __n1, size_type __n2)
+        {
+            const difference_type __d = difference_type(__n1 - __n2);
+
+            if (__d > __gnu_cxx::__numeric_traits<int>::__max)
+            {
+                return __gnu_cxx::__numeric_traits<int>::__max;
+            }
+            else if (__d < __gnu_cxx::__numeric_traits<int>::__min)
+            {
+                return __gnu_cxx::__numeric_traits<int>::__min;
+            }
+            else
+            {
+                return int(__d);
+            }
+        }
+
+        void _M_mutate(size_type __pos, size_type __len1, size_type __len2);
+
+        void _M_leak_hard();
+
+        static _Rep& _S_empty_rep()
+        {
+            return _Rep::_S_empty_rep();
+        }
 
         public:
 
@@ -292,7 +341,15 @@ namespace Utils
         Basic_String(Basic_String&& str, const Alloc&);
 
 
+        //Destructor
+        ~Basic_String()
+        {
+            _M_rep()->_M_dispose(this->get_allocator());
+        }
 
+
+        //Operators
+        
     };
 
 
