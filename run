@@ -1,1 +1,2 @@
-qemu-system-i386 myos.iso
+#qemu-system-i386 myos.iso
+qemu-system-x86_64 myos.iso

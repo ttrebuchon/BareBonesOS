@@ -1,4 +1,6 @@
 #include <drivers/VGA.hh>
+#include <kernel/gdt.h>
+#include <kernel/TSS.h>
 
 
 #if !defined(__cplusplus)
@@ -42,8 +44,68 @@ extern "C"
 #endif
 int main()
 {
+    Kernel::TSS _myTSS{0};
+    Kernel::TSS::myTSS = &_myTSS;
+
+    Drivers::VGA::Init();
+    Drivers::VGA::Write("Writing GDT...\n");
+
+    Kernel::gdt_entry gdt_table[4];
+    
+    gdt_table[0] = Kernel::gdt_entry::nullEntry();
+    
+    gdt_table[1] = Kernel::gdt_entry::nullEntry();
+    gdt_table[1].setLimit(0xfffffff);
+    gdt_table[1].setBase(0);
+    gdt_table[1].setType(0x9A);
+    
+    gdt_table[2] = Kernel::gdt_entry::nullEntry();
+    gdt_table[2].setLimit(0xfffffff);
+    gdt_table[2].setBase(0);
+    gdt_table[2].setType(0x92);
+
+    gdt_table[3] = Kernel::gdt_entry::nullEntry();
+    gdt_table[3].setLimit(sizeof(Kernel::TSS));
+    gdt_table[3].setBase(reinterpret_cast<uint32_t>(Kernel::TSS::myTSS));
+    gdt_table[3].setType(0x89);
+
+    Kernel::gdt_entry::loadTable(gdt_table, 4);
+    Kernel::gdt_entry::reloadSegments();
+
+
     Drivers::VGA::Init();
 
     Drivers::VGA::Write("Hello, kernel world!\nThis is a test.\n");
+
+
+    Kernel::gdt_entry gdt;
+    gdt.setLimit(65500);
+    auto lim = gdt.getLimit();
+    if (lim != 65500)
+    {
+        Drivers::VGA::Write("Limit was encoded/decoded incorrectly!\n");
+    }
+    else
+    {
+        Drivers::VGA::Write("Limit was encoded/decoded correctly!\n");
+    }
+
+    gdt.setBase(33554432);
+    auto b = gdt.getBase();
+    if (b != 33554432)
+    {
+        Drivers::VGA::Write("Base was encoded/decoded incorrectly!\n");
+    }
+    else
+    {
+        Drivers::VGA::Write("Base was encoded/decoded correctly!\n");
+    }
+
+
+
+    
+
+    Drivers::VGA::Write("Kernel main() is finished!!\n");
+
     return 0;
 }
