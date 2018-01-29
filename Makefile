@@ -1,7 +1,17 @@
-C_SRC = $(wildcard kernel/*.c drivers/*.c)
-CPP_SRC = $(wildcard kernel/*.cpp drivers/*.cpp)
-BOOT_SRC = $(wildcard boot/*.s)
-ASM_SRC_ASM = $(wildcard kernel/*.asm drivers/*.asm)
+
+
+rwildcard=$(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2) $(filter $(subst *,%,$2),$d))
+
+GET_SRC = $(call rwildcard,$1/,*.$2)
+
+
+
+
+C_SRC = $(call GET_SRC,kernel,c) $(call GET_SRC,drivers,c)
+CPP_SRC = $(call GET_SRC,kernel,cpp) $(call GET_SRC,drivers,cpp)
+BOOT_SRC = $(call GET_SRC,boot,s)
+#ASM_SRC_ASM = $(wildcard kernel/*.asm drivers/*.asm)
+ASM_SRC_ASM = $(call GET_SRC,kernel,asm) $(call GET_SRC,drivers,asm)
 #ASM_SRC_S = $(wildcard kernel/*.S drivers/*.S)
 #ASM_SRC_s = $(wildcard kernel/*.s drivers/*.s)
 
@@ -41,10 +51,6 @@ myos.iso: myos.bin
 
 
 myos.bin: $(BOOT_OBJS) $(CPP_OBJS) $(C_OBJS) $(ASM_OBJS) linker.ld
-	@echo $(BOOT_OBJS)
-	@echo $(CPP_OBJS)
-	@echo $(C_OBJS)
-	@echo $(ASM_OBJS)
 	$(CXX) -T linker.ld -o $@ $(CXX_FLAGS) -nostdlib $(BOOT_OBJS) $(CPP_OBJS) $(C_OBJS) $(ASM_OBJS) -lgcc
 
 %.o: %.s
@@ -57,7 +63,7 @@ myos.bin: $(BOOT_OBJS) $(CPP_OBJS) $(C_OBJS) $(ASM_OBJS) linker.ld
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
 
 %.o: %.asm
-	nasm $(ASM_FLAGS) -f elf $< -o $@
+	@nasm $(ASM_FLAGS) -f elf $< -o $@
 
 -include $(CPP_DEPS)
 -include $(C_DEPS)
