@@ -1,6 +1,7 @@
 #include <drivers/VGA.hh>
 #include <kernel/gdt.h>
 #include <kernel/TSS.h>
+#include <kernel/Interrupts.h>
 
 
 #if !defined(__cplusplus)
@@ -47,6 +48,8 @@ int main()
     Kernel::TSS _myTSS{0};
     Kernel::TSS::myTSS = &_myTSS;
 
+    Kernel::Interrupts::cli();
+
     Drivers::VGA::Init();
     Drivers::VGA::Write("Writing GDT...\n");
 
@@ -72,6 +75,7 @@ int main()
     Kernel::gdt_entry::loadTable(gdt_table, 4);
     Kernel::gdt_entry::reloadSegments();
 
+    Kernel::Interrupts::sti();
 
     Drivers::VGA::Init();
 
@@ -103,8 +107,8 @@ int main()
 
 
 
-    
 
+    
     Drivers::VGA::Write("Kernel main() is finished!!\n");
 
     return 0;
