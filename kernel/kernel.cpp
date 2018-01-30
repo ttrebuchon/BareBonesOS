@@ -2,6 +2,8 @@
 #include <kernel/gdt.h>
 #include <kernel/TSS.h>
 #include <kernel/Interrupts.h>
+#include <kernel/Interrupts/IDT.h>
+#include <kernel/Registers.h>
 
 
 #if !defined(__cplusplus)
@@ -39,6 +41,8 @@ size_t strlen(const char* str)
     }
     return len;
 }
+
+static_assert(sizeof(Kernel::Registers_t) == 64);
 
 #if defined(__cplusplus)
 extern "C"
@@ -79,6 +83,10 @@ int main()
 
     Drivers::VGA::Init();
 
+    Kernel::Interrupts::init_idt();
+
+    
+
     Drivers::VGA::Write("Hello, kernel world!\nThis is a test.\n");
 
 
@@ -105,7 +113,7 @@ int main()
         Drivers::VGA::Write("Base was encoded/decoded correctly!\n");
     }
 
-
+    asm volatile ("int $0x4");
 
 
     
