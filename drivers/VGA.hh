@@ -3,8 +3,10 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <kernel/utils/String.hh>
+#include <kernel/c_cpp.h>
+//#include <kernel/utils/String.hh>
 
+#ifdef __cplusplus
 namespace Drivers
 {
     //Static Class
@@ -56,7 +58,8 @@ namespace Drivers
         static void PutAt(const char c, const uint8_t color, const size_t x, const size_t y);
         static void PutChar(const char c);
         static void Write(const char* cstr, const size_t len);
-        static void Write(const Utils::String str);
+        static void Write(const char* cstr);
+        //static void Write(const Utils::String str);
 
     };
 
@@ -66,6 +69,9 @@ namespace Drivers
 
 
 }
+#endif
+
+EXTERN_C void c_vga_write(const char*);
 
 
 

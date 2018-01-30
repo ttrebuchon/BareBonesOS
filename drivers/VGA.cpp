@@ -1,5 +1,5 @@
 #include "VGA.hh"
-#include <kernel/utils/String.hh>
+//#include <kernel/utils/String.hh>
 
 namespace Drivers
 {
@@ -69,9 +69,23 @@ namespace Drivers
         }
     }
 
-    void VGA::Write(const Utils::String str)
+    void VGA::Write(const char* cstr)
     {
-        //TODO
+        for (size_t i = 0; cstr[i] != 0; ++i)
+        {
+            PutChar(cstr[i]);
+        }
     }
 
+    // void VGA::Write(const Utils::String str)
+    // {
+    //     //TODO
+    // }
+
+}
+
+
+EXTERN_C void c_vga_write(const char* cstr)
+{
+    Drivers::VGA::Write(cstr);
 }
