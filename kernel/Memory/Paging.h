@@ -22,12 +22,12 @@ struct Page
 
 struct PageTable
 {
-	Page pages[1024];
+	struct Page pages[1024];
 };
 
 struct PageDir
 {
-	PageTable* tables[1024];
+	struct PageTable* tables[1024];
 	uint32_t physicalTables[1024];
 	
 	uint32_t physicalAddress;

@@ -33,6 +33,7 @@ void free_frame(struct Page* page)
 
 
 
+struct PageDir* kernel_dir;
 
 
 
@@ -49,7 +50,7 @@ void init_paging()
 	
 	
 	
-	int i = 0;
+	unsigned int i = 0;
 	while (i < kPlacement)
 	{
 		alloc_frame(get_page(i, 1, kernel_dir), 0, 0);
