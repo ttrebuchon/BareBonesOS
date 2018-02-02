@@ -92,3 +92,18 @@ struct Page* get_page(uint32_t addr, int create, struct PageDir* dir)
 	return 0x0;
 	
 }
+
+
+void page_fault(Registers_t regs)
+{
+	uint32_t fault_addr;
+	asm volatile ("mov %%cr2, %0" : "=r" (fault_addr));
+	
+	int present = !(regs.err_code & 0x1);
+	int rw = regs.err_code & 0x2;
+	int usr = regs.err_code & 0x4;
+	int reserved = regs.err_code & 0x8;
+	int instr_fetch = regs.err_code & 0x10;
+	
+	//TODO
+}

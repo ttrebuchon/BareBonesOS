@@ -7,13 +7,13 @@
 namespace Kernel {
 #endif
 
-struct Registers_t
+typedef struct Registers
 {
     uint32_t ds;
     uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax;
     uint32_t int_no, err_code;
     uint32_t eip, cs, eflags, useresp, ss;
-};
+} Registers_t;
 
 #ifdef __cplusplus
 }
