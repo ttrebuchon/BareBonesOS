@@ -2,21 +2,23 @@
 #define INCLUDED_INTERRUPTS_H
 
 
-#include <kernel/c_cpp.h>
+#include <Common.h>
+#include "ISR.h"
+#include "IRQ.h"
 
 #ifdef __cplusplus
 namespace Kernel { namespace Interrupts {
+extern "C" {
 #endif
 
-EXTERN_C void cli();
-EXTERN_C void sti();
-
+void cli();
+void sti();
 
 
 
 
 #ifdef __cplusplus
-} }
+} } }
 #endif
 
 #endif
