@@ -33,6 +33,8 @@ struct PageDir
 	uint32_t physicalAddress;
 };
 
+extern struct PageDir* kernel_dir;
+
 void init_paging();
 void switch_page_dir(struct PageDir*);
 struct Page* get_page(uint32_t addr, int create, struct PageDir*);
@@ -44,6 +46,9 @@ int first_frame_from(uint32_t*, uint32_t);
 void set_frame(uint32_t);
 void clear_frame(uint32_t);
 uint32_t check_frame(uint32_t);
+void alloc_frame(struct Page* page, int is_kernel, int is_writeable);
+void free_frame(struct Page* page);
+
 
 #ifdef __cplusplus
 }

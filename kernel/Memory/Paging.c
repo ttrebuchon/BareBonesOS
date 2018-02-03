@@ -38,7 +38,7 @@ void free_frame(struct Page* page)
 struct PageDir* kernel_dir;
 
 
-
+extern uint32_t end;
 void init_paging()
 {
 	uint32_t mem_end = 0x1000000;
