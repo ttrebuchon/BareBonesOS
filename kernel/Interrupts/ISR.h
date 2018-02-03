@@ -1,6 +1,9 @@
 #ifndef INCLUDED_ISR_H
 #define INCLUDED_ISR_H
 
+#include <Common.h>
+#include <kernel/Registers.h>
+
 #ifdef __cplusplus
 namespace Kernel { namespace Interrupts {
 #endif

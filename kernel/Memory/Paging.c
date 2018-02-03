@@ -1,5 +1,7 @@
 #include "Paging.h"
 #include "kheap.h"
+#include <kernel/Interrupts.h>
+#include <drivers/VGA.hh>
 
 
 void alloc_frame(struct Page* page, int is_kernel, int is_writeable)
@@ -106,4 +108,6 @@ void page_fault(Registers_t regs)
 	int instr_fetch = regs.err_code & 0x10;
 	
 	//TODO
+	c_vga_write("PAGE_FAULT\n");
+	while (1);
 }

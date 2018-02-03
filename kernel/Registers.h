@@ -1,13 +1,13 @@
-#ifndef INCLUDED_REGISTERS_HH
-#define INCLUDED_REGISTERS_HH
+#ifndef INCLUDED_REGISTERS_H
+#define INCLUDED_REGISTERS_H
 
 #include <stdint.h>
 
 #ifdef __cplusplus
-namespace Kernel {
+extern "C" {
 #endif
 
-typedef struct Registers
+typedef struct
 {
     uint32_t ds;
     uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax;

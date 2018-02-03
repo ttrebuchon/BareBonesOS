@@ -1,7 +1,7 @@
-#include "Memory.h"
+#include "kheap.h"
 
-//TODO: Set initial value
-uint32_t kPlacement = 0x0;
+extern uint32_t end;
+uint32_t kPlacement = (uint32_t)&end;
 
 void* kmalloc(uint32_t size, int align, uint32_t* phys)
 {
@@ -16,5 +16,13 @@ void* kmalloc(uint32_t size, int align, uint32_t* phys)
 	}
 	uint32_t tmp = kPlacement;
 	kPlacement += size;
-	return tmp;
+	return (void*)tmp;
+}
+
+void kmemset(void* ptr, unsigned char byte, uint32_t size)
+{
+	for (unsigned char* d = (unsigned char*)ptr; d < (unsigned char*)ptr + size; ++d)
+	{
+		*d = byte;
+	}
 }

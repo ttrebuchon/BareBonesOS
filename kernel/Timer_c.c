@@ -1,7 +1,8 @@
 #include "Timer.h"
 #include "Interrupts.h"
 #include "Registers.h"
-#include <drivers/Port_IO.h>
+#include <drivers/PortIO.h>
+#include <drivers/VGA.hh>
 
 #define DEFAULT_FREQ 1193180
 

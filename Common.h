@@ -3,16 +3,24 @@
 
 #include "kernel/c_cpp.h"
 
+
 #ifdef __cplusplus
 
-#include <cstdint>
+typedef decltype(sizeof(0)) size_t;
+
+
 
 #else
 
-#include <stdint.h>
+
 
 #endif
 
+#include <stdint.h>
 typedef unsigned char uchar;
 
+#endif
+
+#ifdef __cplusplus
+#include <kernel/new.hh>
 #endif

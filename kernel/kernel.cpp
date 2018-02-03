@@ -4,6 +4,8 @@
 #include <kernel/Interrupts.h>
 #include <kernel/Interrupts/IDT.h>
 #include <kernel/Registers.h>
+#include <kernel/Memory/Paging.h>
+#include <kernel/Timer.h>
 
 
 #if !defined(__cplusplus)
@@ -42,7 +44,12 @@ size_t strlen(const char* str)
     return len;
 }
 
-static_assert(sizeof(Kernel::Registers_t) == 64);
+void handler04(Registers_t regs)
+{
+    Drivers::VGA::Write("handler04()\n");
+}
+
+static_assert(sizeof(Registers_t) == 64);
 
 #if defined(__cplusplus)
 extern "C"
@@ -78,14 +85,11 @@ int main()
 
     Kernel::gdt_entry::loadTable(gdt_table, 4);
     Kernel::gdt_entry::reloadSegments();
-
     Kernel::Interrupts::sti();
-
     Drivers::VGA::Init();
-
     Kernel::Interrupts::init_idt();
-
-    
+    init_timer(50);
+    init_paging();
 
     Drivers::VGA::Write("Hello, kernel world!\nThis is a test.\n");
 
@@ -113,11 +117,16 @@ int main()
         Drivers::VGA::Write("Base was encoded/decoded correctly!\n");
     }
 
+
+    
+
+    Kernel::Interrupts::register_interrupt_handler(0x4, &handler04);
+
     asm volatile ("int $0x4");
 
 
-    
-    Drivers::VGA::Write("Kernel main() is finished!!\n");
 
+
+    Drivers::VGA::Write("Kernel main() is finished!!\n");
     return 0;
 }

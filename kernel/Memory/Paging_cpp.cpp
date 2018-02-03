@@ -12,7 +12,7 @@ extern "C" {
 		
 		frame_collection = (Utils::Bitset_Ptr<>*)kmalloc(sizeof(Utils::Bitset_Ptr<>), 1, 0);
 		auto bits = (Unit_t*)kmalloc(size, 1, 0);
-		frame_collection = ::new ((void*)frame_collection) Utils::Bitset_Ptr<>(bits, size/sizeof(Unit_t));
+		frame_collection = new (frame_collection) Utils::Bitset_Ptr<>(bits, size/sizeof(Unit_t));
 		
 		
 	}

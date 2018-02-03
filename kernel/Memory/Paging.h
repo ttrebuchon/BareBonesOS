@@ -36,7 +36,7 @@ struct PageDir
 void init_paging();
 void switch_page_dir(struct PageDir*);
 struct Page* get_page(uint32_t addr, int create, struct PageDir*);
-void page_fault(struct Registers_t);
+void page_fault(Registers_t);
 
 void init_frame_collection(uint32_t frames);
 int first_frame(uint32_t*);
