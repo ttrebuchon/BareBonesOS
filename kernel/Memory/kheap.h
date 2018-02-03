@@ -41,6 +41,8 @@ struct KHeapFooter
 
 struct KHeap;
 
+extern struct KHeap* kheap;
+
 struct KHeap* create_heap(uint32_t start, uint32_t end, uint32_t max, uint8_t supervisor, uint8_t readonly);
 void* _alloc(uint32_t size, uint8_t page_align, struct KHeap*);
 void _free(void*, struct KHeap*);

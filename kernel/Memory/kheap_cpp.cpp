@@ -272,6 +272,36 @@ EXTERN_C void _free(void* ptr, struct KHeap* heap)
             }
         }
     }
-
     
+    
+    if ((uint32_t)foot + sizeof(KHeapFooter) == heap->endAddr)
+    {
+    	uint32_t oldLen = heap->endAddr - heap->startAddr;
+    	uint32_t newLen = contract((uint32_t)head - heap->startAddr, heap);
+    	
+    	if (head->size - (oldLen - newLen) > 0)
+    	{
+    		head->size -= oldLen - newLen;
+    		foot = (KHeapFooter*)((uint32_t)head + head->size - sizeof(KHeapFooter));
+    		foot->magic = HEAP_MAGIC;
+    		foot->header = head;
+    	}
+    	else
+    	{
+    		for (uint32_t it = 0; it < heap->index.size(); ++it)
+    		{
+    			if (heap->index[it] == testHead)
+    			{
+    				heap->index.erase(it);
+    				break;
+    			}
+    		}
+    	}
+    	
+    }
+    
+    if (add)
+    {
+    	heap->index.insert(head);
+    }
 }
