@@ -137,6 +137,8 @@ int main()
     delete y;
     delete z;
     
+    auto x = new int[40];
+    delete[] x;
 
     Drivers::VGA::Write("Kernel main() is finished!!\n");
     return 0;
