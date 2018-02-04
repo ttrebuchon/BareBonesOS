@@ -2,6 +2,7 @@
 #include "kheap.h"
 #include <kernel/Interrupts.h>
 #include <drivers/VGA.hh>
+#include <kernel/Debug.h>
 
 
 void alloc_frame(struct Page* page, int is_kernel, int is_writeable)
@@ -13,14 +14,12 @@ void alloc_frame(struct Page* page, int is_kernel, int is_writeable)
 	
 	
 	uint32_t index;
-	if (first_frame(&index))
-	{
-		set_frame(index);
-		page->present = 1;
-		page->rw = is_writeable ? 1 : 0;
-		page->user = is_kernel ? 0 : 1;
-		page->frame = index;
-	}
+	ASSERT(first_frame(&index));
+	set_frame(index);
+	page->present = 1;
+	page->rw = is_writeable ? 1 : 0;
+	page->user = is_kernel ? 0 : 1;
+	page->frame = index;
 }
 
 void free_frame(struct Page* page)
@@ -50,7 +49,7 @@ void init_paging()
 	kernel_dir = (struct PageDir*)kmalloc(sizeof(struct PageDir), 1, 0);
 	kmemset(kernel_dir, 0, sizeof(struct PageDir));
 	
-	unsigned int i = 0;
+	int i = 0;
 	for (i = KHEAP_START; i < KHEAP_START+KHEAP_INITIAL_SIZE; i += 0x1000)
 	{
 		get_page(i, 1, kernel_dir);
@@ -77,7 +76,7 @@ void init_paging()
 	
 	switch_page_dir(kernel_dir);
 	
-	kheap = create_heap(KHEAP_START, KHEAP_START + KHEAP_INITIAL_SIZE, 0xCFFFF000, 0, 0);
+	kheap = create_heap(KHEAP_START, KHEAP_START + KHEAP_INITIAL_SIZE, KHEAP_MAX_ADDR, 0, 0);
 }
 
 void switch_page_dir(struct PageDir* dir)

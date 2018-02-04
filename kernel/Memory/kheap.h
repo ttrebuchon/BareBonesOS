@@ -9,6 +9,7 @@
 #define HEAP_INDEX_SIZE   0x20000
 #define HEAP_MAGIC        0x123890AB
 #define HEAP_MIN_SIZE     0x70000
+#define KHEAP_MAX_ADDR    0xCFFFF000
 
 #ifdef __cplusplus
 extern "C" {
@@ -17,12 +18,12 @@ extern "C" {
 
 extern uint32_t kPlacement;
 
-EXTERN_C void* kmalloc(uint32_t size, int align, uint32_t* phys);
+void* kmalloc(uint32_t size, int align, uint32_t* phys);
 
-EXTERN_C void kmemset(void*, unsigned char, uint32_t);
+void kmemset(void*, unsigned char, uint32_t);
 
-EXTERN_C void* malloc(size_t);
-EXTERN_C void free(void*);
+void* malloc(size_t);
+void free(void*);
 
 
 struct KHeapHeader

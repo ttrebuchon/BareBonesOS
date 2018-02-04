@@ -5,7 +5,7 @@
 Utils::Bitset_Ptr<>* frame_collection;
 
 extern "C" {
-	
+
 	void init_frame_collection(uint32_t size)
 	{
 		typedef typename Utils::Bitset_Ptr<>::storage Unit_t;

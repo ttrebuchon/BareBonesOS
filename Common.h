@@ -22,5 +22,5 @@ typedef unsigned char uchar;
 #endif
 
 #ifdef __cplusplus
-#include <kernel/new.hh>
+#include <kernel/CppSupport/new.hh>
 #endif

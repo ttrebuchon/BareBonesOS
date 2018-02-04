@@ -1,6 +1,7 @@
 #include "kheap.h"
 #include "Paging.h"
 #include <kernel/utils/OrderedArray.hh>
+#include <kernel/Debug.h>
 
 struct HeapComp
 {
@@ -61,9 +62,13 @@ static int32_t find_smallest_hole(uint32_t size, bool pageAlign, struct KHeap* h
 EXTERN_C struct KHeap* create_heap(uint32_t start, uint32_t end, uint32_t max, uint8_t sup, uint8_t readonly)
 {
     KHeap* heap = (KHeap*)kmalloc(sizeof(KHeap), false, 0x0);
-
+    
+    ASSERT(start % 0x1000 == 0);
+    ASSERT(end % 0x1000 == 0);
+    
     new (&heap->index) Utils::OrderedArray<KHeapHeader*, HeapComp>((void*)start, HEAP_INDEX_SIZE);
-
+    ASSERT(heap->index.size() == 0);
+    ASSERT(&heap->index[0] == (void*)start);
 
     start += sizeof(KHeapHeader*)*HEAP_INDEX_SIZE;
 
@@ -73,7 +78,7 @@ EXTERN_C struct KHeap* create_heap(uint32_t start, uint32_t end, uint32_t max, u
         start += 0x1000;
     }
 
-    heap->startAddr - start;
+    heap->startAddr = start;
     heap->endAddr = end;
     heap->addrMax = max;
     heap->supervisor = sup;
@@ -89,17 +94,23 @@ EXTERN_C struct KHeap* create_heap(uint32_t start, uint32_t end, uint32_t max, u
 
 static void expand(uint32_t nSize, KHeap* heap)
 {
+
+    ASSERT(nSize > heap->endAddr - heap->startAddr);
+
     if (nSize & 0xFFFFF000 != 0)
     {
         nSize &= 0xFFFFF000;
         nSize += 0x1000;
     }
 
+    ASSERT(heap->startAddr + nSize <= heap->addrMax);
+
     uint32_t oSize = heap->endAddr - heap->startAddr;
-    
-    for (uint32_t i = oSize; i < nSize; i += 0x1000)
+    uint32_t i = oSize;
+    while (i < nSize)
     {
         alloc_frame(get_page(heap->startAddr+i, 1, kernel_dir), (heap->supervisor) ? 1 : 0, heap->readonly ? 0 : 1);
+        i += 0x1000;
     }
     heap->endAddr = heap->startAddr + nSize;
 }
@@ -230,7 +241,7 @@ EXTERN_C void* _alloc(uint32_t size, uint8_t page_align, struct KHeap* heap)
 
         heap->index.insert(holeHeader);
     }
-
+    ASSERT(((KHeapFooter*)((uint32_t)blockHead + blockHead->size - sizeof(KHeapFooter)))->magic == HEAP_MAGIC);
     return (void*)((uint32_t)blockHead + sizeof(KHeapHeader));
 }
 
@@ -242,7 +253,10 @@ EXTERN_C void _free(void* ptr, struct KHeap* heap)
     }
 
     auto head = (KHeapHeader*)((uint32_t)ptr - sizeof(KHeapHeader));
-    auto foot = (KHeapFooter*)((uint32_t)ptr + head->size - sizeof(KHeapFooter));
+    auto foot = (KHeapFooter*)((uint32_t)head + head->size - sizeof(KHeapFooter));
+
+    ASSERT(head->magic == HEAP_MAGIC);
+    ASSERT(foot->magic == HEAP_MAGIC);
 
     bool add = true;
 

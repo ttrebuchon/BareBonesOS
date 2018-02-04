@@ -5,5 +5,7 @@
 
 inline void *operator new(size_t, void *p)     throw() { return p; }
 
+
+
 #endif
 #endif

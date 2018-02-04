@@ -6,6 +6,10 @@
 #include <kernel/Registers.h>
 #include <kernel/Memory/Paging.h>
 #include <kernel/Timer.h>
+#include <kernel/utils/OrderedList.hh>
+#include <kernel/KernelAllocator.hh>
+#include <kernel/Memory/kheap.h>
+#include <kernel/Debug.h>
 
 
 #if !defined(__cplusplus)
@@ -124,8 +128,15 @@ int main()
 
     asm volatile ("int $0x4");
 
+    
 
-
+    //auto x = (unsigned char*)kmalloc(0xFFFFFF, 0, 0x0);
+    ASSERT(kheap != 0x0);
+    auto y = new int;
+    auto z = new int;
+    delete y;
+    delete z;
+    
 
     Drivers::VGA::Write("Kernel main() is finished!!\n");
     return 0;
