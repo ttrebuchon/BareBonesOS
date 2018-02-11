@@ -1,7 +1,7 @@
 
 GET_SRC = $(wildcard ../$1/*.cpp ../$1/*.c)
 
-SRC = $(call GET_SRC,kernel/utils) $(call GET_SRC,drivers/IDE)
+SRC = $(call GET_SRC,kernel/utils) $(call GET_SRC,kernel/utils/detail) #$(call GET_SRC,drivers/IDE)
 
 C_OBJS = $(SRC:.c=.o)
 OBJS = $(C_OBJS:.cpp=.o)

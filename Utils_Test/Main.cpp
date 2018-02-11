@@ -19,6 +19,7 @@ int main()
 	RUNC(Bitset);
 	RUN(Bitset);
 	RUN(IDE);
+	RUN(IOSTREAM);
 	
 	std::cerr << "\n\n\nAll Done!\n" << std::flush;
 }

@@ -26,6 +26,6 @@ TEST(List);
 CTEST(Bitset);
 TEST(Bitset);
 TEST(IDE);
-
+TEST(IOSTREAM);
 
 #endif
