@@ -1,4 +1,4 @@
-#include "Locale.hh"
+#include "Locale"
 
 namespace Utils {
 	

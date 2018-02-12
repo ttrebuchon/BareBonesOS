@@ -1,6 +1,8 @@
 #ifndef INCLUDED_IOS_BASE_HH
 #define INCLUDED_IOS_BASE_HH
 
+#include <Common.h>
+#include <kernel/utils/Types.hh>
 #include <kernel/utils/Locale.hh>
 
 namespace Utils {
@@ -26,7 +28,6 @@ namespace Utils {
 	
 	
 	
-	typedef long long streamsize;
 	
 	class ios_base
 	{

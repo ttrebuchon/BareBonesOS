@@ -22,6 +22,8 @@ namespace Utils {
 		streambuf_type* buf;
 		bool failbit;
 		
+		void _put(const T*, size_t len);
+		
 		public:
 		
 		ostreambuf_iterator(streambuf_type* b) : buf(b), failbit(false)
@@ -40,6 +42,12 @@ namespace Utils {
 		{
 			return failbit;
 		}
+		
+		
+		template <class G, class X>
+		friend X __write(X, const G*, size_t);
+		template <class G>
+		friend ostreambuf_iterator<G> __write(ostreambuf_iterator<G>, const G*, size_t);
 	};
 	
 }

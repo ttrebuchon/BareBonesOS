@@ -30,21 +30,46 @@ namespace Utils
 		using int_type = int;
 		using off_type = unsigned long long;
 		using pos_type = streampos;
-    using state_type = mbstate_t;
-    static constexpr void assign(char_type& c1, const char_type& c2) noexcept;
-    static constexpr bool eq(char_type c1, char_type c2) noexcept;
-    static constexpr bool lt(char_type c1, char_type c2) noexcept;
-    static constexpr int compare(const char_type* s1, const char_type* s2, size_t n);
-    static constexpr size_t length(const char_type* s);
-    static constexpr const char_type* find(const char_type* s, size_t n, const char_type& a);
-    static char_type* move(char_type* s1, const char_type* s2, size_t n);
-    static char_type* copy(char_type* s1, const char_type* s2, size_t n);
-    static char_type* assign(char_type* s, size_t n, char_type a);
-    static constexpr int_type not_eof(int_type c) noexcept;
-    static constexpr char_type to_char_type(int_type c) noexcept;
-    static constexpr int_type to_int_type(char_type c) noexcept;
-    static constexpr bool eq_int_type(int_type c1, int_type c2) noexcept;
-    static constexpr int_type eof() noexcept;
+		using state_type = mbstate_t;
+		static constexpr void assign(char_type& c1, const char_type& c2) noexcept;
+		static constexpr bool eq(char_type c1, char_type c2) noexcept;
+		static constexpr bool lt(char_type c1, char_type c2) noexcept;
+		static constexpr int compare(const char_type* s1, const char_type* s2, size_t n);
+		static constexpr size_t length(const char_type* s);
+		static constexpr const char_type* find(const char_type* s, size_t n, const char_type& a);
+		static char_type* move(char_type* s1, const char_type* s2, size_t n);
+		
+		static char_type* copy(char_type* dest, const char_type* src, size_t n)
+		{
+			for (int i = 0; i < n; ++i)
+			{
+				dest[i] = src[i];
+			}
+			return dest;
+		}
+		
+		static char_type* assign(char_type* s, size_t n, char_type a);
+		
+		static constexpr int_type not_eof(int_type c) noexcept
+		{
+			if (c >= 0) return c;
+			
+			return 0;
+		}
+		
+		static constexpr char_type to_char_type(int_type c) noexcept;
+		
+		static constexpr int_type to_int_type(char_type c) noexcept
+		{
+			return (unsigned char)c;
+		}
+		
+		static constexpr bool eq_int_type(int_type c1, int_type c2) noexcept
+		{
+			return c1 == c2;
+		}
+		
+		static constexpr int_type eof() noexcept { return -1; }
 		
 	};
 	
@@ -52,3 +77,4 @@ namespace Utils
 }
 
 #endif
+#include "Char_Traits.hpp"

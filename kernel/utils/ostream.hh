@@ -2,6 +2,7 @@
 #define INCLUDED_OSTREAM_HH
 
 #include "detail/basic_ios.hh"
+#include "locale.hh"
 
 namespace Utils {
 	
@@ -84,7 +85,11 @@ namespace Utils {
         
         basic_ostream<T, Traits>& operator<<(const void* p);
         basic_ostream<T, Traits>& operator<<(basic_streambuf<char_type, Traits>* sb);
-		
+        
+        
+		basic_ostream<T, Traits>& put(char_type);
+		basic_ostream<T, Traits>& write(const char_type*, streamsize);
+		basic_ostream<T, Traits>& flush();
 	};
 	
 	typedef basic_ostream<char> ostream;

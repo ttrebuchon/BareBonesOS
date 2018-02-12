@@ -3,7 +3,7 @@
 
 #include "ostream.hh"
 #include "istream.hh"
-#include "streambuf.hh"
+#include "streambuf"
 
 namespace Utils
 {

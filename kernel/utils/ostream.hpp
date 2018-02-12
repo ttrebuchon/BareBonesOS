@@ -49,7 +49,7 @@ namespace Utils {
 	template <class T, class Traits>
 	basic_ostream<T, Traits>& basic_ostream<T, Traits>::operator<<(bool n)
 	{
-		
+		_insert(n);
 		return *this;
 	}
 	

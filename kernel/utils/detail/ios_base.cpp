@@ -12,6 +12,13 @@ namespace Utils {
 		return _flags;
 	}
 	
+	auto ios_base::flags(fmtflags nflags) -> fmtflags
+	{
+		auto old = _flags;
+		_flags = nflags;
+		return old;
+	}
+	
 	
 	
 	
