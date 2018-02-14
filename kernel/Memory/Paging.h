@@ -34,10 +34,12 @@ struct PageDir
 };
 
 extern struct PageDir* kernel_dir;
+extern struct PageDir* current_dir;
 
 void init_paging();
 void switch_page_dir(struct PageDir*);
 struct Page* get_page(uint32_t addr, int create, struct PageDir*);
+struct PageDir* clone_page_dir(struct PageDir*);
 void page_fault(Registers_t);
 
 void init_frame_collection(uint32_t frames);
