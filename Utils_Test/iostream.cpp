@@ -176,7 +176,7 @@ TEST(IOSTREAM)
 	unsigned long h = 7;
 	bool j = true;
 	
-	buf->setArray(5000);
+	buf->setArray(400000);
 	assert(buf->str() == "");
 	
 	std::string control = "";
@@ -218,3 +218,5 @@ TEST(IOSTREAM)
 	os << h;
 	assert(os.good());*/
 }
+
+//using namespace __gnu_cxx;
