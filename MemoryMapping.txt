@@ -1,7 +1,10 @@
 
 0xB8000 - VGA Mapping
 
-0x??? - Kernel
+
+
+[start]-0x4000 - Stack bottom
+0x100000 - Kernel
 0x??? - $end
 [end]+0x1 - $kPlacement(t=0) (Initial)
 [end]+0x1 - $frame_collection {8}
@@ -10,11 +13,13 @@
 [end]+0x300D - kheap pages {1048576}
 [end]+0x10300D - 
 ... - Mem Pages
+0x??? - $kheap {~26}
 
 
 
 0x1000000 - $mem_end
 
-0xC0000000 - $KHEAP_START
+0xC0000000 - $KHEAP_START - $kheap::index::array {524288}
+0xC0080000 - Heap Start
 
 0xCFFFF000 - $KHEAP_MAX_ADDR
