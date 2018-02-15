@@ -10,6 +10,11 @@
 #include <kernel/KernelAllocator.hh>
 #include <kernel/Memory/kheap.h>
 #include <kernel/Debug.h>
+#include <kernel/Filesystem/initrd.hh>
+#include <kernel/Filesystem/Node.hh>
+#include <kernel/Filesystem/initrd/DirectoryNode.hh>
+#include <drivers/Disk/AHCI.hh>
+#include <drivers/PCI.hh>
 
 
 #if !defined(__cplusplus)
@@ -89,11 +94,18 @@ int main()
 
     Kernel::gdt_entry::loadTable(gdt_table, 4);
     Kernel::gdt_entry::reloadSegments();
-    Kernel::Interrupts::sti();
     Drivers::VGA::Init();
+    Drivers::VGA::Write("GDT Written\n");
+    Kernel::Interrupts::sti();
+    Drivers::VGA::Write("Initializing IDT...\n");
     Kernel::Interrupts::init_idt();
+    Drivers::VGA::Write("IDT Initialized.\n");
+    Drivers::VGA::Write("Initializing timer...\n");
     init_timer(50);
+    Drivers::VGA::Write("Timer initialized.\n");
+    Drivers::VGA::Write("Initializing paging...\n");
     init_paging();
+    Drivers::VGA::Write("Paging initialized.\n");
 
     Drivers::VGA::Write("Hello, kernel world!\nThis is a test.\n");
 
@@ -130,15 +142,41 @@ int main()
 
     
 
-    //auto x = (unsigned char*)kmalloc(0xFFFFFF, 0, 0x0);
-    ASSERT(kheap != 0x0);
-    auto y = new int;
-    auto z = new int;
-    delete y;
-    delete z;
     
-    auto x = new int[40];
-    delete[] x;
+    {
+        ASSERT(kheap != 0x0);
+        auto y = new int;
+        auto z = new int;
+        delete y;
+        delete z;
+        
+        auto x = new int[40];
+        delete[] x;
+    }
+
+    auto someMem = kmalloc(400, 0, 0x0);
+    *(int*)someMem = 1;
+    auto spanPtr = (unsigned long*)((int*)someMem + 1);
+    *spanPtr = sizeof(int) + sizeof(unsigned long) + 3;
+    auto namePtr = (char*)(spanPtr + 1);
+    namePtr[0] = 'F';
+    namePtr[1] = 'S';
+    namePtr[2] = 0;
+
+    auto fs = Kernel::Filesystem::init_initrd(someMem);
+    Drivers::VGA::Write("Root Node Name: ");
+    Drivers::VGA::Write(fs->name);
+    Drivers::VGA::Write("\n");
+
+    for (int i = 0; i < 256; ++i)
+    {
+        auto x = Drivers::PCI::ConfigReadWord(i, i, 0, 2);
+        if (x == 0xFFFF)
+        {
+            Drivers::VGA::Write("x was 0xFFFF!\n");
+        }
+    }
+    
 
     Drivers::VGA::Write("Kernel main() is finished!!\n");
     return 0;
