@@ -12,6 +12,8 @@ search for this signature in the first 8 KiB of the kernel file, aligned at a
 32-bit boundary. The signature is in its own section so the header can be
 forced to be within the first 8 KiB of the kernel file.
 */
+
+.global multiboot
 .section .multiboot
 .align 4
 .long MAGIC
@@ -85,7 +87,7 @@ _start:
 	preserved and the call is well defined.
 	*/
 	push stack_bottom
-	push multiboot
+	push .multiboot
 	call main
 
 	/*
