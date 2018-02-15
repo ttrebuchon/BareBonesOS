@@ -35,12 +35,16 @@ CC = i686-elf-gcc
 CXX = i686-elf-g++
 ASM = i686-elf-as
 
-CC_FLAGS	= $(WARNINGS_FLAGS) -ffreestanding -O2 -MMD -I.
-CXX_FLAGS	= $(WARNINGS_FLAGS) -ffreestanding -O2 -MMD -I. #-fno-exceptions -fno-rtti
+SYSROOT = sysroot
+CRTBEGIN_OBJ = $(shell $(CC) $(CFLAGS) -print-file-name=crtbegin.o)
+CRTEND_OBJ = $(shell $(CC) $(CFLAGS) -print-file-name=crtend.o)
+
+CFLAGS	= -nostdlib $(WARNINGS_FLAGS) -ffreestanding -Og -MMD -I. -Werror-implicit-function-declaration --sysroot=$(SYSROOT) #-D_TRACE
+CXX_FLAGS	= -std=c++14 -nostdlib $(WARNINGS_FLAGS) -ffreestanding -Og -MMD -I. -fno-exceptions -fno-rtti --sysroot=$(SYSROOT) #-D_TRACE
 ASM_FLAGS	= 
 
 all: myos.iso
-	@echo $(CPP_DEPS)
+	#@echo $(CPP_DEPS)
 
 clean:
 	-@rm -f $(C_OBJS) $(CPP_OBJS) $(CPP_DEPS) $(BOOT_OBJS) *.bin $(wildcard boot/*.o boot/*.bin) $(ASM_OBJS)
@@ -50,14 +54,14 @@ myos.iso: myos.bin
 	@grub-mkrescue -o $@ grub/isodir
 
 
-myos.bin: $(BOOT_OBJS) $(CPP_OBJS) $(C_OBJS) $(ASM_OBJS) linker.ld
-	$(CXX) -T linker.ld -o $@ $(CXX_FLAGS) -nostdlib $(BOOT_OBJS) $(CPP_OBJS) $(C_OBJS) $(ASM_OBJS) -lgcc
+myos.bin: $(BOOT_OBJS) $(CRTBEGIN_OBJ) $(CPP_OBJS) $(C_OBJS) $(ASM_OBJS) $(CRTEND_OBJ) linker.ld
+	$(CXX) -T linker.ld -o $@ $(CXX_FLAGS) -nostdlib $(BOOT_OBJS) $(CRTBEGIN_OBJ) $(CPP_OBJS) $(C_OBJS) $(ASM_OBJS) $(CRTEND_OBJ) #-lgcc
 
 %.o: %.s
 	$(ASM) $(ASM_FLAGS) -c $< -o $@
 
 %.o: %.c
-	$(CC) $(CC_FLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 %.o: %.cpp
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
