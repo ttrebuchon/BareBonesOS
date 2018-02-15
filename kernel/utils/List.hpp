@@ -48,7 +48,11 @@ namespace Utils
 		++_size;
 	}
 	
-	
+	template <class T, class A>
+	typename List<T, A>::size_type List<T, A>::size() const
+	{
+		return _size;
+	}
 	
 	
 }

@@ -81,6 +81,8 @@ namespace Utils
 		
 		void push_back(const T&);
 		void push_back(T&&);
+
+		size_type size() const;
 	};
 	
 	
