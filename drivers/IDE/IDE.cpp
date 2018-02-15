@@ -1,6 +1,9 @@
 #include "IDE.hh"
 #include <drivers/PortIO.h>
 
+
+// https://wiki.osdev.org/IDE
+
 namespace Drivers { namespace IDE {
 	
 	ChannelRegister_t Device::Channels[2];
@@ -106,6 +109,10 @@ namespace Drivers { namespace IDE {
 		return 0;
 	}
 	
+	void Device::readBuffer(const Channel, const Register, uint32_t* buf, uint32_t quads)
+	{
+		//TODO
+	}
 	
 	void Device::Initialize(uint32_t BAR0, uint32_t BAR1, uint32_t BAR2, uint32_t BAR3, uint32_t BAR4)
 	{
@@ -195,6 +202,26 @@ namespace Drivers { namespace IDE {
 				Devices[count].signature = *((unsigned short*)(buf + (uchar)ATAIdentify::DeviceType));
 				Devices[count].capabilities = *((unsigned short*)(buf + (uchar)ATAIdentify::Capabilities));
 				Devices[count].commandSets = *((unsigned int*)(buf + (uchar)ATAIdentify::CommandSets));
+
+
+				if (Devices[count].commandSets & (1 << 26))
+				{
+					Devices[count].size = *((unsigned int*)buf + (uchar)ATAIdentify::MaxLBAExt);
+				}
+				else
+				{
+					Devices[count].size = *((unsigned int*)buf + (uchar)ATAIdentify::MaxLBA);
+				}
+
+				for (k = 0; k < 40; k += 2)
+				{
+					Devices[count].model[k] = buf[ATAIdentify::Model + k + 1];
+					Devices[count].model[k+1] = buf[ATAIdentify::Model + k];
+				}
+
+				Devices[count].model[40] = '\0';
+
+				++count;
 			}
 		}
 	}
