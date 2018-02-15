@@ -4,6 +4,7 @@
 #include <drivers/VGA.hh>
 #include <kernel/Debug.h>
 
+extern void copy_page_physical(uint32_t, uint32_t);
 
 void alloc_frame(struct Page* page, int is_kernel, int is_writeable)
 {
