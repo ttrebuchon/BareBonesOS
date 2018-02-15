@@ -13,7 +13,7 @@ Task* Task::current_task = nullptr;
 uint32_t next_pid = 1;
 
 
-extern uint32_t read_eip();
+extern "C" uint32_t read_eip();
 
 static void move_stack(void* new_addr, uint32_t size)
 {
