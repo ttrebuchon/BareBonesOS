@@ -1,58 +1,80 @@
 #ifndef INCLUDED_CHAR_TRAITS_HH
 #define INCLUDED_CHAR_TRAITS_HH
 
-
-//#include <cwchar> <-- [mbstate_t]
+#include <Common.h>
+#include "cwchar.hh"
 
 namespace Utils
 {
-    template <class T>
-    struct Char_Traits
-    {
-        typedef T char_type;
-        //TODO
-    };
-
-
-    template <>
-    struct Char_Traits<char>
-    {
-        typedef char char_type;
-        typedef int int_type;
-        //typedef streamoff off_type;
-        //typedef pos_type streampos;
-        //typedef mbstate_t state_type;
-
-        static constexpr bool eq(char_type c, char_type d) noexcept
-        {
-            return c == d;
-        }
-
-        static constexpr bool lt(char_type c, char_type d) noexcept
-        {
-            return c < d;
-        }
-
-        static size_t length(const char_type* s)
-        {
-            size_t len = 0;
-            while (s[len++] != '0') ;
-            return len-1;
-        }
-
-        static void assign(char_type& r, const char_type& c) noexcept
-        {
-            r = c;
-        }
-
-        static char_type* assign(char_type* p, size_t n, char_type c)
-        {
-            for (int i = 0; i < n; ++i)
-            {
-                p[i] = c;
-            }
-            return p;
-        }
-    };
+	template <class>
+	struct Char_Traits;
+	
+	template <class StateT>
+	class fpos
+	{
+		private:
+		StateT _state;
+		public:
+		StateT state() const
+		{ return _state; }
+		void state(StateT state)
+		{ _state = state; }
+	};
+	
+	typedef fpos<mbstate_t> streampos;
+	
+	template <>
+	struct Char_Traits<char>
+	{
+		using char_type = char;
+		using int_type = int;
+		using off_type = unsigned long long;
+		using pos_type = streampos;
+		using state_type = mbstate_t;
+		static constexpr void assign(char_type& c1, const char_type& c2) noexcept;
+		static constexpr bool eq(char_type c1, char_type c2) noexcept;
+		static constexpr bool lt(char_type c1, char_type c2) noexcept;
+		static constexpr int compare(const char_type* s1, const char_type* s2, size_t n);
+		static constexpr size_t length(const char_type* s);
+		static constexpr const char_type* find(const char_type* s, size_t n, const char_type& a);
+		static char_type* move(char_type* s1, const char_type* s2, size_t n);
+		
+		static char_type* copy(char_type* dest, const char_type* src, size_t n)
+		{
+			for (int i = 0; i < n; ++i)
+			{
+				dest[i] = src[i];
+			}
+			return dest;
+		}
+		
+		static char_type* assign(char_type* s, size_t n, char_type a);
+		
+		static constexpr int_type not_eof(int_type c) noexcept
+		{
+			if (c >= 0) return c;
+			
+			return 0;
+		}
+		
+		static constexpr char_type to_char_type(int_type c) noexcept;
+		
+		static constexpr int_type to_int_type(char_type c) noexcept
+		{
+			return (unsigned char)c;
+		}
+		
+		static constexpr bool eq_int_type(int_type c1, int_type c2) noexcept
+		{
+			return c1 == c2;
+		}
+		
+		static constexpr int_type eof() noexcept { return -1; }
+		
+	};
+	
+	
 }
+
 #endif
+#include "Char_Traits.hpp"

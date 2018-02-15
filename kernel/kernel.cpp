@@ -60,11 +60,16 @@ void handler04(Registers_t regs)
 
 static_assert(sizeof(Registers_t) == 64);
 
+
+//In Task_c.c
+extern "C" uint32_t init_esp;
+
 #if defined(__cplusplus)
 extern "C"
 #endif
-int main()
+int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
 {
+	init_esp = initial_stack;
     Kernel::TSS _myTSS{0};
     Kernel::TSS::myTSS = &_myTSS;
 

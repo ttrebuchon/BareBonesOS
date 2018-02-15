@@ -35,6 +35,7 @@ void free_frame(struct Page* page)
 
 
 struct PageDir* kernel_dir;
+struct PageDir* current_dir;
 
 
 extern uint32_t end;
@@ -50,6 +51,9 @@ void init_paging()
 	kernel_dir = (struct PageDir*)kmalloc(sizeof(struct PageDir), 1, 0);
 	TRACE_C("kernel_dir allocated.\n");
 	kmemset(kernel_dir, 0, sizeof(struct PageDir));
+	
+	
+	kernel_dir->physicalAddress = (uint32_t)kernel_dir->physicalTables;
 	
 	TRACE_C("Getting kheap pages...\n");
 	int i = 0;
@@ -86,11 +90,15 @@ void init_paging()
 	
 	kheap = create_heap(KHEAP_START, KHEAP_START + KHEAP_INITIAL_SIZE, KHEAP_MAX_ADDR, 0, 0);
 	TRACE_C("Kernel Heap created.\n");
+	
+	current_dir = clone_page_dir(kernel_dir);
+	switch_page_dir(current_dir);
 }
 
 void switch_page_dir(struct PageDir* dir)
 {
-	asm volatile ("mov %0, %%cr3":: "r"(&dir->physicalTables));
+	current_dir = dir;
+	asm volatile ("mov %0, %%cr3":: "r"(dir->physicalAddress));
 	uint32_t cr0;
 	asm volatile ("mov %%cr0, %0" : "=r"(cr0));
 	cr0 |= 0x80000000;
@@ -117,6 +125,74 @@ struct Page* get_page(uint32_t addr, int create, struct PageDir* dir)
 	
 	return 0x0;
 	
+}
+
+static struct PageTable* clone_table(struct PageTable* src, uint32_t* phys)
+{
+	struct PageTable* dest = (struct PageTable*)kmalloc(sizeof(struct PageTable), 1, phys);
+	
+	kmemset(dest, 0, sizeof(struct PageTable));
+	
+	for (int i = 0; i < 1024; ++i)
+	{
+		if (!src->pages[i].frame) continue;
+		
+		alloc_frame(&dest->pages[i],0,0);
+		
+		if (src->pages[i].present)
+		{
+			dest->pages[i].present = 1;
+		}
+		if (src->pages[i].rw)
+		{
+			dest->pages[i].rw = 1;
+		}
+		if (src->pages[i].user)
+		{
+			dest->pages[i].user = 1;
+		}
+		if (src->pages[i].accessed)
+		{
+			dest->pages[i].accessed = 1;
+		}
+		if (src->pages[i].dirty)
+		{
+			dest->pages[i].dirty = 1;
+		}
+		copy_page_physical(src->pages[i].frame*0x1000, dest->pages[i].frame*0x1000);
+	}
+	
+	return dest;
+}
+
+struct PageDir* clone_page_dir(struct PageDir* src)
+{
+	uint32_t phys;
+	
+	struct PageDir* dest = (struct PageDir*)kmalloc(sizeof(struct PageDir),1,&phys);
+	
+	kmemset(dest, 0, sizeof(struct PageDir));
+	
+	uint32_t physOffset = (uint32_t)dest->physicalTables - (uint32_t)dest;
+	
+	dest->physicalAddress = physOffset + phys;
+	
+	for (int i = 0; i < 1024; ++i)
+	{
+		if (!src->tables[i]) continue;
+		
+		if (kernel_dir->tables[i] == src->tables[i])
+		{
+			dest->tables[i] = src->tables[i];
+			dest->physicalTables[i] = src->physicalTables[i];
+		}
+		else
+		{
+			dest->tables[i] = clone_table(src->tables[i], &phys);
+			dest->physicalTables[i] = phys | 0x07;
+		}
+	}
+	return dest;
 }
 
 
