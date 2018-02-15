@@ -42,41 +42,50 @@ void init_paging()
 {
 	uint32_t mem_end = 0x1000000;
 	
-	
+	TRACE_C("Initializing frame collection...\n");
 	init_frame_collection(mem_end/0x1000);
+	TRACE_C("Frame collection initialized.\n");
 	
-	
+	TRACE_C("Allocating kernel_dir...\n");
 	kernel_dir = (struct PageDir*)kmalloc(sizeof(struct PageDir), 1, 0);
+	TRACE_C("kernel_dir allocated.\n");
 	kmemset(kernel_dir, 0, sizeof(struct PageDir));
 	
+	TRACE_C("Getting kheap pages...\n");
 	int i = 0;
 	for (i = KHEAP_START; i < KHEAP_START+KHEAP_INITIAL_SIZE; i += 0x1000)
 	{
 		get_page(i, 1, kernel_dir);
 	}
+	TRACE_C("Pages created.\n");
 	
 	
 	
 	
-	
+	TRACE_C("Allocating frames...\n");
 	i = 0;
 	while (i < kPlacement + 0x1000)
 	{
 		alloc_frame(get_page(i, 1, kernel_dir), 0, 0);
 		i += 0x1000;
 	}
+	TRACE_C("Frames Allocated.\n");
 	
-	
+	TRACE_C("Allocating kheap frames...\n");
 	for (i = KHEAP_START; i < KHEAP_START + KHEAP_INITIAL_SIZE; i += 0x1000)
 	{
 		alloc_frame(get_page(i, 1, kernel_dir), 0, 0);
 	}
+	TRACE_C("kheap frames allocated.\n");
 	
 	register_interrupt_handler(14, page_fault);
+	TRACE_C("Page fault handler registered\n");
 	
 	switch_page_dir(kernel_dir);
+	TRACE_C("Page directory switched\n");
 	
 	kheap = create_heap(KHEAP_START, KHEAP_START + KHEAP_INITIAL_SIZE, KHEAP_MAX_ADDR, 0, 0);
+	TRACE_C("Kernel Heap created.\n");
 }
 
 void switch_page_dir(struct PageDir* dir)
@@ -113,6 +122,7 @@ struct Page* get_page(uint32_t addr, int create, struct PageDir* dir)
 
 void page_fault(Registers_t regs)
 {
+	c_vga_write("PAGE_FAULT\n");
 	uint32_t fault_addr;
 	asm volatile ("mov %%cr2, %0" : "=r" (fault_addr));
 	
@@ -123,6 +133,6 @@ void page_fault(Registers_t regs)
 	int instr_fetch = regs.err_code & 0x10;
 	
 	//TODO
-	c_vga_write("PAGE_FAULT\n");
+	
 	while (1);
 }
