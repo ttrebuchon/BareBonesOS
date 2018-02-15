@@ -2,6 +2,7 @@
 #define INCLUDED_ALLOCATOR_HH
 
 #include "BoolTypes.hh"
+#include "ptrdiff.hh"
 
 namespace Utils
 {
