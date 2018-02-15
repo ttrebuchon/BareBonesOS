@@ -93,7 +93,10 @@ void init_paging()
 	TRACE_C("Kernel Heap created.\n");
 	
 	current_dir = clone_page_dir(kernel_dir);
+	TRACE_C("Kernel page directory cloned.\n");
+
 	switch_page_dir(current_dir);
+	TRACE_C("Switched page directory.\n");
 }
 
 void switch_page_dir(struct PageDir* dir)
@@ -168,10 +171,11 @@ static struct PageTable* clone_table(struct PageTable* src, uint32_t* phys)
 
 struct PageDir* clone_page_dir(struct PageDir* src)
 {
-	uint32_t phys;
-	
+	uint32_t phys = 0;
 	struct PageDir* dest = (struct PageDir*)kmalloc(sizeof(struct PageDir),1,&phys);
-	
+	ASSERT(sizeof(struct PageDir) == 8196);
+	ASSERT(dest != 0);
+	ASSERT(phys != 0);
 	kmemset(dest, 0, sizeof(struct PageDir));
 	
 	uint32_t physOffset = (uint32_t)dest->physicalTables - (uint32_t)dest;
@@ -189,6 +193,7 @@ struct PageDir* clone_page_dir(struct PageDir* src)
 		}
 		else
 		{
+			uint32_t phys;
 			dest->tables[i] = clone_table(src->tables[i], &phys);
 			dest->physicalTables[i] = phys | 0x07;
 		}
