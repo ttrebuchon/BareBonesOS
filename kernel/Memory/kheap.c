@@ -16,7 +16,7 @@ void* kmalloc(uint32_t size, int align, uint32_t* phys)
 		if (phys != 0)
 		{
 			struct Page* page = get_page((uint32_t)addr, 0, kernel_dir);
-			*phys = page->frame*0x1000 + (uint32_t)addr&0xFFF;
+			*phys = page->frame*0x1000 + ((uint32_t)addr&0xFFF);
 		}
 		return addr;
 	}
