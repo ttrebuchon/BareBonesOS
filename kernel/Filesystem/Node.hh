@@ -13,6 +13,7 @@ namespace Kernel { namespace Filesystem {
 
         public:
         uint32_t inode;
+        const char* name;
 
         virtual uint32_t read(uint32_t, uint32_t, uint8_t*) = 0;
         virtual uint32_t write(uint32_t, uint32_t, uint8_t*) = 0;
