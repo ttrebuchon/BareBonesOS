@@ -62,11 +62,14 @@ static int32_t find_smallest_hole(uint32_t size, bool pageAlign, struct KHeap* h
 EXTERN_C struct KHeap* create_heap(uint32_t start, uint32_t end, uint32_t max, uint8_t sup, uint8_t readonly)
 {
     KHeap* heap = (KHeap*)kmalloc(sizeof(KHeap), false, 0x0);
+    TRACE("Heap memory allocated.\n");
     
     ASSERT(start % 0x1000 == 0);
     ASSERT(end % 0x1000 == 0);
     
     new (&heap->index) Utils::OrderedArray<KHeapHeader*, HeapComp>((void*)start, HEAP_INDEX_SIZE);
+    TRACE("Index constructed.\n");
+
     ASSERT(heap->index.size() == 0);
     ASSERT(&heap->index[0] == (void*)start);
 
@@ -78,17 +81,25 @@ EXTERN_C struct KHeap* create_heap(uint32_t start, uint32_t end, uint32_t max, u
         start += 0x1000;
     }
 
+    TRACE("Setting up heap fields...\n");
+
     heap->startAddr = start;
     heap->endAddr = end;
     heap->addrMax = max;
     heap->supervisor = sup;
     heap->readonly = readonly;
 
+    TRACE("Creating initial hole...\n");
     KHeapHeader* hole = (KHeapHeader*)start;
+    TRACE("Hole address identified.\n");
     hole->size = end - start;
+    TRACE("Hole size set.\n");
     hole->magic = HEAP_MAGIC;
+    TRACE("Hole magic set.\n");
     hole->is_hole = 1;
+    TRACE("Hole identified as a hole.\n");
     heap->index.insert(hole);
+    TRACE("Initial hole inserted into index.\n");
     return heap;
 }
 
