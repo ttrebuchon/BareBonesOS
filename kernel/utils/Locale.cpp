@@ -6,7 +6,6 @@ namespace Utils {
 	locale locale::_global(locale::classic());
 	
 	
-	
 	const locale& locale::classic()
 	{
 		static Internal* imp = nullptr;

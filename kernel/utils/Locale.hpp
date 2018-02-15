@@ -33,25 +33,25 @@ namespace Utils {
 	template <class T, class OutputIt>
 	const T* num_put<T, OutputIt>::long_long_str(const long long v, size_t& len, ios_base& str)
 	{
-		assert(false);
+		kassert(false);
 	}
 	
 	template <class T, class OutputIt>
 	const T* num_put<T, OutputIt>::unsigned_long_long_str(const unsigned long long v, size_t& len, ios_base& str)
 	{
-		assert(false);
+		kassert(false);
 	}
 	
 	template <class T, class OutputIt>
 	const T* num_put<T, OutputIt>::long_double_str(const long double v, size_t& len, ios_base& str)
 	{
-		assert(false);
+		kassert(false);
 	}
 	
 	template <class T, class OutputIt>
 	const T* num_put<T, OutputIt>::ptr_str(const void* v, size_t& len, ios_base& str)
 	{
-		assert(false);
+		kassert(false);
 	}
 	
 	template <class T>

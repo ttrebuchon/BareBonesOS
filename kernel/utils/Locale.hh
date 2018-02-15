@@ -2,7 +2,7 @@
 #define INCLUDED_LOCALE_HH
 
 #include <Common.h>
-#include <cassert>
+#include <Debug.h>
 #include "Iterator.hh"
 #include <kernel/utils/StringFwd.hh>
 
