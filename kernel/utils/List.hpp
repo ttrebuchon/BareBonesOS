@@ -53,6 +53,22 @@ namespace Utils
 	{
 		return _size;
 	}
+
+	template <class T, class A>
+	typename List<T, A>::iterator List<T, A>::begin()
+	{
+		iterator it;
+		it.n = head;
+		return it;
+	}
+
+	template <class T, class A>
+	typename List<T, A>::iterator List<T, A>::end()
+	{
+		iterator it;
+		it.n = nullptr;
+		return it;
+	}
 	
 	
 }

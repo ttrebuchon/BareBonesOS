@@ -56,6 +56,31 @@ namespace Utils
 		class iterator
 		{
 			Node* n;
+
+			public:
+
+			iterator& operator++()
+			{
+				n = n->next;
+				return *this;
+			}
+
+			bool operator==(const iterator it2) const
+			{
+				return n == it2.n;
+			}
+
+			bool operator!=(const iterator it2) const
+			{
+				return n != it2.n;
+			}
+
+			T& operator*()
+			{
+				return reinterpret_cast<T&>(*n->elem);
+			}
+
+			friend List<T, Alloc>;
 		};
 		
 		protected:
@@ -83,6 +108,9 @@ namespace Utils
 		void push_back(T&&);
 
 		size_type size() const;
+
+		iterator begin();
+		iterator end();
 	};
 	
 	
