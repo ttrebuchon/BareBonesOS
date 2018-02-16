@@ -82,6 +82,58 @@ namespace Drivers
     //     //TODO
     // }
 
+    void VGA::Write(const void* addr)
+    {
+        int32_t tmp;
+        uint32_t n = (uint32_t)addr;
+
+        Write("0x");
+        bool nZeroes = 1;
+
+
+        for (int i = 28; i > 0; i -= 4)
+        {
+            tmp = (n >> i) & 0xF;
+            if (tmp == 0 && nZeroes)
+            {
+                continue;
+            }
+
+            if (tmp >= 0xA)
+            {
+                nZeroes = false;
+                PutChar(tmp-0xA+'a');
+            }
+            else
+            {
+                nZeroes = false;
+                PutChar(tmp+'0');
+            }
+        }
+
+        tmp = n & 0xF;
+        if (tmp >= 0xA)
+        {
+            PutChar(tmp-0xA+'a');
+        }
+        else
+        {
+            PutChar(tmp+'0');
+        }
+    }
+
+    void VGA::Write(const bool val)
+    {
+        if (val)
+        {
+            Write("true");
+        }
+        else
+        {
+            Write("false");
+        }
+    }
+
 }
 
 

@@ -60,6 +60,8 @@ namespace Drivers
         static void Write(const char* cstr, const size_t len);
         static void Write(const char* cstr);
         //static void Write(const Utils::String str);
+        static void Write(const void* ptr);
+        static void Write(const bool);
 
     };
 
