@@ -74,6 +74,7 @@ namespace Drivers
 #endif
 
 EXTERN_C void c_vga_write(const char*);
+EXTERN_C void c_vga_write_addr(const void*);
 
 
 

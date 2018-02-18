@@ -141,3 +141,8 @@ EXTERN_C void c_vga_write(const char* cstr)
 {
     Drivers::VGA::Write(cstr);
 }
+
+EXTERN_C void c_vga_write_addr(const void* addr)
+{
+    Drivers::VGA::Write(addr);
+}
