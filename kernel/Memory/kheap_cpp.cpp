@@ -1,25 +1,9 @@
-#include "kheap.h"
+#include "kheap.hh"
 #include "Paging.h"
 #include <kernel/utils/OrderedArray.hh>
 #include <kernel/Debug.h>
 
-struct HeapComp
-{
-    bool operator()(const struct KHeapHeader* left, const struct KHeapHeader* right) const
-    {
-        return left->size < right->size;
-    }
-};
 
-extern "C" struct KHeap
-{
-    Utils::OrderedArray<struct KHeapHeader*, HeapComp> index;
-    uint32_t startAddr;
-    uint32_t endAddr;
-    uint32_t addrMax;
-    uint8_t supervisor;
-    uint8_t readonly;
-};
 
 
 
