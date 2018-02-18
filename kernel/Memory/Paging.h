@@ -11,13 +11,25 @@ extern "C" {
 
 struct Page
 {
+	#ifdef FIXED_PAGE_STRUCT
 	uint32_t present : 1;
 	uint32_t rw : 1;
 	uint32_t user : 1;
+	uint32_t reserved : 2;
 	uint32_t accessed : 1;
 	uint32_t dirty : 1;
-	uint32_t unused : 7;
+	uint32_t reserved2 : 2;
+	uint32_t avail : 3;
 	uint32_t frame : 20;
+	#else
+	// uint32_t present : 1;
+	// uint32_t rw : 1;
+	// uint32_t user : 1;
+	// uint32_t accessed : 1;
+	// uint32_t dirty : 1;
+	// uint32_t unused : 7;
+	// uint32_t frame : 20;
+	#endif
 };
 
 struct PageTable
@@ -25,12 +37,25 @@ struct PageTable
 	struct Page pages[1024];
 };
 
+struct PageDir_Entry
+{
+	uint32_t present : 1;
+	uint32_t rw : 1;
+	uint32_t user : 1;
+	uint32_t w_through : 1;
+	uint32_t cache : 1;
+	uint32_t access : 1;
+	uint32_t reserved : 1;
+	uint32_t page_size : 1;
+	uint32_t global : 1;
+	uint32_t avail : 3;
+	uint32_t frame : 20;
+} __attribute__((packed));
+
 struct PageDir
 {
-	struct PageTable* tables[1024];
-	uint32_t physicalTables[1024];
-	
-	uint32_t physicalAddress;
+	struct PageDir_Entry tables[1024];
+	struct PageTable* ref_tables[1024];
 };
 
 extern struct PageDir* kernel_dir;

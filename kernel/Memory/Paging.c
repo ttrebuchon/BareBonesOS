@@ -18,8 +18,8 @@ void alloc_frame(struct Page* page, int is_kernel, int is_writeable)
 	ASSERT(first_frame(&index));
 	set_frame(index);
 	page->present = 1;
-	page->rw = is_writeable ? 1 : 0;
-	page->user = is_kernel ? 0 : 1;
+	page->rw = (is_writeable == 1) ? 1 : 0;
+	page->user = (is_kernel == 1) ? 0 : 1;
 	page->frame = index;
 }
 
@@ -30,6 +30,32 @@ void free_frame(struct Page* page)
 		clear_frame(page->frame);
 		page->frame = 0x0;
 	}
+}
+
+void* virtual_to_physical(struct PageDir* dir, void* virt_addr)
+{
+	uint32_t page_dir_index = ((uint32_t)virt_addr)/(1024*4096); // >> 22
+	uint32_t page_table_index = (((uint32_t)virt_addr)/4096)&0x3ff;
+	uint32_t frame_offset = ((uint32_t)virt_addr)&0xfff;
+
+	ASSERT((((uint32_t)virt_addr) >> 22) == page_dir_index);
+	ASSERT(((((uint32_t)virt_addr) >> 12) & 0x3ff) == page_table_index);
+	ASSERT((((uint32_t)virt_addr) & 0xfff) == frame_offset);
+
+	if (!dir->ref_tables[page_dir_index])
+	{
+		return 0x0;
+	}
+	
+	struct PageTable* table = dir->ref_tables[page_dir_index];
+	if (!table->pages[page_table_index].present)
+	{
+		return 0x0;
+	}
+
+	uint32_t t = table->pages[page_table_index].frame;
+	t = (t << 12) + frame_offset;
+	return (void*)t;
 }
 
 
@@ -49,12 +75,13 @@ void init_paging()
 	TRACE_C("Frame collection initialized.\n");
 	
 	TRACE_C("Allocating kernel_dir...\n");
-	kernel_dir = (struct PageDir*)kmalloc(sizeof(struct PageDir), 1, 0);
+	uint32_t phys;
+	kernel_dir = (struct PageDir*)kmalloc(sizeof(struct PageDir), 1, &phys);
 	TRACE_C("kernel_dir allocated.\n");
 	kmemset(kernel_dir, 0, sizeof(struct PageDir));
+	ASSERT(phys == (uint32_t)&kernel_dir->tables);
 	
-	
-	kernel_dir->physicalAddress = (uint32_t)kernel_dir->physicalTables;
+	//kernel_dir->physicalAddress = (uint32_t)kernel_dir->physicalTables;
 	
 	TRACE_C("Getting kheap pages...\n");
 	int i = 0;
@@ -86,23 +113,36 @@ void init_paging()
 	register_interrupt_handler(14, page_fault);
 	TRACE_C("Page fault handler registered\n");
 	
+	current_dir = 0x0;
 	switch_page_dir(kernel_dir);
 	TRACE_C("Page directory switched\n");
-	
+
 	kheap = create_heap(KHEAP_START, KHEAP_START + KHEAP_INITIAL_SIZE, KHEAP_MAX_ADDR, 0, 0);
 	TRACE_C("Kernel Heap created.\n");
 	
 	current_dir = clone_page_dir(kernel_dir);
 	TRACE_C("Kernel page directory cloned.\n");
-
+	
 	switch_page_dir(current_dir);
 	TRACE_C("Switched page directory.\n");
 }
 
 void switch_page_dir(struct PageDir* dir)
 {
+	uint32_t phys;
+	if (current_dir == 0)
+	{
+		phys = (uint32_t)&dir->tables;
+	}
+	else
+	{
+		phys = virtual_to_physical(current_dir, &dir->tables);
+	}
+	ASSERT(phys != 0);
 	current_dir = dir;
-	asm volatile ("mov %0, %%cr3":: "r"(dir->physicalAddress));
+	// asm volatile ("mov %0, %%cr3":: "r"(dir->physicalAddress));
+	
+	asm volatile ("mov %0, %%cr3":: "r"(phys));
 	uint32_t cr0;
 	asm volatile ("mov %%cr0, %0" : "=r"(cr0));
 	cr0 |= 0x80000000;
@@ -111,23 +151,46 @@ void switch_page_dir(struct PageDir* dir)
 
 struct Page* get_page(uint32_t addr, int create, struct PageDir* dir)
 {
+	//ASSERT(addr != 0xf0000000);
 	addr /= 0x1000;
 	uint32_t tableIndex = addr / 1024;
-	
-	if (dir->tables[tableIndex])
+
+
+	struct PageTable* entry;
+	if (dir->ref_tables[tableIndex])
 	{
-		return &dir->tables[tableIndex]->pages[addr % 1024];
+		entry = dir->ref_tables[tableIndex];
+		//return &dir->tables[tableIndex]->pages[addr % 1024];
 	}
 	else if (create)
 	{
 		uint32_t phys;
-		dir->tables[tableIndex] = (struct PageTable*)kmalloc(sizeof(struct PageTable), 1, &phys);
-		kmemset(dir->tables[tableIndex], 0, sizeof(struct PageTable));
-		dir->physicalTables[tableIndex] = phys | 0x7;
-		return &dir->tables[tableIndex]->pages[addr % 1024];
+		dir->ref_tables[tableIndex] = (struct PageTable*)kmalloc(sizeof(struct PageTable), 1, &phys);
+		kmemset(dir->ref_tables[tableIndex], 0, sizeof(struct PageTable));
+		uint32_t t = (uint32_t)virtual_to_physical(kernel_dir, dir->ref_tables[tableIndex]);
+		//Might need to get rid of the >> 12 bit?
+		c_vga_write_addr((void*)t);
+		c_vga_write("\n");
+		c_vga_write_addr((void*)phys);
+		c_vga_write("\n");
+		//ASSERT(t >> 12 == phys);
+		if (t != 0)
+		{
+			ASSERT(phys == t);
+		}
+		dir->tables[tableIndex].frame = phys >> 12;
+		dir->tables[tableIndex].present = 1;
+		dir->tables[tableIndex].rw = 1;
+		dir->tables[tableIndex].user = 1;
+		dir->tables[tableIndex].page_size = 0;
+		entry = dir->ref_tables[tableIndex];
+	}
+	else
+	{
+		return 0x0;
 	}
 	
-	return 0x0;
+	return &entry->pages[addr % 1024];
 	
 }
 
@@ -173,29 +236,37 @@ struct PageDir* clone_page_dir(struct PageDir* src)
 {
 	uint32_t phys = 0;
 	struct PageDir* dest = (struct PageDir*)kmalloc(sizeof(struct PageDir),1,&phys);
-	ASSERT(sizeof(struct PageDir) == 8196);
+	ASSERT(sizeof(struct PageDir_Entry) == 4);
+	ASSERT(sizeof(struct PageDir) == 8192);
 	ASSERT(dest != 0);
 	ASSERT(phys != 0);
 	kmemset(dest, 0, sizeof(struct PageDir));
 	
-	uint32_t physOffset = (uint32_t)dest->physicalTables - (uint32_t)dest;
+	uint32_t physOffset = (uint32_t)&dest->tables - (uint32_t)dest;
 	
-	dest->physicalAddress = physOffset + phys;
+	//dest->physicalAddress = physOffset + phys;
 	
 	for (int i = 0; i < 1024; ++i)
 	{
-		if (!src->tables[i]) continue;
+		if (!src->ref_tables[i]) continue;
 		
-		if (kernel_dir->tables[i] == src->tables[i])
+		if (kernel_dir->ref_tables[i] == src->ref_tables[i])
 		{
 			dest->tables[i] = src->tables[i];
-			dest->physicalTables[i] = src->physicalTables[i];
+			dest->ref_tables[i] = src->ref_tables[i];
 		}
 		else
 		{
+			ASSERT(0);
 			uint32_t phys;
-			dest->tables[i] = clone_table(src->tables[i], &phys);
-			dest->physicalTables[i] = phys | 0x07;
+			dest->ref_tables[i] = clone_table(src->ref_tables[i], &phys);
+			uint32_t phys2 = (uint32_t)virtual_to_physical(src, dest->ref_tables[i]);
+			ASSERT(phys == phys2);
+			ASSERT(phys != phys2);
+			dest->tables[i].frame = phys >> 12;
+			dest->tables[i].user = src->tables[i].user;
+			dest->tables[i].rw = src->tables[i].rw;
+			dest->tables[i].present = src->tables[i].present;
 		}
 	}
 	return dest;
