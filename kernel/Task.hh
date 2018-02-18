@@ -3,10 +3,14 @@
 
 #include <Common.h>
 
-struct PageDir;
+
+
 
 START_NS(Kernel)
 
+namespace Memory {
+	class PageDir;
+}
 
 class Task
 {
@@ -16,7 +20,7 @@ class Task
 	int id;
 	addr_t esp, ebp;
 	uint32_t instr_ptr;
-	PageDir* page_dir;
+	Memory::PageDir* page_dir;
 };
 
 #ifdef __cplusplus

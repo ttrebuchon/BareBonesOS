@@ -4,17 +4,19 @@
 #include <kernel/Interrupts.h>
 #include <kernel/Interrupts/IDT.h>
 #include <kernel/Registers.h>
-#include <kernel/Memory/Paging.h>
+#include <kernel/Memory/Paging.hh>
 #include <kernel/Timer.h>
 #include <kernel/utils/OrderedList.hh>
 #include <kernel/KernelAllocator.hh>
-#include <kernel/Memory/kheap.h>
+#include <kernel/Memory/kheap.hh>
 #include <kernel/Debug.h>
 #include <kernel/Filesystem/initrd.hh>
 #include <kernel/Filesystem/Node.hh>
 #include <kernel/Filesystem/initrd/DirectoryNode.hh>
 #include <drivers/Disk/AHCI.hh>
 #include <drivers/PCI.hh>
+#include <kernel/Task.hh>
+#include <boot/multiboot.h>
 
 
 #if !defined(__cplusplus)
@@ -108,9 +110,13 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     Drivers::VGA::Write("Initializing timer...\n");
     init_timer(50);
     Drivers::VGA::Write("Timer initialized.\n");
+    ASSERT(init_esp != 0);
+    ASSERT(mboot_ptr != 0);
     Drivers::VGA::Write("Initializing paging...\n");
-    init_paging();
+    Kernel::Memory::init_paging();
     Drivers::VGA::Write("Paging initialized.\n");
+    //Kernel::init_tasking();
+    Drivers::VGA::Write("Tasking initialized.\n");
 
     Drivers::VGA::Write("Hello, kernel world!\nThis is a test.\n");
 
@@ -149,7 +155,7 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
 
     
     {
-        ASSERT(kheap != 0x0);
+        ASSERT(Kernel::Memory::kheap != 0x0);
         auto y = new int;
         auto z = new int;
         delete y;
@@ -173,15 +179,17 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     Drivers::VGA::Write(fs->name);
     Drivers::VGA::Write("\n");
 
-    for (int i = 0; i < 256; ++i)
-    {
-        auto x = Drivers::PCI::ConfigReadWord(i, i, 0, 2);
-        if (x == 0xFFFF)
-        {
-            Drivers::VGA::Write("x was 0xFFFF!\n");
-        }
-    }
+    // for (int i = 0; i < 256; ++i)
+    // {
+    //     auto x = Drivers::PCI::ConfigReadWord(i, i, 0, 2);
+    //     if (x == 0xFFFF)
+    //     {
+    //         Drivers::VGA::Write("x was 0xFFFF!\n");
+    //     }
+    // }
     
+
+    //Kernel::fork();
 
     Drivers::VGA::Write("Kernel main() is finished!!\n");
     return 0;
