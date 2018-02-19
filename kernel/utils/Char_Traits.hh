@@ -41,7 +41,7 @@ namespace Utils
 		
 		static char_type* copy(char_type* dest, const char_type* src, size_t n)
 		{
-			for (int i = 0; i < n; ++i)
+			for (unsigned int i = 0; i < n; ++i)
 			{
 				dest[i] = src[i];
 			}

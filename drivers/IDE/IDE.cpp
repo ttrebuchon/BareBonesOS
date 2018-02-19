@@ -1,5 +1,6 @@
 #include "IDE.hh"
 #include <drivers/PortIO.h>
+#include <kernel/Debug.h>
 
 
 // https://wiki.osdev.org/IDE
@@ -12,7 +13,7 @@ namespace Drivers { namespace IDE {
 	
 	unsigned char Device::read(const Channel channel, const Register reg)
 	{
-		unsigned char result;
+		unsigned char result = 0;
 		
 		
 		if (reg > 0x07 && reg < 0x0C)
@@ -35,6 +36,10 @@ namespace Drivers { namespace IDE {
 		else if (reg < 0x16)
 		{
 			result = port_byte_in(Channels[(unsigned char)channel].bmide + (unsigned char)reg - 0x0E);
+		}
+		else
+		{
+			ASSERT(false);
 		}
 		
 		if (reg > 0x07 && reg < 0x0C)

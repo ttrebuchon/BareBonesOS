@@ -59,7 +59,7 @@ namespace Kernel { namespace Filesystem {
 		
 		void* ptr = entries;
 		void* tmp;
-		for (int j = 0; j < count; ++j)
+		for (unsigned int j = 0; j < count; ++j)
 		{
 			Node* entry = readRecord(ptr, &tmp);
 			dir->addChild(entry);

@@ -29,7 +29,7 @@ int c_int_to_str(int n, char* cstr, unsigned int max_len)
 
     base /= 10;
 
-    int i = 0;
+    unsigned int i = 0;
     uint32_t tmp;
     while (base > 0)
     {

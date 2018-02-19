@@ -11,7 +11,7 @@ namespace Drivers {
 		uint32_t lfunc = (uint32_t)func;
 		uint16_t tmp = 0;
 		
-		address = (uint32_t)((lbus << 16) | (lslot << 11) | (lfunc << 8) | (offset << 0xfc) | ((uint32_t)0x80000000));
+		address = (uint32_t)((lbus << 16) | (lslot << 11) | (lfunc << 8) | (offset & 0xfc) | ((uint32_t)0x80000000));
 		
 		port_long_out(0xCF8, address);
 
@@ -36,5 +36,8 @@ namespace Drivers {
 		uint16_t vendorID;
 
 		//vendorID = CheckVendor(bus, 
+
+		//TODO
+		return false;
 	}
 }

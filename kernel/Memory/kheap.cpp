@@ -69,7 +69,7 @@ namespace Kernel { namespace Memory {
             {
                 uint32_t loc = (uint32_t)header;
                 int32_t offset = 0;
-                if (loc + sizeof(struct KHeapHeader) & 0xFFFFF000 != 0)
+                if (((loc + sizeof(struct KHeapHeader)) & 0xFFFFF000) != 0)
                 {
                     offset = 0x1000 - (loc+sizeof(struct KHeapHeader))%0x1000;
                 }
@@ -111,7 +111,7 @@ namespace Kernel { namespace Memory {
 
         start += sizeof(KHeapHeader*)*HEAP_INDEX_SIZE;
 
-        if (start & 0xFFFFF000 != 0)
+        if ((start & 0xFFFFF000) != 0)
         {
             start &= 0xFFFFF000;
             start += 0x1000;
@@ -143,7 +143,7 @@ namespace Kernel { namespace Memory {
 
         ASSERT(nSize > _endAddr - _startAddr);
 
-        if (nSize & 0xFFFFF000 != 0)
+        if ((nSize & 0xFFFFF000) != 0)
         {
             nSize &= 0xFFFFF000;
             nSize += 0x1000;
@@ -197,9 +197,9 @@ namespace Kernel { namespace Memory {
             uint32_t newLen = _endAddr - _startAddr;
 
             it = 0;
-            size_t idx = -1;
+            int32_t idx = -1;
             uint32_t value = 0x0;
-            while (it < index.size())
+            while (it < (int32_t)index.size())
             {
                 uint32_t tmp = (uint32_t)index[it];
                 if (tmp > value)

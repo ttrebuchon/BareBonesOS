@@ -39,8 +39,11 @@ SYSROOT = sysroot
 CRTBEGIN_OBJ = $(shell $(CC) $(CFLAGS) -print-file-name=crtbegin.o)
 CRTEND_OBJ = $(shell $(CC) $(CFLAGS) -print-file-name=crtend.o)
 
-CFLAGS	= -nostdlib $(WARNINGS_FLAGS) -ffreestanding -Og -MMD -I. -Werror-implicit-function-declaration --sysroot=$(SYSROOT) #-D_TRACE
-CXX_FLAGS	= -std=c++14 -nostdlib $(WARNINGS_FLAGS) -ffreestanding -Og -MMD -I. -fno-exceptions -fno-rtti --sysroot=$(SYSROOT) #-D_TRACE
+NO_WARN = -Wno-unused-parameter -Wno-unused-variable -Wno-unused-but-set-variable -Wno-unused-function
+
+BOTH_FLAGS += -DFIXED_PAGE_STRUCT -D_TRACE $(NO_WARN)
+CFLAGS	= -nostdlib $(WARNINGS_FLAGS) -ffreestanding -Og -MMD -I. -Werror-implicit-function-declaration --sysroot=$(SYSROOT) $(BOTH_FLAGS)
+CXX_FLAGS	= -std=c++14 -nostdlib $(WARNINGS_FLAGS) -ffreestanding -Og -MMD -I. -fno-exceptions -fno-rtti --sysroot=$(SYSROOT) $(BOTH_FLAGS)
 ASM_FLAGS	= 
 
 all: myos.iso
