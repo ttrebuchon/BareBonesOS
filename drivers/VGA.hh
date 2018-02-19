@@ -62,7 +62,7 @@ namespace Drivers
         //static void Write(const Utils::String str);
         static void Write(const void* ptr);
         static void Write(const bool);
-
+        static void Write(const uint32_t);
     };
 
 
