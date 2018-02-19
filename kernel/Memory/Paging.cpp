@@ -70,7 +70,7 @@ namespace Kernel { namespace Memory
 		//kernel_dir->physicalAddress = (uint32_t)kernel_dir->physicalTables;
 		
 		TRACE_C("Getting kheap pages...\n");
-		int i = 0;
+		unsigned int i = 0;
 		for (i = KHEAP_START; i < KHEAP_START+KHEAP_INITIAL_SIZE; i += 0x1000)
 		{
 			kernel_dir->getPage(i, 1);
@@ -111,11 +111,11 @@ namespace Kernel { namespace Memory
 		kheap = new KHeap(KHEAP_START, KHEAP_START + KHEAP_INITIAL_SIZE, KHEAP_MAX_ADDR, 0, 0);
 		TRACE_C("Kernel Heap created.\n");
 		
-		// current_dir = clone_page_dir(kernel_dir);
-		// TRACE_C("Kernel page directory cloned.\n");
+		auto tmp_dir = kernel_dir->clone();
+		TRACE_C("Kernel page directory cloned.\n");
 		
-		// switch_page_dir(current_dir);
-		// TRACE_C("Switched page directory.\n");
+		switch_page_dir(tmp_dir);
+		TRACE_C("Switched page directory.\n");
 	}
 
 	void switch_page_dir(struct PageDir* dir)
@@ -213,10 +213,13 @@ namespace Kernel { namespace Memory
 		asm volatile ("mov %%cr2, %0" : "=r" (fault_addr));
 		
 		bool present = !(regs.err_code & 0x1);
-		bool rw = (regs.err_code & 0x2 != 0);
-		bool usr = (regs.err_code & 0x4 != 0);
-		bool reserved = (regs.err_code & 0x8 != 0);
-		bool instr_fetch = (regs.err_code & 0x10 != 0);
+		bool rw = (regs.err_code & 0x2);
+		bool usr = ((regs.err_code & 0x4) != 0);
+		bool reserved = ((regs.err_code & 0x8) != 0);
+		bool instr_fetch = ((regs.err_code & 0x10) != 0);
+
+		uint32_t upperBits = ((uint32_t)fault_addr) >> 22;
+		uint32_t midBits = (((uint32_t)fault_addr) << 10) >> 22;
 		
 		//TODO
 		Drivers::VGA::Write("Addr: ");
@@ -224,7 +227,7 @@ namespace Kernel { namespace Memory
 		Drivers::VGA::Write("\n");
 		Drivers::VGA::Write("Present: ");
 		Drivers::VGA::Write(present);
-		Drivers::VGA::Write("\nRead/Write: ");
+		Drivers::VGA::Write("\nRead Only: ");
 		Drivers::VGA::Write(rw);
 		Drivers::VGA::Write("\nUser Mode: ");
 		Drivers::VGA::Write(usr);
@@ -236,10 +239,41 @@ namespace Kernel { namespace Memory
 		Drivers::VGA::Write((void*)regs.eip);
 		Drivers::VGA::Write("\n");
 
-		auto pg = current_dir->getPage(fault_addr, 0);
-		Drivers::VGA::Write("\n\n");
-		Drivers::VGA::Write("Read/Write: ");
-		Drivers::VGA::Write(pg->rw == 1);
+		// auto pg = current_dir->getPage(fault_addr, 0);
+		// Drivers::VGA::Write("\n\n");
+		// Drivers::VGA::Write("Read/Write: ");
+		// Drivers::VGA::Write(pg->rw == 1);
+
+		Drivers::VGA::Write("                                             \n");
+		Drivers::VGA::Write("                                             \r");
+		Drivers::VGA::Write("Upper Bits: ");
+		Drivers::VGA::Write((void*)upperBits);
+		Drivers::VGA::Write("\n");
+		Drivers::VGA::Write("                                             \r");
+		Drivers::VGA::Write("Middle Bits: ");
+		Drivers::VGA::Write((void*)midBits);
+		Drivers::VGA::Write("\n");
+		Drivers::VGA::Write("Combined Bits:                ");
+		Drivers::VGA::Write((void*)((fault_addr >> 12)));
+		
+		Drivers::VGA::Write("\nTable Present?   ");
+		Drivers::VGA::Write(current_dir->tables[upperBits].present == 1);
+		Drivers::VGA::Write("\nTable R/W?   ");
+		Drivers::VGA::Write(current_dir->tables[upperBits].rw == 1);
+		Drivers::VGA::Write("\nTable User?   ");
+		Drivers::VGA::Write(current_dir->tables[upperBits].user == 1);
+		Drivers::VGA::Write("\nTable Cache?   ");
+		Drivers::VGA::Write(current_dir->tables[upperBits].cache == 1);
+		Drivers::VGA::Write("\nTable Accessed?   ");
+		Drivers::VGA::Write(current_dir->tables[upperBits].access == 1);
+		
+		ASSERT(current_dir->ref_tables[upperBits] != 0);
+
+		Drivers::VGA::Write("\nPage Present?   ");
+		Drivers::VGA::Write(current_dir->ref_tables[upperBits]->pages[midBits].present == 1);
+		
+		
+		
 		
 		while (1);
 	}

@@ -138,12 +138,12 @@ namespace Kernel { namespace Memory {
 
     PageDir* PageDir::clone() const
 	{
-		//uint32_t phys = 0;
-		//PageDir* dest = (struct PageDir*)kmalloc(sizeof(struct PageDir),1,&phys);
-        PageDir* dest = new PageDir();
+		uint32_t phys = 0;
+		PageDir* dest = (struct PageDir*)kmalloc(sizeof(struct PageDir),1,&phys);
+        //PageDir* dest = new PageDir();
 		ASSERT(dest != 0);
 		//ASSERT(phys != 0);
-		//kmemset(dest, 0, sizeof(struct PageDir));
+		kmemset(dest, 0, sizeof(struct PageDir));
 		
 		uint32_t physOffset = (uint32_t)&dest->tables - (uint32_t)dest;
 		
