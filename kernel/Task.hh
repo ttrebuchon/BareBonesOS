@@ -32,7 +32,7 @@ void init_tasking();
 void task_switch();
 int fork();
 int getpid();
-
+size_t taskLength();
 
 
 #ifdef __cplusplus

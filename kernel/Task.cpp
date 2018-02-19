@@ -29,10 +29,12 @@ static void move_stack(void* new_addr, uint32_t size)
 	Drivers::VGA::Write("Heap End Address: ");
 	Drivers::VGA::Write((void*)Memory::kheap->endAddr());
 	Drivers::VGA::Write("\n");
+	auto pg = Memory::current_dir->getPage((uint32_t)new_addr, 0);
+	ASSERT(pg == 0x0);
 	addr_t i;
 	for (i = (addr_t)new_addr; i >= ((addr_t)new_addr) - size; i -= 0x1000)
 	{
-		auto pg = Memory::current_dir->getPage(i, 1);
+		pg = Memory::current_dir->getPage(i, 1);
 		ASSERT(!pg->present);
 		ASSERT(pg->frame == 0);
 		Memory::current_dir->getPage(i, 1)->alloc_frame(0, 1);
@@ -55,11 +57,11 @@ static void move_stack(void* new_addr, uint32_t size)
 	uint32_t pd_addr;
 	asm volatile ("mov %%cr3, %0" : "=r"(pd_addr));
 	asm volatile ("mov %0, %%cr3" : : "r"(pd_addr));
+	//asm volatile ("invlpg %0" : : "r"((uint32_t)new_addr));
 
 	((char*)new_addr)[1] = 4;
 
 	ASSERT((addr_t)new_addr == 0xF0000000);
-	ASSERT(false);
 	
 	
 	addr_t oldSP, oldBP;
@@ -74,25 +76,30 @@ static void move_stack(void* new_addr, uint32_t size)
 	newSP = oldSP + offset;
 	newBP = oldBP + offset;
 
-	auto pg = Memory::current_dir->getPage(((addr_t)new_addr) - 0x1000 + 100, 0);
-	if (pg != 0)
+	pg = Memory::current_dir->getPage(((addr_t)new_addr) - 0x1000 + 100, 0);
+	ASSERT(pg != 0);
+	ASSERT(pg->rw == 1);
+
+
+	pg = Memory::current_dir->getPage((uint32_t)newSP, 0);
+	ASSERT(pg != 0);
+	ASSERT(pg->rw);
+	ASSERT(pg->present);
+	// ::memcpy((void*)newSP, (void*)oldSP, init_esp-oldSP);
+	TRACE("Copying stack...\n");
+	for (unsigned int j = 0; j < (init_esp-oldSP)/sizeof(char); ++j)
 	{
-		ASSERT(pg->rw == 1);
+		((char*)newSP)[j] = ((char*)oldSP)[j];
+		TRACE("byte copied.\n");
 	}
-
-
-	((char*)new_addr)[-0x1000 + 100] = 4;
-	//::memcpy((void*)newSP, (void*)oldSP, init_esp-oldSP);
+	TRACE("Stack copied.\n");
 	
-	// for (int j = 0; j < (init_esp-oldSP)/sizeof(char); ++j)
-	// {
-	// 	((char*)newSP)[j] = ((char*)oldSP)[j];
-	// }
-	while (1);
+	Memory::switch_page_dir(Memory::current_dir);
 	
 	for (i = (addr_t)new_addr; i > (addr_t)new_addr - size; i -= sizeof(addr_t))
 	{
 		addr_t tmp = *(addr_t*)i;
+		TRACE("Data read...\n");
 		
 		
 		if ((oldSP < tmp) && (tmp < init_esp))
@@ -102,7 +109,7 @@ static void move_stack(void* new_addr, uint32_t size)
 			*tmp2 = tmp;
 		}
 	}
-	
+	while (1);
 	
 	asm volatile ("mov %0, %%esp" : : "r"(newSP));
 	asm volatile ("mov %0, %%ebp" : : "r"(newBP));
@@ -121,7 +128,7 @@ void init_tasking()
 {
 	asm volatile ("cli");
 	
-	move_stack((void*)0xF0000000, 0x2000);
+	//move_stack((void*)0xF0000000, 0x2000);
 	
 	Task::current_task = new Task;
 	
@@ -182,7 +189,13 @@ extern "C" void task_switch()
 	asm volatile ("mov %%ebp, %0" : "=r"(ebp));
 	
 	eip = read_eip();
-	if (eip == EIP_MAGIC) return;
+	if (eip == EIP_MAGIC)
+	{
+		//DEBUG
+		TRACE("Task rezzed.\n");
+		while (1);
+		return;
+	}
 	
 	
 	Task::current_task->esp = esp;
@@ -208,7 +221,8 @@ extern "C" void task_switch()
 
 	Memory::current_dir = Task::current_task->page_dir;
 
-
+	uint32_t dir_phys = (uint32_t)virtual_to_physical(Memory::current_dir, &Memory::current_dir->tables);
+	ASSERT(dir_phys != 0);
 
 	asm volatile("	\
 	cli;	\
@@ -218,7 +232,10 @@ extern "C" void task_switch()
 	mov %3, %%cr3;	\
 	mov $0x12345, %%eax;	\
 	sti;	\
-	jmp *%%ecx	" : : "r"(eip), "r"(esp), "r"(ebp), "r"(&Memory::current_dir));
+	jmp *%%ecx	" : : "r"(eip), "r"(esp), "r"(ebp), "r"(dir_phys));
+	
+	//Should never reach here
+	while (1);
 }
 
 
@@ -226,6 +243,11 @@ extern "C" void task_switch()
 void add_to_queue(Task* t)
 {
 	tasks->push_back(t);
+}
+
+size_t taskLength()
+{
+	return tasks->size();
 }
 
 }
