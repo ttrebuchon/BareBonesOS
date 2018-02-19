@@ -6,11 +6,14 @@
 
 #define DEFAULT_FREQ 1193180
 
+void task_switch();
+
 uint32_t ticks = 0;
 
 static void timer_callback(Registers_t regs)
 {
 	++ticks;
+	task_switch();
 }
 
 void init_timer(uint32_t freq)
