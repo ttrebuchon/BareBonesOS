@@ -35,9 +35,10 @@ static void move_stack(void* new_addr, uint32_t size)
 	for (i = (addr_t)new_addr; i >= ((addr_t)new_addr) - size; i -= 0x1000)
 	{
 		pg = Memory::current_dir->getPage(i, 1);
-		ASSERT(!pg->present);
-		ASSERT(pg->frame == 0);
-		Memory::current_dir->getPage(i, 1)->alloc_frame(0, 1);
+		if (!pg->present)
+		{
+			pg->alloc_frame(0, 1);
+		}
 		auto pg2 = Memory::current_dir->getPage(i, 0);
 		ASSERT(pg == pg2);
 		ASSERT(pg2->present);
@@ -59,7 +60,7 @@ static void move_stack(void* new_addr, uint32_t size)
 	asm volatile ("mov %0, %%cr3" : : "r"(pd_addr));
 	//asm volatile ("invlpg %0" : : "r"((uint32_t)new_addr));
 
-	((char*)new_addr)[1] = 4;
+	//((char*)new_addr)[1] = 4;
 
 	ASSERT((addr_t)new_addr == 0xF0000000);
 	
@@ -87,10 +88,43 @@ static void move_stack(void* new_addr, uint32_t size)
 	ASSERT(pg->present);
 	// ::memcpy((void*)newSP, (void*)oldSP, init_esp-oldSP);
 	TRACE("Copying stack...\n");
-	for (unsigned int j = 0; j < (init_esp-oldSP)/sizeof(char); ++j)
+	for (unsigned int j = 1; j < (init_esp-oldSP)/sizeof(unsigned char); ++j)
 	{
-		((char*)newSP)[j] = ((char*)oldSP)[j];
+		// pg = Memory::current_dir->getPage(oldSP, 0);
+		// ASSERT(pg != 0);
+		// ASSERT(pg != nullptr);
+		// ASSERT(pg->present);
+		// pg->rw = true;
+		// pg = Memory::current_dir->getPage(oldSP, 0);
+		// ASSERT(pg != 0);
+		// ASSERT(pg->rw);
+		// asm volatile ("mov %%cr3, %0" : "=r"(pd_addr));
+		// asm volatile ("mov %0, %%cr3" : : "r"(pd_addr));
+		
+		
+		Drivers::VGA::Write("Address: ");
+		Drivers::VGA::Write(virtual_to_physical(Memory::current_dir, (void*)oldSP));
+		Drivers::VGA::Write("\n");
+		//ASSERT(false);
+		unsigned char byte = *(((unsigned char*)oldSP) + j);
+		//ASSERT(false);
+		TRACE("byte read.\n");
+		pg = Memory::current_dir->getPage((uint32_t)(((unsigned char*)newSP)+j), 0);
+		ASSERT(pg != 0);
+		ASSERT(pg->present);
+		ASSERT(pg->rw);
+		ASSERT(pg->frame != 0);
+		ASSERT(pg->user);
+		ASSERT(pg->reserved == 0);
+		ASSERT(pg->reserved2 == 0);
+		unsigned char byte2 = *(((unsigned char*)newSP)+j);
+		pg->accessed = true;
+		ASSERT(pg->accessed);
+		TRACE("Accessed set to true.\n");
+		*(((unsigned char*)newSP)+j) = byte;
+		//((unsigned char*)newSP)[j] = byte;
 		TRACE("byte copied.\n");
+		ASSERT(false);
 	}
 	TRACE("Stack copied.\n");
 	
@@ -128,7 +162,7 @@ void init_tasking()
 {
 	asm volatile ("cli");
 	
-	//move_stack((void*)0xF0000000, 0x2000);
+	move_stack((void*)0xF0000000, 0x2000);
 	
 	Task::current_task = new Task;
 	
@@ -147,10 +181,12 @@ void init_tasking()
 int fork()
 {
 	asm volatile ("cli");
-	
+	if (!Task::current_task) return -1;
 	
 	Task* caller = Task::current_task;
 	Memory::PageDir* new_dir = Memory::current_dir->clone();
+	
+	
 	
 	Task* newT = new Task;
 	newT->id = next_pid++;
@@ -213,16 +249,27 @@ extern "C" void task_switch()
 	}
 
 	ASSERT(task_iterator != tasks->end());
+	if ((*task_iterator)->page_dir == Task::current_task->page_dir)
+	{
+		uint32_t _cr3;
+		asm volatile ("mov %%cr3, %0" : "=r"(_cr3));
+		ASSERT((void*)_cr3 == virtual_to_physical(Memory::current_dir, (*task_iterator)->page_dir));
+		//ASSERT(false);
+	}
+	//ASSERT(false);
 	Task::current_task = *task_iterator;
 	
 	eip = Task::current_task->instr_ptr;
 	esp = Task::current_task->esp;
 	ebp = Task::current_task->ebp;
 
-	Memory::current_dir = Task::current_task->page_dir;
+	
 
-	uint32_t dir_phys = (uint32_t)virtual_to_physical(Memory::current_dir, &Memory::current_dir->tables);
+	uint32_t dir_phys = (uint32_t)virtual_to_physical(Memory::current_dir, &Task::current_task->page_dir->tables);
 	ASSERT(dir_phys != 0);
+	ASSERT((void*)&Task::current_task->page_dir->tables == Task::current_task->page_dir->tables);
+
+	Memory::current_dir = Task::current_task->page_dir;
 
 	asm volatile("	\
 	cli;	\
@@ -247,7 +294,11 @@ void add_to_queue(Task* t)
 
 size_t taskLength()
 {
-	return tasks->size();
+	if (tasks)
+	{
+		return tasks->size();
+	}
+	return 0;
 }
 
 }

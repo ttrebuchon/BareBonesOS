@@ -123,6 +123,9 @@ namespace Kernel { namespace Memory {
 			tables[tableIndex].rw = 1;
 			tables[tableIndex].user = 1;
 			tables[tableIndex].page_size = 0;
+			tables[tableIndex].global = 0;
+			tables[tableIndex].w_through = 1;
+			tables[tableIndex].cache = 1;
 			entry = ref_tables[tableIndex];
 		}
 		else

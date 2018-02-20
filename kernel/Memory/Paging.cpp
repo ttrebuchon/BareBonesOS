@@ -222,7 +222,7 @@ namespace Kernel { namespace Memory
 		uint32_t midBits = (((uint32_t)fault_addr) << 10) >> 22;
 		
 		//TODO
-		Drivers::VGA::Write("Addr: ");
+		Drivers::VGA::Write("Virtual Addr: ");
 		Drivers::VGA::Write((void*)fault_addr);
 		Drivers::VGA::Write("\n");
 		Drivers::VGA::Write("Present: ");
@@ -238,39 +238,42 @@ namespace Kernel { namespace Memory
 		Drivers::VGA::Write("\nInstruction Address: ");
 		Drivers::VGA::Write((void*)regs.eip);
 		Drivers::VGA::Write("\n");
+		Drivers::VGA::Write("Physical Address: ");
+		Drivers::VGA::Write(virtual_to_physical(current_dir, (void*)fault_addr));
+		Drivers::VGA::Write("\n");
 
 		// auto pg = current_dir->getPage(fault_addr, 0);
 		// Drivers::VGA::Write("\n\n");
 		// Drivers::VGA::Write("Read/Write: ");
 		// Drivers::VGA::Write(pg->rw == 1);
 
-		Drivers::VGA::Write("                                             \n");
-		Drivers::VGA::Write("                                             \r");
-		Drivers::VGA::Write("Upper Bits: ");
-		Drivers::VGA::Write((void*)upperBits);
-		Drivers::VGA::Write("\n");
-		Drivers::VGA::Write("                                             \r");
-		Drivers::VGA::Write("Middle Bits: ");
-		Drivers::VGA::Write((void*)midBits);
-		Drivers::VGA::Write("\n");
-		Drivers::VGA::Write("Combined Bits:                ");
-		Drivers::VGA::Write((void*)((fault_addr >> 12)));
+		// Drivers::VGA::Write("                                             \n");
+		// Drivers::VGA::Write("                                             \r");
+		// Drivers::VGA::Write("Upper Bits: ");
+		// Drivers::VGA::Write((void*)upperBits);
+		// Drivers::VGA::Write("\n");
+		// Drivers::VGA::Write("                                             \r");
+		// Drivers::VGA::Write("Middle Bits: ");
+		// Drivers::VGA::Write((void*)midBits);
+		// Drivers::VGA::Write("\n");
+		// Drivers::VGA::Write("Combined Bits:                ");
+		// Drivers::VGA::Write((void*)((fault_addr >> 12)));
 		
-		Drivers::VGA::Write("\nTable Present?   ");
-		Drivers::VGA::Write(current_dir->tables[upperBits].present == 1);
-		Drivers::VGA::Write("\nTable R/W?   ");
-		Drivers::VGA::Write(current_dir->tables[upperBits].rw == 1);
-		Drivers::VGA::Write("\nTable User?   ");
-		Drivers::VGA::Write(current_dir->tables[upperBits].user == 1);
-		Drivers::VGA::Write("\nTable Cache?   ");
-		Drivers::VGA::Write(current_dir->tables[upperBits].cache == 1);
-		Drivers::VGA::Write("\nTable Accessed?   ");
-		Drivers::VGA::Write(current_dir->tables[upperBits].access == 1);
+		// Drivers::VGA::Write("\nTable Present?   ");
+		// Drivers::VGA::Write(current_dir->tables[upperBits].present == 1);
+		// Drivers::VGA::Write("\nTable R/W?   ");
+		// Drivers::VGA::Write(current_dir->tables[upperBits].rw == 1);
+		// Drivers::VGA::Write("\nTable User?   ");
+		// Drivers::VGA::Write(current_dir->tables[upperBits].user == 1);
+		// Drivers::VGA::Write("\nTable Cache?   ");
+		// Drivers::VGA::Write(current_dir->tables[upperBits].cache == 1);
+		// Drivers::VGA::Write("\nTable Accessed?   ");
+		// Drivers::VGA::Write(current_dir->tables[upperBits].access == 1);
 		
-		ASSERT(current_dir->ref_tables[upperBits] != 0);
+		// ASSERT(current_dir->ref_tables[upperBits] != 0);
 
-		Drivers::VGA::Write("\nPage Present?   ");
-		Drivers::VGA::Write(current_dir->ref_tables[upperBits]->pages[midBits].present == 1);
+		// Drivers::VGA::Write("\nPage Present?   ");
+		// Drivers::VGA::Write(current_dir->ref_tables[upperBits]->pages[midBits].present == 1);
 		
 		
 		

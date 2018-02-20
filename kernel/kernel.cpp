@@ -115,7 +115,7 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     Drivers::VGA::Write("Initializing paging...\n");
     Kernel::Memory::init_paging();
     Drivers::VGA::Write("Paging initialized.\n");
-    Kernel::init_tasking();
+    //Kernel::init_tasking();
     Drivers::VGA::Write("Tasking initialized.\n");
 
     Drivers::VGA::Write("Hello, kernel world!\nThis is a test.\n");
@@ -192,7 +192,7 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     if (Kernel::fork() != 0)
     {
         //Drivers::VGA::Write("First process running!\n");
-        while(1);
+        //while(1);
     }
     else
     {
