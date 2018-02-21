@@ -1,4 +1,7 @@
 #include "Locale"
+#ifdef TESTING
+#include <assert.h>
+#endif
 
 namespace Utils {
 	
@@ -13,6 +16,7 @@ namespace Utils {
 		{
 			imp = new Internal;
 			imp->addFacet(new num_put<char>);
+			imp->rcount = 100;
 		}
 		
 		static locale _classic(imp);
@@ -50,5 +54,26 @@ namespace Utils {
 		{
 			delete imp;
 		}
+	}
+	
+	
+	
+	
+	const locale& locale::operator=(const locale& loc)
+	{
+		if (this->imp)
+		{
+			if (--imp->rcount == 0)
+			{
+				delete imp;
+			}
+		}
+		this->imp = loc.imp;
+		if (imp)
+		{
+			++imp->rcount;
+		}
+		
+		return *this;
 	}
 }

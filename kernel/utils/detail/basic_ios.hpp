@@ -18,6 +18,11 @@ namespace Utils {
 		this->_streambuf = buf;
 	}
 	
+	template <class T, class Traits>
+	ios_base::iostate basic_ios<T, Traits>::rdstate() const
+	{
+		return _state;
+	}
 	
 	template <class T, class Traits>
 	void basic_ios<T, Traits>::setstate(iostate st)
@@ -29,6 +34,23 @@ namespace Utils {
 	bool basic_ios<T, Traits>::good() const
 	{
 		return _state == goodbit;
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	template <class T, class Traits>
+	basic_streambuf<T, Traits>* basic_ios<T, Traits>::rdbuf(basic_streambuf<T, Traits>* sb)
+	{
+		auto old = _streambuf;
+		_streambuf = sb;
+		return old;
 	}
 }
 

@@ -94,7 +94,7 @@ namespace Utils {
 	template <class T, class Traits>
 	basic_streambuf<T, Traits>* basic_streambuf<T, Traits>::setbuf(char_type* ptr, streamsize n)
 	{
-		
+		return this;
 	}
 	
 	template <class T, class Traits>
@@ -112,7 +112,7 @@ namespace Utils {
 	template <class T, class Traits>
 	int basic_streambuf<T, Traits>::sync()
 	{
-		
+		return 0;
 	}
 	
 	template <class T, class Traits>
@@ -195,7 +195,14 @@ namespace Utils {
 	
 	
 	
-	
+	template <class T, class Traits>
+	locale basic_streambuf<T, Traits>::pubimbue(const locale& loc)
+	{
+		auto old = _loc;
+		_loc = loc;
+		imbue(loc);
+		return old;
+	}
 	
 	
 	template <class T, class Traits>

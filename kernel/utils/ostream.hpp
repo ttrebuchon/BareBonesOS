@@ -49,7 +49,15 @@ namespace Utils {
 	template <class T, class Traits>
 	basic_ostream<T, Traits>& basic_ostream<T, Traits>::operator<<(bool n)
 	{
-		_insert(n);
+		/*const ios_base::fmtflags __fmt = this->flags() & ios_base::boolapha;
+		if (__fmt | 0x0)
+		{*/
+			_insert(n);/*
+		}
+		else
+		{
+			
+		}*/
 		return *this;
 	}
 	
@@ -146,6 +154,25 @@ namespace Utils {
 	{
 		
 		return *this;
+	}
+	
+	
+	
+	
+	
+	template <class T, class Traits>
+	basic_ostream<T, Traits>& basic_ostream<T, Traits>::flush()
+	{
+		sentry __cerb(*this);
+		
+		if (__cerb)
+		{
+			ios_base::iostate __err = this->rdstate();
+			if (this->rdbuf()->pubsync() != 0)
+			{
+				this->setstate(this->rdstate() | ios_base::badbit);
+			}
+		}
 	}
 }
 

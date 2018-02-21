@@ -20,7 +20,7 @@ namespace Utils {
 		
 		private:
 		char_type *_pstart, *_pptr, *_pend, *_gstart, *_gptr, *_gend;
-		
+		locale _loc;
 		
 		
 		protected:
