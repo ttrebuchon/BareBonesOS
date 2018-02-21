@@ -64,11 +64,23 @@ namespace Drivers { namespace IDE {
 		CommandSets = 0xA4,
 		MaxLBAExt = 0xC8
 	};
+
+	enum class Interface : unsigned char
+	{
+		ATA = 0x0,
+		ATAPI = 0x1,
+	};
 	
 	enum class Channel : unsigned char
 	{
 		Primary = 0x00,
 		Secondary = 0x01
+	};
+
+	enum class Role : unsigned char
+	{
+		Master = 0xA0,
+		Slave = 0xB0,
 	};
 	
 	enum class Register : unsigned char
@@ -119,7 +131,9 @@ namespace Drivers { namespace IDE {
 	
 	class Device
 	{
-		
+		private:
+		static bool _initted;
+
 		public:
 		static ChannelRegister_t Channels[2];
 		static Device Devices[4];
@@ -158,12 +172,16 @@ namespace Drivers { namespace IDE {
 		
 		static void write(const Channel, const Register, unsigned char data);
 		
-		static void readBuffer(const Channel, const Register, uint32_t* buf, uint32_t quads);
+		static void readBuffer(const Channel, const Register, uint32_t* buf, uint32_t dwordCount);
 		
-		unsigned char poll(const Channel, const bool advCheck = false);
+		static unsigned char poll(const Channel, const bool advCheck = false);
 		
 		static void Initialize(uint32_t BAR0, uint32_t BAR1, uint32_t BAR2, uint32_t BAR3, uint32_t BAR4);
 		
+		static inline bool Initialized()
+		{
+			return _initted;
+		}
 		
 	} __attribute__((packed));
 	

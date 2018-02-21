@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 typedef unsigned char uchar;
-typedef uint64_t addr_t;
+typedef uint32_t addr_t;
 
 #ifdef __cplusplus
 
@@ -24,3 +24,5 @@ typedef uint32_t size_t;
 #ifdef __cplusplus
 #include <kernel/CppSupport/new.hh>
 #endif
+
+#include <kernel/Timer.h>

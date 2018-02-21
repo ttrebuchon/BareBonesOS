@@ -42,3 +42,8 @@ uint32_t port_long_in(const unsigned short port)
     __asm__("inl %%dx, %%ax" : "=a" (data) : "d" (port));
     return data;
 }
+
+void insl(uint16_t port, void* addr, uint32_t cnt)
+{
+    asm volatile ("cld; rep insl" : "=D" (addr), "=c" (cnt) : "d" (port), "0" (addr), "1" (cnt) : "memory", "cc");
+}

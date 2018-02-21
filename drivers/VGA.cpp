@@ -78,6 +78,14 @@ namespace Drivers
         }
     }
 
+    void VGA::Write(const unsigned char* cstr)
+    {
+        for (size_t i = 0; cstr[i] != 0; ++i)
+        {
+            PutChar(cstr[i]);
+        }
+    }
+
     // void VGA::Write(const Utils::String str)
     // {
     //     //TODO
@@ -136,6 +144,16 @@ namespace Drivers
     }
 
     void VGA::Write(const uint32_t n)
+    {
+        char buf[256];
+        if (c_int_to_str(n, buf, 256))
+        {
+            Write(buf);
+        }
+    }
+
+
+    void VGA::Write(const unsigned int n)
     {
         char buf[256];
         if (c_int_to_str(n, buf, 256))

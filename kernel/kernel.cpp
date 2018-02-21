@@ -17,6 +17,7 @@
 #include <drivers/PCI.hh>
 #include <kernel/Task.hh>
 #include <boot/multiboot.h>
+#include <drivers/IDE/IDE.hh>
 
 
 #if !defined(__cplusplus)
@@ -202,6 +203,42 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     Drivers::VGA::Write("Tasks length: ");
     Drivers::VGA::Write(Kernel::taskLength());
     Drivers::VGA::Write("\n");
+
+    Drivers::VGA::Write("Testing sleeping (2s)...\n");
+    sleep(2000);
+    Drivers::VGA::Write("Done sleeping.\n");
+
+
+    Drivers::VGA::Write("Initializing ATA Devices...\n");
+    Drivers::IDE::Device::Initialize(0x1F0, 0x3F6, 0x170, 0x376, 0x000);
+    ASSERT(Drivers::IDE::Device::Initialized());
+    Drivers::VGA::Write("ATA Initialized.\n");
+    Drivers::VGA::Write("Device 0 Present? ");
+    Drivers::VGA::Write(Drivers::IDE::Device::Devices[0].reserved != 0);
+    Drivers::VGA::Write("\n");
+    if (Drivers::IDE::Device::Devices[0].reserved != 0)
+    {
+        Drivers::VGA::Write("Drive 0 Size: ");
+        Drivers::VGA::Write(Drivers::IDE::Device::Devices[0].size);
+        Drivers::VGA::Write("\n");
+        Drivers::VGA::Write("Model: '");
+        Drivers::VGA::Write(Drivers::IDE::Device::Devices[0].model);
+        Drivers::VGA::Write("'\n");
+    }
+
+    for (int i = 1; i < 4; ++i)
+    {
+        if (Drivers::IDE::Device::Devices[i].reserved != 0)
+        {
+            Drivers::VGA::Write("Drive Size: ");
+            Drivers::VGA::Write(Drivers::IDE::Device::Devices[i].size);
+            Drivers::VGA::Write("\n");
+            Drivers::VGA::Write("Model: '");
+            Drivers::VGA::Write(Drivers::IDE::Device::Devices[i].model);
+            Drivers::VGA::Write("'\n");
+        }
+    }
+    
 
     Drivers::VGA::Write("Kernel main() is finished!!\n");
     return 0;

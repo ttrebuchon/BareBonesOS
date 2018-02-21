@@ -59,10 +59,12 @@ namespace Drivers
         static void PutChar(const char c);
         static void Write(const char* cstr, const size_t len);
         static void Write(const char* cstr);
+        static void Write(const unsigned char* cstr);
         //static void Write(const Utils::String str);
         static void Write(const void* ptr);
         static void Write(const bool);
         static void Write(const uint32_t);
+        static void Write(const unsigned int);
     };
 
 
