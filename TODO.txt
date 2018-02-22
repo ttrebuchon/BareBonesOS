@@ -1,0 +1,41 @@
+Long Term
+{
+TODO: 
+	+ Long Mode (64-bit)
+	+ Networking
+	+ Drive Drivers
+	+ USB Drive Drivers(?)
+	+ Display
+	+ RTTI
+	+ Exceptions
+	+ Standard Library
+	+ Multitasking
+	{
+		+ Threading
+		+ Processes
+		+ Mutexes
+		+ Atomic Types
+	}
+	+ I/O
+	{
+		+ Keyboard
+		+ Mouse
+		+ Audio
+		+ Fans(?)
+	}
+	+ Userspace
+	+ Libraries/Linking
+	+ SQLite Port
+	+ Page Fault Recovery
+	+ System Time
+	+ Runtime Metrics
+	{
+		+ Resource Use
+		+ Performance
+	}
+	
+	
+	
+	
+Done: 
+}
