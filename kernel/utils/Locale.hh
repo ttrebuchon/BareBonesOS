@@ -213,66 +213,12 @@ namespace Utils
 		
 	};
 	
-	template <class T, class OutputIt>
-	class num_put : public locale::facet
-	{
-		public:
-		typedef T char_type;
-		typedef OutputIt iter_type;
-		
-		
-		private:
-		static const T* bool_str(const bool, size_t& len, ios_base& str);
-		static const T* long_long_str(const long long, size_t& len, ios_base& str);
-		static const T* unsigned_long_long_str(const unsigned long long, size_t& len, ios_base& str);
-		static const T* long_double_str(const long double, size_t& len, ios_base& str);
-		static const T* ptr_str(const void*, size_t& len, ios_base& str);
-		
-		constexpr static auto _trueStr = "true";
-		constexpr static auto _trueStrLen = 4;
-		constexpr static auto _falseStr = "false";
-		constexpr static auto _falseStrLen = 5;
-		
-		
-		
-		
-		protected:
-		
-		public:
-		static locale::id id;
-		
-		#define PUT_T(X, Y) \
-		public: \
-		iter_type put(iter_type out, ios_base& str, T fill, X v) const \
-		{ \
-			return do_put(out, str, fill, v); \
-		} \
-		\
-		protected: \
-		virtual iter_type do_put(iter_type out, ios_base& str, T fill, X v) const \
-		{ \
-			size_t len; \
-			const T* cstr = Y##_str(v, len, str); \
-			return __write(out, cstr, len);\
-		}
-		
-		
-		PUT_T(bool, bool)
-		PUT_T(long, long_long)
-		PUT_T(long long, long_long)
-		PUT_T(unsigned long, unsigned_long_long)
-		PUT_T(unsigned long long, unsigned_long_long)
-		PUT_T(double, long_double)
-		PUT_T(long double, long_double)
-		PUT_T(const void*, ptr)
-	};
-	
-	template <class T, class OutputIt>
-	locale::id num_put<T, OutputIt>::id;
 	
 	
 	template <class T, class It>
 	It __write(It s, const T* str, size_t len);
+	template <class T, class It>
+	It __write(It s, T str);
 	
 	
 	

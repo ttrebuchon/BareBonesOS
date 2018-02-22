@@ -23,7 +23,7 @@ namespace Utils {
 		if (__cerb)
 		{
 			ios_base::iostate __err = ios_base::goodbit;
-			//TODO
+			
 			if (has_facet<_nput_t>(this->getloc()))
 			{
 			const auto& np = use_facet<_nput_t>(this->getloc());
@@ -152,6 +152,63 @@ namespace Utils {
     template <class T, class Traits>
 	basic_ostream<T, Traits>& basic_ostream<T, Traits>::operator<<(long double f)
 	{
+		
+		return *this;
+	}
+	
+	template <class T, class Traits>
+	basic_ostream<T, Traits>& basic_ostream<T, Traits>::operator<<(const char_type* str)
+	{
+		
+		sentry __cerb(*this);
+		if (__cerb)
+		{
+			ios_base::iostate __err = ios_base::goodbit;
+			
+			auto len = traits_type::length(str);
+			if (this->rdbuf()->sputn(str, len) != len)
+			{
+				__err |= ios_base::badbit;
+			}
+			
+			
+			if (__err)
+			{
+				this->setstate(__err);
+			}
+		}
+		return *this;
+	}
+	
+	template <class T, class Traits>
+	basic_ostream<T, Traits>& basic_ostream<T, Traits>::operator<<(const void* ptr)
+	{
+		static_assert(sizeof(addr_t) == sizeof(void*));
+		
+		sentry __cerb(*this);
+		
+		if (__cerb)
+		{
+			ios_base::iostate __err = ios_base::goodbit;
+			
+			if (has_facet<_nput_t>(this->getloc()))
+			{
+			const auto& np = use_facet<_nput_t>(this->getloc());
+			if (np.put(*this, *this, ios_base::hex | ios_base::showbase, this->fill(), (addr_t)ptr).failed())
+			{
+				__err |= ios_base::badbit;
+			}
+			}
+			else
+			{
+				__err |= ios_base::badbit;
+			}
+			
+			if (__err)
+			{
+				this->setstate(__err);
+			}
+		}
 		
 		return *this;
 	}

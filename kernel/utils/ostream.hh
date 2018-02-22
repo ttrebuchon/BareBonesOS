@@ -82,6 +82,7 @@ namespace Utils {
         basic_ostream<T, Traits>& operator<<(float f);
         basic_ostream<T, Traits>& operator<<(double f);
         basic_ostream<T, Traits>& operator<<(long double f);
+        basic_ostream& operator<<(const char_type*);
         
         basic_ostream<T, Traits>& operator<<(const void* p);
         basic_ostream<T, Traits>& operator<<(basic_streambuf<char_type, Traits>* sb);

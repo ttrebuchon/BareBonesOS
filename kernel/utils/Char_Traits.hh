@@ -35,7 +35,12 @@ namespace Utils
 		static constexpr bool eq(char_type c1, char_type c2) noexcept;
 		static constexpr bool lt(char_type c1, char_type c2) noexcept;
 		static constexpr int compare(const char_type* s1, const char_type* s2, size_t n);
-		static constexpr size_t length(const char_type* s);
+		static constexpr size_t length(const char_type* s)
+		{
+			size_t i = 0;
+			for (i = 0; s[i] != 0; ++i);
+			return i;
+		}
 		static constexpr const char_type* find(const char_type* s, size_t n, const char_type& a);
 		static char_type* move(char_type* s1, const char_type* s2, size_t n);
 		

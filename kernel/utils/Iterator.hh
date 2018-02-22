@@ -46,8 +46,12 @@ namespace Utils {
 		
 		template <class G, class X>
 		friend X __write(X, const G*, size_t);
+		template <class G, class X>
+		friend X __write(X, G);
 		template <class G>
 		friend ostreambuf_iterator<G> __write(ostreambuf_iterator<G>, const G*, size_t);
+		template <class G>
+		friend ostreambuf_iterator<G> __write(ostreambuf_iterator<G>, G);
 	};
 	
 }

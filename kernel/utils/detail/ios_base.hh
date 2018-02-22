@@ -77,11 +77,11 @@ namespace Utils {
 		typedef unsigned int fmtflags;
 		constexpr static fmtflags boolalpha = 0x1;
 		constexpr static fmtflags dec = 0x2;
-		constexpr static fmtflags fixed = 0x4;
-		constexpr static fmtflags hex = 0x8;
-		constexpr static fmtflags internal = 0x10;
-		constexpr static fmtflags left = 0x20;
-		constexpr static fmtflags oct = 0x40;
+		constexpr static fmtflags hex = 0x4;
+		constexpr static fmtflags fixed = 0x8;
+		constexpr static fmtflags oct = 0x10;
+		constexpr static fmtflags internal = 0x20;
+		constexpr static fmtflags left = 0x40;
 		constexpr static fmtflags right = 0x80;
 		constexpr static fmtflags scientific = 0x100;
 		constexpr static fmtflags showbase = 0x200;
@@ -94,7 +94,7 @@ namespace Utils {
 		constexpr static fmtflags basefield = dec | oct | hex;
 		constexpr static fmtflags floatfield = fixed | scientific;
 		
-		
+		static_assert(((~0) & basefield) != 0);
 		
 		
 		
