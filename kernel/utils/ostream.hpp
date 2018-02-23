@@ -124,35 +124,35 @@ namespace Utils {
     template <class T, class Traits>
 	basic_ostream<T, Traits>& basic_ostream<T, Traits>::operator<<(long long n)
 	{
-		
+		_insert(n);
 		return *this;
 	}
 	
     template <class T, class Traits>
 	basic_ostream<T, Traits>& basic_ostream<T, Traits>::operator<<(unsigned long long n)
 	{
-		
+		_insert(n);
 		return *this;
 	}
 	
     template <class T, class Traits>
 	basic_ostream<T, Traits>& basic_ostream<T, Traits>::operator<<(float f)
 	{
-		
+		_insert(f);
 		return *this;
 	}
 	
     template <class T, class Traits>
 	basic_ostream<T, Traits>& basic_ostream<T, Traits>::operator<<(double f)
 	{
-		
+		_insert(f);
 		return *this;
 	}
 	
     template <class T, class Traits>
 	basic_ostream<T, Traits>& basic_ostream<T, Traits>::operator<<(long double f)
 	{
-		
+		_insert(f);
 		return *this;
 	}
 	

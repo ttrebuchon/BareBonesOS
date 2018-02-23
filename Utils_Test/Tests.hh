@@ -1,6 +1,8 @@
 #ifndef INCLUDED_TESTS_HH
 #define INCLUDED_TESTS_HH
 
+#define kassert(x) assert(x)
+
 #ifdef __cplusplus
 #include <iostream>
 

@@ -19,6 +19,25 @@ namespace Utils {
 		return old;
 	}
 	
+	auto ios_base::setf(fmtflags opts) -> fmtflags
+	{
+		auto old = _flags;
+		_flags |= opts;
+		return old;
+	}
+	
+	auto ios_base::setf(fmtflags opts, fmtflags mask) -> fmtflags
+	{
+		auto old = _flags;
+		_flags = ((mask & opts)|(_flags&~mask));
+		return old;
+	}
+	
+	void ios_base::unsetf(fmtflags opts)
+	{
+		_flags &= ~opts;
+	}
+	
 	
 	
 	

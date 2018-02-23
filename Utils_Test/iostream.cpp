@@ -1,8 +1,10 @@
+#include <cassert>
 #include "Tests.hh"
 #include <kernel/utils/detail/basic_ios.hh>
 #include <kernel/utils/iostream.hh>
 #include <sstream>
-#include <cassert>
+#include <vector>
+
 //#include <kernel/utils/String.hh>
 #include <kernel/utils/locale>
 
@@ -142,6 +144,30 @@ class StdBuf : public Utils::streambuf, std::stringbuf
 	}
 };
 
+class ArrBuf : public Utils::streambuf
+{
+	static constexpr size_t default_size = 2048;
+	char* array;
+	size_t s;
+	public:
+	
+	ArrBuf(const size_t s = default_size) : Utils::streambuf(), array(new char[s]), s(s)
+	{
+		reset();
+	}
+	
+	std::string to_string() const
+	{
+		return std::string(array);
+	}
+	
+	void reset()
+	{
+		memset(array, 0, s);
+		setp(array, array + s);
+	}
+};
+
 
 class Bar : public Utils::basic_iostream<char>
 {
@@ -150,6 +176,8 @@ class Bar : public Utils::basic_iostream<char>
 
 TEST(IOSTREAM)
 {
+	//kassert(false);
+	STACK();
 	//Foo foo;
 	typedef typename Utils::basic_iostream<char>::char_type G;
 	typedef typename Bar::char_type H;
@@ -217,6 +245,93 @@ TEST(IOSTREAM)
 	assert(os.good());
 	os << h;
 	assert(os.good());*/
+	
+	ArrBuf* buf2;
+	delete os.rdbuf(buf2 = new ArrBuf(101));
+	
+	for (int i = 0; i < 25; ++i)
+	{
+		assert(os.good());
+		os << j;
+		assert(os.good());
+		os.flush();
+		assert(os.good());
+	}
+	
+	std::cout << buf2->to_string() << "\n";
+	buf2->reset();
+	
+	std::cout << "Disabling boolalpha...\n";
+	buf2->pubimbue(os.getloc());
+	os.flags((os.flags() & ~(Utils::ios::boolalpha | Utils::ios::hex | Utils::ios::oct)) | Utils::ios::dec);
+	assert(os.flags() & Utils::ios::dec);
+	for (int i = 0; i < 25; ++i)
+	{
+		assert(os.good());
+		os << j;
+		assert(os.good());
+		os.flush();
+		assert(os.good());
+	}
+	std::cout << buf2->to_string() << "\n";
+	control = std::string(25, '1');
+	std::cout << control << std::endl;
+	assert(control == buf2->to_string());
+	
+	buf2->reset();
+	os << 14;
+	os << 15;
+	os << 10;
+	os << 9 << 8 << 7 << 6 << 2 << 1 << 0;
+	std::cout << buf2->to_string() << "\n";
+	
+	os.flags((os.flags() & ~Utils::ios::dec) | Utils::ios::hex | Utils::ios::showbase);
+	buf2->reset();
+	os << 16;
+	std::cout << buf2->to_string() << "\n";
+	
+	
+	
+	std::stringstream ss;
+	ss.flags(os.flags());
+	
+	buf2->reset();
+	ss.str("");
+	ss << "Hello, world!\n";
+	os << "Hello, world!\n";
+	assert(os.good());
+	assert(ss.good());
+	std::cout << buf2->to_string() << std::flush;
+	assert(buf2->to_string() == ss.str());
+	
+	
+	
+	buf2->reset();
+	ss.str("");
+	os.flags(Utils::ios::dec);
+	ss.flags(os.flags());
+	os << L"Test" << "\n";
+	ss << L"Test" << "\n";
+	assert(os.good());
+	assert(ss.good());
+	std::cout << buf2->to_string() << std::flush;
+	assert(ss.str() == buf2->to_string());
+	
+	
+	os.unsetf(Utils::ios_base::hex);
+	os.flags(os.flags() | Utils::ios_base::dec);
+	buf2->reset();
+	ss.str("");
+	os << 4.20001 << "\n";
+	ss << 4.20001 << "\n";
+	assert(os.good());
+	assert(ss.good());
+	std::cout << buf2->to_string() << std::flush;
+	std::cout << ss.str() << std::flush;
+	assert(buf2->to_string() == ss.str());
+	
+	
+	
 }
 
 //using namespace __gnu_cxx;

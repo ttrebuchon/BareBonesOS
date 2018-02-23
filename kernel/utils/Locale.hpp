@@ -7,7 +7,24 @@
 
 namespace Utils {
 	
-	
+	template <class T, class OutputIt>
+	template <class N>
+	N num_put<T, OutputIt>::getNumBase(const ios_base& io, ios_base::fmtflags flags)
+	{
+		
+		if (((ios_base::basefield & flags) != ios_base::hex) && ((ios_base::basefield & flags) != ios_base::oct))
+		{
+			return 10;
+		}
+		else if ((ios_base::basefield & flags) == ios_base::oct)
+		{
+			return 8;
+		}
+		else
+		{
+			return 16;
+		}
+	}
 	
 	template <class T, class OutputIt>
 	void num_put<T, OutputIt>::bool_str(const bool v, iter_type& it, ios_base& io)
@@ -61,26 +78,30 @@ namespace Utils {
 		}
 		
 		
-		int base;
-		if (((ios_base::basefield & flags) != ios_base::hex) && ((ios_base::basefield & flags) != ios_base::oct))
+		N base;
+		auto baseFlg = getFlagsBase(io, flags);
+		switch (baseFlg)
 		{
+			case ios_base::dec:
 			base = 10;
-		}
-		else if ((ios_base::basefield & flags) == ios_base::oct)
-		{
+			break;
+			
+			case ios_base::oct:
 			base = 8;
 			if (flags & ios_base::showbase)
 			{
 				it = __write(it, _octPrefix, _octPrefixLen);
 			}
-		}
-		else
-		{
+			break;
+			
+			case ios_base::hex:
+			default:
 			base = 16;
 			if (flags & ios_base::showbase)
 			{
 				it = __write(it, _hexPrefix, _hexPrefixLen);
 			}
+			
 		}
 		
 		kassert(base > 0);
@@ -103,7 +124,6 @@ namespace Utils {
 		}
 		
 		
-		//kassert(false);
 		it = __write<T, iter_type>(it, buf, digitCount);
 	}
 	
@@ -122,12 +142,13 @@ namespace Utils {
 	template <class T, class OutputIt>
 	void num_put<T, OutputIt>::long_double_str(const long double v, iter_type& it, ios_base& io)
 	{
-		kassert(false);
+		long_double_str(v, it, io, io.flags());
 	}
 	
 	template <class T, class OutputIt>
 	void num_put<T, OutputIt>::ptr_str(const void* v, iter_type& it, ios_base& io)
 	{
+		STACK();
 		kassert(false);
 	}
 	
@@ -168,14 +189,58 @@ namespace Utils {
 	template <class T, class OutputIt>
 	void num_put<T, OutputIt>::long_double_str(const long double v, iter_type& it, ios_base& io, ios_base::fmtflags flags)
 	{
-		kassert(false);
+		long double v2 = v;
+		if (v2 < 0)
+		{
+			v2 *= -1;
+		}
+		long vgt1 = static_cast<long>(v2);
+		
+		numeric_str<long>(vgt1, it, io, flags);
+		v2 -= vgt1;
+		it = __write<T, iter_type>(it, point);
+		
+		const size_t count = 10;
+		T buf[count];
+		buf[0] = digits[0];
+		long double base = getNumBase<long double>(io, flags);
+		size_t i = 0;
+		size_t nz = 1;
+		v2 *= base;
+		while (v2 > 0 && i < count)
+		{
+			if (v2 > 1)
+			{
+				vgt1 = static_cast<long>(v2);
+				v2 -= vgt1;
+				buf[i++] = digits[vgt1];
+				nz = i;
+			}
+			else
+			{
+				buf[i++] = digits[0];
+				v2 *= base;
+			}
+		}
+		it = __write(it, buf, nz);
 	}
 	
 	template <class T, class OutputIt>
 	void num_put<T, OutputIt>::ptr_str(const void* v, iter_type& it, ios_base& io, ios_base::fmtflags flags)
 	{
+		STACK();
 		kassert(false);
 	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	
 	
