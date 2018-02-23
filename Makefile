@@ -58,7 +58,7 @@ myos.iso: myos.bin
 
 
 myos.bin: $(BOOT_OBJS) $(CRTBEGIN_OBJ) $(CPP_OBJS) $(C_OBJS) $(ASM_OBJS) $(CRTEND_OBJ) linker.ld
-	$(CXX) -T linker.ld -o $@ $(CXX_FLAGS) -nostdlib $(BOOT_OBJS) $(CRTBEGIN_OBJ) $(CPP_OBJS) $(C_OBJS) $(ASM_OBJS) $(CRTEND_OBJ) #-lgcc
+	$(CXX) -T linker.ld -o $@ $(CXX_FLAGS) -nostdlib $(BOOT_OBJS) $(CRTBEGIN_OBJ) $(CPP_OBJS) $(C_OBJS) $(ASM_OBJS) $(CRTEND_OBJ) -lgcc
 
 %.o: %.s
 	$(ASM) $(ASM_FLAGS) -c $< -o $@
