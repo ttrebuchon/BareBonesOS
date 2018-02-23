@@ -143,7 +143,7 @@ namespace Drivers { namespace IDE {
 			insl(Channels[(uchar)channel].base + reg - 0xE, buf, dwordCount);
 		}
 		asm volatile ("popw %es");
-		if (reg < 0x07 && reg < 0x0C)
+		if (reg > 0x07 && reg < 0x0C)
 		{
 			write(channel, Register::Control, Channels[(uchar)channel].nIEN);
 		}
@@ -199,8 +199,7 @@ namespace Drivers { namespace IDE {
 			{
 				currentRole = (j == 0 ? Role::Master : Role::Slave);
 				unsigned char err = 0,
-				type = (uchar)Interface::ATA,
-				status;
+				type = (uchar)Interface::ATA;
 				
 				Devices[count].reserved = 0;
 				
@@ -225,7 +224,7 @@ namespace Drivers { namespace IDE {
 				
 				while (true)
 				{
-					status = read(i, Register::Status);
+					unsigned char status = read(i, Register::Status);
 					if ((status & ATAState::Error))
 					{
 						err = 1;
