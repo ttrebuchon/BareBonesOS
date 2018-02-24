@@ -1,5 +1,5 @@
 #include "Tests.hh"
-#include <drivers/IDE/IDE.hh>
+#include <drivers/IDE/IDEDisk.hh>
 #include <kernel/utils/EnumOperators.hh>
 
 struct IDEChannelRegisters {

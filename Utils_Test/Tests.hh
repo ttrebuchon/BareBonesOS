@@ -29,5 +29,6 @@ CTEST(Bitset);
 TEST(Bitset);
 TEST(IDE);
 TEST(IOSTREAM);
+TEST(Limits);
 
 #endif

@@ -11,7 +11,7 @@ namespace Utils
 
 
     template <class Char_t, class CharTraits, class Alloc>
-    class Basic_String
+    class basic_string
     {
         private:
         typedef typename Alloc::template rebind<Char_t>::other _CharT_alloc_type;
@@ -27,8 +27,8 @@ namespace Utils
         typedef typename _CharT_alloc_type::const_reference                 const_reference;
         typedef typename _CharT_alloc_type::pointer                         pointer;
         typedef typename _CharT_alloc_type::const_pointer                   const_pointer;
-        typedef __gnu_cxx::__normal_iterator<pointer, Basic_String>         iterator; 
-        typedef __gnu_cxx::__normal_iterator<const_pointer, Basic_String>   const_iterator;
+        typedef __gnu_cxx::__normal_iterator<pointer, basic_string>         iterator; 
+        typedef __gnu_cxx::__normal_iterator<const_pointer, basic_string>   const_iterator;
 
 
 
@@ -311,38 +311,38 @@ namespace Utils
         
 
         //Default Constructors
-        Basic_String();
-        explicit Basic_String(const Alloc& alloc);
+        basic_string();
+        explicit basic_string(const Alloc& alloc);
 
         //Copy Constructors
-        Basic_String(const Basic_String&);
-        Basic_String(const Basic_String&, const Alloc&);
+        basic_string(const basic_string&);
+        basic_string(const basic_string&, const Alloc&);
 
         //Substring Constructor
-        Basic_String(const Basic_String&, size_t pos, size_t len = npos, const Alloc& = Alloc());
+        basic_string(const basic_string&, size_t pos, size_t len = npos, const Alloc& = Alloc());
 
         //CString Constructor
-        Basic_String(const Char_t*, const Alloc& = Alloc());
+        basic_string(const Char_t*, const Alloc& = Alloc());
 
-        Basic_String(const Char_t*, size_t n, const Alloc& = Alloc());
+        basic_string(const Char_t*, size_t n, const Alloc& = Alloc());
 
         //Fill Constructor
-        Basic_String(size_t n, Char_t c, const Alloc& = Alloc());
+        basic_string(size_t n, Char_t c, const Alloc& = Alloc());
 
         //Range Constructor
         template <class InputIter>
-        Basic_String(InputIter first, InputIter last, const Alloc& = Alloc());
+        basic_string(InputIter first, InputIter last, const Alloc& = Alloc());
 
         // //Initializer List Constructor
-        // Basic_String(std::initializer_list<Char_t> il, const Alloc& = Alloc());
+        // basic_string(std::initializer_list<Char_t> il, const Alloc& = Alloc());
         
         //Move Constructors
-        Basic_String(Basic_String&& str) noexcept;
-        Basic_String(Basic_String&& str, const Alloc&);
+        basic_string(basic_string&& str) noexcept;
+        basic_string(basic_string&& str, const Alloc&);
 
 
         //Destructor
-        ~Basic_String()
+        ~basic_string()
         {
             _M_rep()->_M_dispose(this->get_allocator());
         }
@@ -353,7 +353,7 @@ namespace Utils
     };
 
 
-    typedef Basic_String<char, Char_Traits<char>, Allocator<char>> String;
+    typedef basic_string<char, Char_Traits<char>, Allocator<char>> string;
 
 }
 #endif

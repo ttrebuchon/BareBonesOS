@@ -3,7 +3,6 @@
 #include <kernel/utils/detail/basic_ios.hh>
 #include <kernel/utils/iostream.hh>
 #include <sstream>
-#include <vector>
 
 //#include <kernel/utils/String.hh>
 #include <kernel/utils/locale>

@@ -1,7 +1,7 @@
 #include "Tests.hh"
 #include <kernel/utils/List.hh>
 #include <type_traits>
-#include <kernel/Memory/Paging.h>
+#include <kernel/Memory/Paging.hh>
 #include <kernel/utils/Bitset.hh>
 
 class Foo
