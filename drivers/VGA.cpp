@@ -1,6 +1,7 @@
 #include "VGA.hh"
 //#include <kernel/utils/String.hh>
 #include <kernel/utils/int_to_str.h>
+#include <kernel/Memory.h>
 
 namespace Drivers
 {
@@ -57,7 +58,9 @@ namespace Drivers
             terminal_column = 0;
             if (++terminal_row == Height)
             {
-                terminal_row = 0;
+                memcpy(terminal_buffer, &terminal_buffer[Width], 2*Width*(Height-1));
+                terminal_row -= 1;
+                kmemset(&terminal_buffer[(Height-1)*Width], 0, 2*Width);
             }
         }
     }
