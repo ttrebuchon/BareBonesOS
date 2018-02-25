@@ -1,5 +1,4 @@
 #include <drivers/VGA.hh>
-#include <kernel/gdt.h>
 #include <kernel/TSS.h>
 #include <kernel/Interrupts.h>
 #include <kernel/Interrupts/IDT.h>
