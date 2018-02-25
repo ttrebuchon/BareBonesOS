@@ -65,7 +65,6 @@ void handler04(Registers_t regs)
 
 static_assert(sizeof(Registers_t) == 64);
 
-Kernel::gdt_entry gdt_table[4];
 Kernel::Memory::GDTEntry gdt_table2[5];
 
 //In Task_c.c
@@ -107,35 +106,14 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
 
     Drivers::VGA::Write("Hello, kernel world!\nThis is a test.\n");
 
-    Kernel::Memory::GDTEntry gdt2;
-    gdt2.limit(65500);
-    Kernel::gdt_entry gdt;
-    gdt.setLimit(65500);
-    auto lim = gdt.getLimit();
-    auto lim2 = gdt2.limit();
-    ASSERT(lim2 == 65500);
-    if (lim != 65500)
-    {
-        Drivers::VGA::Write("Limit was encoded/decoded incorrectly!\n");
-    }
-    else
-    {
-        Drivers::VGA::Write("Limit was encoded/decoded correctly!\n");
-    }
+    Kernel::Memory::GDTEntry gdt;
+    gdt.limit(65500);
+    auto lim = gdt.limit();
+    ASSERT(lim == 65500);
 
-    gdt2.base(33554432);
-    gdt.setBase(33554432);
-    auto b = gdt.getBase();
-    auto b2 = gdt2.base();
-    ASSERT(b2 == 33554432);
-    if (b != 33554432)
-    {
-        Drivers::VGA::Write("Base was encoded/decoded incorrectly!\n");
-    }
-    else
-    {
-        Drivers::VGA::Write("Base was encoded/decoded correctly!\n");
-    }
+    gdt.base(33554432);
+    auto b = gdt.base();
+    ASSERT(b == 33554432);
 
 
     
