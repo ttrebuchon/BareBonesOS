@@ -50,3 +50,50 @@ int c_int_to_str(int n, char* cstr, unsigned int max_len)
     cstr[i] = 0;
     return 1;
 }
+
+
+
+
+int c_uint_to_str(uint64_t n, char* cstr, unsigned int max_len)
+{
+    if (max_len < 2)
+    {
+        return 0;
+    }
+    uint64_t base = 10;
+    if (n == 0)
+    {
+        cstr[0] = '0';
+        cstr[1] = 0;
+        return 1;
+    }
+
+
+
+
+    for (base = 10; n / base != 0; base *= 10)
+    {}
+
+    base /= 10;
+
+    unsigned int i = 0;
+    uint64_t tmp;
+    while (base > 0)
+    {
+        tmp = n / base;
+        cstr[i] = (unsigned char)48 + tmp;
+        n -= tmp * base;
+        base /= 10;
+        ++i;
+        if (i >= max_len)
+        {
+            return 0;
+        }
+    }
+    if (i >= max_len)
+    {
+        return 0;
+    }
+    cstr[i] = 0;
+    return 1;
+}
