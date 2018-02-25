@@ -18,6 +18,8 @@
 #include <kernel/Task.hh>
 #include <boot/multiboot.h>
 #include <drivers/IDE/IDE.hh>
+#define private public
+#include <kernel/Memory/GDT.hh>
 
 
 #if !defined(__cplusplus)
@@ -63,6 +65,8 @@ void handler04(Registers_t regs)
 
 static_assert(sizeof(Registers_t) == 64);
 
+Kernel::gdt_entry gdt_table[4];
+Kernel::Memory::GDTEntry gdt_table2[5];
 
 //In Task_c.c
 extern "C" uint32_t init_esp;
@@ -81,27 +85,29 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     Drivers::VGA::Init();
     Drivers::VGA::Write("Writing GDT...\n");
 
-    Kernel::gdt_entry gdt_table[4];
     
-    gdt_table[0] = Kernel::gdt_entry::nullEntry();
+    Kernel::Memory::init_gdt();
     
-    gdt_table[1] = Kernel::gdt_entry::nullEntry();
-    gdt_table[1].setLimit(0xfffffff);
-    gdt_table[1].setBase(0);
-    gdt_table[1].setType(0x9A);
     
-    gdt_table[2] = Kernel::gdt_entry::nullEntry();
-    gdt_table[2].setLimit(0xfffffff);
-    gdt_table[2].setBase(0);
-    gdt_table[2].setType(0x92);
+    // gdt_table[0] = Kernel::gdt_entry::nullEntry();
+    
+    // gdt_table[1] = Kernel::gdt_entry::nullEntry();
+    // gdt_table[1].setLimit(0xfffffff);
+    // gdt_table[1].setBase(0);
+    // gdt_table[1].setType(0x9A);
+    
+    // gdt_table[2] = Kernel::gdt_entry::nullEntry();
+    // gdt_table[2].setLimit(0xfffffff);
+    // gdt_table[2].setBase(0);
+    // gdt_table[2].setType(0x92);
 
-    gdt_table[3] = Kernel::gdt_entry::nullEntry();
-    gdt_table[3].setLimit(sizeof(Kernel::TSS));
-    gdt_table[3].setBase(reinterpret_cast<uint32_t>(Kernel::TSS::myTSS));
-    gdt_table[3].setType(0x89);
+    // gdt_table[3] = Kernel::gdt_entry::nullEntry();
+    // gdt_table[3].setLimit(sizeof(Kernel::TSS));
+    // gdt_table[3].setBase(reinterpret_cast<uint32_t>(Kernel::TSS::myTSS));
+    // gdt_table[3].setType(0x89);
 
-    Kernel::gdt_entry::loadTable(gdt_table, 4);
-    Kernel::gdt_entry::reloadSegments();
+    // Kernel::gdt_entry::loadTable(gdt_table, 4);
+    // Kernel::gdt_entry::reloadSegments();
     Drivers::VGA::Init();
     Drivers::VGA::Write("GDT Written\n");
     Kernel::Interrupts::sti();
@@ -121,10 +127,13 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
 
     Drivers::VGA::Write("Hello, kernel world!\nThis is a test.\n");
 
-
+    Kernel::Memory::GDTEntry gdt2;
+    gdt2.limit(65500);
     Kernel::gdt_entry gdt;
     gdt.setLimit(65500);
     auto lim = gdt.getLimit();
+    auto lim2 = gdt2.limit();
+    ASSERT(lim2 == 65500);
     if (lim != 65500)
     {
         Drivers::VGA::Write("Limit was encoded/decoded incorrectly!\n");
@@ -134,8 +143,11 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
         Drivers::VGA::Write("Limit was encoded/decoded correctly!\n");
     }
 
+    gdt2.base(33554432);
     gdt.setBase(33554432);
     auto b = gdt.getBase();
+    auto b2 = gdt2.base();
+    ASSERT(b2 == 33554432);
     if (b != 33554432)
     {
         Drivers::VGA::Write("Base was encoded/decoded incorrectly!\n");
