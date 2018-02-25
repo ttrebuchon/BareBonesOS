@@ -116,7 +116,7 @@ namespace Utils {
 		
 		T buf[digitCount];
 		
-		for (int i = 0; i < digitCount; ++i)
+		for (size_t i = 0; i < digitCount; ++i)
 		{
 			buf[i] = digits[v / div];
 			v %= div;
