@@ -88,26 +88,6 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     
     Kernel::Memory::init_gdt();
     
-    
-    // gdt_table[0] = Kernel::gdt_entry::nullEntry();
-    
-    // gdt_table[1] = Kernel::gdt_entry::nullEntry();
-    // gdt_table[1].setLimit(0xfffffff);
-    // gdt_table[1].setBase(0);
-    // gdt_table[1].setType(0x9A);
-    
-    // gdt_table[2] = Kernel::gdt_entry::nullEntry();
-    // gdt_table[2].setLimit(0xfffffff);
-    // gdt_table[2].setBase(0);
-    // gdt_table[2].setType(0x92);
-
-    // gdt_table[3] = Kernel::gdt_entry::nullEntry();
-    // gdt_table[3].setLimit(sizeof(Kernel::TSS));
-    // gdt_table[3].setBase(reinterpret_cast<uint32_t>(Kernel::TSS::myTSS));
-    // gdt_table[3].setType(0x89);
-
-    // Kernel::gdt_entry::loadTable(gdt_table, 4);
-    // Kernel::gdt_entry::reloadSegments();
     Drivers::VGA::Init();
     Drivers::VGA::Write("GDT Written\n");
     Kernel::Interrupts::sti();
@@ -228,17 +208,8 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     Drivers::VGA::Write("Device 0 Present? ");
     Drivers::VGA::Write(Drivers::IDE::Device::Devices[0].reserved != 0);
     Drivers::VGA::Write("\n");
-    if (Drivers::IDE::Device::Devices[0].reserved != 0)
-    {
-        Drivers::VGA::Write("Drive 0 Size: ");
-        Drivers::VGA::Write(Drivers::IDE::Device::Devices[0].size);
-        Drivers::VGA::Write("\n");
-        Drivers::VGA::Write("Model: '");
-        Drivers::VGA::Write(Drivers::IDE::Device::Devices[0].model);
-        Drivers::VGA::Write("'\n");
-    }
-
-    for (int i = 1; i < 4; ++i)
+    
+    for (int i = 0; i < 4; ++i)
     {
         if (Drivers::IDE::Device::Devices[i].reserved != 0)
         {
@@ -248,9 +219,26 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
             Drivers::VGA::Write("Model: '");
             Drivers::VGA::Write(Drivers::IDE::Device::Devices[i].model);
             Drivers::VGA::Write("'\n");
+
+            // for (int j = 0; j < 40; ++j)
+            // {
+            //     if (Drivers::IDE::Device::Devices[i].model[j] != 0)
+            //     {
+            //         Drivers::VGA::Write((unsigned int)Drivers::IDE::Device::Devices[i].model[j]);
+            //         Drivers::VGA::Write(", ");
+            //     }
+            //     else
+            //     {
+            //         break;
+            //     }
+            // }
+            // Drivers::VGA::Write("\n");
         }
     }
-    
+
+    ASSERT(Drivers::IDE::Device::Devices[0].size == 4294967295);
+    ASSERT(Drivers::IDE::Device::Devices[0].type == Drivers::IDE::Interface::ATA);
+    ASSERT(Drivers::IDE::Device::Devices[2].type == Drivers::IDE::Interface::ATAPI);
 
     Drivers::VGA::Write("Kernel main() is finished!!\n");
     return 0;
