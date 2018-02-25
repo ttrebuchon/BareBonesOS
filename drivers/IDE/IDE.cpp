@@ -115,20 +115,20 @@ namespace Drivers { namespace IDE {
 		return 0;
 	}
 	
-	//BROKEN
 	void Device::readBuffer(const Channel channel, const Register reg, uint32_t* buf, uint32_t dwordCount)
 	{
-		
-		//TODO
 		if (reg > 0x07 && reg < 0x0C)
 		{
 			write(channel, Register::Control, 0x80 | Channels[(uchar)channel].nIEN);
 		}
-		asm volatile ("pushw %es; movw %ds, %ax; movw %ax, %es");
+		uint16_t esOld = 0;
+		uint16_t ds = 0;
+		asm volatile ("movw %%es, %%bx" : "=b"(esOld));
+		asm volatile ("movw %%ds, %%ax" : "=a"(ds));
+		asm volatile ("movw %%bx, %%es" : : "b"(ds));
 		if (reg < 0x08)
 		{
 			insl(Channels[(uchar)channel].base + reg - 0x00, buf, dwordCount);
-			ASSERT(false);
 		}
 		else if (reg < 0x0C)
 		{
@@ -142,7 +142,7 @@ namespace Drivers { namespace IDE {
 		{
 			insl(Channels[(uchar)channel].base + reg - 0xE, buf, dwordCount);
 		}
-		asm volatile ("popw %es");
+		asm volatile ("movw %%bx, %%es" : : "b"(esOld));
 		if (reg > 0x07 && reg < 0x0C)
 		{
 			write(channel, Register::Control, Channels[(uchar)channel].nIEN);
@@ -156,6 +156,12 @@ namespace Drivers { namespace IDE {
 			return;
 		}
 		_initted = true;
+
+		for (int i = 0; i < 512; ++i)
+		{
+			buf[i] = 0;
+		}
+
 		auto initialStatus1 = read(Channel::Primary, Register::Status);
 		auto initialStatus2 = read(Channel::Secondary, Register::Status);
 		int j, k, count = 0;
@@ -198,8 +204,8 @@ namespace Drivers { namespace IDE {
 			for (j = 0; j < 2; ++j)
 			{
 				currentRole = (j == 0 ? Role::Master : Role::Slave);
-				unsigned char err = 0,
-				type = (uchar)Interface::ATA;
+				unsigned char err = 0;
+				Interface type = Interface::ATA;
 				
 				Devices[count].reserved = 0;
 				
@@ -219,11 +225,27 @@ namespace Drivers { namespace IDE {
 				
 				if (read(i, Register::Status) == 0)
 				{
+					TRACE("ATA Bus is not present!");
+
+					// Drivers::VGA::Write("ATA Bus ");
+					// Drivers::VGA::Write((int)i);
+					// Drivers::VGA::Write(" is not present!\n");
 					continue;
 				}
-				
+
 				while (true)
 				{
+					if (read(i, Register::LBA1) != 0)
+					{
+						err = 1;
+						break;
+					}
+					if (read(i, Register::LBA2) != 0)
+					{
+						err = 1;
+						break;
+					}
+
 					unsigned char status = read(i, Register::Status);
 					if ((status & ATAState::Error))
 					{
@@ -245,12 +267,12 @@ namespace Drivers { namespace IDE {
 					if (cl == 0x14 && ch == 0xEB)
 					{
 						//TODO
-						type = (uchar)Interface::ATAPI;
+						type = Interface::ATAPI;
 					}
 					else if (cl == 0x69 && ch == 0x96)
 					{
 						//TODO
-						type = (uchar)Interface::ATAPI;
+						type = Interface::ATAPI;
 					}
 					else
 					{
@@ -260,8 +282,24 @@ namespace Drivers { namespace IDE {
 					write(i, Register::Command, (uchar)ATACmd::IdentifyPacket);
 					sleep(1);
 				}
-				
+
 				readBuffer(i, Register::Data, buf, 127);
+
+				#if DEBUG
+				bool nonFull = false;
+				for (int h = 1; h < 127; ++h)
+				{
+					if (buf[h] != 0xFFFFFFFF)
+					{
+						Drivers::VGA::Write("Found non-full byte at ");
+						Drivers::VGA::Write(h);
+						Drivers::VGA::Write("\n");
+						nonFull = true;
+						break;
+					}
+				}
+				ASSERT(nonFull);
+				#endif
 				
 				Devices[count].reserved = 1;
 				Devices[count].type = type;
@@ -271,7 +309,7 @@ namespace Drivers { namespace IDE {
 				Devices[count].capabilities = *((unsigned short*)(buf + (uchar)ATAIdentify::Capabilities));
 				Devices[count].commandSets = *((unsigned int*)(buf + (uchar)ATAIdentify::CommandSets));
 
-
+				
 				if (Devices[count].commandSets & (1 << 26))
 				{
 					Devices[count].size = *((unsigned int*)buf + (uchar)ATAIdentify::MaxLBAExt);

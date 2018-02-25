@@ -148,7 +148,7 @@ namespace Drivers { namespace IDE {
 		unsigned char drive;
 		
 		// 0 or 1 (ATA or ATAPI)
-		unsigned short type;
+		Interface type;
 		
 		// Drive Signature
 		unsigned short signature;
@@ -185,7 +185,7 @@ namespace Drivers { namespace IDE {
 		
 	} __attribute__((packed));
 	
-	static_assert(sizeof(Device) == 58);
+	//static_assert(sizeof(Device) == 58);
 }
 }
 
