@@ -65,6 +65,10 @@ namespace Drivers
         static void Write(const bool);
         static void Write(const uint32_t);
         static void Write(const unsigned int);
+        static void Write(const uint16_t);
+        static void Write(const uint8_t);
+        static void Write(const int64_t);
+        static void Write(const int);
     };
 
 
