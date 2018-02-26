@@ -149,14 +149,101 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     Drivers::VGA::Write(fs->name);
     Drivers::VGA::Write("\n");
 
-    // for (int i = 0; i < 256; ++i)
-    // {
-    //     auto x = Drivers::PCI::ConfigReadWord(i, i, 0, 2);
-    //     if (x == 0xFFFF)
-    //     {
-    //         Drivers::VGA::Write("x was 0xFFFF!\n");
-    //     }
-    // }
+    Drivers::PCI::Initialize();
+
+    for (int i = 0; i < 256; ++i)
+    {
+        for (int n = 0; n < 256; ++n)
+        {
+            auto x = Drivers::PCI::ConfigReadWord(i, n, 0, 0);
+            if (x != 0xFFFF)
+            {
+                Drivers::VGA::Write("x was not 0xFFFF! At x: ");
+                Drivers::VGA::Write((void*)x);
+                Drivers::VGA::Write("\n");
+            }
+
+            auto y = Drivers::PCI::ConfigReadWord(i, n, 2, 0);
+            if (y != 0xFFFF)
+            {
+                Drivers::VGA::Write("y was not 0xFFFF! At y: ");
+                Drivers::VGA::Write((void*)y);
+                Drivers::VGA::Write("\n");
+            }
+        }
+    }
+    Drivers::PCIDevice_t dev;
+        
+    for (int i = 0; i < 256; ++i)
+    {
+        dev.data.busNo = i;
+        for (int j = 0; j < 31; ++j)
+        {
+            dev.data.deviceNo = j;
+            dev.data.fieldNo = (((uint16_t)Drivers::PCIRegister::BAR4) & 0xFC) >> 2;
+            ASSERT(dev.data.fieldNo != 0);
+            for (int k = 0; k < 8; ++k)
+            {
+                dev.data.functionNo = k;
+                dev.data.zero = 0;
+                dev.data.reserved = 0;
+                dev.data.enabled = 1;
+                uint32_t expected = (((uint32_t)dev.data.busNo << 16) | ((uint32_t)dev.data.deviceNo << 11) | ((uint32_t)dev.data.functionNo << 8) | ((uint32_t)dev.data.fieldNo << 2) | 0x80000000);
+                uint32_t actual = dev.data;
+                if (actual != expected)
+                {
+                    Drivers::VGA::Write((void*)actual);
+                    Drivers::VGA::Write("\n");
+                    Drivers::VGA::Write((void*)expected);
+                    Drivers::VGA::Write("\n");
+                }
+                ASSERT(actual == expected);
+                if (dev.read(Drivers::PCIRegister::VendorID) != 0xFFFF)
+                {
+                    Drivers::VGA::Write(dev.data.busNo);
+                    Drivers::VGA::Write(" : ");
+                    Drivers::VGA::Write(dev.data.deviceNo);
+                    Drivers::VGA::Write(" : ");
+                    Drivers::VGA::Write(dev.data.functionNo);
+                    Drivers::VGA::Write(" : ");
+                    Drivers::VGA::Write((void*)(addr_t)dev.read(Drivers::PCIRegister::VendorID));
+                    Drivers::VGA::Write(" : ");
+                    Drivers::VGA::Write((void*)(addr_t)dev.read(Drivers::PCIRegister::DeviceID));
+                    Drivers::VGA::Write(" : ");
+                    Drivers::VGA::Write((void*)(addr_t)dev.type());
+                    Drivers::VGA::Write(" : ");
+                    Drivers::VGA::Write((void*)(addr_t)dev.read(Drivers::PCIRegister::ClassCode));
+                    Drivers::VGA::Write(" : ");
+                    Drivers::VGA::Write((void*)(addr_t)dev.read(Drivers::PCIRegister::Subclass));
+                    Drivers::VGA::Write("      -      ");
+                    Drivers::VGA::Write((void*)(addr_t)dev.data);
+                    Drivers::VGA::Write("\n");
+                    if (dev.data.busNo != dev.secondaryBus())
+                    {
+                        dev.data.busNo = dev.secondaryBus();
+                        Drivers::VGA::Write(dev.data.busNo);
+                        Drivers::VGA::Write(" : ");
+                        Drivers::VGA::Write(dev.data.deviceNo);
+                        Drivers::VGA::Write(" : ");
+                        Drivers::VGA::Write(dev.data.functionNo);
+                        Drivers::VGA::Write(" : ");
+                        Drivers::VGA::Write((void*)(addr_t)dev.read(Drivers::PCIRegister::VendorID));
+                        Drivers::VGA::Write(" : ");
+                        Drivers::VGA::Write((void*)(addr_t)dev.read(Drivers::PCIRegister::DeviceID));
+                        Drivers::VGA::Write(" : ");
+                        Drivers::VGA::Write((void*)(addr_t)dev.type());
+                        Drivers::VGA::Write("      -      ");
+                        Drivers::VGA::Write((void*)(addr_t)dev.data);
+                        Drivers::VGA::Write("\n");
+                        Drivers::VGA::Write("\n");
+                    }
+                    
+
+                    
+                }
+            }
+        }
+    }
     
 
     if (Kernel::fork() != 0)
@@ -179,7 +266,8 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
 
 
     Drivers::VGA::Write("Initializing ATA Devices...\n");
-    Drivers::IDE::Device::Initialize(0x1F0, 0x3F6, 0x170, 0x376, 0x000);
+    //Drivers::IDE::Device::Initialize(0x1F0, 0x3F6, 0x170, 0x376, 0x000);
+    Drivers::IDE::Device::Initialize();
     ASSERT(Drivers::IDE::Device::Initialized());
     Drivers::VGA::Write("ATA Initialized.\n");
     Drivers::VGA::Write("Device 0 Present? ");
@@ -190,12 +278,18 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     {
         if (Drivers::IDE::Device::Devices[i].reserved != 0)
         {
+            Drivers::VGA::Write("Drive: ");
+            Drivers::VGA::Write(i);
+            Drivers::VGA::Write("\n");
             Drivers::VGA::Write("Drive Size: ");
             Drivers::VGA::Write(Drivers::IDE::Device::Devices[i].size);
             Drivers::VGA::Write("\n");
             Drivers::VGA::Write("Model: '");
             Drivers::VGA::Write(Drivers::IDE::Device::Devices[i].model);
             Drivers::VGA::Write("'\n");
+            Drivers::VGA::Write("Signature: ");
+            Drivers::VGA::Write((void*)(addr_t)Drivers::IDE::Device::Devices[i].signature);
+            Drivers::VGA::Write("\n");
 
             // for (int j = 0; j < 40; ++j)
             // {
@@ -213,9 +307,6 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
         }
     }
 
-    ASSERT(Drivers::IDE::Device::Devices[0].size == 4294967295);
-    ASSERT(Drivers::IDE::Device::Devices[0].type == Drivers::IDE::Interface::ATA);
-    ASSERT(Drivers::IDE::Device::Devices[2].type == Drivers::IDE::Interface::ATAPI);
 
     Drivers::VGA::Write("Kernel main() is finished!!\n");
     return 0;
