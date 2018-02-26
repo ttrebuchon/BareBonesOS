@@ -14,7 +14,7 @@ namespace Drivers { namespace IDE {
 	
 	unsigned char* IDEDisk::readSector(const uint32_t lba) const
 	{
-		auto buf = reinterpret_cast<unsigned char*>(malloc(dev->sector_size));
+		auto buf = reinterpret_cast<unsigned char*>(kmalloc(dev->sector_size, 0, 0x0));
 		if (!readSector(lba, buf))
 		{
 			free(buf);

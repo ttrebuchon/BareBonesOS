@@ -1,5 +1,6 @@
 #include "IDE.hh"
 #include <drivers/PortIO.h>
+#include <drivers/PCI.hh>
 #include <kernel/Debug.h>
 
 
@@ -10,33 +11,35 @@ namespace Drivers { namespace IDE {
 	ChannelRegister_t Device::Channels[2];
 	Device Device::Devices[4];
 	bool Device::_initted = false;
-	static uint32_t buf[512];
+	static uchar buf[2048];
 	
 	unsigned char Device::read(const Channel channel, const Register reg)
 	{
 		unsigned char result = 0;
+		ChannelRegister_t& chan = (channel == Channel::Primary ? Channels[0] : Channels[1]);
 		
+		ASSERT(Channels[(unsigned char)channel].base + (unsigned char)reg == Channels[(unsigned char)channel].base + (uint16_t)reg);
 		
 		if (reg > 0x07 && reg < 0x0C)
 		{
-			write(channel, Register::Control, 0x80 | Channels[(unsigned char)channel].nIEN);
+			write(channel, Register::Control, 0x80 | chan.nIEN);
 		}
 		
 		if (reg < 0x08)
 		{
-			result = port_byte_in(Channels[(unsigned char)channel].base + (unsigned char)reg - 0x00);
+			result = port_byte_in(chan.base + (unsigned char)reg - 0x00);
 		}
 		else if (reg < 0x0C)
 		{
-			result = port_byte_in(Channels[(unsigned char)channel].base + (unsigned char)reg - 0x06);
+			result = port_byte_in(chan.base + (unsigned char)reg - 0x06);
 		}
 		else if (reg < 0x0E)
 		{
-			result = port_byte_in(Channels[(unsigned char)channel].ctrl + (unsigned char)reg - 0x0A);
+			result = port_byte_in(chan.ctrl + (unsigned char)reg - 0x0A);
 		}
 		else if (reg < 0x16)
 		{
-			result = port_byte_in(Channels[(unsigned char)channel].bmide + (unsigned char)reg - 0x0E);
+			result = port_byte_in(chan.bmide + (unsigned char)reg - 0x0E);
 		}
 		else
 		{
@@ -45,7 +48,7 @@ namespace Drivers { namespace IDE {
 		
 		if (reg > 0x07 && reg < 0x0C)
 		{
-			write(channel, Register::Control, Channels[(unsigned char)channel].nIEN);
+			write(channel, Register::Control, chan.nIEN);
 		}
 		
 		return result;
@@ -59,9 +62,11 @@ namespace Drivers { namespace IDE {
 			write(channel, Register::Control, 0x80 | Channels[(unsigned char)channel].nIEN);
 		}
 		
+		ASSERT(Channels[(unsigned char)channel].base + (uint16_t)reg - 0x00 == Channels[(unsigned char)channel].base + (unsigned short)reg - 0x00);
+
 		if (reg < 0x08)
 		{
-			port_byte_out(Channels[(unsigned char)channel].base + (unsigned char)reg - 0x00, data);
+			port_byte_out(Channels[(unsigned char)channel].base + (uint16_t)reg - 0x00, data);
 		}
 		else if (reg < 0x0C)
 		{
@@ -128,25 +133,67 @@ namespace Drivers { namespace IDE {
 		asm volatile ("movw %%bx, %%es" : : "b"(ds));
 		if (reg < 0x08)
 		{
-			insl(Channels[(uchar)channel].base + reg - 0x00, buf, dwordCount);
+			// for (int i = 0; i < dwordCount*2; ++i)
+			// {
+			// 	((uint16_t*)buf)[i] = port_word_in(Channels[(uchar)channel].base + (uint16_t)reg - 0x00);
+			// }
+			insl(Channels[(uchar)channel].base + (uint16_t)reg - 0x00, buf, dwordCount);
 		}
 		else if (reg < 0x0C)
 		{
-			insl(Channels[(uchar)channel].base + reg - 0x06, buf, dwordCount);
+			insl(Channels[(uchar)channel].base + (uint16_t)reg - 0x06, buf, dwordCount);
 		}
 		else if (reg < 0x0E)
 		{
-			insl(Channels[(uchar)channel].base + reg - 0x0A, buf, dwordCount);
+			insl(Channels[(uchar)channel].base + (uint16_t)reg - 0x0A, buf, dwordCount);
 		}
 		else if (reg < 0x16)
 		{
-			insl(Channels[(uchar)channel].base + reg - 0xE, buf, dwordCount);
+			insl(Channels[(uchar)channel].base + (uint16_t)reg - 0xE, buf, dwordCount);
 		}
 		asm volatile ("movw %%bx, %%es" : : "b"(esOld));
 		if (reg > 0x07 && reg < 0x0C)
 		{
 			write(channel, Register::Control, Channels[(uchar)channel].nIEN);
 		}
+	}
+
+	void Device::Initialize()
+	{
+		if (_initted)
+		{
+			return;
+		}
+
+		auto pciDev = PCI::GetDevice(PCIVendorID::ATA, PCIDeviceID::ATA, PCIType::Null);
+
+		if (pciDev == PCI::NULL_DEVICE)
+		{
+			pciDev = PCI::GetDevice(PCIVendorID::ATA, PCIDeviceID::PIIX4, PCIType::Null);
+		}
+
+		ASSERT(pciDev != PCI::NULL_DEVICE);
+
+		auto bar0 = pciDev.read(PCIRegister::BAR0) + 0x1F0;
+		auto bar1 = pciDev.read(PCIRegister::BAR1) + 0x1F0;
+		auto bar2 = pciDev.read(PCIRegister::BAR2) + 0x1F0;
+		auto bar3 = pciDev.read(PCIRegister::BAR3) + 0x1F0;
+		auto bar4 = pciDev.read(PCIRegister::BAR4);
+
+		// bar0 = 0x1F0;
+		// bar1 = 0x3F6;
+		// bar2 = 0x170;
+		// bar3 = 0x376;
+
+		if (bar0 != 0x1F0)
+		{
+			VGA::Write("BAR0: ");
+			VGA::Write(bar0);
+			VGA::Write("\n");
+		}
+		ASSERT(bar0 == 0x1F0);
+
+		Initialize(bar0, bar1, bar2, bar3, bar4);
 	}
 	
 	void Device::Initialize(uint32_t BAR0, uint32_t BAR1, uint32_t BAR2, uint32_t BAR3, uint32_t BAR4)
@@ -162,10 +209,10 @@ namespace Drivers { namespace IDE {
 			buf[i] = 0;
 		}
 
-		auto initialStatus1 = read(Channel::Primary, Register::Status);
-		auto initialStatus2 = read(Channel::Secondary, Register::Status);
+		ASSERT(BAR0 == 0x1F0);
 		int j, k, count = 0;
 		Channels[(uchar)Channel::Primary].base = (BAR0 & 0xFFFFFFFC) + 0x1F0 * (!BAR0);
+		ASSERT(Channels[(uchar)Channel::Primary].base == 0x1F0);
 		Channels[(uchar)Channel::Primary].ctrl = (BAR1 & 0xFFFFFFFC) + 0x3F6 * (!BAR1);
 		Channels[(uchar)Channel::Secondary].base = (BAR2 & 0xFFFFFFFC) + 0x170 * (!BAR2);
 		
@@ -176,7 +223,8 @@ namespace Drivers { namespace IDE {
 		Channels[(uchar)Channel::Secondary].bmide = (BAR4 & 0xFFFFFFFC) + 0x08;
 		
 		
-		
+		auto initialStatus1 = read(Channel::Primary, Register::Status);
+		auto initialStatus2 = read(Channel::Secondary, Register::Status);
 		
 		write(Channel::Primary, Register::Control, 2);
 		write(Channel::Secondary, Register::Control, 2);
@@ -199,10 +247,11 @@ namespace Drivers { namespace IDE {
 			return;
 		}
 		Role currentRole = Role::Master;
-		for (; i < iEnd; i = (Channel)(i+1))
+		for (j = 0; j < 2; ++j)
 		{
-			for (j = 0; j < 2; ++j)
+			for (; i < iEnd; i = (Channel)(i+1))
 			{
+				//count = ((int)i)*2 + j;
 				currentRole = (j == 0 ? Role::Master : Role::Slave);
 				unsigned char err = 0;
 				Interface type = Interface::ATA;
@@ -218,6 +267,8 @@ namespace Drivers { namespace IDE {
 				write(i, Register::LBA2, 0);
 				sleep(1);
 
+				//poll(i, false);
+
 				write(i, Register::Command, (uchar)ATACmd::Identify);
 				
 				//TODO: Sleep for ~1ms
@@ -225,7 +276,7 @@ namespace Drivers { namespace IDE {
 				
 				if (read(i, Register::Status) == 0)
 				{
-					TRACE("ATA Bus is not present!");
+					TRACE("ATA Bus is not present!\n");
 
 					// Drivers::VGA::Write("ATA Bus ");
 					// Drivers::VGA::Write((int)i);
@@ -261,6 +312,7 @@ namespace Drivers { namespace IDE {
 				
 				if (err != 0)
 				{
+					TRACE("ATA Error Encountered...\n");
 					unsigned char cl = read(i, Register::LBA1);
 					unsigned char ch = read(i, Register::LBA2);
 					
@@ -278,45 +330,37 @@ namespace Drivers { namespace IDE {
 					{
 						continue;
 					}
+
+					TRACE("Nvm, was just an ATAPI device.\n");
 					
 					write(i, Register::Command, (uchar)ATACmd::IdentifyPacket);
 					sleep(1);
 				}
 
-				readBuffer(i, Register::Data, buf, 127);
-
-				#if DEBUG
-				bool nonFull = false;
-				for (int h = 1; h < 127; ++h)
-				{
-					if (buf[h] != 0xFFFFFFFF)
-					{
-						Drivers::VGA::Write("Found non-full byte at ");
-						Drivers::VGA::Write(h);
-						Drivers::VGA::Write("\n");
-						nonFull = true;
-						break;
-					}
-				}
-				ASSERT(nonFull);
-				#endif
+				readBuffer(i, Register::Data, (uint32_t*)buf, 128);
 				
 				Devices[count].reserved = 1;
 				Devices[count].type = type;
 				Devices[count].channel = (Channel)i;
 				Devices[count].drive = j;
-				Devices[count].signature = *((unsigned short*)(buf + (uchar)ATAIdentify::DeviceType));
-				Devices[count].capabilities = *((unsigned short*)(buf + (uchar)ATAIdentify::Capabilities));
-				Devices[count].commandSets = *((unsigned int*)(buf + (uchar)ATAIdentify::CommandSets));
+				Devices[count].signature = *((uint16_t*)(buf + (uint16_t)ATAIdentify::DeviceType));
+				Devices[count].capabilities = *((uint16_t*)(buf + (uint16_t)ATAIdentify::Capabilities));
+				Devices[count].commandSets = *((uint32_t*)(buf + (uint16_t)ATAIdentify::CommandSets));
 
+				
+				Drivers::VGA::Write("Size could be either ");
+				Drivers::VGA::Write(*((uint32_t*)buf + (uint16_t)ATAIdentify::MaxLBAExt));
+				Drivers::VGA::Write(" or ");
+				Drivers::VGA::Write(*((uint32_t*)buf + (uint16_t)ATAIdentify::MaxLBA));
+				Drivers::VGA::Write("\n");
 				
 				if (Devices[count].commandSets & (1 << 26))
 				{
-					Devices[count].size = *((unsigned int*)buf + (uchar)ATAIdentify::MaxLBAExt);
+					Devices[count].size = *((unsigned int*)buf + (uint16_t)ATAIdentify::MaxLBAExt);
 				}
 				else
 				{
-					Devices[count].size = *((unsigned int*)buf + (uchar)ATAIdentify::MaxLBA);
+					Devices[count].size = *((unsigned int*)buf + (uint16_t)ATAIdentify::MaxLBA);
 				}
 
 				for (k = 0; k < 40; k += 2)

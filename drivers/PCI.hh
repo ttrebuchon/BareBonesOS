@@ -77,6 +77,7 @@ namespace Drivers {
 		Bridge = 0x0604,
 		SATA = 0x0106,
 		None = 0xFFFF,
+		Null = -1,
 	};
 	
 	
@@ -87,11 +88,13 @@ namespace Drivers {
 	enum class PCIVendorID : uint16_t
 	{
 		ATA = 0x8086,
+		None = 0xFFFF
 	};
 	
 	enum class PCIDeviceID : uint16_t
 	{
 		ATA = 0x7010,
+		PIIX4 = 0x7111
 	};
 	
 	
@@ -100,10 +103,9 @@ namespace Drivers {
 	
 	
 	
-	class PCIDevice
+	class PCIDevice_t
 	{
-		public:
-		struct
+		struct alignas (uint32_t) Data_t
 		{
 			uint32_t zero : 2;
 			uint32_t fieldNo : 6;
@@ -117,26 +119,54 @@ namespace Drivers {
 			{
 				return *reinterpret_cast<const uint32_t*>(this);
 			}
+
+			Data_t() :	zero(0), fieldNo(0), functionNo(0), deviceNo(0), busNo(0),
+						reserved(0), enabled(0)
+			{
+				
+			}
 			
-		} __attribute__((packed)) data;
+		} __attribute__((packed));
+
+		static_assert(sizeof(Data_t) == 4);
+
+		public:
+		Data_t data;
 		
 		uint32_t read(PCIRegister);
-		
+		PCIType type();
+		bool reachedEnd();
+		uint32_t secondaryBus();
 	};
+
+	inline bool operator==(const PCIDevice_t d1, const PCIDevice_t d2)
+	{
+		return d1.data == d2.data;
+	}
+	inline bool operator!=(const PCIDevice_t d1, const PCIDevice_t d2)
+	{
+		return d1.data != d2.data;
+	}
 	
 	class PCI
 	{
-		
+		private:
+		static bool _initted;
 		
 		public:
-		
+		static const PCIDevice_t NULL_DEVICE;
+
+		static void Initialize();
 		
 		static uint16_t ConfigReadWord(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset);
 		static uint16_t CheckVendor(uint8_t bus, uint8_t slot);
 		static bool CheckDevice(uint8_t bus, uint8_t device);
-		
-		static PCIDevice* GetDevice(uint16_t vendorID, uint16_t deviceID, int deviceType);
-		static PCIDevice* GetDevice(PCIVendorID vendorID, PCIDeviceID deviceID, int deviceType);
+
+		static PCIDevice_t ScanFunction(uint16_t vendorID, uint16_t deviceID, uint32_t bus, uint32_t device, uint32_t function, PCIType deviceType);
+		static PCIDevice_t ScanDevice(uint16_t vendorID, uint16_t deviceID, uint32_t bus, uint32_t device, PCIType deviceType);
+		static PCIDevice_t ScanBus(uint16_t vendorID, uint16_t deviceID, uint32_t bus, PCIType deviceType);
+		static PCIDevice_t GetDevice(uint16_t vendorID, uint16_t deviceID, PCIType deviceType);
+		static PCIDevice_t GetDevice(PCIVendorID vendorID, PCIDeviceID deviceID, PCIType deviceType);
 	};
 	
 }

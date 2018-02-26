@@ -2,6 +2,7 @@
 #define INCLUDED_PRDT_HH
 
 #include <Common.h>
+#include <kernel/Memory.h>
 
 namespace Drivers { namespace IDE {
 	
@@ -40,7 +41,10 @@ namespace Drivers { namespace IDE {
 		public:
 		PRD entries[N];
 		
-		static PRDT* Create(addr_t* phys = nullptr);
+		static PRDT* Create(addr_t* phys = nullptr)
+		{
+			return (PRDT*)kmalloc(sizeof(PRDT), 1, phys);
+		}
 	};
 }
 }

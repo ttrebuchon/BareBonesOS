@@ -164,7 +164,9 @@ namespace Drivers { namespace IDE {
 		
 		// Model (As string)
 		unsigned char model[41];
-		
+
+		// Size (in bytes) of a sector
+		unsigned short sector_size;
 		
 		
 		
@@ -177,6 +179,7 @@ namespace Drivers { namespace IDE {
 		static unsigned char poll(const Channel, const bool advCheck = false);
 		
 		static void Initialize(uint32_t BAR0, uint32_t BAR1, uint32_t BAR2, uint32_t BAR3, uint32_t BAR4);
+		static void Initialize();
 		
 		static inline bool Initialized()
 		{
@@ -185,7 +188,7 @@ namespace Drivers { namespace IDE {
 		
 	} __attribute__((packed));
 	
-	//static_assert(sizeof(Device) == 58);
+	
 }
 }
 

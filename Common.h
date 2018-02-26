@@ -27,3 +27,4 @@ typedef uint32_t size_t;
 
 #include <kernel/Timer.h>
 #include <kernel/MetaInfo.h>
+#include <kernel/Debug.h>
