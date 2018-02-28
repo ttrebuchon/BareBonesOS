@@ -34,7 +34,7 @@ namespace Utils
         typedef const T*        const_pointer;
         typedef T&              reference;
         typedef const T&        const_reference;
-        typedef size_t          size_type;
+        typedef decltype(sizeof(0))          size_type;
         typedef ptrdiff_t       difference_type;
         typedef true_type       propagate_on_container_move_assignment;
         typedef true_type       is_always_equal;
@@ -89,6 +89,12 @@ namespace Utils
         	u->~U();
         }
     };
+    
+    template <class T>
+    bool operator==(const Allocator<T>& a1, const Allocator<T>& a2)
+    {
+    	return true;
+    }
     
     
     

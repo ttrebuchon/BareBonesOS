@@ -6,7 +6,7 @@
 
 namespace Utils
 {
-    template <class T, class Compare = Less<T>>
+    template <class T, class Compare = less<T>>
     class OrderedArray
     {
         private:

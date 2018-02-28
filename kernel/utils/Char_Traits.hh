@@ -31,10 +31,32 @@ namespace Utils
 		using off_type = unsigned long long;
 		using pos_type = streampos;
 		using state_type = mbstate_t;
-		static constexpr void assign(char_type& c1, const char_type& c2) noexcept;
+		static constexpr void assign(char_type& c1, const char_type& c2) noexcept
+		{
+			c1 = c2;
+		}
+		
 		static constexpr bool eq(char_type c1, char_type c2) noexcept;
 		static constexpr bool lt(char_type c1, char_type c2) noexcept;
-		static constexpr int compare(const char_type* s1, const char_type* s2, size_t n);
+		static constexpr int compare(const char_type* s1, const char_type* s2, size_t n)
+		{
+			for (size_t i = 0; i < n; ++i)
+			{
+				if (s1[i] != s2[i])
+				{
+					if (s1[i] < s2[i])
+					{
+						return -1;
+					}
+					else
+					{
+						return 1;
+					}
+				}
+			}
+			return 0;
+		}
+		
 		static constexpr size_t length(const char_type* s)
 		{
 			size_t i = 0;
@@ -53,7 +75,14 @@ namespace Utils
 			return dest;
 		}
 		
-		static char_type* assign(char_type* s, size_t n, char_type a);
+		static char_type* assign(char_type* s, size_t n, char_type a)
+		{
+			for (size_t i = 0; i < n; ++i)
+			{
+				s[i] = a;
+			}
+			return s;
+		}
 		
 		static constexpr int_type not_eof(int_type c) noexcept
 		{
@@ -75,6 +104,11 @@ namespace Utils
 		}
 		
 		static constexpr int_type eof() noexcept { return -1; }
+		
+		static constexpr char_type terminal()
+		{
+			return char_type();
+		}
 		
 	};
 	

@@ -1,59 +1,45 @@
-#ifndef INCLUDED_NUMERIC_LIMITS_HH
-#define INCLUDED_NUMERIC_LIMITS_HH
+#ifndef INCLUDED_NUMERIC_LIMITS_INT_HPP
+#define INCLUDED_NUMERIC_LIMITS_INT_HPP
 
-namespace Utils {
-	
-namespace detail
+namespace Utils
 {
-	template <class T, size_t N>
-	struct Num_LimitFinder
-	{
-		constexpr static T value = 256*(Num_LimitFinder<T, N-1>::value) + 256 - 1;
-	};
-	
-	template <class T>
-	struct Num_LimitFinder<T, 1>
-	{
-		constexpr static T value = 255;
-	};
-}
 
-enum float_round_style
-{
-	round_indeterminate = -1,
-	round_toward_zero = 0,
-	round_to_nearest = 1,
-	round_toward_infinity = 2,
-	round_toward_negative_infinity = 3,
-};
-
-enum float_denorm_style
-{
-	denorm_indeterminate = -1,
-	denorm_absent = 0,
-	denorm_present = 1,
-};
-
-template <class T>
-class numeric_limits;
-
-template <class T>
-class numeric_limits<const T> : public numeric_limits<T>
-{};
-
-
-template <class T>
-class numeric_limits
+template <>
+class numeric_limits<int32_t>
 {
 	public:
-	constexpr static bool is_specialized = false;
-	typedef T type;
+	constexpr static bool is_specialized = true;
+	typedef int32_t type;
 	
 	constexpr static type min() noexcept
-	{ return type(); }
+	{
+		if (is_integer)
+		{
+			if (is_signed)
+			{
+				return -detail::Num_LimitFinder<int64_t, sizeof(type)/2>::value;
+			}
+			else
+			{
+				return 0;
+			}
+		}
+	}
 	
 	constexpr static type max() noexcept
-	{ return type(); }
+	{
+		if (is_integer)
+		{
+			if (is_signed)
+			{
+				return detail::Num_LimitFinder<int64_t, sizeof(type)/2>::value;
+			}
+			else
+			{
+				return detail::Num_LimitFinder<uint64_t, sizeof(type)>::value;
+			}
+		}
+	}
 	
 	constexpr static type lowest() noexcept
 	{ return type(); }
@@ -61,8 +47,8 @@ class numeric_limits
 	constexpr static int digits = 0;
 	constexpr static int digits10 = 0;
 	
-	constexpr static bool is_signed = false;
-	constexpr static bool is_integer = false;
+	constexpr static bool is_signed = true;
+	constexpr static bool is_integer = true;
 	constexpr static bool is_exact = false;
 	constexpr static int radix = 0;
 	
@@ -108,7 +94,6 @@ class numeric_limits
 	constexpr static float_round_style round_style = round_toward_zero;
 };
 
-}
 
+}
 #endif
-#include "numeric_limits_int.hpp"

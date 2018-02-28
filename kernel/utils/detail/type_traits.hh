@@ -1,6 +1,7 @@
 #ifndef INCLUDED_TYPE_TRAITS_HH
 #define INCLUDED_TYPE_TRAITS_HH
 
+#include <kernel/utils/utility>
 #include "type_traits_arithmetic.hh"
 
 namespace Utils
@@ -28,20 +29,7 @@ namespace Utils
 	
 	
 	
-	// remove_cv
-	template <class T>
-	struct remove_cv
-	{
-		typedef T type;
-	};
 	
-	template <class T>
-	struct remove_cv<const T> : public remove_cv<T>
-	{};
-	
-	template <class T>
-	struct remove_cv<volatile T> : public remove_cv<T>
-	{ };
 	
 	
 	

@@ -4,7 +4,7 @@
 namespace Utils {
 
     template <class T>
-    struct Less
+    struct less
     {
         bool operator()(const T left, const T right) const
         {
