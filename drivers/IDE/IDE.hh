@@ -6,6 +6,14 @@
 
 namespace Drivers { namespace IDE {
 	
+	#define ATA_STATE_BUSY 0x80
+	#define ATA_STATE_READY 0x40
+	#define ATA_STATE_FAULT 0x20
+	#define ATA_STATE_SEEK_DONE 0x10
+	#define ATA_STATE_REQUEST_READY 0x08
+	#define ATA_STATE_CORRECTED_DATA 0x04
+	#define ATA_STATE_INLEX 0x02
+	#define ATA_STATE_ERROR 0x01
 	
 	enum class ATAState : unsigned char
 	{
@@ -19,7 +27,14 @@ namespace Drivers { namespace IDE {
 		Error = 0x01
 	};
 	
-	
+	#define ATA_ERROR_BAD_SECTOR 0x80
+	#define ATA_ERROR_UNCORRECTABLE_DATA 0x40
+	#define ATA_ERROR_NO_MEDIA 0x20
+	#define ATA_ERROR_ID_NOT_FOUND 0x10
+	#define ATA_ERROR_NO_MEDIA_2 0x08
+	#define ATA_ERROR_CMD_ABORTED 0x04
+	#define ATA_ERROR_TRACK_0_NOT_FOUND 0x02
+	#define ATA_ERROR_NO_ADDR 0x01
 	
 	enum class ATAError : unsigned char
 	{
@@ -32,6 +47,20 @@ namespace Drivers { namespace IDE {
 		Track0NotFound = 0x02,
 		NoAddr = 0x01
 	};
+	
+	#define ATA_CMD_READ_PIO 0x20
+	#define ATA_CMD_READ_PIO_EXT 0x24
+	#define ATA_CMD_READ_DMA 0xC8
+	#define ATA_CMD_READ_DMA_EXT 0x25
+	#define ATA_CMD_WRITE_PIO 0x30
+	#define ATA_CMD_WRITE_PIO_EXT 0x34
+	#define ATA_CMD_WRITE_DMA 0xCA
+	#define ATA_CMD_WRITE_DMA_EXT 0x35
+	#define ATA_CMD_CACHE_FLUSH 0xE7
+	#define ATA_CMD_CACHE_FLUSH_EXT 0xEA
+	#define ATA_CMD_PACKET 0xA0
+	#define ATA_CMD_IDENTIFY_PACKET 0xA1
+	#define ATA_CMD_IDENTIFY 0xEC
 	
 	enum class ATACmd : unsigned char
 	{
@@ -49,6 +78,18 @@ namespace Drivers { namespace IDE {
 		IdentifyPacket = 0xA1,
 		Identify = 0xEC
 	};
+	
+	#define ATA_IDENTIFY_DEVICE_TYPE 0x00
+	#define ATA_IDENTIFY_CYLINDERS 0x02
+	#define ATA_IDENTIFY_HEADS 0x06
+	#define ATA_IDENTIFY_SECTORS 0x0C
+	#define ATA_IDENTIFY_SERIAL 0x14
+	#define ATA_IDENTIFY_MODEL 0x36
+	#define ATA_IDENTIFY_CAPABILITIES 0x62
+	#define ATA_IDENTIFY_FIELD_VALID 0x6A
+	#define ATA_IDENTIFY_MAX_LBA 0x78
+	#define ATA_IDENTIFY_COMMAND_SETS 0xA4
+	#define ATA_IDENTIFY_MAX_LBA_EXT 0xC8
 	
 	enum class ATAIdentify : unsigned char
 	{
@@ -76,12 +117,33 @@ namespace Drivers { namespace IDE {
 		Primary = 0x00,
 		Secondary = 0x01
 	};
+	
+	#define ATA_MASTER 0xA0
+	#define ATA_SLAVE 0xB0
 
 	enum class Role : unsigned char
 	{
 		Master = 0xA0,
 		Slave = 0xB0,
 	};
+	
+	#define ATA_REG_DATA 0x00
+	#define ATA_REG_ERROR 0x01
+	#define ATA_REG_FEATURES 0x01
+	#define ATA_REG_SECTOR_COUNT_0 0x02
+	#define ATA_REG_LBA_LOW 0x03
+	#define ATA_REG_LBA_MID 0x04
+	#define ATA_REG_LBA_HIGH 0x05
+	#define ATA_REG_DEVICE_SELECT 0x06
+	#define ATA_REG_COMMAND 0x07
+	#define ATA_REG_STATUS 0x07
+	#define ATA_REG_SECTOR_COUNT_1 0x08
+	#define ATA_REG_LBA_3 0x09
+	#define ATA_REG_LBA_4 0x0A
+	#define ATA_REG_LBA_5 0x0B
+	#define ATA_REG_CONTROL 0x0C
+	#define ATA_REG_ALT_STATUS 0x0C
+	#define ATA_REG_DEVICE_ADDR 0x0D
 	
 	enum class Register : unsigned char
 	{
@@ -104,12 +166,12 @@ namespace Drivers { namespace IDE {
 		DevAddr = 0x0D
 	};
 	
-	ENUM_OPS(ATAState, unsigned char)
-	ENUM_OPS(ATAError, unsigned char)
-	ENUM_OPS(ATACmd, unsigned char)
-	ENUM_OPS(Channel, unsigned char)
-	ENUM_OPS(Register, unsigned char)
-	ENUM_OPS(ATAIdentify, unsigned char)
+	ENUM_OPS(ATAState, uint32_t)
+	ENUM_OPS(ATAError, uint32_t)
+	ENUM_OPS(ATACmd, uint32_t)
+	ENUM_OPS(Channel, uint32_t)
+	ENUM_OPS(Register, uint32_t)
+	ENUM_OPS(ATAIdentify, uint32_t)
 	
 	struct ChannelRegister_t
 	{

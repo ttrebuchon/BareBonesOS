@@ -27,19 +27,19 @@ namespace Drivers { namespace IDE {
 		
 		if (reg < 0x08)
 		{
-			result = port_byte_in(chan.base + (unsigned char)reg - 0x00);
+			result = port_byte_in(chan.base + reg - 0x00);
 		}
 		else if (reg < 0x0C)
 		{
-			result = port_byte_in(chan.base + (unsigned char)reg - 0x06);
+			result = port_byte_in(chan.base + reg - 0x06);
 		}
 		else if (reg < 0x0E)
 		{
-			result = port_byte_in(chan.ctrl + (unsigned char)reg - 0x0A);
+			result = port_byte_in(chan.ctrl + reg - 0x0A);
 		}
 		else if (reg < 0x16)
 		{
-			result = port_byte_in(chan.bmide + (unsigned char)reg - 0x0E);
+			result = port_byte_in(chan.bmide + reg - 0x0E);
 		}
 		else
 		{
@@ -57,33 +57,35 @@ namespace Drivers { namespace IDE {
 	
 	void Device::write(const Channel channel, const Register reg, unsigned char data)
 	{
+		ChannelRegister_t& chan = (channel == Channel::Primary ? Channels[0] : Channels[1]);
+		
 		if (reg > 0x07 && reg < 0x0C)
 		{
-			write(channel, Register::Control, 0x80 | Channels[(unsigned char)channel].nIEN);
+			write(channel, Register::Control, 0x80 | chan.nIEN);
 		}
 		
 		ASSERT(Channels[(unsigned char)channel].base + (uint16_t)reg - 0x00 == Channels[(unsigned char)channel].base + (unsigned short)reg - 0x00);
 
 		if (reg < 0x08)
 		{
-			port_byte_out(Channels[(unsigned char)channel].base + (uint16_t)reg - 0x00, data);
+			port_byte_out(chan.base + reg - 0x00, data);
 		}
 		else if (reg < 0x0C)
 		{
-			port_byte_out(Channels[(unsigned char)channel].base + (unsigned char)reg - 0x06, data);
+			port_byte_out(chan.base + reg - 0x06, data);
 		}
 		else if (reg < 0x0E)
 		{
-			port_byte_out(Channels[(unsigned char)channel].ctrl + (unsigned char)reg - 0x0A, data);
+			port_byte_out(chan.ctrl + reg - 0x0A, data);
 		}
 		else if (reg < 0x16)
 		{
-			port_byte_out(Channels[(unsigned char)channel].bmide + (unsigned char)reg - 0x0E, data);
+			port_byte_out(chan.bmide + reg - 0x0E, data);
 		}
 		
 		if (reg > 0x07 && reg < 0x0C)
 		{
-			write(channel, Register::Control, Channels[(unsigned char)channel].nIEN);
+			write(channel, Register::Control, chan.nIEN);
 		}
 	}
 	
@@ -122,39 +124,45 @@ namespace Drivers { namespace IDE {
 	
 	void Device::readBuffer(const Channel channel, const Register reg, uint32_t* buf, uint32_t dwordCount)
 	{
+		ChannelRegister_t& chan = (channel == Channel::Primary ? Channels[0] : Channels[1]);
+		
 		if (reg > 0x07 && reg < 0x0C)
 		{
-			write(channel, Register::Control, 0x80 | Channels[(uchar)channel].nIEN);
+			write(channel, Register::Control, 0x80 | chan.nIEN);
 		}
 		uint16_t esOld = 0;
 		uint16_t ds = 0;
+		#ifndef TESTING
 		asm volatile ("movw %%es, %%bx" : "=b"(esOld));
 		asm volatile ("movw %%ds, %%ax" : "=a"(ds));
 		asm volatile ("movw %%bx, %%es" : : "b"(ds));
+		#endif
 		if (reg < 0x08)
 		{
 			// for (int i = 0; i < dwordCount*2; ++i)
 			// {
 			// 	((uint16_t*)buf)[i] = port_word_in(Channels[(uchar)channel].base + (uint16_t)reg - 0x00);
 			// }
-			insl(Channels[(uchar)channel].base + (uint16_t)reg - 0x00, buf, dwordCount);
+			insl(chan.base + reg - 0x00, buf, dwordCount);
 		}
 		else if (reg < 0x0C)
 		{
-			insl(Channels[(uchar)channel].base + (uint16_t)reg - 0x06, buf, dwordCount);
+			insl(chan.base + reg - 0x06, buf, dwordCount);
 		}
 		else if (reg < 0x0E)
 		{
-			insl(Channels[(uchar)channel].base + (uint16_t)reg - 0x0A, buf, dwordCount);
+			insl(chan.base + reg - 0x0A, buf, dwordCount);
 		}
 		else if (reg < 0x16)
 		{
-			insl(Channels[(uchar)channel].base + (uint16_t)reg - 0xE, buf, dwordCount);
+			insl(chan.base + reg - 0xE, buf, dwordCount);
 		}
+		#ifndef TESTING
 		asm volatile ("movw %%bx, %%es" : : "b"(esOld));
+		#endif
 		if (reg > 0x07 && reg < 0x0C)
 		{
-			write(channel, Register::Control, Channels[(uchar)channel].nIEN);
+			write(channel, Register::Control, chan.nIEN);
 		}
 	}
 
@@ -185,12 +193,6 @@ namespace Drivers { namespace IDE {
 		// bar2 = 0x170;
 		// bar3 = 0x376;
 
-		if (bar0 != 0x1F0)
-		{
-			VGA::Write("BAR0: ");
-			VGA::Write(bar0);
-			VGA::Write("\n");
-		}
 		ASSERT(bar0 == 0x1F0);
 
 		Initialize(bar0, bar1, bar2, bar3, bar4);
@@ -251,7 +253,7 @@ namespace Drivers { namespace IDE {
 		{
 			for (; i < iEnd; i = (Channel)(i+1))
 			{
-				//count = ((int)i)*2 + j;
+				count = ((int)i)*2 + j;
 				currentRole = (j == 0 ? Role::Master : Role::Slave);
 				unsigned char err = 0;
 				Interface type = Interface::ATA;
@@ -348,11 +350,12 @@ namespace Drivers { namespace IDE {
 				Devices[count].commandSets = *((uint32_t*)(buf + (uint16_t)ATAIdentify::CommandSets));
 
 				
-				Drivers::VGA::Write("Size could be either ");
+				/*Drivers::VGA::Write("Size could be either ");
 				Drivers::VGA::Write(*((uint32_t*)buf + (uint16_t)ATAIdentify::MaxLBAExt));
 				Drivers::VGA::Write(" or ");
 				Drivers::VGA::Write(*((uint32_t*)buf + (uint16_t)ATAIdentify::MaxLBA));
 				Drivers::VGA::Write("\n");
+				*/
 				
 				if (Devices[count].commandSets & (1 << 26))
 				{
