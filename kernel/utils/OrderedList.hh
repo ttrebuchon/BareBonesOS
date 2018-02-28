@@ -6,7 +6,7 @@
 
 namespace Utils {
 
-    template <class T, class Comp = Less<T>, class Alloc = Allocator<T>>
+    template <class T, class Comp = less<T>, class Alloc = Allocator<T>>
     class OrderedList : public List<T, Alloc>
     {
         private:
