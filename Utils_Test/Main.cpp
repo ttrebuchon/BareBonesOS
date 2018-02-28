@@ -42,6 +42,7 @@ int main()
 	RUN(Bitset);
 	RUN(IDE);
 	RUN(Limits);
+	RUN(String);
 	RUN(IOSTREAM);
 	
 	std::cerr << "\n\n\nAll Done!\n" << std::flush;

@@ -1,5 +1,7 @@
 #include "Tests.hh"
 #include <drivers/IDE/IDEDisk.hh>
+#include <drivers/IDE/DMA.hh>
+#include <drivers/PCI.hh>
 #include <kernel/utils/EnumOperators.hh>
 
 struct IDEChannelRegisters {
@@ -18,4 +20,5 @@ TEST(IDE)
 	std::cout << "Size: " << sizeof(IDEChannelRegisters) << std::endl;
 	std::cout << "Size: " << sizeof(channels) << std::endl;
 	std::cout << "Size: " << sizeof(Drivers::IDE::Device) << std::endl;
+	assert(true);
 }

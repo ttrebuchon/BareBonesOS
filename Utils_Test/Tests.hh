@@ -30,5 +30,6 @@ TEST(Bitset);
 TEST(IDE);
 TEST(IOSTREAM);
 TEST(Limits);
+TEST(String);
 
 #endif
