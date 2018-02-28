@@ -1,4 +1,4 @@
-
+#include <kernel/Error.h>
 
 
 #ifndef _GLIBCXX_SYNCHRONIZATION_HAPPENS_BEFORE
@@ -23,7 +23,11 @@
 
 #else
 
-#define _GLIBCXX_THROW_OR_ABORT(_EXC) (__builtin_abort())
+    #ifndef TESTING
+    #define _GLIBCXX_THROW_OR_ABORT(_EXC) (KPANIC(""))
+    #else
+    #define _GLIBCXX_THROW_OR_ABORT(_EXC) (__builtin_abort())
+    #endif
 
 #endif
 
