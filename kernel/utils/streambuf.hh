@@ -56,10 +56,10 @@ namespace Utils {
 		virtual int_type underflow();
 		virtual int_type uflow();
 		
-		virtual int_type pbackfail(int_type c = Traits::eof());
+		virtual int_type pbackfail(int_type c = traits_type::eof());
 		
 		virtual streamsize xsputn(const char_type* s, streamsize n);
-		virtual int_type overflow(int_type c = Traits::eof());
+		virtual int_type overflow(int_type c = traits_type::eof());
 		
 		
 		public:
