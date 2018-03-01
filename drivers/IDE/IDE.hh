@@ -195,10 +195,13 @@ namespace Drivers { namespace IDE {
 	{
 		private:
 		static bool _initted;
+		static uint32_t BAR0, BAR1, BAR2, BAR3, BAR4;
+		
+		bool _device_initted;
 
 		public:
 		static ChannelRegister_t Channels[2];
-		static Device Devices[4];
+		//static Device Devices[4];
 		
 		// 0 or 1 (Empty or Exists)
 		unsigned char reserved;
@@ -206,8 +209,8 @@ namespace Drivers { namespace IDE {
 		// 0 or 1 (Primary channel or secondary)
 		Channel channel;
 		
-		// 0 or 1 (Master or Slave)
-		unsigned char drive;
+		// (Master or Slave)
+		Role drive;
 		
 		// 0 or 1 (ATA or ATAPI)
 		Interface type;
@@ -230,15 +233,47 @@ namespace Drivers { namespace IDE {
 		// Size (in bytes) of a sector
 		unsigned short sector_size;
 		
+		// Register Addresses
+		uint16_t data;
+		uint16_t error;
+		uint16_t sectorCount;
+		union {
+			uint16_t sectorNum;
+			uint16_t lbaLow;
+		};
 		
+		union {
+			uint16_t cylinderLow;
+			uint16_t lbaMid;
+		};
 		
-		static unsigned char read(const Channel channel, const Register reg);
+		union {
+			uint16_t cylinderHigh;
+			uint16_t lbaHigh;
+		};
 		
-		static void write(const Channel, const Register, unsigned char data);
+		union {
+			uint16_t select;
+			uint16_t head;
+		};
 		
-		static void readBuffer(const Channel, const Register, uint32_t* buf, uint32_t dwordCount);
+		union {
+			uint16_t command;
+			uint16_t status;
+		};
 		
-		static unsigned char poll(const Channel, const bool advCheck = false);
+		union {
+			uint16_t control;
+			uint16_t altStatus;
+		};
+		
+		static unsigned char Read(const Channel channel, const Register reg);
+		
+		static void Write(const Channel, const Register, unsigned char data);
+		
+		static void ReadBuffer(const Channel, const Register, uint32_t* buf, uint32_t dwordCount);
+		
+		static unsigned char Poll(const Channel, const bool advCheck = false);
 		
 		static void Initialize(uint32_t BAR0, uint32_t BAR1, uint32_t BAR2, uint32_t BAR3, uint32_t BAR4);
 		static void Initialize();
@@ -247,6 +282,12 @@ namespace Drivers { namespace IDE {
 		{
 			return _initted;
 		}
+		
+		Device(Channel, Role);
+		
+		bool init();
+		void delay() const;
+		void softReset();
 		
 	} __attribute__((packed));
 	

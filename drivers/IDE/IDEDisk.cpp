@@ -4,8 +4,10 @@
 
 namespace Drivers { namespace IDE {
 	
-	IDEDisk::IDEDisk(bool primary, bool master) : IDEDisk(&Device::Devices[((int)!primary)*2 + (int)!master])
-	{}
+	IDEDisk::IDEDisk(bool primary, bool master) : IDEDisk(new Device(primary ? Channel::Primary : Channel::Secondary, master ? Role::Master : Role::Slave)/*&Device::Devices[((int)!primary)*2 + (int)!master]*/)
+	{
+		
+	}
 	
 	IDEDisk::IDEDisk(Device* dev) : dev(dev)
 	{
@@ -26,7 +28,7 @@ namespace Drivers { namespace IDE {
 	
 	bool IDEDisk::readSector(const uint32_t lba, unsigned char* buf) const
 	{
-		Device::write(dev->channel, Register::Command, 0);
+		Device::Write(dev->channel, Register::Command, 0);
 		//port_byte_out(, 0);
 	}
 	
