@@ -10,15 +10,16 @@ namespace Utils {
 	locale* locale::_global(nullptr);
 	
 	
-	
 	const locale& locale::classic()
 	{
 		static Internal* imp = nullptr;
 		if (!imp)
 		{
 			imp = new Internal;
-			imp->addFacet(new num_put<char>);
+			auto np = new num_put<char>();
+			imp->addFacet(np);
 			imp->rcount = 100;
+			
 		}
 		
 		static locale _classic(imp);
@@ -30,7 +31,8 @@ namespace Utils {
 	{
 		if (_global == nullptr)
 		{
-			_global = new locale(classic());
+			assert(classic().imp != nullptr);
+			_global = new locale(classic().imp);
 		}
 		return *_global;
 	}

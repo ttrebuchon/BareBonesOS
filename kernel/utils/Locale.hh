@@ -147,7 +147,11 @@ namespace Utils
 			
 			Internal() : rcount(1), _indexes(new id*[6]), _facets(new const facet*[6]), _facets_size(6)
 			{
-				
+				for (int i = 0; i < 6; ++i)
+				{
+					_indexes[i] = nullptr;
+					_facets[i] = nullptr;
+				}
 			}
 			
 			Internal(const Internal& o) : rcount(1), _indexes(new id*[o._facets_size]), _facets(new const facet*[o._facets_size]), _facets_size(o._facets_size)
@@ -168,9 +172,11 @@ namespace Utils
 					return (new Internal(*this))->addFacet(f);
 				}
 				
+				
 				const auto index = F::id.value();
 				if (_facets_size <= index)
 				{
+					
 					auto tmpInd = new id*[_facets_size*2];
 					auto tmpFac = new const facet*[_facets_size*2];
 					for (size_t i = 0; i < _facets_size; ++i)
