@@ -204,7 +204,9 @@ namespace Utils
 		
 		Internal* imp;
 		
-		static locale _global;
+		static locale* _global;
+		static locale& getGlobal();
+		static locale& setGlobal(const locale&);
 		
 		template <class Facet>
 		friend const Facet& use_facet(const locale&);

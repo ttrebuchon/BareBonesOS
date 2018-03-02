@@ -7,7 +7,8 @@
 namespace Utils {
 	
 	size_t locale::id::counter = 0;
-	locale locale::_global(locale::classic());
+	locale* locale::_global(nullptr);
+	
 	
 	
 	const locale& locale::classic()
@@ -24,6 +25,18 @@ namespace Utils {
 		
 		return _classic;
 	}
+
+	locale& locale::getGlobal()
+	{
+		if (_global == nullptr)
+		{
+			_global = new locale(classic());
+		}
+		return *_global;
+	}
+	
+
+
 	
 	locale::locale(Internal* i) : imp(i)
 	{
@@ -34,7 +47,7 @@ namespace Utils {
 	
 	
 	
-	locale::locale() : locale(_global)
+	locale::locale() : locale(getGlobal())
 	{
 		
 	}

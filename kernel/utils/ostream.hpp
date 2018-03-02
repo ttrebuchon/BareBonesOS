@@ -26,11 +26,11 @@ namespace Utils {
 			
 			if (has_facet<_nput_t>(this->getloc()))
 			{
-			const auto& np = use_facet<_nput_t>(this->getloc());
-			if (np.put(*this, *this, this->fill(), v).failed())
-			{
-				__err |= ios_base::badbit;
-			}
+				const auto& np = use_facet<_nput_t>(this->getloc());
+				if (np.put(*this, *this, this->fill(), v).failed())
+				{
+					__err |= ios_base::badbit;
+				}
 			}
 			else
 			{
@@ -230,6 +230,7 @@ namespace Utils {
 				this->setstate(this->rdstate() | ios_base::badbit);
 			}
 		}
+		return *this;
 	}
 }
 
