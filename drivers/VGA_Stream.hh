@@ -2,6 +2,7 @@
 #define INCLUDED_VGA_STREAM_HH
 
 #include <kernel/utils/streambuf.hh>
+#include <kernel/utils/streambuf.hpp>
 #include <drivers/VGA.hh>
 
 namespace Drivers
