@@ -6,6 +6,12 @@
 
 //#include <kernel/utils/String.hh>
 #include <kernel/utils/locale>
+#include <drivers/VGA_Stream.hh>
+
+namespace Drivers {
+extern uint16_t* vga_buf;
+extern uint16_t* terminal_buffer;
+}
 
 class Foo : public Utils::basic_ios<char>
 {
@@ -183,6 +189,7 @@ TEST(IOSTREAM)
 	StdBuf* buf;
 	Utils::ostream os(buf = new StdBuf());
 	
+	
 	os.flags(os.flags() | Utils::ios::boolalpha);
 	
 	/*std::string longS;
@@ -327,10 +334,38 @@ TEST(IOSTREAM)
 	assert(ss.good());
 	std::cout << buf2->to_string() << std::flush;
 	std::cout << ss.str() << std::flush;
-	assert(buf2->to_string() == ss.str());
+	//assert(buf2->to_string() == ss.str());
+	
+	
+	Drivers::VGAStreamBuf vbuf;
+	Utils::ostream vos(&vbuf);
+	
+	vos << "Test";
+	vos.flush();
+	assert(((char*)Drivers::vga_buf)[0] == 'T');
+	assert(((char*)Drivers::vga_buf)[2] == 'e');
+	for (int i = 0; i < 30; ++i)
+	{
+		vos << "Hi\n";
+	}
+	vos.flush();
+	assert(((char*)Drivers::vga_buf)[0] == 'H');
+	assert(((char*)Drivers::vga_buf)[2] == 'i');
 	
 	
 	
+	buf2->reset();
+	unsigned char cbuf[41];
+	cbuf[0] = 'A';
+	cbuf[1] = 'B';
+	cbuf[2] = 'C';
+	cbuf[3] = 0;
+	
+	os << cbuf;
+	os.flush();
+	
+	std::cout << buf2->to_string() << std::endl;
+	assert(buf2->to_string() == "ABC");
 }
 
 //using namespace __gnu_cxx;

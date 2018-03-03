@@ -11,5 +11,14 @@ namespace Utils {
             return left < right;
         }
     };
+    
+    template <class T>
+    struct equal_to
+    {
+        bool operator()(const T left, const T right) const
+        {
+            return left == right;
+        }
+    };
 }
 #endif

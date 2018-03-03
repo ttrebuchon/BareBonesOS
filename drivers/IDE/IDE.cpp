@@ -488,9 +488,10 @@ namespace Drivers { namespace IDE {
 					
 			port_byte_out(command, (uchar)ATACmd::IdentifyPacket);
 			delay();
-			insl(data, (uint32_t*)buf, 256);
-			reserved = 1;
 		}
+		
+		insl(data, (uint32_t*)buf, 256);
+		reserved = 1;
 				
 		/*
 				Devices[count].type = type;

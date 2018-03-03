@@ -266,6 +266,7 @@ namespace Drivers { namespace IDE {
 			uint16_t control;
 			uint16_t altStatus;
 		};
+		uint16_t BMR;
 		
 		static unsigned char Read(const Channel channel, const Register reg);
 		

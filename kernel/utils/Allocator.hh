@@ -96,6 +96,12 @@ namespace Utils
     	return true;
     }
     
+    template <class T>
+    bool operator!=(const Allocator<T>& a1, const Allocator<T>& a2)
+    {
+    	return false;
+    }
+    
     
     
     

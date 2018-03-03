@@ -3,6 +3,9 @@
 
 //Includes and whatnot
 
+#ifdef TESTING
+#include <assert.h>
+#endif
 
 
 
@@ -20,7 +23,7 @@
 #undef kassert
 
 //TODO: kassert
-#define kassert(X) 
+#define kassert(X) assert(X)
 
 #endif
 #else

@@ -13,6 +13,7 @@ namespace Drivers
     class VGA final
     {
         private:
+        VGA();
         static bool initialized;
         static size_t terminal_row;
         static size_t terminal_column;
@@ -64,11 +65,11 @@ namespace Drivers
         static void Write(const void* ptr);
         static void Write(const bool);
         static void Write(const uint32_t);
-        static void Write(const unsigned int);
+        static void Write(const uint64_t);
         static void Write(const uint16_t);
         static void Write(const uint8_t);
         static void Write(const int64_t);
-        static void Write(const int);
+        static void Write(const int32_t);
     };
 
 

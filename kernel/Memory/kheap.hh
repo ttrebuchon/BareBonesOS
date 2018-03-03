@@ -16,7 +16,7 @@ extern "C" {
     extern uint32_t kPlacement;
 
 
-    void* kmalloc(uint32_t size, int align, uint32_t* phys);
+    void* kmalloc(uint32_t size, int align, addr_t* phys);
 
     void kmemset(void*, unsigned char, uint32_t);
 

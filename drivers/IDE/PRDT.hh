@@ -43,7 +43,10 @@ namespace Drivers { namespace IDE {
 		
 		static PRDT* Create(addr_t* phys = nullptr)
 		{
-			return (PRDT*)kmalloc(sizeof(PRDT), 1, phys);
+			auto ptr = (PRDT<N>*)kmalloc(sizeof(PRDT<N>), 1, phys);
+			kmemset(ptr, 0, sizeof(PRDT<N>));
+			ptr->entries[N-1].end = 1;
+			return ptr;
 		}
 	};
 }

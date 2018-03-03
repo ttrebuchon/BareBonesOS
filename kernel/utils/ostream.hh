@@ -95,6 +95,15 @@ namespace Utils {
 	
 	typedef basic_ostream<char> ostream;
 	typedef basic_ostream<wchar_t> wostream;
+	
+	template <class Traits>
+	basic_ostream<char, Traits>& operator<<(basic_ostream<char, Traits>&, const signed char*);
+	
+	template <class Traits>
+	basic_ostream<char, Traits>& operator<<(basic_ostream<char, Traits>& os, const unsigned char* cstr)
+	{
+		return (os << (const char*)cstr);
+	}
 }
 
 #endif
