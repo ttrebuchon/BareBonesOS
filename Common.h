@@ -5,16 +5,24 @@
 
 #include <stdint.h>
 typedef unsigned char uchar;
-typedef uint32_t addr_t;
+typedef uint64_t addr_t;
 
 #ifdef __cplusplus
 
+//#ifndef TESTING
+
+typedef unsigned long size_t;
 typedef decltype(sizeof(0)) size_t;
+
+//#endif
 
 
 
 #else
-typedef uint32_t size_t;
+
+//#ifndef TESTING
+typedef unsigned long size_t;
+//#endif
 
 
 #endif

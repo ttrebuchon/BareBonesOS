@@ -1,8 +1,14 @@
 #ifndef INCLUDED_DEBUG_H
 #define INCLUDED_DEBUG_H
 
-#include "Error.h"
+
+
+#ifndef TESTING
+
 #include <drivers/VGA.hh>
+#include "Error.h"
+
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,4 +35,34 @@ inline void __ASSERT_TRUE() {}
 #endif
 
 
+//Are testing
+#else
+
+#include "assert.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+
+#define ASSERT(X) assert(X)
+
+#ifdef _TRACE
+
+#define TRACE(X) 
+#define TRACE_C(X) 
+
+#else
+
+#define TRACE(X) 
+#define TRACE_C(X) 
+
+#endif
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
 #endif

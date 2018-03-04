@@ -9,7 +9,12 @@ namespace Drivers
     size_t VGA::terminal_row = 0;
     size_t VGA::terminal_column = 0;
     uint8_t VGA::terminal_color = VGA::AttributeValue(VGA::Color::LIGHT_GREY, VGA::Color::BLACK);
+    #ifndef TESTING
     uint16_t* VGA::terminal_buffer = (uint16_t*) 0xB8000;
+    #else
+    uint16_t* vga_buf = new uint16_t[VGA::Width*VGA::Height];
+    uint16_t* VGA::terminal_buffer = vga_buf;
+    #endif
 
 
 
@@ -97,7 +102,7 @@ namespace Drivers
     void VGA::Write(const void* addr)
     {
         int32_t tmp;
-        uint32_t n = (uint32_t)addr;
+        addr_t n = (addr_t)addr;
 
         Write("0x");
         bool nZeroes = 1;
@@ -155,14 +160,14 @@ namespace Drivers
         }
     }
 
-    void VGA::Write(const unsigned int n)
+    /*void VGA::Write(const unsigned int n)
     {
         char buf[256];
         if (c_uint_to_str(n, buf, 256))
         {
             Write(buf);
         }
-    }
+    }*/
 
     void VGA::Write(const uint16_t n)
     {

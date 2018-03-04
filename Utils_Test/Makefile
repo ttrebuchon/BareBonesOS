@@ -1,7 +1,7 @@
 
 GET_SRC = $(wildcard ../$1/*.cpp ../$1/*.c)
 
-SRC = $(call GET_SRC,kernel/utils) $(call GET_SRC,kernel/utils/detail) ../kernel/Memory/memcpy.c ../kernel/MetaInfo.cpp ../drivers/IDE/DMA.cpp $(call GET_SRC,drivers/IDE) ../drivers/PCI.cpp $(wildcard Dummies/*.cpp Dummies/*.c)
+SRC = $(call GET_SRC,kernel/utils) $(call GET_SRC,kernel/utils/detail) ../kernel/Memory/memcpy.c ../kernel/MetaInfo.cpp ../drivers/IDE/DMA.cpp $(call GET_SRC,drivers/IDE) ../drivers/PCI.cpp $(wildcard Dummies/*.cpp Dummies/*.c) ../drivers/VGA_Stream.cpp ../drivers/VGA.cpp
 
 C_OBJS = $(SRC:.c=.o)
 OBJS = $(C_OBJS:.cpp=.o)

@@ -3,6 +3,9 @@
 
 // //Includes and whatnot
 
+#ifdef TESTING
+#include <assert.h>
+#endif
 
 
 

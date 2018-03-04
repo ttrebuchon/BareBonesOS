@@ -500,6 +500,9 @@ namespace Drivers { namespace IDE {
 			model[k] = buf[ATAIdentify::Model + k + 1];
 			model[k+1] = buf[ATAIdentify::Model + k];
 		}
+		
+		// insl(data, (uint32_t*)buf, 256);
+		// reserved = 1;
 				
 		/*
 				Devices[count].type = type;

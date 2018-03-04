@@ -35,17 +35,19 @@ namespace Drivers { namespace IDE {
 		
 		static_assert(sizeof(Status) == 1);
 		
+		constexpr static size_t PRDT_Size = 10;
+		
 		private:
 		
 		// Second bus is offset by 0x8
-		enum class Register
+		enum class Register : uint16_t
 		{
 			Command = 0x0,
 			Status = 0x2,
 			PRDT_Addr = 0x4,
 		};
 		
-		enum class Function
+		enum class Function : uint16_t
 		{
 			Read48 = 0x25,
 			Write48 = 0x35,
@@ -60,8 +62,14 @@ namespace Drivers { namespace IDE {
 		Direction _dir;
 		bool _state;
 		Device* dev;
-		PRDT<10>* prdt;
+		mutable PRDT<PRDT_Size>* prdt;
 		addr_t prdt_phys;
+		mutable unsigned char* bufs[PRDT_Size];
+		mutable addr_t bufsPhys[PRDT_Size];
+		mutable size_t bufsSize[PRDT_Size];
+		
+		
+		void configureForSize(size_t len) const;
 		
 		public:
 		
@@ -72,6 +80,13 @@ namespace Drivers { namespace IDE {
 		
 		DMADrive(Device*);
 		DMADrive(const Channel, const Role);
+		
+		unsigned char* readSector(uint32_t lba, uint32_t len);
+		
+		virtual int read(size_t start, size_t len, unsigned char* buf) const;
+		virtual int write(size_t start, size_t len, const unsigned char* buf);
+		
+		virtual size_t capacity() const;
 	};
 	
 }

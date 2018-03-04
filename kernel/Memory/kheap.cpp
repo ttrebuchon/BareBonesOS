@@ -67,7 +67,7 @@ namespace Kernel { namespace Memory {
             const KHeapHeader* header = index[i];
             if (!pageAlign)
             {
-                uint32_t loc = (uint32_t)header;
+                uint32_t loc = (addr_t)header;
                 int32_t offset = 0;
                 if (((loc + sizeof(struct KHeapHeader)) & 0xFFFFF000) != 0)
                 {
@@ -201,7 +201,7 @@ namespace Kernel { namespace Memory {
             uint32_t value = 0x0;
             while (it < (int32_t)index.size())
             {
-                uint32_t tmp = (uint32_t)index[it];
+                uint32_t tmp = (addr_t)index[it];
                 if (tmp > value)
                 {
                     value = tmp;
@@ -226,7 +226,7 @@ namespace Kernel { namespace Memory {
                 auto head = index[idx];
                 head->size += newLen - oldLen;
                 
-                auto foot = (KHeapFooter*)((uint32_t)head + head->size - sizeof(KHeapFooter));
+                auto foot = (KHeapFooter*)((addr_t)head + head->size - sizeof(KHeapFooter));
                 foot->magic = HEAP_MAGIC;
                 foot->header = head;
             }
@@ -235,7 +235,7 @@ namespace Kernel { namespace Memory {
         }
 
         KHeapHeader* origHoleHead = (KHeapHeader*)index[it];
-        uint32_t origHolePos = (uint32_t)origHoleHead;
+        uint32_t origHolePos = (addr_t)origHoleHead;
         uint32_t origHoleSize = origHoleHead->size;
 
         if (origHoleSize - nSize < sizeof(KHeapHeader)+sizeof(KHeapFooter))
@@ -278,8 +278,8 @@ namespace Kernel { namespace Memory {
             holeHeader->is_hole = true;
             holeHeader->size = origHoleSize - nSize;
 
-            auto holeFoot = (KHeapFooter*)((uint32_t)holeHeader + origHoleSize - nSize - sizeof(KHeapFooter));
-            if ((uint32_t)holeFoot < _endAddr)
+            auto holeFoot = (KHeapFooter*)((addr_t)holeHeader + origHoleSize - nSize - sizeof(KHeapFooter));
+            if ((addr_t)holeFoot < _endAddr)
             {
                 holeFoot->magic = HEAP_MAGIC;
                 holeFoot->header = holeHeader;
@@ -287,8 +287,8 @@ namespace Kernel { namespace Memory {
 
             index.insert(holeHeader);
         }
-        ASSERT(((KHeapFooter*)((uint32_t)blockHead + blockHead->size - sizeof(KHeapFooter)))->magic == HEAP_MAGIC);
-        return (void*)((uint32_t)blockHead + sizeof(KHeapHeader));
+        ASSERT(((KHeapFooter*)((addr_t)blockHead + blockHead->size - sizeof(KHeapFooter)))->magic == HEAP_MAGIC);
+        return (void*)((addr_t)blockHead + sizeof(KHeapHeader));
     }
 
     void KHeap::free(void* ptr)
@@ -298,15 +298,15 @@ namespace Kernel { namespace Memory {
             return;
         }
 
-        auto head = (KHeapHeader*)((uint32_t)ptr - sizeof(KHeapHeader));
-        auto foot = (KHeapFooter*)((uint32_t)head + head->size - sizeof(KHeapFooter));
+        auto head = (KHeapHeader*)((addr_t)ptr - sizeof(KHeapHeader));
+        auto foot = (KHeapFooter*)((addr_t)head + head->size - sizeof(KHeapFooter));
 
         ASSERT(head->magic == HEAP_MAGIC);
         ASSERT(foot->magic == HEAP_MAGIC);
 
         bool add = true;
 
-        auto testFoot = (KHeapFooter*)((uint32_t)ptr - sizeof(KHeapFooter));
+        auto testFoot = (KHeapFooter*)((addr_t)ptr - sizeof(KHeapFooter));
         if (testFoot->magic == HEAP_MAGIC && testFoot->header->is_hole == 1)
         {
             uint32_t cachedSize = head->size;
@@ -316,11 +316,11 @@ namespace Kernel { namespace Memory {
             add = false;
         }
 
-        auto testHead = (KHeapHeader*)((uint32_t)foot + sizeof(KHeapFooter));
+        auto testHead = (KHeapHeader*)((addr_t)foot + sizeof(KHeapFooter));
         if (testHead->magic == HEAP_MAGIC && testHead->is_hole)
         {
             head->size += testHead->size;
-            testFoot = (KHeapFooter*)((uint32_t)testHead + testHead->size - sizeof(KHeapFooter));
+            testFoot = (KHeapFooter*)((addr_t)testHead + testHead->size - sizeof(KHeapFooter));
             foot = testFoot;
 
             for (uint32_t it = 0; it < index.size(); ++it)
@@ -334,15 +334,15 @@ namespace Kernel { namespace Memory {
         }
         
         
-        if ((uint32_t)foot + sizeof(KHeapFooter) == _endAddr)
+        if ((addr_t)foot + sizeof(KHeapFooter) == _endAddr)
         {
             uint32_t oldLen = _endAddr - _startAddr;
-            uint32_t newLen = contract((uint32_t)head - _startAddr);
+            uint32_t newLen = contract((addr_t)head - _startAddr);
             
             if (head->size - (oldLen - newLen) > 0)
             {
                 head->size -= oldLen - newLen;
-                foot = (KHeapFooter*)((uint32_t)head + head->size - sizeof(KHeapFooter));
+                foot = (KHeapFooter*)((addr_t)head + head->size - sizeof(KHeapFooter));
                 foot->magic = HEAP_MAGIC;
                 foot->header = head;
             }
@@ -378,4 +378,3 @@ namespace Kernel { namespace Memory {
 
 }
 }
-
