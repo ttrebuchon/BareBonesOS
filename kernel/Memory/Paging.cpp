@@ -3,7 +3,7 @@
 #include <kernel/Interrupts.h>
 #include <drivers/VGA.hh>
 #include <kernel/Debug.h>
-#include <kernel/utils/Bitset.hh>
+#include <Utils/Bitset.hh>
 
 
 
@@ -61,7 +61,7 @@ namespace Kernel { namespace Memory
 		TRACE_C("Frame collection initialized.\n");
 		
 		TRACE_C("Allocating kernel_dir...\n");
-		uint32_t phys;
+		addr_t phys;
 		kernel_dir = (struct PageDir*)kmalloc(sizeof(struct PageDir), 1, &phys);
 		TRACE_C("kernel_dir allocated.\n");
 		kmemset(kernel_dir, 0, sizeof(struct PageDir));
@@ -146,7 +146,7 @@ namespace Kernel { namespace Memory
 
 	
 
-	struct PageDir* create_empty_page_dir(uint32_t* phys)
+	struct PageDir* create_empty_page_dir(addr_t* phys)
 	{
 		struct PageDir* dir = (struct PageDir*)kmalloc(sizeof(struct PageDir), 1, phys);
 		kmemset(dir, 0, sizeof(struct PageDir));

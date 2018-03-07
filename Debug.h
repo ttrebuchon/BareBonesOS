@@ -1,4 +1,4 @@
-#ifndef INCLUDED_DEBUG_H
+/*#ifndef INCLUDED_DEBUG_H
 #define INCLUDED_DEBUG_H
 
 //Includes and whatnot
@@ -37,4 +37,5 @@
 #define kassert(X) 
 
 #endif
-#endif
+#endif*/
+#include "kernel/Debug.h"

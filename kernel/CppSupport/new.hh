@@ -3,8 +3,8 @@
 
 #ifdef __cplusplus
 
-inline void *operator new(size_t, void *p)     throw() { return p; }
-
+inline void *operator new(size_t, void *p) noexcept
+{ return p; }
 
 
 #endif

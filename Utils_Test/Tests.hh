@@ -31,5 +31,7 @@ TEST(IDE);
 TEST(IOSTREAM);
 TEST(Limits);
 TEST(String);
+TEST(SQLite);
+TEST(shared_ptr);
 
 #endif

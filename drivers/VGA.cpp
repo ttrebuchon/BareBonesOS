@@ -1,6 +1,6 @@
 #include "VGA.hh"
 //#include <kernel/utils/String.hh>
-#include <kernel/utils/int_to_str.h>
+#include <Utils/int_to_str.h>
 #include <kernel/Memory.h>
 
 namespace Drivers

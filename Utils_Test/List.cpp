@@ -1,8 +1,8 @@
 #include "Tests.hh"
-#include <kernel/utils/List.hh>
+#include <Utils/List.hh>
 #include <type_traits>
 #include <kernel/Memory/Paging.hh>
-#include <kernel/utils/Bitset.hh>
+#include <Utils/Bitset.hh>
 
 class Foo
 {

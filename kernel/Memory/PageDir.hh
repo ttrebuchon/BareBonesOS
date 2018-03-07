@@ -28,7 +28,7 @@ namespace Kernel { namespace Memory {
     {
         Page pages[1024];
 
-        PageTable* clone(uint32_t* phys) const;
+        PageTable* clone(addr_t* phys) const;
     };
 
     static_assert(sizeof(PageTable) == 4*1024);

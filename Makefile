@@ -7,13 +7,17 @@ GET_SRC = $(call rwildcard,$1/,*.$2)
 
 
 
-C_SRC = $(call GET_SRC,kernel,c) $(call GET_SRC,drivers,c)
-CPP_SRC = $(call GET_SRC,kernel,cpp) $(call GET_SRC,drivers,cpp)
+C_SRC = $(call GET_SRC,kernel,c) $(call GET_SRC,drivers,c) $(call GET_SRC,Libraries,c)
+CPP_SRC = $(call GET_SRC,kernel,cpp) $(call GET_SRC,drivers,cpp) $(call GET_SRC,Libraries,cpp)
 BOOT_SRC = $(call GET_SRC,boot,s)
 #ASM_SRC_ASM = $(wildcard kernel/*.asm drivers/*.asm)
 ASM_SRC_ASM = $(call GET_SRC,kernel,asm) $(call GET_SRC,drivers,asm)
 #ASM_SRC_S = $(wildcard kernel/*.S drivers/*.S)
 #ASM_SRC_s = $(wildcard kernel/*.s drivers/*.s)
+
+HDD2 = Dummy.img
+HDD2_GEN = Tools/Dummy_Img/Main.out
+HDD2_SRC = $(wildcard Tools/Dummy_Img/*.cpp)
 
 C_OBJS = $(C_SRC:.c=.o)
 CPP_OBJS = $(CPP_SRC:.cpp=.o)
@@ -46,7 +50,7 @@ CFLAGS	= -nostdlib $(WARNINGS_FLAGS) -ffreestanding -Og -MMD -I. -Werror-implici
 CXX_FLAGS	= -std=c++14 -nostdlib $(WARNINGS_FLAGS) -ffreestanding -Og -MMD -I. -fno-exceptions -fno-rtti --sysroot=$(SYSROOT) $(BOTH_FLAGS)
 ASM_FLAGS	= 
 
-all: myos.iso
+all: $(HDD2) myos.iso
 	#@echo $(CPP_DEPS)
 
 clean:
@@ -74,3 +78,10 @@ myos.bin: $(BOOT_OBJS) $(CRTBEGIN_OBJ) $(CPP_OBJS) $(C_OBJS) $(ASM_OBJS) $(CRTEN
 
 -include $(CPP_DEPS)
 -include $(C_DEPS)
+
+$(HDD2): $(HDD2_GEN)
+	./$(HDD2_GEN) $(HDD2)
+
+$(HDD2_GEN): $(HDD2_SRC)
+	$(CXX) -o $(HDD2_GEN) $^
+	

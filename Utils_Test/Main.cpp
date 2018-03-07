@@ -44,6 +44,8 @@ int main()
 	RUN(Limits);
 	RUN(String);
 	RUN(IOSTREAM);
+	RUN(SQLite);
+	RUN(shared_ptr);
 	
 	std::cerr << "\n\n\nAll Done!\n" << std::flush;
 }

@@ -4,6 +4,14 @@
 #include "kernel/c_cpp.h"
 
 #include <stdint.h>
+#include <float.h>
+#include <iso646.h>
+#include <limits.h>
+#include <stdalign.h>
+#include <stdarg.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdnoreturn.h>
 typedef unsigned char uchar;
 typedef uint64_t addr_t;
 

@@ -1,11 +1,11 @@
 #include <cassert>
 #include "Tests.hh"
-#include <kernel/utils/detail/basic_ios.hh>
-#include <kernel/utils/iostream.hh>
+#include <Utils/detail/basic_ios.hh>
+#include <Utils/iostream.hh>
 #include <sstream>
 
 //#include <kernel/utils/String.hh>
-#include <kernel/utils/locale>
+#include <Utils/locale>
 #include <drivers/VGA_Stream.hh>
 
 namespace Drivers {
@@ -181,7 +181,6 @@ class Bar : public Utils::basic_iostream<char>
 
 TEST(IOSTREAM)
 {
-	//kassert(false);
 	STACK();
 	//Foo foo;
 	typedef typename Utils::basic_iostream<char>::char_type G;
