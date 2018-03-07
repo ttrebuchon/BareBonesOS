@@ -1,0 +1,61 @@
+#ifndef INCLUDED_UTILITY
+#define INCLUDED_UTILITY
+
+namespace Utils
+{
+	
+	// remove_cv
+	template <class T>
+	struct remove_cv
+	{
+		typedef T type;
+	};
+	
+	template <class T>
+	struct remove_cv<const T> : public remove_cv<T>
+	{};
+	
+	template <class T>
+	struct remove_cv<volatile T> : public remove_cv<T>
+	{ };
+	
+	
+	
+	
+	// remove_ref
+	template <class T>
+	struct remove_ref
+	{
+		typedef T type;
+	};
+	
+	template <class T>
+	struct remove_ref<T&> : public remove_ref<T>
+	{};
+	
+	template <class T>
+	struct remove_ref<T&&> : public remove_ref<T>
+	{ };
+	
+	template <class T>
+	using remove_reference = remove_ref<T>;
+	
+	
+	
+	
+	// add_rvalue_reference
+	template <class T>
+	struct add_rvalue_reference
+	{
+		typedef typename remove_ref<typename remove_cv<T>::type>::type&& type;
+	};
+	
+	
+	
+	
+	// declval()
+	template <class T>
+	typename add_rvalue_reference<T>::type declval();
+	
+}
+#endif
