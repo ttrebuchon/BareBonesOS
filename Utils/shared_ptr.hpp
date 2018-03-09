@@ -2,39 +2,12 @@
 #define INCLUDED_SHARED_PTR_HPP
 
 #include "shared_ptr.hh"
+#include "detail/shared_ptr_control.hh"
+#include "detail/shared_ptr_control.hpp"
 #include "detail/forward.hh"
-//#include <new>
 
 namespace Utils
 {
-namespace detail
-{
-	shared_ptr_control::shared_ptr_control() : refcount(0), usecount(0), obj(nullptr), deleter_obj(nullptr), deleter(nullptr), dealloc_object(nullptr), dealloc(nullptr)
-	{
-		
-	}
-	
-	bool shared_ptr_control::strongRelease()
-	{
-		if (--usecount == 0)
-		{
-			deleter(deleter_obj, obj);
-		}
-		
-		return (--refcount != 0);
-	}
-}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
 	template <class T>
 	constexpr shared_ptr<T>::shared_ptr() : ctrl(nullptr)
@@ -50,21 +23,21 @@ namespace detail
 	
 	template <class T>
 	template <class Y, class Deleter>
-	shared_ptr<T>::shared_ptr(Y* ptr, Deleter d) : ctrl(createControl(ptr, d))
+	shared_ptr<T>::shared_ptr(Y* ptr, Deleter d) : ctrl(detail::shared_ptr_control::CreateControl(ptr, d))
 	{
 		
 	}
 	
 	template <class T>
 	template <class Y, class Deleter, class Alloc>
-	shared_ptr<T>::shared_ptr(Y* ptr, Deleter d, Alloc alloc) : ctrl(createControl(ptr, d, alloc))
+	shared_ptr<T>::shared_ptr(Y* ptr, Deleter d, Alloc alloc) : ctrl(detail::shared_ptr_control::CreateControl(ptr, d, alloc))
 	{
 		
 	}
 	
 	template <class T>
 	template <class Y>
-	shared_ptr<T>::shared_ptr(Y* ptr) : ctrl(createControl(ptr))
+	shared_ptr<T>::shared_ptr(Y* ptr) : ctrl(detail::shared_ptr_control::CreateControl(ptr))
 	{
 		
 	}
@@ -80,8 +53,20 @@ namespace detail
 	template <class T>
 	shared_ptr<T>::shared_ptr(const shared_ptr& r) : ctrl(r.ctrl)
 	{
-		++ctrl->refcount;
-		++ctrl->usecount;
+		if (ctrl)
+		{
+			++ctrl->refcount;
+			++ctrl->usecount;
+		}
+	}
+	
+	template <class T>
+	template <class Y>
+	shared_ptr<T>::shared_ptr(shared_ptr<Y>&& r) : ctrl(r.ctrl)
+	{
+		r.ctrl = nullptr;
+		/*++ctrl->refcount;
+		++ctrl->usecount;*/
 	}
 	
 	template <class T>
@@ -102,6 +87,16 @@ namespace detail
 		ctrl->obj = rawObj;
 	}
 	
+	template <class T>
+	shared_ptr<T>::shared_ptr(detail::shared_ptr_control* ctrl) : ctrl(ctrl)
+	{
+		if (ctrl)
+		{
+			++ctrl->refcount;
+			++ctrl->usecount;
+		}
+	}
+	
 	
 	template <class T>
 	shared_ptr<T>::~shared_ptr()
@@ -113,60 +108,6 @@ namespace detail
 	
 	
 	
-	
-	
-	template <class T>
-	template <class Y, class Deleter, class Alloc>
-	detail::shared_ptr_control* shared_ptr<T>::createControl(Y* ptr, Deleter d, Alloc _alloc)
-	{
-		auto calloc = new typename Alloc::template rebind<detail::shared_ptr_control>::other();
-		typename Alloc::template rebind<detail::shared_ptr_control::template Destructor<Y, Deleter>>::other dalloc;
-		auto ctrl = calloc->construct(calloc->allocate(1));
-		ctrl->dealloc_object = calloc;
-		ctrl->dealloc = [](void* aptr, detail::shared_ptr_control* ctrl)
-		{
-			auto calloc = (typename Alloc::template rebind<detail::shared_ptr_control>::other*)aptr;
-			calloc->destroy(ctrl);
-			calloc->deallocate(ctrl);
-			delete calloc;
-		};
-		
-		ctrl->refcount = ctrl->usecount = 1;
-		auto destr = dalloc.construct(dalloc.allocate(1));
-		destr->del = d;
-		ctrl->deleter_obj = (void*)destr;
-		ctrl->deleter = detail::shared_ptr_control::template Destructor<Y, Deleter>::template call<Alloc>;
-		ctrl->obj = (T*)ptr;
-		return ctrl;
-	}
-	
-	template <class T>
-	template <class Y, class Deleter>
-	detail::shared_ptr_control* shared_ptr<T>::createControl(Y* ptr, Deleter d)
-	{
-		auto ctrl = new detail::shared_ptr_control();
-		ctrl->refcount = ctrl->usecount = 1;
-		auto destr = new typename detail::shared_ptr_control::template Destructor<Y, Deleter>();
-		destr->del = d;
-		ctrl->deleter_obj = (void*)destr;
-		ctrl->deleter = detail::shared_ptr_control::template Destructor<Y, Deleter>::call;
-		ctrl->obj = (T*)ptr;
-		return ctrl;
-	}
-	
-	template <class T>
-	template <class Y>
-	detail::shared_ptr_control* shared_ptr<T>::createControl(Y* ptr)
-	{
-		auto ctrl = new detail::shared_ptr_control();
-		ctrl->refcount = ctrl->usecount = 1;
-		ctrl->deleter = [](void*, void* tptr)
-		{
-			delete (Y*)tptr;
-		};
-		ctrl->obj = (T*)ptr;
-		return ctrl;
-	}
 	
 	
 	
@@ -215,8 +156,11 @@ namespace detail
 	shared_ptr<T>& shared_ptr<T>::operator=(const shared_ptr& r)
 	{
 		auto ctrl2 = r.ctrl;
-		++ctrl2->refcount;
-		++ctrl2->usecount;
+		if (ctrl2)
+		{
+			++ctrl2->refcount;
+			++ctrl2->usecount;
+		}
 		reset();
 		ctrl = ctrl2;
 		return *this;

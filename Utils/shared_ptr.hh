@@ -7,61 +7,11 @@ namespace Utils
 {
 	namespace detail
 	{
-		class shared_ptr_control
-		{
-			public:
-			typedef void(*Destructor_Ptr)(void*, void*);
-			typedef void(*Deallocator)(void*, shared_ptr_control*);
-			
-			template <class Y, class Deleter>
-			class Destructor
-			{
-				public:
-				Deleter del;
-				static void call(void* d, void* ptr)
-				{
-					Destructor* dest = static_cast<Destructor<Y, Deleter>*>(d);
-					dest->del((Y*)ptr);
-					delete dest;
-				}
-				
-				template <class Alloc>
-				static void call(void* d, void* ptr)
-				{
-					Destructor* dest = static_cast<Destructor<Y, Deleter>*>(d);
-					dest->del((Y*)ptr);
-					typename Alloc::template rebind<Destructor>::other dalloc;
-					dalloc.destroy(dest);
-					dalloc.deallocate(dest);
-				}
-				
-				Destructor()
-				{
-					
-				}
-				
-				Destructor(Deleter d) : del(d)
-				{
-					
-				}
-			};
-			
-			long refcount;
-			long usecount;
-			void* obj;
-			void* deleter_obj;
-			Destructor_Ptr deleter;
-			void* dealloc_object;
-			Deallocator dealloc;
-			
-			
-			shared_ptr_control();
-			
-			bool strongRelease();
-			bool weakRelease();
-			
-		};
+		class shared_ptr_control;
 	}
+	
+	template <class T>
+	class weak_ptr;
 	
 	
 	template <class T>
@@ -74,19 +24,14 @@ namespace Utils
 		typedef T& ref_type;
 		
 		private:
-		// Private Static Methods
-		template <class Y, class Deleter, class Alloc>
-		static detail::shared_ptr_control* createControl(Y*, Deleter, Alloc);
-		template <class Y, class Deleter>
-		static detail::shared_ptr_control* createControl(Y*, Deleter);
-		template <class Y>
-		static detail::shared_ptr_control* createControl(Y*);
-		
-		template <class Deleter>
-		shared_ptr(void*, size_t n, Deleter);
 		
 		// Members
 		mutable detail::shared_ptr_control* ctrl;
+		
+		//Private Constructors
+		template <class Deleter>
+		shared_ptr(void*, size_t n, Deleter);
+		shared_ptr(detail::shared_ptr_control*);
 		
 		public:
 		// Constructors / Destructors
@@ -108,6 +53,8 @@ namespace Utils
 		
 		shared_ptr(const shared_ptr&) noexcept;
 		shared_ptr(shared_ptr&&) noexcept;
+		template <class Y>
+		explicit shared_ptr(const weak_ptr<Y>&);
 		
 		
 		~shared_ptr() noexcept;
@@ -137,6 +84,9 @@ namespace Utils
 		
 		template <class>
 		friend struct make_shared_t;
+		
+		template <class>
+		friend class weak_ptr;
 		
 		template <class G, class Y>
 		friend bool operator==(const shared_ptr<G>&, const shared_ptr<Y>&) noexcept;
