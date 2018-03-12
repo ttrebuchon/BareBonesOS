@@ -31,6 +31,11 @@ namespace Utils
 				alloc.template construct<T>(reinterpret_cast<T*>(elem), args...);
 			}
 			
+			void uninit(A& alloc)
+			{
+				alloc.template destroy<T>(reinterpret_cast<T*>(elem));
+			}
+			
 			template <class, class>
 			friend class List;
 		};
@@ -99,6 +104,7 @@ namespace Utils
 		List(const List&);
 		template <class InputIt>
 		List(InputIt start, InputIt end);
+		List(List&&) noexcept;
 		
 		//Destructor
 		~List() noexcept;
@@ -106,6 +112,8 @@ namespace Utils
 		
 		void push_back(const T&);
 		void push_back(T&&);
+		template <class... Args>
+		void emplace_back(Args&&...);
 
 		size_type size() const;
 
@@ -113,7 +121,8 @@ namespace Utils
 		iterator end();
 	};
 	
-	
+	template <class T, class A = Allocator<T>>
+	using list = List<T, A>;
 	
 }
 #endif

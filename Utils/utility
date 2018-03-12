@@ -1,6 +1,8 @@
 #ifndef INCLUDED_UTILITY
 #define INCLUDED_UTILITY
 
+
+
 namespace Utils
 {
 	
@@ -57,5 +59,16 @@ namespace Utils
 	template <class T>
 	typename add_rvalue_reference<T>::type declval();
 	
+	
+	
+	
+	// move()
+	template <class T>
+	constexpr typename remove_reference<T>::type&& move(T&& t) noexcept
+	{
+		return static_cast<typename remove_reference<T>::type&&>(t);
+	}
+	
 }
 #endif
+#include "detail/forward.hh"

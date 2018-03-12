@@ -1,7 +1,6 @@
 #ifndef INCLUDED_TYPE_TRAITS_HH
 #define INCLUDED_TYPE_TRAITS_HH
 
-#include <Utils/utility>
 #include "type_traits_arithmetic.hh"
 
 namespace Utils
@@ -235,6 +234,12 @@ namespace Utils
 	template <class T>
 	struct is_fundamental : public integral_constant<bool, (is_arithmetic<T>::value || is_void<T>::value)>
 	{};
+	
+	
+	
+	
+	
+	
 }
 
 #endif

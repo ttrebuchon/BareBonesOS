@@ -2,6 +2,7 @@
 #define INCLUDED_ALLOCATOR_TRAITS_HH
 
 #include "Pointer_Traits.hh"
+#include "Utility"
 
 namespace Utils
 {
@@ -162,6 +163,28 @@ namespace Utils
 		typedef typename detail::alloc_traits::const_void_pointer<A>::type const_void_pointer;
 		
 		typedef typename detail::alloc_traits::difference_type<A>::type difference_type;
+		
+		template <class T, class... Args>
+		static void construct(allocator_type& alloc, T* p, Args&&... args)
+		{
+			alloc.template construct<T>(p, forward<Args>(args)...);
+		}
+		
+		static pointer allocate(allocator_type& alloc, size_t n)
+		{
+			return alloc.allocate(n);
+		}
+		
+		template <class T>
+		static void destroy(allocator_type& alloc, T* p)
+		{
+			alloc.destroy(p);
+		}
+		
+		static void deallocate(allocator_type& alloc, pointer p, size_t n)
+		{
+			alloc.deallocate(p, n);
+		}
 		
 	};
 	

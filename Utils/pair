@@ -1,0 +1,44 @@
+#ifndef INCLUDED_PAIR
+#define INCLUDED_PAIR
+
+namespace Utils
+{
+	template <class T1, class T2>
+	class pair
+	{
+		private:
+		
+		public:
+		T1 first;
+		T2 second;
+		
+		constexpr pair() : first(), second()
+		{
+			
+		}
+		
+		template <class Arg1, class Arg2>
+		pair(Arg1&& a1, Arg2&& a2) : first(forward<Arg1>(a1)), second(forward<Arg2>(a2))
+		{}
+		
+		template <class Arg1, class Arg2>
+		pair(const Arg1& a1, const Arg2& a2) : first(a1), second(a2)
+		{}
+		
+		pair(const T1& f, const T2& s) : first(f), second(s)
+		{
+			
+		}
+		
+		pair(pair&& p) : first(forward((T1&&)p.first)), second(forward((T2&&)p.second))
+		{
+			
+		}
+		
+		template <class Arg1, class... Args>
+		pair(Arg1&& arg1, Args&&... args) : first(forward<Arg1>(arg1)), second(forward<Args>(args)...)
+		{}
+	};
+}
+
+#endif

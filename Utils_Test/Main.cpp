@@ -46,6 +46,9 @@ int main()
 	RUN(IOSTREAM);
 	RUN(SQLite);
 	RUN(shared_ptr);
+	RUN(vector);
+	RUN(tuple);
+	RUN(map);
 	
 	std::cerr << "\n\n\nAll Done!\n" << std::flush;
 }

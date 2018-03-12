@@ -1,8 +1,8 @@
 #ifndef INCLUDED_TYPE_TRAITS_ENUM_HH
 #define INCLUDED_TYPE_TRAITS_ENUM_HH
 
-#include "type_traits_arithmetic.hh"
 #include "type_traits.hh"
+#include "type_traits_arithmetic.hh"
 
 namespace Utils
 {

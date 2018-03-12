@@ -13,7 +13,7 @@ TESTS_SRC = $(wildcard *.cpp)
 TESTS_SRC_C = $(wildcard *.c)
 TESTS = $(TESTS_SRC:.cpp=.o) $(TESTS_SRC_C:.c=.o)
 
-BOTH_FLAGS += -DTESTING -DSTACK_INFO_V -DDEBUG -I../Libraries #-DINCLUDED_DEBUG_H_ENABLED #-D"kassert(x)"="assert(x)"
+BOTH_FLAGS += -DTESTING -DSTACK_INFO_V -DDEBUG -I../Libraries #-Wfatal-errors #-DINCLUDED_DEBUG_H_ENABLED #-D"kassert(x)"="assert(x)"
 
 CXXFLAGS += -std=c++14 -MMD -I.. -fno-rtti -fno-exceptions -ffreestanding -lgcc -DDEBUG -DINCLUDED_NEW_HH $(BOTH_FLAGS)
 
