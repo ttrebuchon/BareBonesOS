@@ -1,17 +1,24 @@
 #include "Tests.hh"
-#include <Utils/map>
+#include <Utils/unordered_map>
 //#include "Tests.hh"
-#include <map>
-
-template <template <class...> class Type, class T, class F>
-static void do_tests(const int n, const std::vector<int>& positions, F);
+#include <unordered_map>
 
 
-template <class T = int, class F = void(*)()>
+
+#define NO_IT_YET
+
+template <template <class...> class map, class T, class F, template <class> class H, class K = int>
+static void do_tests(const int n, const std::vector<K>& positions, F);
+
+
+template <class K = int, class T = int, class F = void(*)()>
 void run_for(const int n, const int shuffles, F f = F());
 
+template<template <class...> class map>
+void misc_test(size_t n);
 
-TEST(map)
+
+TEST(unordered_map)
 {
 	srand(time(NULL));
 	
@@ -21,32 +28,50 @@ TEST(map)
 		Bar_t::Check();
 	};
 	
-	run_for(10000, 3);
+	misc_test<std::unordered_map>(10);
+	//return;
+	
+	run_for<long long, long>(10000, 3);
 	//run_for(100000, 7);
 	//run_for(100000, 10);
 	
 	Bar_t::SetPrinting(false);
-	run_for<Bar_t>(10000, 3, barReset);
+	run_for<int, Bar_t>(10000, 3, barReset);
 	Bar_t::SetPrinting(true);
+	
+	enum E
+	{
+		E1,
+		E2,
+		E3
+	};
+	
+	run_for<E>(10000, 3);
 }
 
 
 
 
-template <class T, class F>
+template <class K, class T, class F>
 void run_for(const int n, const int shuffles, F f)
 {
-	std::vector<int> positions(n);
+	std::vector<K> positions(n);
 	for (int i = 0; i < n; ++i)
 	{
-		positions[i] = i;
+		positions[i] = K(i);
 	}
 	
 	std::clog << "Testing std..." << std::endl;
-	do_tests<std::map, T, F>(n, positions, f);
+	do_tests<std::unordered_map, T, F, std::hash, K>(n, positions, f);
+	
+	std::clog << "Testing std (Utils hash)..." << std::endl;
+	do_tests<std::unordered_map, T, F, Utils::hash, K>(n, positions, f);
 	
 	std::clog << "Testing Utils..." << std::endl;
-	do_tests<Utils::map, T, F>(n, positions, f);
+	do_tests<Utils::unordered_map, T, F, Utils::hash, K>(n, positions, f);
+	
+	std::clog << "Testing Utils (std hash)..." << std::endl;
+	do_tests<Utils::unordered_map, T, F, std::hash, K>(n, positions, f);
 	
 	if (shuffles <= 0)
 	{
@@ -60,10 +85,16 @@ void run_for(const int n, const int shuffles, F f)
 	}
 	
 	std::clog << "Testing std..." << std::endl;
-	do_tests<std::map, T, F>(n, positions, f);
+	do_tests<std::unordered_map, T, F, std::hash, K>(n, positions, f);
+	
+	std::clog << "Testing std (Utils hash)..." << std::endl;
+	do_tests<std::unordered_map, T, F, Utils::hash, K>(n, positions, f);
 	
 	std::clog << "Testing Utils..." << std::endl;
-	do_tests<Utils::map, T, F>(n, positions, f);
+	do_tests<Utils::unordered_map, T, F, Utils::hash, K>(n, positions, f);
+	
+	std::clog << "Testing Utils (std hash)..." << std::endl;
+	do_tests<Utils::unordered_map, T, F, std::hash, K>(n, positions, f);
 }
 
 
@@ -71,24 +102,34 @@ void run_for(const int n, const int shuffles, F f)
 
 
 
-template <template <class...> class map, class T, class F>
-static void do_tests(const int n, const std::vector<int>& positions, F f)
+template <template <class...> class map, class T, class F, template <class> class _H, class K>
+static void do_tests(const int n, const std::vector<K>& positions, F f)
 {
+	typedef _H<K> H;
+	
+	typedef map<K, T, H> M;
+	
+	
 	std::clog << "--------------\n" << std::endl;
 	{
-		map<int, T> m;
-		m[0] = T(0);
+		M m;
+		//m.emplace(K(0), T(0));
+		m[K(0)] = T(0);
 		ASSERTEQ(m.size(), 1);
-		ASSERTEQ(m[0], T(0));
-		m[1] = T(4);
+		ASSERTEQ(m[K(0)], T(0));
+		if (m[K(0)] != T(0))
+		{
+			std::cout << "ERROR!!!" << std::endl;
+		}
+		m[K(1)] = T(4);
 		ASSERTEQ(m.size(), 2);
-		ASSERTEQ(m[1], T(4));
-		m[0] = T(1);
+		ASSERTEQ(m[K(1)], T(4));
+		m[K(0)] = T(1);
 		ASSERTEQ(m.size(), 2);
-		ASSERTEQ(m[0], T(1));
-		m[20] = T(-1);
+		ASSERTEQ(m[K(0)], T(1));
+		m[K(20)] = T(-1);
 		ASSERTEQ(m.size(), 3);
-		ASSERTEQ(m[20], T(-1));
+		ASSERTEQ(m[K(20)], T(-1));
 	}
 	
 	
@@ -96,13 +137,13 @@ static void do_tests(const int n, const std::vector<int>& positions, F f)
 	Bar_t::Check();
 	std::clog << "--------------\n" << std::endl;
 	{
-		map<int, Bar_t> m;
-		m[0] = Bar_t(0);
+		map<K, Bar_t, H> m;
+		m[K(0)] = Bar_t(0);
 		ASSERTEQ(Bar_t::count, 1);
 		ASSERTEQ(Bar_t::callers.size(), 0);
 		ASSERT(Bar_t::Check(1, 0));
 		
-		m[1].n = 4;
+		m[K(1)].n = 4;
 		ASSERTEQ(m.size(), 2);
 	}
 	ASSERTEQ(Bar_t::count, 0);
@@ -115,13 +156,13 @@ static void do_tests(const int n, const std::vector<int>& positions, F f)
 	Bar_t::Check();
 	std::clog << "--------------\n" << std::endl;
 	{
-		map<int, Bar_t> m;
-		m[0] = Bar_t(0);
+		map<K, Bar_t, H> m;
+		m[K(0)] = Bar_t(0);
 		ASSERTEQ(Bar_t::count, 1);
 		ASSERTEQ(Bar_t::callers.size(), 0);
 		ASSERT(Bar_t::Check(1, 0));
 		
-		m[1].n = 4;
+		m[K(1)].n = 4;
 		ASSERTEQ(m.size(), 2);
 	}
 	ASSERTEQ(Bar_t::count, 0);
@@ -148,7 +189,7 @@ static void do_tests(const int n, const std::vector<int>& positions, F f)
 	}
 	std::clog << "--------------\n" << std::endl;
 	{
-		map<int, T> m;
+		M m;
 		
 		for (int i = 0; i < n; ++i)
 		{
@@ -164,7 +205,7 @@ static void do_tests(const int n, const std::vector<int>& positions, F f)
 			MASSERTEQ(m[positions.at(i)], T(i), i, positions.at(i));
 		}
 		
-		map<int, T> m2 = m;
+		M m2 = m;
 		
 		for (int i = 0; i < n; ++i)
 		{
@@ -187,10 +228,10 @@ static void do_tests(const int n, const std::vector<int>& positions, F f)
 		}
 	}
 	
-	
+	/*
 	std::clog << "--------------\n" << std::endl;
 	{
-		map<int, long> m;
+		map<K, long, H> m;
 		
 		for (int i = 0; i < n; ++i)
 		{
@@ -204,7 +245,7 @@ static void do_tests(const int n, const std::vector<int>& positions, F f)
 			ASSERTEQ(m.at(positions.at(i)), i);
 		}
 		
-		map<int, long> m2 = m;
+		map<K, long, H> m2 = m;
 		
 		for (int i = 0; i < n; ++i)
 		{
@@ -230,8 +271,8 @@ static void do_tests(const int n, const std::vector<int>& positions, F f)
 	
 	std::clog << "--------------\n" << std::endl;
 	{
-		map<int, long> m;
-		const map<int, long>& mc = m;
+		map<K, long, H> m;
+		const map<K, long, H>& mc = m;
 		
 		for (int i = 0; i < n; ++i)
 		{
@@ -245,8 +286,8 @@ static void do_tests(const int n, const std::vector<int>& positions, F f)
 			ASSERTEQ(mc.at(positions.at(i)), i);
 		}
 		
-		map<int, long> m2 = m;
-		const map<int, long>& mc2 = m2;
+		map<K, long, H> m2 = m;
+		const map<K, long, H>& mc2 = m2;
 		
 		for (int i = 0; i < n; ++i)
 		{
@@ -274,8 +315,8 @@ static void do_tests(const int n, const std::vector<int>& positions, F f)
 	
 	std::clog << "--------------\n" << std::endl;
 	{
-		map<int, long> m;
-		const map<int, long>& mc = m;
+		map<K, long, H> m;
+		const map<K, long, H>& mc = m;
 		
 		for (int i = 0; i < n; ++i)
 		{
@@ -291,8 +332,8 @@ static void do_tests(const int n, const std::vector<int>& positions, F f)
 			ASSERTEQ(mc.at(positions.at(i)), i);
 		}
 		
-		map<int, long> m2 = m;
-		const map<int, long>& mc2 = m2;
+		map<K, long, H> m2 = m;
+		const map<K, long, H>& mc2 = m2;
 		
 		for (int i = 0; i < n; ++i)
 		{
@@ -321,31 +362,93 @@ static void do_tests(const int n, const std::vector<int>& positions, F f)
 		}
 		
 		
-		
+		#ifndef NO_IT_YET
 		for (auto it = m2.begin(); it != m2.end(); ++it)
 		{
 			
 		}
+		#endif
 	}
 	
 	
 	{
-		map<int, long> m;
+		map<K, long, H> m;
 		for (int i = 0; i < n; ++i)
 		{
 			m[positions.at(i)] = positions.at(i);
 		}
 		
-		int x = 0;
-		for (auto it = m.begin(); it != m.end(); ++it)
-		{
-			ASSERTEQ(it->second, x);
-			++x;
-		}
-		
-		ASSERTEQ(x, n);
-		
 		m.clear();
+		#ifndef NO_IT_YET
 		ASSERT(m.begin() == m.end());
+		#endif
+	}*/
+}
+
+
+template <class Key>
+struct id_hasher
+{
+	size_t operator()(const Key& k) const
+	{
+		return (size_t)k;
+	}
+};
+
+template <class Key>
+struct bad_hasher
+{
+	size_t operator()(const Key& k) const
+	{
+		return 1;
+	}
+};
+
+template <class Inner>
+struct printing_hasher;
+
+template <template <class> class Inner, class Key>
+struct printing_hasher<Inner<Key>>
+{
+	Inner<Key> inner;
+	
+	size_t operator()(const Key& k) const
+	{
+		std::cout << "Hashing " << k << ": ";
+		auto r = inner(k);
+		std::cout << r << std::endl;
+		return r;
+	}
+};
+
+
+template<template <class...> class map>
+void misc_test(size_t n)
+{
+	typedef int* Key;
+	typedef std::hash<Key> IH;
+	//typedef id_hasher<Key> IH;
+	//typedef bad_hasher<Key> IH;
+	
+	
+	//typedef IH H;
+	typedef printing_hasher<IH> H;
+	typedef map<Key, size_t, H> M;
+	
+	{
+		M m;
+		H h;
+		for (Key i = 0; i < (Key)n; i = (Key)((size_t)i + 1))
+		{
+			m[i] = (size_t)i;
+		}
+		/*auto max = std::numeric_limits<Key>::max();
+		m[max] = h(max);*/
+		
+		for (Key i = (Key)(n-1); i > (Key)0; i = (Key)((size_t)i - 1))
+		{
+			ASSERTEQ(m.at(i), (size_t)i);
+		}
+		ASSERTEQ(m.at((Key)0), 0);
 	}
 }

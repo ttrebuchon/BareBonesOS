@@ -39,6 +39,8 @@ bool Foo_t::Check(const int _count, const int _callers)
 int Bar_t::__X = 0;
 int Bar_t::count = 0;
 std::vector<int> Bar_t::callers;
+bool Bar_t::__printing = true;
+
 bool Bar_t::Check()
 {
 	assert(count == 0);
@@ -69,4 +71,21 @@ bool Bar_t::Check(const int _count, const int _callers)
 		return false;
 	}
 	return true;
+}
+
+bool Bar_t::TogglePrinting()
+{
+	return !(__printing = !__printing);
+}
+
+bool Bar_t::SetPrinting(bool v)
+{
+	bool old = __printing;
+	__printing = v;
+	return old;
+}
+
+bool Bar_t::IsPrintingEnabled()
+{
+	return __printing;
 }

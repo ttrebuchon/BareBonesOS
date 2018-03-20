@@ -13,7 +13,9 @@ TESTS_SRC = $(wildcard *.cpp)
 TESTS_SRC_C = $(wildcard *.c)
 TESTS = $(TESTS_SRC:.cpp=.o) $(TESTS_SRC_C:.c=.o)
 
-BOTH_FLAGS += -DTESTING -DSTACK_INFO_V -DDEBUG -I../Libraries #-Wfatal-errors #-DINCLUDED_DEBUG_H_ENABLED #-D"kassert(x)"="assert(x)"
+BOTH_FLAGS += -DTESTING -DSTACK_INFO_V -I../Libraries -Wfatal-errors #-DINCLUDED_DEBUG_H_ENABLED #-D"kassert(x)"="assert(x)"
+BOTH_FLAGS += -DDEBUG #-DDEBUG_VERIFY
+BOTH_FLAGS += -DTRACK_ALLOC
 
 CXXFLAGS += -std=c++14 -MMD -I.. -fno-rtti -fno-exceptions -ffreestanding -lgcc -DDEBUG -DINCLUDED_NEW_HH $(BOTH_FLAGS)
 
@@ -22,14 +24,18 @@ CFLAGS += -MMD -I.. -ffreestanding -lgcc $(BOTH_FLAGS)
 
 DEPS = $(OBJS:.o=.d) $(TESTS:.o=.d)
 
-all: Test.out .fake
+PREPROC_GET = PreProcTest.cxx
+PREPROC_OUT = $(PREPROC_GET:.cxx=.pp)
+
+
+all: $(PREPROC_OUT) Test.out .fake
 	
 
 .fake: 
 	
 
 
-Test.out: $(OBJS) $(TESTS)
+Test.out: $(OBJS) $(TESTS) TestUtils/MemTracker.o
 	@echo '$$SRC = ' $(SRC)
 	@echo '$$OBJS = ' $(OBJS)
 	echo $(OBJS) $(TESTS)
@@ -43,3 +49,13 @@ Test.out: $(OBJS) $(TESTS)
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 -include $(DEPS)
+
+TestUtils/MemTracker.o: TestUtils/MemTracker.cpp TestUtils/MemTracker.hh Makefile
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+Main.o: Main.cpp Makefile
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+
+$(PREPROC_OUT): $(PREPROC_GET)
+	$(CXX) $(CXXFLAGS) -o $@ -E $^
