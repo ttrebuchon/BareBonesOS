@@ -19,6 +19,15 @@ namespace Utils
 	{};
 	
 	
+	
+	template <class T, bool b = is_enum<T>::value>
+	struct underlying_type;
+	
+	template <class T>
+	struct underlying_type<T, true>
+	{
+		typedef __underlying_type(T) type;
+	};
 }
 
 #endif

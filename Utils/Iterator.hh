@@ -128,5 +128,11 @@ namespace Utils {
 		return lhs.base() != rhs.base();
 	}
 	
+	template <class Iter>
+	typename iterator_traits<Iter>::difference_type distance(Iter first, Iter last);
+	
+	template <class Iter, class Distance>
+	void advance(Iter& it, Distance dist);
+	
 }
 #endif

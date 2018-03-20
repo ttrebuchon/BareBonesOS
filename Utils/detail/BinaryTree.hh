@@ -7,12 +7,10 @@ namespace Utils { namespace detail
 	{
 		class NodeBase
 		{
-			private:
-			size_t _size;
-			
 			public:
+			size_t size;
 			mutable NodeBase *left, *right, *parent;
-			size_t size() const;
+			NodeBase();
 		};
 		
 		template <class T, class Comp>
@@ -60,6 +58,8 @@ namespace Utils { namespace detail
 			
 			BinaryTree* clone() const;
 			void destroy(allocator_type&);
+			
+			size_t size() const;
 		};
 	}
 }

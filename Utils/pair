@@ -1,6 +1,9 @@
 #ifndef INCLUDED_PAIR
 #define INCLUDED_PAIR
 
+#include <Common.h>
+#include "utility"
+
 namespace Utils
 {
 	template <class T1, class T2>
@@ -13,6 +16,11 @@ namespace Utils
 		T2 second;
 		
 		constexpr pair() : first(), second()
+		{
+			
+		}
+		
+		constexpr pair(const pair& p) : first(p.first), second(p.second)
 		{
 			
 		}
@@ -30,7 +38,7 @@ namespace Utils
 			
 		}
 		
-		pair(pair&& p) : first(forward((T1&&)p.first)), second(forward((T2&&)p.second))
+		pair(pair&& p) : first(forward<T1&&>((T1&&)p.first)), second(forward<T2&&>((T2&&)p.second))
 		{
 			
 		}

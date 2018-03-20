@@ -7,6 +7,12 @@ namespace Utils { namespace detail
 {
 namespace binary_tree
 {
+	NodeBase::NodeBase() : size(1), left(nullptr), right(nullptr), parent(nullptr)
+	{
+		
+	}
+	
+	
 	template <class T, class Comp>
 	template <class NAlloc, class Alloc>
 	void Node<T, Comp>::destroyChildren(NAlloc& na, Alloc& a)
@@ -50,6 +56,40 @@ namespace binary_tree
 	
 	
 	
+	
+	template <class T, class Comp, class Alloc>
+	template <class Key>
+	auto BinaryTree<T, Comp, Alloc>::find(const Key& k) const -> _Node*
+	{
+		if (root)
+		{
+			_Node* it = root;
+			bool choice;
+			while (it != nullptr)
+			{
+				choice = comp(k, it->value);
+				if (comp(it->value, k))
+				{
+					if (choice)
+					{
+						return it;
+					}
+					
+					it = (_Node*)it->right;
+				}
+				else
+				{
+					if (!choice)
+					{
+						return it;
+					}
+					
+					it = (_Node*)it->left;
+				}
+			}
+		}
+		return nullptr;
+	}
 	
 	template <class T, class Comp, class Alloc>
 	template <class Key>
@@ -143,6 +183,13 @@ namespace binary_tree
 		branch = na.allocate(1);
 		nalloc.construct((NodeBase*)branch);
 		alloc.template construct<T>(&branch->value, forward<Args>(args)...);
+		
+		NodeBase* it = parent;
+		while (it != nullptr)
+		{
+			++it->size;
+			it = it->parent;
+		}
 	}
 	
 	
@@ -158,6 +205,12 @@ namespace binary_tree
 			nalloc.deallocate(root, 1);
 			root = nullptr;
 		}
+	}
+	
+	template <class T, class Comp, class Alloc>
+	size_t BinaryTree<T, Comp, Alloc>::size() const
+	{
+		return root != nullptr ? root->size : 0;
 	}
 	
 	

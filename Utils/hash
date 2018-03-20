@@ -1,0 +1,110 @@
+#ifndef INCLUDED_HASH
+#define INCLUDED_HASH
+
+#include "type_traits"
+
+namespace Utils
+{
+	template <class R, class Key>
+	struct hash_base
+	{
+		typedef Key argument_type;
+		typedef R result_type;
+		
+		constexpr hash_base() noexcept = default;
+		constexpr hash_base(const hash_base&) noexcept = default;
+		~hash_base() noexcept = default;
+	};
+	
+	template <class Key>
+	struct hash;
+	
+	
+	
+	
+	
+	
+	// Specializations
+	
+	#define IDENTITY_HASH(T) \
+	template <> \
+	struct hash< T > : public hash_base < size_t, T > \
+	{\
+		constexpr hash() noexcept = default; \
+		constexpr hash(const hash&) noexcept = default; \
+		~hash() noexcept = default; \
+		\
+		result_type operator()(argument_type const& k) const noexcept \
+		{ \
+			return k; \
+		} \
+	};
+	
+	
+	IDENTITY_HASH( bool )
+	IDENTITY_HASH( char )
+	IDENTITY_HASH( signed char )
+	IDENTITY_HASH( unsigned char )
+	IDENTITY_HASH( char16_t )
+	IDENTITY_HASH( char32_t )
+	IDENTITY_HASH( wchar_t )
+	IDENTITY_HASH( short )
+	IDENTITY_HASH( unsigned short )
+	IDENTITY_HASH( int )
+	IDENTITY_HASH( unsigned int )
+	IDENTITY_HASH( long )
+	IDENTITY_HASH( long long )
+	IDENTITY_HASH( unsigned long )
+	IDENTITY_HASH( unsigned long long )
+	
+	#undef IDENTITY_HASH
+	
+	
+	
+	template <class T>
+	struct hash<T*> : public hash_base<size_t, T*>
+	{
+		typedef typename hash_base<size_t, T*>::argument_type argument_type;
+		typedef typename hash_base<size_t, T*>::result_type result_type;
+		
+		constexpr hash() noexcept = default;
+		constexpr hash(const hash&) noexcept = default;
+		~hash() noexcept = default;
+		
+		result_type operator()(const argument_type& k) const noexcept
+		{
+			return (result_type)k;
+		}
+	};
+	
+	
+	namespace detail
+	{
+		template <class T, bool>
+		struct hash_enum_helper
+		{
+			private:
+			hash_enum_helper(hash_enum_helper&&);
+			~hash_enum_helper();
+		};
+		
+		template <class T>
+		struct hash_enum_helper<T, true> : public hash_base<size_t, T>
+		{
+			typedef typename hash_base<size_t, T>::argument_type argument_type;
+			typedef typename hash_base<size_t, T>::result_type result_type;
+			
+			result_type operator()(const argument_type& k) const noexcept
+			{
+				using U = typename underlying_type<T>::type;
+				return hash<U>{}(static_cast<U>(k));
+				
+			}
+		}; 
+	}
+	
+	template <class Enum>
+	struct hash : detail::hash_enum_helper<Enum, is_enum<Enum>::value> { };
+}
+
+#endif
