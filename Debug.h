@@ -1,3 +1,4 @@
+/*
 // #ifndef INCLUDED_DEBUG_H
 // #define INCLUDED_DEBUG_H
 
@@ -44,6 +45,18 @@
 // }
 // #endif
 
-// #endif
+//#endif
+//#else
+
+//#ifndef INCLUDED_DEBUG_H_DISABLED
+//#define INCLUDED_DEBUG_H_DISABLED
+//#undef INCLUDED_DEBUG_H_ENABLED
+//#undef kassert
+
+
+#define kassert(X) 
+
+#endif
+#endif*/
 #include "kernel/Debug.h"
-#define kassert(x) ASSERT(x)
+// #endif

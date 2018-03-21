@@ -2,7 +2,7 @@
 #include <drivers/IDE/IDEDisk.hh>
 #include <drivers/IDE/DMA.hh>
 #include <drivers/PCI.hh>
-#include <kernel/utils/EnumOperators.hh>
+#include <Utils/EnumOperators.hh>
 
 struct IDEChannelRegisters {
    unsigned short base;  // I/O Base.

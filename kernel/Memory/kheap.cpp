@@ -3,14 +3,14 @@
 
 
 extern uint32_t end;
-uint32_t kPlacement = (uint32_t)&end;
+uint32_t kPlacement = (addr_t)&end;
 
 extern Kernel::Memory::PageDir* Kernel::Memory::kernel_dir;
 
 
 
 extern "C" {
-    void* kmalloc(uint32_t size, int align, uint32_t* phys)
+    void* kmalloc(uint32_t size, int align, addr_t* phys)
     {
         if (Kernel::Memory::kheap != 0)
         {
@@ -18,8 +18,8 @@ extern "C" {
             //void* addr = _alloc(size, (uint8_t)align, kheap);
             if (phys != 0)
             {
-                Kernel::Memory::Page* page = Kernel::Memory::kernel_dir->getPage((uint32_t)addr, 0);
-                *phys = page->frame*0x1000 + ((uint32_t)addr&0xFFF);
+                Kernel::Memory::Page* page = Kernel::Memory::kernel_dir->getPage((addr_t)addr, 0);
+                *phys = page->frame*0x1000 + ((addr_t)addr&0xFFF);
             }
             return addr;
         }

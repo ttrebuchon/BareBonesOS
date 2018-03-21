@@ -1,6 +1,6 @@
 #include "Tests.hh"
-#include <kernel/utils/limits>
-#include <kernel/utils/type_traits>
+#include <Utils/limits>
+#include <Utils/type_traits>
 
 using namespace Utils;
 

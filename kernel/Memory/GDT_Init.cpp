@@ -45,8 +45,7 @@ namespace Kernel { namespace Memory {
         gdt_table[4].granularity = 1;
         gdt_table[4].operand_size = 1;
 
-        Drivers::VGA::Write(reinterpret_cast<uint8_t*>(&gdt_table[1])[5]);
-        Drivers::VGA::Write("\n");
+        
         ASSERT(reinterpret_cast<uint8_t*>(&gdt_table[1])[5] == 0x9A);
 
         Kernel::Memory::GDTEntry::Pointer.limit = (sizeof(Kernel::Memory::GDTEntry)*5 - 1);
@@ -58,4 +57,3 @@ namespace Kernel { namespace Memory {
 
 }
 }
-

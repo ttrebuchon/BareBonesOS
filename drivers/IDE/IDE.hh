@@ -2,7 +2,7 @@
 #define INCLUDED_ATA_HH
 
 #include <Common.h>
-#include <kernel/utils/EnumOperators.hh>
+#include <Utils/EnumOperators.hh>
 
 namespace Drivers { namespace IDE {
 	

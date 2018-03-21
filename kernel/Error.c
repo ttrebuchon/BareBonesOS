@@ -1,6 +1,6 @@
 #include "Error.h"
 #include <drivers/VGA.hh>
-#include <kernel/utils/int_to_str.h>
+#include <Utils/int_to_str.h>
 
 
 void __do_kernel_panic(const char* msg, const char* file, const int line, const char* function)

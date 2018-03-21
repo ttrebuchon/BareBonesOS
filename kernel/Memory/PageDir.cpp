@@ -42,13 +42,13 @@ namespace Kernel { namespace Memory {
 
 
 
-    PageTable* PageTable::clone(uint32_t* phys) const
+    PageTable* PageTable::clone(addr_t* phys) const
 	{
 		//PageTable* dest = (struct PageTable*)kmalloc(sizeof(struct PageTable), 1, phys);
 		PageTable* dest = new PageTable();
 		if (phys != nullptr)
 		{
-			*phys = (uint32_t)virtual_to_physical(current_dir, dest);
+			*phys = (addr_t)virtual_to_physical(current_dir, dest);
 			ASSERT(*phys != 0);
 		}
 		
@@ -105,19 +105,19 @@ namespace Kernel { namespace Memory {
 		}
 		else if (create)
 		{
-			uint32_t phys;
+			addr_t phys;
 			//ref_tables[tableIndex] = new PageTable();
 			ref_tables[tableIndex] = (struct PageTable*)kmalloc(sizeof(struct PageTable), 1, &phys);
 			kmemset(ref_tables[tableIndex], 0, sizeof(struct PageTable));
 			new (ref_tables[tableIndex]) PageTable();
-			uint32_t t;
+			addr_t t;
 			if (current_dir == nullptr)
 			{
-				t = (uint32_t)ref_tables[tableIndex];
+				t = (addr_t)ref_tables[tableIndex];
 			}
 			else
 			{
-				t = (uint32_t)virtual_to_physical(kernel_dir, ref_tables[tableIndex]);
+				t = (addr_t)virtual_to_physical(kernel_dir, ref_tables[tableIndex]);
 			}
 			ASSERT(t != 0);
 			//Might need to get rid of the >> 12 bit?
@@ -148,14 +148,14 @@ namespace Kernel { namespace Memory {
 
     PageDir* PageDir::clone() const
 	{
-		uint32_t phys = 0;
+		addr_t phys = 0;
 		PageDir* dest = (struct PageDir*)kmalloc(sizeof(struct PageDir),1,&phys);
         //PageDir* dest = new PageDir();
 		ASSERT(dest != 0);
 		//ASSERT(phys != 0);
 		kmemset(dest, 0, sizeof(struct PageDir));
 		
-		uint32_t physOffset = (uint32_t)&dest->tables - (uint32_t)dest;
+		addr_t physOffset = (addr_t)&dest->tables - (addr_t)dest;
 		
 		//dest->physicalAddress = physOffset + phys;
 		
@@ -171,9 +171,9 @@ namespace Kernel { namespace Memory {
 			else
 			{
 				ASSERT(0);
-				uint32_t phys;
+				addr_t phys;
                 dest->ref_tables[i] = ref_tables[i]->clone(&phys);
-				uint32_t phys2 = (uint32_t)virtual_to_physical(this, dest->ref_tables[i]);
+				addr_t phys2 = (addr_t)virtual_to_physical(this, dest->ref_tables[i]);
 				ASSERT(phys == phys2);
 				ASSERT(phys != phys2);
 				dest->tables[i].frame = phys >> 12;
