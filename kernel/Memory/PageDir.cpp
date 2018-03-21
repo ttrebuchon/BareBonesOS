@@ -7,6 +7,12 @@ extern "C" void copy_page_physical(uint32_t, uint32_t);
 
 namespace Kernel { namespace Memory {
 
+	Page::Page() :	present(0), rw(0), user(0), reserved(0), accessed(0), dirty(0),
+					reserved2(0), avail(0), frame(0)
+	{
+
+	}
+
     void Page::alloc_frame(bool is_kernel, bool is_writeable)
 	{
 		if (frame != 0)
@@ -87,7 +93,7 @@ namespace Kernel { namespace Memory {
     Page* PageDir::getPage(uint32_t addr, bool create)
 	{
 		//ASSERT(addr != 0xf0000000);
-		addr /= 0x1000;
+		 addr /= 0x1000;
 		uint32_t tableIndex = addr / 1024;
 		ASSERT(tableIndex < 1024);
 
@@ -103,6 +109,7 @@ namespace Kernel { namespace Memory {
 			//ref_tables[tableIndex] = new PageTable();
 			ref_tables[tableIndex] = (struct PageTable*)kmalloc(sizeof(struct PageTable), 1, &phys);
 			kmemset(ref_tables[tableIndex], 0, sizeof(struct PageTable));
+			new (ref_tables[tableIndex]) PageTable();
 			uint32_t t;
 			if (current_dir == nullptr)
 			{
