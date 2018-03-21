@@ -59,6 +59,8 @@ namespace Kernel { namespace Memory
 
 
     void init_gdt();
+
+    extern GDTEntry* gdt_table;
 }
 }
 
