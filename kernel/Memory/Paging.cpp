@@ -16,6 +16,9 @@ namespace Kernel { namespace Memory
 
 	PageDir* kernel_dir;
 	PageDir* current_dir;
+	#ifdef DEBUG
+	PageDir* identity_dir;
+	#endif
 	Utils::Bitset_Ptr<>* frame_collection;
 
 
@@ -59,6 +62,31 @@ namespace Kernel { namespace Memory
 		TRACE_C("Initializing frame collection...\n");
 		init_frame_collection(mem_end/0x1000);
 		TRACE_C("Frame collection initialized.\n");
+		
+		
+		
+		#ifdef DEBUG
+		TRACE_C("Allocating identity_dir...\n");
+		addr_t iphys;
+		identity_dir = create_empty_page_dir(&iphys);
+		TRACE_C("identity_dir allocated.\n");
+		
+		ASSERT(iphys == (uint32_t)&identity_dir->tables);
+		
+		
+		for (addr_t q = 0; q < 0xFFFFF; ++q)
+		{
+			auto pg = identity_dir->getPage(i, true);
+			ASSERT(pg->map(q*0x1000, true, true, true));
+			
+		}
+		
+		TRACE_C("identity_dir initialization complete.\n");
+		#endif
+		
+		
+		
+		
 		
 		TRACE_C("Allocating kernel_dir...\n");
 		addr_t phys;
