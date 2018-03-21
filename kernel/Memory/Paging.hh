@@ -13,6 +13,9 @@ namespace Kernel { namespace Memory {
 
 	extern PageDir* kernel_dir;
 	extern PageDir* current_dir;
+	#ifdef DEBUG
+	extern PageDir* identity_dir;
+	#endif
 
 	void init_paging();
 	void switch_page_dir(PageDir*);

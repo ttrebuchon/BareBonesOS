@@ -32,6 +32,21 @@ namespace Kernel { namespace Memory {
 			frame = 0x0;
 		}
 	}
+	
+	bool Page::map(addr_t phys, bool writeable, bool kernel, bool overwrite)
+	{
+		if (frame != 0 && !overwrite)
+		{
+			return false;
+		}
+		
+		present = 0;
+		rw = writeable;
+		user = !kernel;
+		frame = phys / 0x1000;
+		present = 1;
+		return true;
+	}
 
 
 

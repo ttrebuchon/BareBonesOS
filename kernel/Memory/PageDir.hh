@@ -20,6 +20,8 @@ namespace Kernel { namespace Memory {
 
         void alloc_frame(bool is_kernel, bool is_writeable);
         void free_frame();
+        
+        bool map(addr_t phys, bool writeable, bool kernel, bool overwrite = true);
     };
 
     static_assert(sizeof(Page) == 4);
