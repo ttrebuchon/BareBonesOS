@@ -21,13 +21,13 @@ namespace Utils
 	
 	
 	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
-	hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::hash_table(size_t bucketHint, const Selector& select, const hasher& hash, const equals_type& eq, const allocator_type& alloc) : select(select), hash(hash), eq(eq), alloc(alloc), policy(), buckets(nullptr), pre(nullptr), bucketCount(0), elemCount(0), beforeBegin()
+	hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::hash_table(size_type bucketHint, const Selector& select, const hasher& hash, const equals_type& eq, const allocator_type& alloc) : select(select), hash(hash), eq(eq), alloc(alloc), _policy(), buckets(nullptr), pre(nullptr), bucketCount(0), elemCount(0), beforeBegin()
 	{
 		typedef typename allocator_type::template rebind<Bucket>::other bucket_alloc_type;
 		bucket_alloc_type bAlloc(alloc);
 		
 		
-		bucketCount = policy.nextBuckets(bucketHint);
+		bucketCount = _policy.nextBuckets(bucketHint);
 		buckets = bAlloc.allocate(bucketCount);
 		for (int i = 0; i < bucketCount; ++i)
 		{
@@ -38,7 +38,13 @@ namespace Utils
 	}
 	
 	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
-	hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::hash_table(const hash_table& t) : select(t.select), hash(t.hash), eq(t.eq), alloc(t.alloc), policy(t.policy), buckets(nullptr), pre(nullptr), bucketCount(t.bucketCount), elemCount(t.elemCount), beforeBegin()
+	hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::hash_table(const hash_table& t) : select(t.select), hash(t.hash), eq(t.eq), alloc(t.alloc), _policy(t._policy), buckets(nullptr), pre(nullptr), bucketCount(t.bucketCount), elemCount(
+	#ifdef DEBUG
+	0
+	#else
+	t.elemCount
+	#endif
+	), beforeBegin()
 	{
 		typedef typename allocator_type::template rebind<Bucket>::other bucket_alloc_type;
 		bucket_alloc_type bAlloc(alloc);
@@ -55,6 +61,9 @@ namespace Utils
 		ptr->code = tptr->code;
 		beforeBegin.next = ptr;
 		buckets[bucketIndex(ptr)] = (_VNode*)&beforeBegin;
+		#ifdef DEBUG
+		++elemCount;
+		#endif
 		
 		
 		detail::hash_node_base* prev = ptr;
@@ -69,11 +78,15 @@ namespace Utils
 				buckets[bkt] = (_VNode*)prev;
 			}
 			prev = ptr;
+			#ifdef DEBUG
+			++elemCount;
+			#endif
 		}
 		
 		
 		ASSERT(buckets);
 		ASSERT(bucketCount > 0);
+		ASSERT(elemCount == t.elemCount);
 	}
 	
 	
@@ -84,7 +97,7 @@ namespace Utils
 		bucket_alloc_type bAlloc(alloc);
 		
 		
-		_VNode* ptr = _begin();
+		/*_VNode* ptr = _begin();
 		_VNode* last = ptr;
 		
 		if (ptr != nullptr)
@@ -102,10 +115,86 @@ namespace Utils
 			ASSERT(last != &beforeBegin);
 			nalloc.destroy(last);
 			nalloc.deallocate(last, 1);
-		}
+		}*/
+		clear();
 		
 		bAlloc.deallocate(buckets, bucketCount);
 	}
+	
+	
+	
+	
+	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	auto hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::operator=(const hash_table& t) -> hash_table&
+	{
+		typedef typename allocator_type::template rebind<Bucket>::other bucket_alloc_type;
+		
+		clear();
+		
+		bucket_alloc_type oldBAlloc(alloc);
+		
+		oldBAlloc.deallocate(buckets, bucketCount);
+		
+		select = t.select;
+		hash = t.hash;
+		eq = t.eq;
+		alloc = t.alloc;
+		_policy = t._policy;
+		bucketCount = t.bucketCount;
+		#ifndef DEBUG
+		elemCount = t.elemCount;
+		#else
+		elemCount = 0;
+		#endif
+		beforeBegin = t.beforeBegin;
+		
+		
+		bucket_alloc_type bAlloc(alloc);
+		
+		
+		buckets = bAlloc.allocate(bucketCount);
+		for (int i = 0; i < bucketCount; ++i)
+		{
+			buckets[i] = nullptr;
+		}
+		
+		auto tptr = t._begin();
+		auto ptr = allocateNode(tptr->value);
+		ptr->code = tptr->code;
+		beforeBegin.next = ptr;
+		buckets[bucketIndex(ptr)] = (_VNode*)&beforeBegin;
+		#ifdef DEBUG
+		++elemCount;
+		#endif
+		
+		
+		detail::hash_node_base* prev = ptr;
+		for (tptr = next(tptr); tptr; tptr = next(tptr))
+		{
+			ptr = allocateNode(tptr->value);
+			prev->next = ptr;
+			ptr->code = tptr->code;
+			size_t bkt = bucketIndex(ptr);
+			if (!buckets[bkt])
+			{
+				buckets[bkt] = (_VNode*)prev;
+			}
+			prev = ptr;
+			#ifdef DEBUG
+			++elemCount;
+			#endif
+		}
+		
+		
+		ASSERT(buckets);
+		ASSERT(bucketCount > 0);
+		ASSERT(elemCount == t.elemCount);
+		
+		
+		return *this;
+	}
+	
 	
 	
 	
@@ -125,10 +214,10 @@ namespace Utils
 		node = allocateNode(k);
 		
 		node->code = code;
-		auto needsRehash = policy.needRehash(bucketCount, elemCount, 1);
+		auto needsRehash = _policy.needRehash(bucketCount, elemCount, 1);
 		if (needsRehash.first)
 		{
-			rehash(needsRehash.second);
+			_rehash(needsRehash.second);
 			index = bucketIndex(code);
 		}
 		
@@ -168,10 +257,10 @@ namespace Utils
 		node = allocateNode(k);
 		
 		node->code = code;
-		auto needsRehash = policy.needRehash(bucketCount, elemCount, 1);
+		auto needsRehash = _policy.needRehash(bucketCount, elemCount, 1);
 		if (needsRehash.first)
 		{
-			rehash(needsRehash.second);
+			_rehash(needsRehash.second);
 			index = bucketIndex(code);
 		}
 		
@@ -200,31 +289,31 @@ namespace Utils
 	
 	
 	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
-	size_t hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::bucketIndex(const T& t) const
+	auto hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::bucketIndex(const T& t) const -> size_type
 	{
 		return bucketIndex(select(t));
 	}
 	
 	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
-	size_t hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::bucketIndex(const Key& k) const
+	auto hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::bucketIndex(const Key& k) const -> size_type
 	{
 		return bucketIndex(getCode(k));
 	}
 	
 	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
-	size_t hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::bucketIndex(const hash_code h) const
+	auto hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::bucketIndex(const hash_code h) const -> size_type
 	{
 		return h % bucketCount;
 	}
 	
 	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
-	size_t hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::bucketIndex(const _VNode* n) const
+	auto hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::bucketIndex(const _VNode* n) const -> size_type
 	{
 		return bucketIndex(n->code);
 	}
 	
 	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
-	auto hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::findNode(const size_t bucketIndex, const Key& k, const hash_code c) -> _VNode*
+	auto hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::findNode(const size_type bucketIndex, const Key& k, const hash_code c) -> _VNode*
 	{
 		auto n = findBeforeNode(bucketIndex, k, c);
 		if (n)
@@ -238,7 +327,7 @@ namespace Utils
 	}
 	
 	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
-	auto hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::findNode(const size_t bucketIndex, const Key& k, const hash_code c) const -> const _VNode*
+	auto hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::findNode(const size_type bucketIndex, const Key& k, const hash_code c) const -> const _VNode*
 	{
 		auto n = findBeforeNode(bucketIndex, k, c);
 		if (n)
@@ -252,7 +341,7 @@ namespace Utils
 	}
 	
 	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
-	detail::hash_node_base* hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::findBeforeNode(const size_t bucketIndex, const Key& k, const hash_code c)
+	detail::hash_node_base* hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::findBeforeNode(const size_type bucketIndex, const Key& k, const hash_code c)
 	{
 		auto prev_p = buckets[bucketIndex];
 		if (!prev_p)
@@ -299,7 +388,7 @@ namespace Utils
 	}
 	
 	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
-	void hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::rehash(size_t bCount)
+	void hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::_rehash(size_type bCount)
 	{
 		ASSERT(bCount > 0);
 		typedef typename allocator_type::template rebind<Bucket>::other bucket_alloc_type;
@@ -369,12 +458,169 @@ namespace Utils
 	
 	
 	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
-	detail::hash_node<T>* hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::get(const Key& k)
+	auto hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::get(const Key& k) -> _VNode*
 	{
 		hash_code code = hash(k);
 		size_t index = bucketIndex(code);
 		
-		ASSERT(false);
+		auto ptr = buckets[index];
+		if (!ptr)
+		{
+			return nullptr;
+		}
+		while (ptr = next(ptr))
+		{
+			if (equiv(k, ptr))
+			{
+				return ptr;
+			}
+		};
+		
+		return nullptr;
+	}
+	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	auto hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::get(const Key& k) const -> const _VNode*
+	{
+		hash_code code = hash(k);
+		size_t index = bucketIndex(code);
+		
+		auto ptr = buckets[index];
+		if (!ptr)
+		{
+			return nullptr;
+		}
+		while (ptr = next(ptr))
+		{
+			if (equiv(k, ptr))
+			{
+				return ptr;
+			}
+		};
+		
+		return nullptr;
+	}
+	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	auto hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::get(Key&& k) -> _VNode*
+	{
+		hash_code code = hash(k);
+		size_t index = bucketIndex(code);
+		
+		auto ptr = buckets[index];
+		if (!ptr)
+		{
+			return nullptr;
+		}
+		while (ptr = next(ptr))
+		{
+			if (equiv(k, ptr))
+			{
+				return ptr;
+			}
+		};
+		
+		return nullptr;
+	}
+	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	auto hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::get(Key&& k) const -> const _VNode*
+	{
+		hash_code code = hash(k);
+		size_t index = bucketIndex(code);
+		
+		auto ptr = buckets[index];
+		if (!ptr)
+		{
+			return nullptr;
+		}
+		while (ptr = next(ptr))
+		{
+			if (equiv(k, ptr))
+			{
+				return ptr;
+			}
+		};
+		
+		return nullptr;
+	}
+	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	void hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::clear()
+	{
+		/**this = hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>();
+		return;*/
+		_VNode* ptr = _begin();
+		_VNode* last = ptr;
+		
+		if (ptr != nullptr)
+		{
+			ptr = next(ptr);
+			while (ptr)
+			{
+				ASSERT(last != &beforeBegin);
+				nalloc.destroy(last);
+				nalloc.deallocate(last, 1);
+				
+				last = ptr;
+				ptr = next(ptr);
+			}
+			ASSERT(last != &beforeBegin);
+			nalloc.destroy(last);
+			nalloc.deallocate(last, 1);
+		}
+		
+		beforeBegin.next = nullptr;
+		for (int i = 0; i < bucketCount; ++i)
+		{
+			buckets[i] = nullptr;
+		}
+		elemCount = 0;
+	}
+	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	void hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::rehash(size_type n)
+	{
+		if (n > bucketCount)
+		{
+			_rehash(n);
+		}
+	}
+	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	void hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::reserve(size_type n)
+	{
+		if (n > elemCount)
+		{
+			auto needsRehash = _policy.needRehash(bucketCount, elemCount, n - elemCount);
+			if (needsRehash.first)
+			{
+				_rehash(needsRehash.second);
+			}
+		}
+	}
+	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	constexpr const Policy& hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::policy() const noexcept
+	{
+		return _policy;
+	}
+	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	constexpr float hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::max_load_factor() const noexcept
+	{
+		return policy().max_load_factor();
+	}
+	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	void hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::max_load_factor(float f)
+	{
+		_policy.max_load_factor(f);
+		auto needsRehash = _policy.needRehash(bucketCount, elemCount, 0);
+		if (needsRehash.first)
+		{
+			_rehash(needsRehash.second);
+		}
 	}
 	
 	
@@ -431,6 +677,179 @@ namespace Utils
 	
 	
 	
+	// Iterator Methods
+	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	auto hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::begin() -> iterator
+	{
+		return iterator(_begin());
+	}
+	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	auto hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::end() -> iterator
+	{
+		return iterator(nullptr);
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	// Iterator Method Definitions
+	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::iterator::iterator(_VNode* n) : node(n)
+	{
+		
+	}
+	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::iterator::iterator() : node(nullptr)
+	{
+		
+	}
+	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::iterator::iterator(const iterator& it) : node(it.node)
+	{
+		
+	}
+	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	auto hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::iterator::operator++() -> iterator&
+	{
+		node = next(node);
+		return *this;
+	}
+	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	auto hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::iterator::operator++(int) -> iterator
+	{
+		auto old = node;
+		node = next(node);
+		return iterator(old);
+	}
+	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	auto hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::iterator::operator*() const -> value_type&
+	{
+		return node->value;
+	}
+	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	auto hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::iterator::operator->() const -> value_type*
+	{
+		return &node->value;
+	}
+	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::iterator::operator const_iterator() const
+	{
+		return const_iterator(node);
+	}
+	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	bool hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::iterator::operator==(const iterator& it) const
+	{
+		return node == it.node;
+	}
+	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	bool hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::iterator::operator!=(const iterator& it) const
+	{
+		return node != it.node;
+	}
+	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	bool hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::iterator::operator==(const const_iterator& it) const
+	{
+		return node == it.node;
+	}
+	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	bool hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::iterator::operator!=(const const_iterator& it) const
+	{
+		return node != it.node;
+	}
+	
+	
+	
+	
+	
+	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::const_iterator::const_iterator(const _VNode* n) : node(n)
+	{
+		
+	}
+	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::const_iterator::const_iterator() : node(nullptr)
+	{
+		
+	}
+	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::const_iterator::const_iterator(const const_iterator& it) : node(it.node)
+	{
+		
+	}
+	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::const_iterator::const_iterator(const iterator& it) : node(it.node)
+	{
+		
+	}
+	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	auto hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::const_iterator::operator++() -> const_iterator&
+	{
+		node = next(node);
+		return *this;
+	}
+	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	auto hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::const_iterator::operator++(int) -> const_iterator
+	{
+		auto old = node;
+		node = next(node);
+		return iterator(old);
+	}
+	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	auto hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::const_iterator::operator*() const -> const value_type&
+	{
+		return node->value;
+	}
+	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	bool hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::const_iterator::operator==(const const_iterator& it) const
+	{
+		return node == it.node;
+	}
+	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	bool hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::const_iterator::operator!=(const const_iterator& it) const
+	{
+		return node != it.node;
+	}
+	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	bool hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::const_iterator::operator==(const iterator& it) const
+	{
+		return node == it.node;
+	}
+	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	bool hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::const_iterator::operator!=(const iterator& it) const
+	{
+		return node != it.node;
+	}
 	
 }
 

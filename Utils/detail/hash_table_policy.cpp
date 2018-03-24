@@ -26,9 +26,9 @@ namespace detail
 		if (minBuckets >= bucketCount)
 		{
 			result.first = true;
-			if ((size_t)minBuckets + 1 >= bucketCount*GROWTH_FACTOR)
+			if ((((size_t)minBuckets) + 1) >= bucketCount*GROWTH_FACTOR)
 			{
-				result.second = (size_t)minBuckets + 1;
+				result.second = ((size_t)minBuckets) + 1;
 			}
 			else
 			{
@@ -58,7 +58,7 @@ namespace detail
 		}
 		
 		
-		constexpr auto nPrimes = sizeof(_primes_list)/sizeof(unsigned long) - 1;
+		constexpr auto nPrimes = sizeof(_primes_list)/sizeof(unsigned long);
 		
 		constexpr auto lastPrime = _primes_list + nPrimes - 1;
 		
@@ -72,10 +72,32 @@ namespace detail
 		}
 		else
 		{
-			nextResize = *next * (long double)maxLoad + 1;
+			long double floorNext = *next * (long double)maxLoad;
+			if (floorNext != (size_t)floorNext)
+			{
+				nextResize = ((size_t)floorNext) + 1;
+			}
+			else
+			{
+				nextResize = *next * (long double)maxLoad;
+			}
 		}
 		
 		return *next;
+	}
+	
+	static constexpr size_t __max_buckets() noexcept
+	{
+		constexpr auto nPrimes = sizeof(_primes_list)/sizeof(unsigned long) - 1;
+		
+		constexpr auto lastPrime = _primes_list[nPrimes];
+		
+		return lastPrime;
+	}
+	
+	size_t hash_table_policy::max_buckets() const noexcept
+	{
+		return __max_buckets();
 	}
 	
 }

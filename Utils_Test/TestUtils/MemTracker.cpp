@@ -1,16 +1,16 @@
 #include "MemTracker.hh"
+#include <iostream>
 
-namespace QA
-{
+using Memory = typename QA::Memory;
+	
+	
+	
 	template <class T>
 	using MAllocator = Memory::MetaAllocator<T>;
 	
 	std::map<void*, Memory::Allocation*, std::less<void*>, MAllocator<std::pair<void* const, Memory::Allocation*>>> Memory::allocationMap;
 	std::list<Memory::Allocation*, MAllocator<Memory::Allocation*>> Memory::allocations;
 		
-	void* Memory::metaPool;
-	void* Memory::metaPtr;
-	size_t Memory::metaLimit;
 	MAllocator<Memory::Allocation> Memory::alloc;
 	bool Memory::__initted = false;
 	size_t Memory::_total = 0;
@@ -20,30 +20,29 @@ namespace QA
 	const size_t& Memory::Total = _total;
 	
 	
-	void Memory::Init()
+	void Memory::Start()
 	{
-		if (__initted)
-		{
-			return;
-		}
 		__initted = true;
-		
-		
-		#ifdef TRACK_ALLOC
-		metaLimit = 1024*1024*1024;
-		metaPool = malloc(metaLimit);
-		metaPtr = metaPool;
-		#endif
+	}
+	
+	void Memory::Pause()
+	{
+		__initted = false;
 	}
 	
 	
 	
-	void* Memory::Allocate(size_t s)
+	void* Memory::Allocate(size_t s, bool meta)
 	{
 		auto p = malloc(s);
 		
-		if (__initted)
+		if (__initted && !meta)
 		{
+			if (s == 0)
+			{
+				out << "\n\nZero byte allocation requested, granted at " << p << "\n\n" << std::endl;
+				while (true);
+			}
 			Allocation* a = alloc.allocate(1);
 			alloc.construct(a, p, s);
 			allocationMap[p] = a;
@@ -54,12 +53,17 @@ namespace QA
 		return p;
 	}
 	
-	void* Memory::AllocateArray(size_t s)
+	void* Memory::AllocateArray(size_t s, bool meta)
 	{
 		auto p = malloc(s);
 		
-		if (__initted)
+		if (__initted && !meta)
 		{
+			if (s == 0)
+			{
+				out << "\n\nZero byte allocation requested, granted at " << p << "\n\n" << std::endl;
+				while (true) ;
+			}
 			Allocation* a = alloc.allocate(1);
 			alloc.construct(a, p, s, true);
 			allocationMap[p] = a;
@@ -70,40 +74,60 @@ namespace QA
 		return p;
 	}
 	
-	void Memory::Release(void* ptr)
+	void Memory::Release(void* ptr, bool meta)
 	{
-		if (__initted)
+		if (__initted && !meta)
 		{
+			if (!allocationMap.count(ptr))
+			{
+				out << "Releasing unallocated memory: " << ptr << std::endl;
+				//while (true) ;
+			}
 			allocationMap.erase(ptr);
 		}
 		
 		free(ptr);
 	}
 	
-	void Memory::Release(void* ptr, size_t s)
+	void Memory::Release(void* ptr, size_t s, bool meta)
 	{
-		if (__initted)
+		if (__initted && !meta)
 		{
+			if (!allocationMap.count(ptr))
+			{
+				out << "Releasing unallocated memory: " << ptr << std::endl;
+				//while (true) ;
+			}
 			allocationMap.erase(ptr);
 		}
 		
 		free(ptr);
 	}
 	
-	void Memory::ReleaseArray(void* ptr)
+	void Memory::ReleaseArray(void* ptr, bool meta)
 	{
-		if (__initted)
+		if (__initted && !meta)
 		{
+			if (!allocationMap.count(ptr))
+			{
+				out << "Releasing unallocated memory: " << ptr << std::endl;
+				//while (true) ;
+			}
 			allocationMap.erase(ptr);
 		}
 		
 		free(ptr);
 	}
 	
-	void Memory::ReleaseArray(void* ptr, size_t s)
+	void Memory::ReleaseArray(void* ptr, size_t s, bool meta)
 	{
-		if (__initted)
+		if (__initted && !meta)
 		{
+			if (!allocationMap.count(ptr))
+			{
+				out << "Releasing unallocated memory: " << ptr << std::endl;
+				//while (true) ;
+			}
 			allocationMap.erase(ptr);
 		}
 		
@@ -117,20 +141,18 @@ namespace QA
 		for (auto a : allocations)
 		{
 			alloc.destroy(a);
+			alloc.deallocate(a, 1);
 		}
 		
 		allocations.clear();
 		allocationMap.clear();
-		metaPtr = metaPool;
 		_total = 0;
 	}
 	
 	
 	
 	
-	
-	
-}
+
 #ifdef TRACK_ALLOC
 void* operator new(size_t size)
 {

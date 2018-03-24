@@ -144,6 +144,81 @@ namespace Utils
 		{
 			typedef typename Pointer_Traits<typename pointer<A>::type>::difference_type type;
 		};
+		
+		
+		
+		
+		template <class Alloc, class = void>
+		struct copy_construct_ret
+		{
+			constexpr static int Instance = 0;
+			typedef Alloc type;
+		};
+		
+		template <class Alloc>
+		struct copy_construct_ret<Alloc, void_t<decltype(Alloc(declval<Alloc>()))>>
+		{
+			constexpr static int Instance = 1;
+			typedef Alloc type;
+		};
+		
+		
+		template <class Alloc1, class Alloc2, class = void>
+		struct copy_construct
+		{
+			private:
+			typedef copy_construct_ret<Alloc1> return_struct;
+			
+			public:
+			constexpr static int Instance = (return_struct::Instance << 1) | 0;
+			typedef typename return_struct::type return_type;
+			
+			constexpr inline static typename return_struct::type call(const Alloc2&)
+			{
+				return Alloc1();
+			}
+			
+			constexpr inline static Alloc1* in_place(void* ptr, const Alloc2&)
+			{
+				new (ptr) Alloc1();
+			}
+			
+			template <class MetaAlloc>
+			constexpr inline static Alloc1* in_place(MetaAlloc& ma, void* ptr, const Alloc2& a2)
+			{
+				ma.construct((Alloc1*)ptr);
+				return (Alloc1*)ptr;
+			}
+		};
+		
+		template <class Alloc1, class Alloc2>
+		struct copy_construct<Alloc1, Alloc2, void_t<decltype(Alloc1(declval<Alloc2>()))>>
+		{
+			private:
+			typedef copy_construct_ret<Alloc1> return_struct;
+			
+			public:
+			constexpr static int Instance = (return_struct::Instance << 1) | 1;
+			typedef typename return_struct::type return_type;
+			
+			constexpr inline static typename return_struct::type call(const Alloc2& a2)
+			{
+				return Alloc1(a2);
+			}
+			
+			constexpr inline static Alloc1* in_place(void* ptr, const Alloc2& a2)
+			{
+				new (ptr) Alloc1(a2);
+			}
+			
+			template <class MetaAlloc>
+			constexpr inline static Alloc1* in_place(MetaAlloc& ma, void* ptr, const Alloc2& a2)
+			{
+				ma.construct((Alloc1*)ptr, a2);
+				return (Alloc1*)ptr;
+			}
+		};
+		
 	}
 	}
 	
@@ -186,9 +261,30 @@ namespace Utils
 			alloc.deallocate(p, n);
 		}
 		
+		
+		
+		
+		template <class A2>
+		static typename detail::alloc_traits::copy_construct<A, A2>::return_type copy_create(const A2& a2)
+		{
+			return detail::alloc_traits::copy_construct<A, A2>::call(a2);
+		}
+		
+		template <class A2>
+		static A* copy_create(void* ptr, const A2& a2)
+		{
+			return detail::alloc_traits::copy_construct<A, A2>::in_place(ptr, a2);
+		}
+		
+		template <class MA, class A2>
+		static A* copy_create(MA& ma, void* ptr, const A2& a2)
+		{
+			return detail::alloc_traits::copy_construct<A, A2>::in_place(ma, ptr, a2);
+		}
 	};
 	
-	
+	template <class A>
+	using allocator_traits = Allocator_Traits<A>;
 	
 	
 }

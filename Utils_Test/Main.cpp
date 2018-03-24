@@ -2,21 +2,41 @@
 #include <iostream>
 #include <kernel/MetaInfo.hh>
 
+
+TEST(List);
+CTEST(Bitset);
+TEST(Bitset);
+TEST(IDE);
+TEST(IOSTREAM);
+TEST(Limits);
+TEST(String);
+TEST(SQLite);
+TEST(shared_ptr);
+TEST(vector);
+TEST(tuple);
+TEST(map);
+TEST(unordered_map);
+TEST(kernel_utility);
+
+
+
 void checkMemoryTrack();
 
 #define RUN(X) do { \
-	std::cout << "-----------------\n" << "Running test for " << #X << "...\n-----------------\n" << std::endl; \
-	Test_##X(); \
-	std::cout << "-----------------\n" << #X << " testing done.\n-----------------\n\n\n\n"; \
-	checkMemoryTrack(); \
+	QA::out << "-----------------\n" << "Running test for " << #X << "...\n-----------------\n" << std::endl; \
 	QA::Memory::Reset(); \
-	std::cout << "----------------------------------\n\n\n\n\n" << std::endl; \
+	QA::Memory::Start(); \
+	Test_##X(); \
+	QA::Memory::Pause(); \
+	QA::out << "-----------------\n" << #X << " testing done.\n-----------------\n\n\n\n"; \
+	checkMemoryTrack(); \
+	QA::out << "----------------------------------\n\n\n\n\n" << std::endl; \
 	} while (false)
 
 #define RUNC(X) do { \
-	std::cout << "-----------------\n" << "Running C test for " << #X << "...\n-----------------\n" << std::endl; \
+	QA::out << "-----------------\n" << "Running C test for " << #X << "...\n-----------------\n" << std::endl; \
 	TestC_##X(); \
-	std::cout << "-----------------\n" << #X << " C testing done.\n-----------------\n\n\n\n" << "----------------------------------\n\n\n\n\n" << std::endl; \
+	QA::out << "-----------------\n" << #X << " C testing done.\n-----------------\n\n\n\n" << "----------------------------------\n\n\n\n\n" << std::endl; \
 	} while (false)
 
 class MI_Printer
@@ -37,11 +57,12 @@ class MI_Printer
 
 int main()
 {
-	QA::Memory::Init();
+	QA::Init();
 	
 	MI_Printer pr(std::clog);
 	auto mi_pr = new MetaInfo::ClassPrinter<MI_Printer, void>(pr, &MI_Printer::write);
 	MetaInfo::registerPrinter(mi_pr);
+	
 	
 	
 	RUN(IOSTREAM);
@@ -57,8 +78,9 @@ int main()
 	RUN(shared_ptr);
 	RUN(vector);
 	RUN(tuple);
-	//RUN(map);
-	RUN(unordered_map);
+	RUN(map);
+	//RUN(unordered_map);
+	RUN(kernel_utility);
 	
 	std::cerr << "\n\n\nAll Done!\n" << std::flush;
 }
@@ -68,12 +90,12 @@ int main()
 void checkMemoryTrack()
 {
 	#ifdef TRACK_ALLOC
-	std::cout << "Total Allocated: " << QA::Memory::Total << "\n";
-	std::cout << "Allocations: " << QA::Memory::Allocations.size() << "\n";
-	std::cout << "Unfreed: " << QA::Memory::Map.size() << "\n";
+	QA::out << "Total Allocated: " << QA::Memory::Total << "\n";
+	QA::out << "Allocations: " << QA::Memory::Allocations.size() << "\n";
+	QA::out << "Unfreed: " << QA::Memory::Map.size() << "\n";
 	if (QA::Memory::Map.size() > 0)
 	{
-		std::cout << "\tTotalling: ";
+		QA::out << "\tTotalling: ";
 		size_t tot = 0;
 		size_t arrays = 0;
 		for (const auto& p : QA::Memory::Map)
@@ -81,7 +103,15 @@ void checkMemoryTrack()
 			tot += p.second->size();
 			arrays += p.second->array();
 		}
-		std::cout << tot << "\n\tWhere " << arrays << " unfreed were arrays\n";
+		QA::out << tot << "\n\tWhere " << arrays << " unfreed were arrays\n";
+		
+		QA::out << "\n\tUnfreed:\n";
+		for (const auto& p : QA::Memory::Map)
+		{
+			QA::out << "\t\t" << p.first << "\t-\t" << p.second->size() << "\n";
+			ASSERT(p.first == p.second->addr());
+		}
 	}
+	QA::out << std::flush;
 	#endif
 }

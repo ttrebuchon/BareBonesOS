@@ -1,6 +1,9 @@
 #ifndef INCLUDED_SHARED_PTR_CONTROL_HH
 #define INCLUDED_SHARED_PTR_CONTROL_HH
 
+#include <Common.h>
+#include <Utils/Allocator.hh>
+
 namespace Utils
 {
 	namespace detail
@@ -30,7 +33,7 @@ namespace Utils
 					dest->del((Y*)ptr);
 					typename Alloc::template rebind<Destructor>::other dalloc;
 					dalloc.destroy(dest);
-					dalloc.deallocate(dest);
+					dalloc.deallocate(dest, 1);
 				}
 				
 				Destructor()
@@ -59,10 +62,10 @@ namespace Utils
 			bool weakRelease();
 			
 			
-			template <class Y, class Deleter, class Alloc>
-			static detail::shared_ptr_control* CreateControl(Y*, Deleter, Alloc);
-			template <class Y, class Deleter>
-			static detail::shared_ptr_control* CreateControl(Y*, Deleter);
+			template <class Y, class Deleter, class Alloc = Utils::Allocator<Y>>
+			static detail::shared_ptr_control* CreateControl(Y*, Deleter, const Alloc& = Alloc());
+			/*template <class Y, class Deleter>
+			static detail::shared_ptr_control* CreateControl(Y*, Deleter);*/
 			template <class Y>
 			static detail::shared_ptr_control* CreateControl(Y*);
 			

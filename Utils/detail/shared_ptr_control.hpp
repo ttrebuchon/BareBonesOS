@@ -2,6 +2,7 @@
 #define INCLUDED_SHARED_PTR_CONTROL_HPP
 
 #include "shared_ptr_control.hh"
+#include <Utils/Allocator_Traits.hh>
 
 namespace Utils
 {
@@ -38,22 +39,35 @@ namespace detail
 	
 	
 	template <class Y, class Deleter, class Alloc>
-	shared_ptr_control* shared_ptr_control::CreateControl(Y* ptr, Deleter d, Alloc _alloc)
+	shared_ptr_control* shared_ptr_control::CreateControl(Y* ptr, Deleter d, const Alloc& _alloc)
 	{
-		auto calloc = new typename Alloc::template rebind<shared_ptr_control>::other();
-		typename Alloc::template rebind<shared_ptr_control::template Destructor<Y, Deleter>>::other dalloc;
-		auto ctrl = calloc->construct(calloc->allocate(1));
+		typedef typename Alloc::template rebind<shared_ptr_control>::other CtrlAlloc;
+		
+		auto calloc_alloc = allocator_traits<typename Alloc::template rebind<CtrlAlloc>::other>::copy_create(_alloc);
+		
+		CtrlAlloc* calloc = calloc_alloc.allocate(1);
+		allocator_traits<CtrlAlloc>::copy_create(calloc_alloc, calloc, _alloc);
+		
+		
+		auto dalloc = allocator_traits<typename Alloc::template rebind<shared_ptr_control::template Destructor<Y, Deleter>>::other>::copy_create(_alloc);
+		auto ctrl = calloc->allocate(1);
+		calloc->construct(ctrl);
 		ctrl->dealloc_object = calloc;
 		ctrl->dealloc = [](void* aptr, shared_ptr_control* ctrl)
 		{
-			auto calloc = (typename Alloc::template rebind<shared_ptr_control>::other*)aptr;
+			auto calloc = (CtrlAlloc*)aptr;
 			calloc->destroy(ctrl);
-			calloc->deallocate(ctrl);
-			delete calloc;
+			calloc->deallocate(ctrl, 1);
+			
+			auto calloc_alloc = allocator_traits<typename Alloc::template rebind<CtrlAlloc>::other>::copy_create(*calloc);
+			calloc_alloc.destroy(calloc);
+			calloc_alloc.deallocate(calloc, 1);
+			
 		};
 		
 		ctrl->refcount = ctrl->usecount = 1;
-		auto destr = dalloc.construct(dalloc.allocate(1));
+		auto destr = dalloc.allocate(1);
+		dalloc.construct(destr);
 		destr->del = d;
 		ctrl->deleter_obj = (void*)destr;
 		ctrl->deleter = shared_ptr_control::template Destructor<Y, Deleter>::template call<Alloc>;
@@ -61,7 +75,7 @@ namespace detail
 		return ctrl;
 	}
 	
-	template <class Y, class Deleter>
+	/*template <class Y, class Deleter>
 	shared_ptr_control* shared_ptr_control::CreateControl(Y* ptr, Deleter d)
 	{
 		auto ctrl = new shared_ptr_control();
@@ -72,7 +86,7 @@ namespace detail
 		ctrl->deleter = shared_ptr_control::template Destructor<Y, Deleter>::call;
 		ctrl->obj = ptr;
 		return ctrl;
-	}
+	}*/
 	
 	template <class Y>
 	shared_ptr_control* shared_ptr_control::CreateControl(Y* ptr)

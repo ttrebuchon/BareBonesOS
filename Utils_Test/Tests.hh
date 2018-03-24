@@ -27,19 +27,7 @@ using std::cerr;
 
 
 
-TEST(List);
-CTEST(Bitset);
-TEST(Bitset);
-TEST(IDE);
-TEST(IOSTREAM);
-TEST(Limits);
-TEST(String);
-TEST(SQLite);
-TEST(shared_ptr);
-TEST(vector);
-TEST(tuple);
-TEST(map);
-TEST(unordered_map);
+
 
 
 
@@ -234,6 +222,24 @@ inline void do_assert_eq(const T& x, const std::nullptr_t& y, const char* file, 
 	}
 }
 
+
+inline void do_assert(const bool x, const char* file, const int line, const char* func, const char* X, const char* msg = nullptr)
+{
+	if (!x)
+	{
+		std::stringstream ss;
+		ss << "assert(" << X << "):" << std::endl << "{ (" << x << ") != (true) }" << std::endl;
+		if (msg)
+		{
+			ss << msg << std::endl;
+		}
+		auto str = ss.str();
+		//std::cout << std::endl << "(" << x << ") != (" << y << ")" << std::endl;
+		__assert2(file, line, func, str.c_str());
+		
+	}
+}
+
 template <int I, int N, class Stream, class... Args>
 struct Tuple_Printer
 {
@@ -292,6 +298,23 @@ struct Tuple_Printer<sizeof...(Args), Stream, Args...>
 	}
 };*/
 
+template <class... NameArgs, class... Args>
+inline void do_assert(const bool x, const char* file, const int line, const char* func, const char* X, std::tuple<NameArgs...> argNames, std::tuple<Args...> args)
+{
+	if (!x)
+	{
+		std::stringstream ss;
+		ss << "{ ";
+		Tuple_Printer<0, sizeof...(NameArgs), std::stringstream, NameArgs...>::call(ss, argNames, ", ");
+		ss << " } = { ";
+		Tuple_Printer<0, sizeof...(Args), std::stringstream, Args...>::call(ss, args, ", ");
+		ss << " }";
+		//(ss << ... << args);
+		auto str = ss.str();
+		do_assert(x, file, line, func, X, str.c_str());
+	}
+}
+
 template <class T, class V, class... NameArgs, class... Args>
 inline void do_assert_eq(const T& x, const V& y, const char* file, const int line, const char* func, const char* X, const char* Y, std::tuple<NameArgs...> argNames, std::tuple<Args...> args)
 {
@@ -313,7 +336,7 @@ inline void do_assert_eq(const T& x, const V& y, const char* file, const int lin
 
 #define MASSERTEQ(X, Y, ...) do { auto __x = X; auto __y = Y; if (__x != __y) { do_assert_eq(__x, __y, __FILE__, __LINE__, __func__, #X, #Y, std::make_tuple(#__VA_ARGS__), std::make_tuple(__VA_ARGS__)); } } while (0)
 
-
+#define MASSERT(X, ...) do { auto __x = X; if (!__x) { do_assert(__x, __FILE__, __LINE__, __func__, #X, std::make_tuple(#__VA_ARGS__), std::make_tuple(__VA_ARGS__)); } } while (0)
 
 
 #endif

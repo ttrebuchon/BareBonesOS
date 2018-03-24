@@ -44,7 +44,7 @@ namespace Utils
 		shared_ptr(Y* ptr, Deleter d);
 		
 		template <class Y, class Deleter, class Alloc>
-		shared_ptr(Y* ptr, Deleter d, Alloc);
+		shared_ptr(Y* ptr, Deleter d, const Alloc&);
 		
 		template <class Y>
 		shared_ptr(const shared_ptr<Y>&) noexcept;
