@@ -1,0 +1,2 @@
+#include "detail/atomic.hh"
+#include "detail/atomic.hpp"

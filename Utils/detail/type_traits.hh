@@ -3,6 +3,19 @@
 
 #include "type_traits_arithmetic.hh"
 
+#define _DEFINE_SPEC_BODY(_Value) : public integral_constant<bool, _Value> {};
+
+#define _DEFINE_SPEC_0_HELPER(_Spec, _Value) \
+template <> \
+struct _Spec \
+_DEFINE_SPEC_BODY(_Value)
+
+#define _DEFINE_SPEC(_Order, _Trait, _Type, _Value) \
+_DEFINE_SPEC_##_Order##_HELPER(_Trait<_Type>, _Value) \
+_DEFINE_SPEC_##_Order##_HELPER(_Trait<_Type const>, _Value) \
+_DEFINE_SPEC_##_Order##_HELPER(_Trait<_Type volatile>, _Value) \
+_DEFINE_SPEC_##_Order##_HELPER(_Trait<_Type const volatile>, _Value) \
+
 namespace Utils
 {
 	namespace detail
@@ -238,8 +251,53 @@ namespace Utils
 	
 	
 	
+	// is_trivial
+	template <class T>
+	struct is_trivial : public integral_constant<bool, __is_trivial(T)>
+	{};
+	
+	
+	
+	
+	// is_integral
+	template <class T>
+	struct is_integral : public false_type
+	{};
+	
+	_DEFINE_SPEC(0, is_integral, bool, true);
+	_DEFINE_SPEC(0, is_integral, char, true);
+	_DEFINE_SPEC(0, is_integral, signed char, true);
+	_DEFINE_SPEC(0, is_integral, unsigned char, true);
+	_DEFINE_SPEC(0, is_integral, wchar_t, true);
+	_DEFINE_SPEC(0, is_integral, short, true);
+	_DEFINE_SPEC(0, is_integral, unsigned short, true);
+	_DEFINE_SPEC(0, is_integral, int, true);
+	_DEFINE_SPEC(0, is_integral, unsigned int, true);
+	_DEFINE_SPEC(0, is_integral, long, true);
+	_DEFINE_SPEC(0, is_integral, unsigned long, true);
+	_DEFINE_SPEC(0, is_integral, long long, true);
+	_DEFINE_SPEC(0, is_integral, unsigned long long, true);
+	
+	
+	
+	
+	// is_floating
+	template <class T>
+	struct is_floating : public false_type
+	{};
+	
+	_DEFINE_SPEC(0, is_floating, float, true);
+	_DEFINE_SPEC(0, is_floating, double, true);
+	_DEFINE_SPEC(0, is_floating, long double, true);
+	
+	
+	
 	
 	
 }
+
+#undef _DEFINE_SPEC
+#undef _DEFINE_SPEC_0_HELPER
+#undef _DEFINE_SPEC_BODY
 
 #endif

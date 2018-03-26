@@ -17,6 +17,7 @@ TEST(tuple);
 TEST(map);
 TEST(unordered_map);
 TEST(kernel_utility);
+TEST(mutex);
 
 
 
@@ -79,8 +80,9 @@ int main()
 	RUN(vector);
 	RUN(tuple);
 	RUN(map);
-	//RUN(unordered_map);
+	RUN(unordered_map);
 	RUN(kernel_utility);
+	RUN(mutex);
 	
 	std::cerr << "\n\n\nAll Done!\n" << std::flush;
 }
