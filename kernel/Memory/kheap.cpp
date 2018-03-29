@@ -40,18 +40,24 @@ extern "C" {
         }
     }
 
-    void free(void* p)
+    void kfree(void* p)
     {
         Kernel::Memory::kheap->free(p);
         //_free(p, kheap);
     }
+    
+    void* krealloc(void* ptr, size_t nsize)
+    {
+    	return Kernel::Memory::kheap->realloc(ptr, nsize);
+    }
 
-    void kmemset(void* ptr, unsigned char byte, uint32_t size)
+    void* kmemset(void* ptr, int c, size_t size)
     {
         for (unsigned char* d = (unsigned char*)ptr; d < (unsigned char*)ptr + size; ++d)
         {
-            *d = byte;
+            *d = c;
         }
+        return ptr;
     }
 }
 

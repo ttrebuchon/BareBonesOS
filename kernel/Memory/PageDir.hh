@@ -63,6 +63,7 @@ namespace Kernel { namespace Memory {
 
         Page* getPage(uint32_t addr, bool create);
         PageDir* clone() const;
+        void flush() const;
     };
     
     static_assert(sizeof(PageTable*) == 8);

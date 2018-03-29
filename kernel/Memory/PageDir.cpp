@@ -178,12 +178,18 @@ namespace Kernel { namespace Memory {
 			}
 			else
 			{
+				// DEBUG
 				ASSERT(0);
+				
+				
 				addr_t phys;
                 dest->ref_tables[i] = ref_tables[i]->clone(&phys);
 				addr_t phys2 = (addr_t)virtual_to_physical(this, dest->ref_tables[i]);
 				ASSERT(phys == phys2);
+				
+				// DEBUG
 				ASSERT(phys != phys2);
+				
 				dest->tables[i].frame = phys >> 12;
 				dest->tables[i].user = tables[i].user;
 				dest->tables[i].rw = tables[i].rw;
