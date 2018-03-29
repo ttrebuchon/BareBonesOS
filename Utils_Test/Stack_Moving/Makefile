@@ -1,10 +1,10 @@
 
 
-GET_SRC = $(wildcard ../$1/*.cpp ../$1/*.c)
+GET_SRC = $(wildcard ../../$1/*.cpp ../../$1/*.c)
 
-SRC = $(call GET_SRC,Utils) $(call GET_SRC,Utils/detail) ../kernel/Memory/memcpy.c ../kernel/MetaInfo.cpp ../drivers/IDE/DMA.cpp $(call GET_SRC,drivers/IDE) ../drivers/PCI.cpp $(wildcard Dummies/*.cpp Dummies/*.c) ../drivers/VGA_Stream.cpp ../drivers/VGA.cpp ../Libraries/sqlite3/sqlite3.c ../kernel/Error.c 
+SRC = $(call GET_SRC,Utils) $(call GET_SRC,Utils/detail) ../../kernel/Memory/memcpy.c ../../kernel/MetaInfo.cpp ../../drivers/IDE/DMA.cpp $(call GET_SRC,drivers/IDE) ../../drivers/PCI.cpp $(wildcard ../Dummies/*.cpp ../Dummies/*.c) ../../drivers/VGA_Stream.cpp ../../drivers/VGA.cpp ../../Libraries/sqlite3/sqlite3.c ../../kernel/Error.c 
 
-ASM_SRC = ../kernel/Utility_asm.asm
+ASM_SRC = ../../kernel/Utility_asm.asm
 ASM_OBJS = $(ASM_SRC:.asm=.o)
 ASM = $(word 1,$(CXX:-g++=-as))
 
@@ -19,18 +19,15 @@ TESTS_SRC = $(wildcard *.cpp)
 TESTS_SRC_C = $(wildcard *.c)
 TESTS = $(TESTS_SRC:.cpp=.o) $(TESTS_SRC_C:.c=.o)
 
-BOTH_FLAGS += -DTESTING -DSTACK_INFO_V -I../Libraries -I../../CppUtilities -Wfatal-errors #-DINCLUDED_DEBUG_H_ENABLED #-D"kassert(x)"="assert(x)"
+BOTH_FLAGS += -DTESTING -DSTACK_INFO_V -I../../Libraries -I../../../CppUtilities -Wfatal-errors #-DINCLUDED_DEBUG_H_ENABLED #-D"kassert(x)"="assert(x)"
 BOTH_FLAGS += -DDEBUG #-DDEBUG_VERIFY
 BOTH_FLAGS += #-DTRACK_ALLOC
 
-CXXFLAGS += -std=c++14 -MMD -I.. -ffreestanding -lgcc -DDEBUG -DINCLUDED_NEW_HH $(BOTH_FLAGS)
+CXXFLAGS += -std=c++14 -MMD -I../.. -fno-rtti -fno-exceptions -ffreestanding -lgcc -DDEBUG -DINCLUDED_NEW_HH $(BOTH_FLAGS)
 
-CXXFLAGS += -fno-rtti
-CXXFLAGS += -fno-exceptions
+CFLAGS += -MMD -I../.. -ffreestanding -lgcc $(BOTH_FLAGS)
 
-CFLAGS += -MMD -I.. -ffreestanding -lgcc $(BOTH_FLAGS)
-
-ASMFLAGS = -MMD -I..
+ASMFLAGS = -MMD -I../..
 
 
 DEPS = $(OBJS:.o=.d) $(TESTS:.o=.d)
@@ -39,7 +36,7 @@ PREPROC_GET = PreProcTest.cxx
 PREPROC_OUT = $(PREPROC_GET:.cxx=.pp)
 
 
-all: $(PREPROC_OUT) Test.out .fake
+all: Test.out .fake
 	
 
 .fake: 
@@ -80,7 +77,3 @@ TestUtils/MemTracker.o: TestUtils/MemTracker.cpp TestUtils/MemTracker.hh Makefil
 
 Main.o: Main.cpp Makefile
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
-
-
-$(PREPROC_OUT): $(PREPROC_GET)
-	$(CXX) $(CXXFLAGS) -o $@ -E $^

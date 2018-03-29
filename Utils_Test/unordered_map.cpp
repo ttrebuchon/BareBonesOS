@@ -45,7 +45,7 @@ TEST(unordered_map)
 		E3
 	};
 	
-	run_for<E>(10000, 3);
+	run_for<E>(100, 3);
 }
 
 
@@ -63,14 +63,8 @@ void run_for(const int n, const int shuffles, F f)
 	std::clog << "Testing std..." << std::endl;
 	do_tests<std::unordered_map, T, F, std::hash, K>(n, positions, f);
 	
-	/*std::clog << "Testing std (Utils hash)..." << std::endl;
-	do_tests<std::unordered_map, T, F, Utils::hash, K>(n, positions, f);*/
-	
 	std::clog << "Testing Utils..." << std::endl;
 	do_tests<Utils::unordered_map, T, F, Utils::hash, K>(n, positions, f);
-	
-	std::clog << "Testing Utils (std hash)..." << std::endl;
-	do_tests<Utils::unordered_map, T, F, std::hash, K>(n, positions, f);
 	
 	if (shuffles <= 0)
 	{
@@ -86,14 +80,8 @@ void run_for(const int n, const int shuffles, F f)
 	std::clog << "Testing std..." << std::endl;
 	do_tests<std::unordered_map, T, F, std::hash, K>(n, positions, f);
 	
-	/*std::clog << "Testing std (Utils hash)..." << std::endl;
-	do_tests<std::unordered_map, T, F, Utils::hash, K>(n, positions, f);*/
-	
 	std::clog << "Testing Utils..." << std::endl;
 	do_tests<Utils::unordered_map, T, F, Utils::hash, K>(n, positions, f);
-	
-	std::clog << "Testing Utils (std hash)..." << std::endl;
-	do_tests<Utils::unordered_map, T, F, std::hash, K>(n, positions, f);
 }
 
 

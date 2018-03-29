@@ -18,6 +18,7 @@ TEST(map);
 TEST(unordered_map);
 TEST(kernel_utility);
 TEST(mutex);
+TEST(function);
 
 
 
@@ -83,6 +84,7 @@ int main()
 	RUN(unordered_map);
 	RUN(kernel_utility);
 	RUN(mutex);
+	RUN(function);
 	
 	std::cerr << "\n\n\nAll Done!\n" << std::flush;
 }

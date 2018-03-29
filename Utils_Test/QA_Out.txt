@@ -8,21 +8,6 @@ IOSTREAM testing done.
 
 
 
-Total Allocated: 400949
-Allocations: 18
-Unfreed: 8
-	Totalling: 333
-	Where 4 unfreed were arrays
-
-	Unfreed:
-		0x7f9ae28980	-	48
-		0x7f9ae289e0	-	48
-		0x7f9ae2a5f0	-	16
-		0x7f9ae2c168	-	8
-		0x7f9ae30180	-	32
-		0x7f9ae3d600	-	0
-		0x7f9aeae000	-	80
-		0x7f9aeb3000	-	101
 ----------------------------------
 
 
@@ -39,14 +24,6 @@ List testing done.
 
 
 
-Total Allocated: 372
-Allocations: 19
-Unfreed: 1
-	Totalling: 16
-	Where 0 unfreed were arrays
-
-	Unfreed:
-		0x7f9ae2a610	-	16
 ----------------------------------
 
 
@@ -79,9 +56,6 @@ Bitset testing done.
 
 
 
-Total Allocated: 256
-Allocations: 1
-Unfreed: 0
 ----------------------------------
 
 
@@ -98,14 +72,6 @@ IDE testing done.
 
 
 
-Total Allocated: 80
-Allocations: 1
-Unfreed: 1
-	Totalling: 80
-	Where 0 unfreed were arrays
-
-	Unfreed:
-		0x7f9aeae0a0	-	80
 ----------------------------------
 
 
@@ -122,9 +88,6 @@ Limits testing done.
 
 
 
-Total Allocated: 0
-Allocations: 0
-Unfreed: 0
 ----------------------------------
 
 
@@ -141,9 +104,6 @@ String testing done.
 
 
 
-Total Allocated: 559
-Allocations: 15
-Unfreed: 0
 ----------------------------------
 
 
@@ -160,9 +120,6 @@ SQLite testing done.
 
 
 
-Total Allocated: 0
-Allocations: 0
-Unfreed: 0
 ----------------------------------
 
 
@@ -173,19 +130,12 @@ Unfreed: 0
 Running test for shared_ptr...
 -----------------
 
-Releasing unallocated memory: 0x0
-Releasing unallocated memory: 0x0
-Releasing unallocated memory: 0x7f9aeae220
-Releasing unallocated memory: 0x7f9aeae218
 -----------------
 shared_ptr testing done.
 -----------------
 
 
 
-Total Allocated: 961
-Allocations: 37
-Unfreed: 0
 ----------------------------------
 
 
@@ -196,17 +146,12 @@ Unfreed: 0
 Running test for vector...
 -----------------
 
-Releasing unallocated memory: 0x0
-Releasing unallocated memory: 0x0
 -----------------
 vector testing done.
 -----------------
 
 
 
-Total Allocated: 48
-Allocations: 4
-Unfreed: 0
 ----------------------------------
 
 
@@ -223,9 +168,6 @@ tuple testing done.
 
 
 
-Total Allocated: 0
-Allocations: 0
-Unfreed: 0
 ----------------------------------
 
 
@@ -242,14 +184,22 @@ map testing done.
 
 
 
-Total Allocated: 37294108
-Allocations: 720172
-Unfreed: 1
-	Totalling: 0
-	Where 0 unfreed were arrays
+----------------------------------
 
-	Unfreed:
-		0x7f99ae2a80	-	0
+
+
+
+
+-----------------
+Running test for unordered_map...
+-----------------
+
+-----------------
+unordered_map testing done.
+-----------------
+
+
+
 ----------------------------------
 
 
@@ -266,9 +216,38 @@ kernel_utility testing done.
 
 
 
-Total Allocated: 0
-Allocations: 0
-Unfreed: 0
+----------------------------------
+
+
+
+
+
+-----------------
+Running test for mutex...
+-----------------
+
+-----------------
+mutex testing done.
+-----------------
+
+
+
+----------------------------------
+
+
+
+
+
+-----------------
+Running test for function...
+-----------------
+
+-----------------
+function testing done.
+-----------------
+
+
+
 ----------------------------------
 
 

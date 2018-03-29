@@ -72,6 +72,20 @@ class Foo_t
 		}
 	}
 	
+	int operator()() const
+	{
+		std::cout << "Foo_t{" << n << "}() called!" << std::endl;
+		return n;
+	}
+	
+	int operator()(int x)
+	{
+		int old = n;
+		n = x;
+		std::cout << "Foo_t{n=" << n << "}() called!" << std::endl;
+		return old;
+	}
+	
 	static bool Check();
 	static void Reset();
 	static bool Check(const int count, const int callers);

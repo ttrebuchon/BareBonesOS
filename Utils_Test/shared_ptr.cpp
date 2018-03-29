@@ -21,6 +21,30 @@ class Foo_t_Container
 	Utils::shared_ptr<Foo_t> ptr;
 };
 
+class Base_t
+{
+	
+	public:
+	virtual void foo() = 0;
+};
+
+class Deriv_t : public Base_t
+{
+	public:
+	int x = 0;
+	
+	virtual void foo() override
+	{
+		++x;
+	}
+	
+};
+
+template <template <class...> class ptr_t>
+void baseCaller(ptr_t<Base_t> p)
+{
+	p->foo();
+}
 
 
 
@@ -320,4 +344,12 @@ TEST(shared_ptr)
 	assert(Foo_t::count == 0);
 	Foo_t::callers.clear();
 	assert(Foo_t::callers.size() == 0);
+	
+	
+	{
+		Utils::shared_ptr<Deriv_t> ptr(new Deriv_t());
+		ASSERTEQ(ptr->x, 0);
+		baseCaller<Utils::shared_ptr>(ptr);
+		ASSERTEQ(ptr->x, 1);
+	}
 }
