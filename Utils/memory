@@ -1,0 +1,7 @@
+#include "detail/bits/allocator_arg_t.hh"
+#include "Allocator.hh"
+#include "Allocator_Traits.hh"
+
+#include "shared_ptr"
+#include "unique_ptr"
+#include "weak_ptr"
