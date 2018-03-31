@@ -1,5 +1,5 @@
 #include "API.hh"
-
+#include "Filesystem.hh"
 
 extern "C"
 {
@@ -9,6 +9,11 @@ extern "C"
 		ASSERT(false);
 	}
 	
+	int fchmod(int fd, mode_t mode)
+	{
+		// TODO
+		ASSERT(false);
+	}
 	
 	int rmdir(const char* path)
 	{
@@ -66,14 +71,30 @@ extern "C"
 	
 	int stat(const char* __restrict path, struct stat* __restrict buf)
 	{
-		// TODO
-		ASSERT(false);
+		if (Kernel::Filesystem::Filesystem::Current)
+		{
+			auto n = Kernel::Filesystem::Filesystem::Current->getNode(path);
+			if (n)
+			{
+				// TODO
+				ASSERT(false);
+			}
+		}
+		return -1;
 	}
 	
 	int lstat(const char* __restrict path, struct stat* __restrict buf)
 	{
-		// TODO
-		ASSERT(false);
+		if (Kernel::Filesystem::Filesystem::Current)
+		{
+			auto n = Kernel::Filesystem::Filesystem::Current->getNode(path);
+			if (n)
+			{
+				// TODO
+				ASSERT(false);
+			}
+		}
+		return -1;
 	}
 	
 	char* getcwd(char* buf, size_t size)
@@ -86,6 +107,38 @@ extern "C"
 	{
 		// TODO
 		ASSERT(false);
+	}
+	
+	int link(const char* from, const char* to)
+	{
+		// TODO
+		ASSERT(false);
+	}
+	
+	int unlink(const char* name)
+	{
+		// TODO
+		ASSERT(false);
+	}
+	
+	int mkdir(const char* path, mode_t mode)
+	{
+		// TODO
+		ASSERT(false);
+	}
+	
+	ssize_t readlink(const char* path, char* buf, size_t bufsize)
+	{
+		if (Kernel::Filesystem::Filesystem::Current)
+		{
+			auto n = Kernel::Filesystem::Filesystem::Current->getNode(path);
+			if (n)
+			{
+				// TODO
+				ASSERT(false);
+			}
+		}
+		return -1;
 	}
 	
 }
