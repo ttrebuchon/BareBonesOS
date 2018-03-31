@@ -9,7 +9,7 @@ extern "C" {
 
 
 void init_timer(uint32_t freq);
-void sleep(uint32_t ms);
+uint32_t sleep(uint32_t ms);
 
 
 #ifdef __cplusplus

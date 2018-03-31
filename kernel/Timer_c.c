@@ -37,7 +37,7 @@ void init_timer(uint32_t freq)
 	current_freq = freq;
 }
 
-void sleep(uint32_t ms)
+uint32_t sleep(uint32_t ms)
 {
 	cli();
 	sleep_for = (ms*current_freq)/1000;
@@ -54,8 +54,11 @@ void sleep(uint32_t ms)
 		asm volatile ("NOP");
 		asm volatile ("NOP");
 		asm volatile ("NOP");
+		#ifndef __aarch64__
+		asm volatile ("PAUSE");
+		#endif
 		cli();
 	}
 	sti();
-	
+	return 0;
 }
