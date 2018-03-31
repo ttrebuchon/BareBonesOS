@@ -2,7 +2,7 @@
 #define INCLUDED_OSTREAM_HH
 
 #include "detail/basic_ios.hh"
-#include "locale.hh"
+#include "detail/locale.hh"
 
 namespace Utils {
 	

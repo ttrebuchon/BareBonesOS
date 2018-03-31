@@ -1,7 +1,7 @@
 #ifndef INCLUDED_NUM_PUT_HH
 #define INCLUDED_NUM_PUT_HH
 
-#include <Utils/locale.hh>
+#include "locale.hh"
 #include "ios_base.hh"
 
 namespace Utils

@@ -3,7 +3,7 @@
 
 #include <Common.h>
 #include <Utils/Types.hh>
-#include <Utils/Locale.hh>
+#include "Locale.hh"
 
 namespace Utils {
 	
