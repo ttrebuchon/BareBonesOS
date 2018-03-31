@@ -15,8 +15,11 @@
 typedef unsigned char uchar;
 typedef uint64_t addr_t;
 
-#ifdef __cplusplus
+#define likely(X) __builtin_expect((X), 1)
+#define unlikely(X) __builtin_expect((X), 0)
 
+#ifdef __cplusplus
+#include <new>
 //#ifndef TESTING
 
 typedef unsigned long size_t;

@@ -34,4 +34,58 @@ extern "C"
 		ASSERT(false);
 	}
 	
+	int close(int fd)
+	{
+		// TODO
+		ASSERT(false);
+	}
+	
+	int fcntl(int fd, int cmd, ...)
+	{
+		// TODO
+		ASSERT(false);
+	}
+	
+	int ftruncate(int fd, off_t len)
+	{
+		// TODO
+		ASSERT(false);
+	}
+	
+	int truncate(const char* path, off_t len)
+	{
+		// TODO
+		ASSERT(false);
+	}
+	
+	int fstat(int fd, struct stat* buf)
+	{
+		// TODO
+		ASSERT(false);
+	}
+	
+	int stat(const char* __restrict path, struct stat* __restrict buf)
+	{
+		// TODO
+		ASSERT(false);
+	}
+	
+	int lstat(const char* __restrict path, struct stat* __restrict buf)
+	{
+		// TODO
+		ASSERT(false);
+	}
+	
+	char* getcwd(char* buf, size_t size)
+	{
+		// TODO
+		ASSERT(false);
+	}
+	
+	int access(const char* path, int amode)
+	{
+		// TODO
+		ASSERT(false);
+	}
+	
 }
