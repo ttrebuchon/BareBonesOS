@@ -19,10 +19,13 @@ int memcmp(const void*, const void*, size_t);
 void* memmove(void* dest, const void* src, size_t num);
 
 
-size_t memcpy(void*, const void*, size_t);
+void* memcpy(void*, const void*, size_t);
 
 
 size_t strcspn(const char*, const char*);
+
+
+size_t strlen(const char*);
 
 
 #ifdef __cplusplus

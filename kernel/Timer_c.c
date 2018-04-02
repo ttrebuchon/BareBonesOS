@@ -21,6 +21,8 @@ static void timer_callback(Registers_t regs)
 	task_switch();
 }
 
+extern "C" {
+
 void init_timer(uint32_t freq)
 {
 	register_interrupt_handler(IRQ0, &timer_callback);
@@ -37,10 +39,10 @@ void init_timer(uint32_t freq)
 	current_freq = freq;
 }
 
-uint32_t sleep(uint32_t ms)
+unsigned int sleep(unsigned int secs)
 {
 	cli();
-	sleep_for = (ms*current_freq)/1000;
+	sleep_for = seconds*current_freq;
 	while (sleep_for != 0)
 	{
 		sti();
@@ -61,4 +63,32 @@ uint32_t sleep(uint32_t ms)
 	}
 	sti();
 	return 0;
+}
+
+int usleep(useconds_t microseconds)
+{
+	cli();
+	sleep_for = microseconds*current_freq/1000000;
+	while (sleep_for != 0)
+	{
+		sti();
+		asm volatile ("NOP");
+		asm volatile ("NOP");
+		asm volatile ("NOP");
+		asm volatile ("NOP");
+		asm volatile ("NOP");
+		asm volatile ("NOP");
+		asm volatile ("NOP");
+		asm volatile ("NOP");
+		asm volatile ("NOP");
+		asm volatile ("NOP");
+		#ifndef __aarch64__
+		asm volatile ("PAUSE");
+		#endif
+		cli();
+	}
+	sti();
+	return 0;
+}
+
 }
