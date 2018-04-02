@@ -15,6 +15,8 @@
 typedef unsigned char uchar;
 typedef uint64_t addr_t;
 
+#include "Types.h"
+
 #define likely(X) __builtin_expect((X), 1)
 #define unlikely(X) __builtin_expect((X), 0)
 

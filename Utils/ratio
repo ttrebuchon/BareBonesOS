@@ -1,0 +1,23 @@
+#ifndef INCLUDED_RATIO
+#define INCLUDED_RATIO
+
+#include <Common.h>
+#include "detail/bits/static_numeric.hh"
+
+namespace Utils
+{
+	
+	
+	template <intmax_t Num, intmax_t Denom = 1>
+	class ratio
+	{
+		private:
+		static constexpr intmax_t gcd = detail::static_gcd<Num, Denom>::value;
+		public:
+		static constexpr intmax_t num = Num/gcd;
+		static constexpr intmax_t den = Denom/gcd;
+	};
+	
+}
+
+#endif

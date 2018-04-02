@@ -5,4 +5,6 @@
 #include <kernel/Memory.h>
 #include <kernel/Filesystem/API.hh>
 
+#include <kernel/Timer.h>
+
 #endif

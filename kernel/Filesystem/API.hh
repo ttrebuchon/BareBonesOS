@@ -30,6 +30,11 @@ extern "C"
 	// Close FD
 	int close(int fd);
 	
+	// Open PATH with flags OFLAGS and
+	// mode MODE, then return a file
+	// descriptor
+	int open(const char* path, int oflags, mode_t mode);
+	
 	// File control
 	int fcntl(int fd, int cmd, ...);
 	
@@ -69,6 +74,30 @@ extern "C"
 	// at FD and stores it in BUF
 	int fstat(int fd, struct stat* buf);
 	
+	// Move the read/write file offset of FD by OFFSET depending on WHENCE's value
+	// SEEK_SET = absolute
+	// SEEK_CUR = relative
+	// SEEK_END = end + offset
+	off_t lseek(int fd, off_t offset, int whence);
+	
+	#define SEEK_SET 0
+	#define SEEK_CUR 1
+	#define SEEK_END -1
+	
+	
+	
+	// 
+	int fsync(int fd);
+	int sync();
+	
+	
+	
+	
+	
+	#define O_EXCL 1
+	#define O_CREAT 2
+	#define O_RDONLY 4
+	#define O_RDWR 8
 	
 	
 	
