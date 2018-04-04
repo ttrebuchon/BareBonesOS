@@ -31,12 +31,33 @@ typedef decltype(sizeof(0)) size_t;
 
 
 
+
+#define C_CODE extern "C" {
+#define C_END }
+
+#define C_namespace(X) namespace X {
+#define C_namespace_e(X) }
+
+#define IF_CPP_ELSE(X, Y) X
+#define IF_CPP(X) X
+#define IF_C(X) 
+
 #else
 
 //#ifndef TESTING
 typedef unsigned long size_t;
 //#endif
 
+
+#define C_CODE
+#define C_END
+
+#define C_namespace(X)
+#define C_namespace_e(X)
+
+#define IF_CPP_ELSE(X, Y) Y
+#define IF_CPP(X)
+#define IF_C(X) X
 
 #endif
 
