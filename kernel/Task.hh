@@ -2,6 +2,8 @@
 #define INCLUDED_TASK_HH
 
 #include <Common.h>
+#include <Utils/list>
+#include <Utils/shared_ptr>
 
 
 
@@ -12,6 +14,8 @@ namespace Memory {
 	class PageDir;
 }
 
+class SystemResource;
+
 class Task
 {
 	public:
@@ -21,6 +25,7 @@ class Task
 	addr_t esp, ebp;
 	uint32_t instr_ptr;
 	Memory::PageDir* page_dir;
+	Utils::list<Utils::shared_ptr<SystemResource>> resources;
 };
 
 #ifdef __cplusplus
