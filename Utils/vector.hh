@@ -69,8 +69,10 @@ namespace Utils
 		const_reference front() const;
 		reference back();
 		const_reference back() const;
-		value_type* data();
-		const value_type* data() const;
+		value_type* data()
+		{ return _data; }
+		const value_type* data() const
+		{ return _data; }
 		
 		template <class InputIt>
 		void assign(InputIt first, InputIt last);

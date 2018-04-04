@@ -3,16 +3,26 @@
 
 #include "Map.hh"
 #include "RBTree.hpp"
+#include "functexcept.hh"
 
 namespace Utils
 {
 	template <class Key, class T, class Comp, class Alloc>
-	map<Key, T, Comp, Alloc>::map() : alloc(), tree(nullptr)
+	void map<Key, T, Comp, Alloc>::initTree()
 	{
 		typedef typename Alloc::template rebind<Tree_t>::other TAlloc;
-		TAlloc ta;
+		TAlloc ta(get_allocator());
 		tree = Allocator_Traits<TAlloc>::allocate(ta, 1);
 		Allocator_Traits<TAlloc>::construct(ta, tree);
+		
+	}
+	
+	
+	
+	
+	template <class Key, class T, class Comp, class Alloc>
+	map<Key, T, Comp, Alloc>::map() : alloc(), tree(nullptr)
+	{
 		
 	}
 	
@@ -76,6 +86,10 @@ namespace Utils
 	template <class Key, class T, class Comp, class Alloc>
 	auto map<Key, T, Comp, Alloc>::at(const key_type& key) -> mapped_type&
 	{
+		if (!tree)
+		{
+			__throw_out_of_range("key not in map");
+		}
 		auto ptr = tree->find(key);
 		ASSERT(ptr != nullptr);
 		
@@ -85,6 +99,10 @@ namespace Utils
 	template <class Key, class T, class Comp, class Alloc>
 	auto map<Key, T, Comp, Alloc>::at(key_type&& key) -> mapped_type&
 	{
+		if (!tree)
+		{
+			__throw_out_of_range("key not in map");
+		}
 		auto ptr = tree->find(forward<key_type>(key));
 		ASSERT(ptr != nullptr);
 		
@@ -94,6 +112,10 @@ namespace Utils
 	template <class Key, class T, class Comp, class Alloc>
 	auto map<Key, T, Comp, Alloc>::at(const key_type& key) const -> const mapped_type&
 	{
+		if (!tree)
+		{
+			__throw_out_of_range("key not in map");
+		}
 		auto ptr = tree->find(key);
 		ASSERT(ptr != nullptr);
 		
@@ -103,6 +125,10 @@ namespace Utils
 	template <class Key, class T, class Comp, class Alloc>
 	auto map<Key, T, Comp, Alloc>::at(key_type&& key) const -> const mapped_type&
 	{
+		if (!tree)
+		{
+			__throw_out_of_range("key not in map");
+		}
 		auto ptr = tree->find(forward<key_type>(key));
 		ASSERT(ptr != nullptr);
 		
@@ -144,7 +170,10 @@ namespace Utils
 	template <class Key, class T, class Comp, class Alloc>
 	T& map<Key, T, Comp, Alloc>::operator[](const key_type& k)
 	{
-		
+		if (!tree)
+		{
+			initTree();
+		}
 		typename Tree_t::node* parent;
 		auto ptr = tree->findCreate(k, &parent);
 		ASSERT(ptr != nullptr);
@@ -172,6 +201,10 @@ namespace Utils
 	template <class Key, class T, class Comp, class Alloc>
 	T& map<Key, T, Comp, Alloc>::operator[](key_type&& k)
 	{
+		if (!tree)
+		{
+			initTree();
+		}
 		typename Tree_t::node* parent;
 		auto ptr = tree->findCreate(k, &parent);
 		ASSERT(ptr != nullptr);

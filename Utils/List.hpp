@@ -7,8 +7,7 @@ namespace Utils
 	template <class T, class A>
 	List<T, A>::List() : head(nullptr), tail(nullptr), _size(0), alloc(), nalloc()
 	{
-		head = tail = nalloc.allocate(1);
-		new (head) Node();
+		head = tail = nullptr;
 	}
 	
 	template <class T, class A>
@@ -18,47 +17,67 @@ namespace Utils
 		r._size = 0;
 	}
 	
+	template <class T, class A>
+	List<T, A>::List(const List& r) : head(nullptr), tail(nullptr), _size(r._size), alloc(r.alloc), nalloc(r.nalloc)
+	{
+		if (r.head)
+		{
+			head = r.head->clone(nalloc, true, &tail);
+			ASSERT(head != nullptr);
+			ASSERT(tail != nullptr);
+		}
+	}
+	
 	
 	template <class T, class A>
 	List<T, A>::~List() noexcept
 	{
 		Node* ptr = head;
-		while (head != tail)
+		while (head != nullptr)
 		{
 			head = head->next;
-			ptr->uninit(alloc);
 			nalloc.destroy(ptr);
 			nalloc.deallocate(ptr, 1);
 			ptr = head;
-		}
-		if (tail != nullptr)
-		{
-			nalloc.destroy(tail);
-			nalloc.deallocate(tail, 1);
 		}
 	}
 	
 	template <class T, class A>
 	void List<T, A>::push_back(const T& t)
 	{
-		tail->init(alloc, t);
+		
 		auto ptr = nalloc.allocate(1);
-		new (ptr) Node();
-		tail->next = ptr;
-		ptr->prev = tail;
-		tail = ptr;
+		nalloc.construct(ptr, forward<const T&>(t));
+		if (!head)
+		{
+			head = ptr;
+			tail = ptr;
+		}
+		else
+		{
+			tail->next = ptr;
+			ptr->prev = tail;
+			tail = ptr;
+		}
 		++_size;
 	}
 	
 	template <class T, class A>
 	void List<T, A>::push_back(T&& t)
 	{
-		tail->init(alloc, t);
 		auto ptr = nalloc.allocate(1);
-		new (ptr) Node();
-		tail->next = ptr;
-		ptr->prev = tail;
-		tail = ptr;
+		nalloc.construct(ptr, forward<T&&>(t));
+		if (!head)
+		{
+			head = ptr;
+			tail = ptr;
+		}
+		else
+		{
+			tail->next = ptr;
+			ptr->prev = tail;
+			tail = ptr;
+		}
 		++_size;
 	}
 	
@@ -66,12 +85,19 @@ namespace Utils
 	template <class... Args>
 	void List<T, A>::emplace_back(Args&&... args)
 	{
-		tail->init(alloc, forward<Args>(args)...);
 		auto ptr = nalloc.allocate(1);
-		new (ptr) Node();
-		tail->next = ptr;
-		ptr->prev = tail;
-		tail = ptr;
+		nalloc.construct(ptr, forward<Args>(args)...);
+		if (!head)
+		{
+			head = ptr;
+			tail = ptr;
+		}
+		else
+		{
+			tail->next = ptr;
+			ptr->prev = tail;
+			tail = ptr;
+		}
 		++_size;
 	}
 	
