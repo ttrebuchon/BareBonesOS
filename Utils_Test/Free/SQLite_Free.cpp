@@ -40,6 +40,11 @@ void* memcpy(void*, const void*, unsigned long)
 	
 }*/
 
+void abort()
+{
+	ASSERT(false);
+}
+
 }
 
 int main()

@@ -1,9 +1,12 @@
-#include <kernel/Utility.hh>
+#define C_CODE(...) namespace __VA_ARGS__ { extern "C" {
+#define C_END(...) __VA_OPT__(,) }
 
-ASM_EXEC(Test, : "=r"(y) : "r"(z))
+C_CODE(Kernel)
 
-ASM_MOV(%SP, %0, y)
 
-ASM_OP1(mov, %0)
+struct OpenFile_Hndl
+{
+	
+};
 
-ASM_OP2(mov, %SP, %0)
+C_END(Kernel)

@@ -19,6 +19,8 @@ TEST(unordered_map);
 TEST(kernel_utility);
 TEST(mutex);
 TEST(function);
+TEST(list_vector);
+CTEST(FileDescriptors);
 
 
 
@@ -85,6 +87,8 @@ int main()
 	RUN(kernel_utility);
 	RUN(mutex);
 	RUN(function);
+	RUN(list_vector);
+	RUNC(FileDescriptors);
 	
 	std::cerr << "\n\n\nAll Done!\n" << std::flush;
 }
