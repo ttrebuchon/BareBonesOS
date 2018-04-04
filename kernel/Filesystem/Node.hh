@@ -3,7 +3,7 @@
 
 #include <Common.h>
 #include "NodeType.hh"
-#include <std/string>
+#include <Utils/string>
 
 namespace Kernel { namespace Filesystem {
 
@@ -11,8 +11,13 @@ namespace Kernel { namespace Filesystem {
 
     class Node
     {
+    	private:
+    	static uint32_t counter;
+    	
         protected:
         NodeType _type;
+        
+        Node(const NodeType);
 
         public:
         uint32_t inode;

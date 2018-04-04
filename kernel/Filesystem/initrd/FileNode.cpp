@@ -13,7 +13,7 @@ namespace Kernel { namespace Filesystem { namespace Init_RD {
     }
 
 
-    uint32_t FileNode::write(uint32_t, uint32_t, uint8_t*)
+    uint32_t FileNode::write(uint32_t, uint32_t, const uint8_t*)
     {
 
     }

@@ -5,14 +5,13 @@
 #include "Node.hh"
 
 namespace Kernel { namespace Filesystem {
-
+	
     class FileNode : public Node
     {
         protected:
-
-        public:
-
         
+        public:
+        FileNode(const NodeType = NodeType::File);
     };
 }
 }

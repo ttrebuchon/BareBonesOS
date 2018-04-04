@@ -3,7 +3,7 @@
 namespace Kernel { namespace Filesystem { namespace Init_RD {
 
 
-    DirectoryNode::DirectoryNode(const char* name)
+    DirectoryNode::DirectoryNode(const char* name) : Filesystem::DirectoryNode(NodeType::Directory)
     {
         this->name = name;
     }
@@ -17,7 +17,7 @@ namespace Kernel { namespace Filesystem { namespace Init_RD {
     }
 
 
-    uint32_t DirectoryNode::write(uint32_t, uint32_t, uint8_t*)
+    uint32_t DirectoryNode::write(uint32_t, uint32_t, const uint8_t*)
     {
 
     }
