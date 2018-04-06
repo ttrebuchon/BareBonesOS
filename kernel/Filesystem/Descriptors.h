@@ -18,6 +18,7 @@ namespace Kernel { namespace Filesystem {
 		private:
 		bool needNext;
 		int nextFree;
+		
 		Utils::vector<FileNode*> descriptors;
 		
 		
@@ -48,7 +49,8 @@ C_namespace(Filesystem)
 
 struct FileDescriptors* get_file_descriptors();
 void init_kernel_file_descriptors();
-struct OpenFile_Hndl resolve_file_descriptor(struct FileDescriptors*, int fd);
+struct OpenFile_Hndl resolve_file_descriptor_for(struct FileDescriptors*, int fd);
+struct OpenFile_Hndl resolve_file_descriptor(int fd);
 
 C_namespace_e(Filesystem)
 C_namespace_e(Kernel)

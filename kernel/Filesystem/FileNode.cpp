@@ -8,5 +8,21 @@ namespace Kernel { namespace Filesystem
 		
 	}
 	
+	FileNode::FileNode() : FileNode(NodeType::File)
+	{
+		
+	}
+	
+	FileNode::~FileNode()
+	{
+		// TODO
+		//Utils::unique_lock<mutex> lock(lock_m);
+		if (file != nullptr)
+		{
+			// TODO
+			//file->sync();
+			delete file;
+		}
+	}
 }
 }

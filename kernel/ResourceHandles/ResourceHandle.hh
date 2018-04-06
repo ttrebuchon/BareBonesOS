@@ -5,6 +5,8 @@ namespace Kernel
 {
 	class ResourceHandle
 	{
+		protected:
+		
 		public:
 		
 		ResourceHandle() = default;
@@ -12,6 +14,7 @@ namespace Kernel
 		ResourceHandle(ResourceHandle&&) = default;
 		
 		virtual ~ResourceHandle() = default;
+		
 		
 		ResourceHandle& operator=(const ResourceHandle&) = delete;
 		ResourceHandle& operator=(ResourceHandle&&) = default;

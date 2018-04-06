@@ -110,7 +110,7 @@ namespace Kernel { namespace Filesystem {
 		return FileDescriptors::Current;
 	}
 	
-	OpenFile_Hndl resolve_file_descriptor(struct FileDescriptors* desc, int fd)
+	OpenFile_Hndl resolve_file_descriptor_for(struct FileDescriptors* desc, int fd)
 	{
 		if (desc)
 		{
@@ -124,8 +124,21 @@ namespace Kernel { namespace Filesystem {
 		return OpenFile_Hndl{nullptr};
 	}
 	
+	OpenFile_Hndl resolve_file_descriptor(int fd)
+	{
+		if (FileDescriptors::Current)
+		{
+			auto node = FileDescriptors::Current->resolve(fd);
+			if (node)
+			{
+				return OpenFile_Hndl{node};
+			}
+		}
+		
+		return OpenFile_Hndl{nullptr};
+	}
+	
 	
 	}
 }
 }
-
