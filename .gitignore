@@ -7,6 +7,8 @@
 *.o
 *.obj
 *.pp
+*.asm.out.s
+*.optimized
 
 # Precompiled Headers
 *.gch
