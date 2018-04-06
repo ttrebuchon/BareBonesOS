@@ -75,6 +75,39 @@ namespace Utils { namespace chrono
 	
 	
 	static system_clock::time_point from_time_t(time_t) noexcept;
+	
+	
+	
+	
+	class steady_clock
+	{
+		public:
+		typedef int64_t rep;
+		typedef ratio<1> period;
+		typedef chrono::duration<rep, period> duration;
+		typedef chrono::time_point<steady_clock> time_point;
+		
+		static constexpr bool is_steady = true;
+		static_assert(duration::zero().count() == 0);
+		static_assert(duration::min() < duration::zero());
+		
+		protected:
+		
+		
+		public:
+		static time_point now() noexcept;
+		
+		
+		static time_point from_time_t(time_t t) noexcept
+		{
+			return time_point(seconds(t));
+		}
+		static time_t to_time_t(time_point) noexcept
+		{
+			
+		}
+		
+	};
 }
 }
 

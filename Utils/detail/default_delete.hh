@@ -10,9 +10,10 @@ namespace Utils
 		template <class U>
 		default_delete(const default_delete<U>&) noexcept;
 		
-		void operator()(T* ptr) const
+		__attribute__ ((__always_inline__)) void operator() (T* __ptr) const throw()
 		{
-			delete ptr;
+			static_assert(sizeof(T) > 0, "Cannot delete incomplete type");
+			delete __ptr;
 		}
 		
 		private:
@@ -35,6 +36,7 @@ namespace Utils
 		private:
 		void call(T* t) const
 		{
+			static_assert(sizeof(T) > 0, "Cannot delete incomplete type");
 			delete[] t;
 		}
 	};
