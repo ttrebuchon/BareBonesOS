@@ -112,7 +112,8 @@ namespace Utils
 		
 	};
 	
-	
+	template <class T>
+	using char_traits = Char_Traits<T>;
 }
 
 #endif
