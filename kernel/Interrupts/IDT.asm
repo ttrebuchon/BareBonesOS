@@ -72,8 +72,9 @@ isr_common_stub:
     MOV fs, ax
     MOV gs, ax
 
+    ;push esp
     CALL isr_handler
-    
+    ;pop esp
 
     POP ebx
     MOV ds, bx

@@ -217,12 +217,25 @@ namespace Drivers { namespace IDE {
 		Device::BAR3 = BAR3;
 		Device::BAR4 = BAR4;
 
+		
+
+		if(BAR4 & 0x1)
+		{
+        	Device::BAR4 = BAR4 & 0xfffffffc;
+    	}
+
 		for (int i = 0; i < 512; ++i)
 		{
 			buf[i] = 0;
 		}
 
 		ASSERT(BAR0 == 0x1F0);
+
+
+		
+
+
+
 		/*
 		int j, k, count = 0;
 		Channels[(uchar)Channel::Primary].base = (BAR0 & 0xFFFFFFFC) + 0x1F0 * (!BAR0);
@@ -406,6 +419,7 @@ namespace Drivers { namespace IDE {
 		select = base + 0x6;
 		command = base + 0x7;
 		altStatus = alt;
+		BMR = BAR4;
 		
 		init();
 	}
@@ -431,7 +445,6 @@ namespace Drivers { namespace IDE {
 		port_byte_out(lbaLow, 0);
 		port_byte_out(lbaMid, 0);
 		port_byte_out(lbaHigh, 0);
-		
 		port_byte_out(command, (uchar)ATACmd::Identify);
 		if (!port_byte_in(status))
 		{
@@ -485,7 +498,7 @@ namespace Drivers { namespace IDE {
 			}
 			
 			TRACE("Nvm, was just an ATAPI device.\n");
-					
+			
 			port_byte_out(command, (uchar)ATACmd::IdentifyPacket);
 			delay();
 			
@@ -499,6 +512,22 @@ namespace Drivers { namespace IDE {
 		{
 			model[k] = buf[ATAIdentify::Model + k + 1];
 			model[k+1] = buf[ATAIdentify::Model + k];
+		}
+
+		auto pciDev = PCI::GetDevice(PCIVendorID::ATA, PCIDeviceID::ATA, PCIType::Null);
+
+		if (pciDev == PCI::NULL_DEVICE)
+		{
+			pciDev = PCI::GetDevice(PCIVendorID::ATA, PCIDeviceID::PIIX4, PCIType::Null);
+		}
+
+		ASSERT(pciDev != PCI::NULL_DEVICE);
+
+		auto pciCmd = pciDev.read(PCIRegister::Command);
+		if (!(pciCmd & (1 << 2)))
+		{
+			pciCmd |= (1 << 2);
+			pciDev.write(PCIRegister::Command, pciCmd);
 		}
 		
 		// insl(data, (uint32_t*)buf, 256);

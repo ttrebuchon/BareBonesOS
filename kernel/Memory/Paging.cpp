@@ -72,12 +72,17 @@ namespace Kernel { namespace Memory
 		TRACE_C("identity_dir allocated.\n");
 		
 		ASSERT(iphys == (uint32_t)&identity_dir->tables);
-		
+		Drivers::VGA::Write("Identity_Dir Physical Address: ");
+		c_vga_write_addr(identity_dir);
+		Drivers::VGA::Write("\n");
 		
 		for (addr_t q = 0; q < 0xFFFFF; ++q)
 		{
-			auto pg = identity_dir->getPage(i, true);
-			ASSERT(pg->map(q*0x1000, true, true, true));
+			uint64_t q2 = q;
+			q2 *= 0x1000;
+			ASSERT(q*0x1000 == q2);
+			auto pg = identity_dir->getPage(q*0x1000, true);
+			ASSERT(pg->map(q*0x1000, true, false, true));
 			
 		}
 		
@@ -129,25 +134,33 @@ namespace Kernel { namespace Memory
 		TRACE_C("Page fault handler registered\n");
 		
 		current_dir = 0x0;
-		switch_page_dir(kernel_dir);
+		switch_page_dir(identity_dir);
 		TRACE_C("Page directory switched\n");
+		//while (true);
 
 		//kheap = create_heap(KHEAP_START, KHEAP_START + KHEAP_INITIAL_SIZE, KHEAP_MAX_ADDR, 0, 0);
 		//kheap = (KHeap*)kmalloc(sizeof(KHeap), false, 0);
 		TRACE("KHeap space allocated\n");
 		//new (kheap) KHeap(KHEAP_START, KHEAP_START + KHEAP_INITIAL_SIZE, KHEAP_MAX_ADDR, 0, 0);   
-		kheap = new KHeap(KHEAP_START, KHEAP_START + KHEAP_INITIAL_SIZE, KHEAP_MAX_ADDR, 0, 0);
+		//kheap = new KHeap(KHEAP_START, KHEAP_START + KHEAP_INITIAL_SIZE, KHEAP_MAX_ADDR, 0, 0);
 		TRACE_C("Kernel Heap created.\n");
 		
 		auto tmp_dir = kernel_dir->clone();
 		TRACE_C("Kernel page directory cloned.\n");
 		
+		#ifndef DEBUG
 		switch_page_dir(tmp_dir);
 		TRACE_C("Switched page directory.\n");
+		#else
+		ASSERT(virtual_to_physical(current_dir, identity_dir) != 0x0);
+		switch_page_dir(identity_dir);
+		TRACE_C("Switched to identity directory\n");
+		#endif
 	}
 
 	void switch_page_dir(struct PageDir* dir)
 	{
+		asm volatile ("sti");
 		uint32_t phys;
 		if (current_dir == 0)
 		{
@@ -166,6 +179,7 @@ namespace Kernel { namespace Memory
 		asm volatile ("mov %%cr0, %0" : "=r"(cr0));
 		cr0 |= 0x80000000;
 		asm volatile ("mov %0, %%cr0":: "r"(cr0));
+		asm volatile ("cli");
 	}
 
 	

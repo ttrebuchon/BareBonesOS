@@ -1,7 +1,9 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-
+#include <cstdlib>
+#include <cstring>
+#include <stdint.h>
 
 
 int main(int argc, const char* argv[])

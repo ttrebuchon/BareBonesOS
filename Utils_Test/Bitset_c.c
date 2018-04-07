@@ -1,5 +1,5 @@
 #include "Tests.hh"
-//#include <kernel/utils/Bitset.hh>
+//#include <Utils/Bitset.hh>
 
 
 CTEST(Bitset)

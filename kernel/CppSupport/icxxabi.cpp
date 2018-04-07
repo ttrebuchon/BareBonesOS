@@ -5,7 +5,7 @@ extern "C"
     atexit_func_entry_t __atexit_funcs[ATEXIT_MAX_FUNCS];
     uarch_t __atexit_func_count = 0;
 
-    void* __dso_handle;
+    //void* __dso_handle;
 
     int __cxa_atexit(void (*f)(void*), void* objptr, void* dso)
     {

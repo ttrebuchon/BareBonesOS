@@ -1,5 +1,5 @@
 #include "VGA.hh"
-//#include <kernel/utils/String.hh>
+//#include <Utils/String.hh>
 #include <Utils/int_to_str.h>
 #include <kernel/Memory.h>
 
@@ -204,6 +204,15 @@ namespace Drivers
     //         Write(buf);
     //     }
     // }
+
+    void VGA::Write_HardcodedMark()
+    {
+        PutChar('M');
+        PutChar('a');
+        PutChar('r');
+        PutChar('k');
+        PutChar('\n');
+    }
 }
 
 

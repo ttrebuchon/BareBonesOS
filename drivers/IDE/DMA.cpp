@@ -1,20 +1,67 @@
 #include "DMA.hh"
 #include <drivers/PortIO.h>
+#include <kernel/Interrupts.h>
 
 namespace Drivers { namespace IDE {
+
+	bool DMADrive::_initted = false;
+	static bool int_fired = false;
+	static DMADrive* current_drive = nullptr;
+
+	void HandleInterrupt(Registers_t regs)
+	{
+		Drivers::VGA::Write("_Interrupt Received!\n");
+	}
+
+	void DMADrive::Initialize()
+	{
+		if (_initted)
+		{
+			return;
+		}
+		_initted = true;
+
+		Kernel::Interrupts::register_interrupt_handler(46, DMADrive::HandleInterrupt);
+		Device::Channels[0].nIEN = 0;
+		Device::Channels[1].nIEN = 0;
+	}
+
+	
+
+	void DMADrive::HandleInterrupt(Registers_t regs)
+	{
+		Drivers::VGA::Write("Interrupt Received!\n");
+		if (current_drive != nullptr)
+		{
+			port_byte_in(current_drive->dev->status);
+			port_byte_in(current_drive->BMR + (uint16_t)Register::Status);
+			port_byte_out(current_drive->BMR + (uint16_t)Register::Command, 0);
+		}
+		int_fired = true;
+	}
 	
 	DMADrive::DMADrive(const Channel chan, const Role role) : DMADrive(new Device(chan, role)/*&Device::Devices[2*(int)(chan == Channel::Secondary) + (int)(role == Role::Slave)]*/)
 	{}
 	
-	DMADrive::DMADrive(Device* dev) : Disk(), BMR(), _dir(), _state(false), dev(dev), prdt(nullptr), prdt_phys(0x0)
+	DMADrive::DMADrive(Device* dev) : Disk(), BMR(0), _dir(), _state(false), dev(dev), prdt(nullptr), prdt_phys(0x0)
 	{
+		Initialize();
 		prdt = PRDT<10>::Create(&prdt_phys);
+		current_drive = this;
+		port_byte_out(dev->command, (uchar)ATACmd::Identify);
+		dev->delay();
+		for (int i = 0; i < 256; ++i) port_word_in(dev->data);
 		for (auto i = 0; i < PRDT_Size; ++i)
 		{
 			bufsPhys[i] = 0;
 			bufs[i] = nullptr;
 			bufsSize[i] = 0;
 		}
+		BMR = dev->BMR;
+		dev->softReset();
+		dev->delay();
+		port_byte_out(dev->control, 0);
+
 	}
 	
 	
@@ -62,7 +109,11 @@ namespace Drivers { namespace IDE {
 	{
 		assert(len <= 512);
 		auto data = (unsigned char*)kmalloc(len, 0, 0);
-		kmemset(data, 0, 512);
+		
+		// DEBUG
+		//kmemset(data, 0, 512);
+		kmemset(data, 1, 512);
+		ASSERT(data[511] == 1);
 		
 		if (read(lba, len, data) == 0)
 		{
@@ -120,33 +171,58 @@ namespace Drivers { namespace IDE {
 		
 		configureForSize(len);
 		
-		
-		port_byte_out(dev->BMR + (uint16_t)Register::Command, 0);
-		port_long_out(dev->BMR + (uint16_t)Register::PRDT_Addr, prdt_phys);
+		ASSERT(BMR != 0);
+		port_byte_out(dev->control, 0);
+		port_byte_out(BMR + (uint16_t)Register::Command, 0);
+		port_long_out(BMR + (uint16_t)Register::PRDT_Addr, prdt_phys);
+		//port_byte_out(BMR + (uint16_t)Register::Command, 0x8);
+		port_byte_out(BMR + (uint16_t)Register::Status, Status{0,0,0,0,0,0});
 		port_byte_out(dev->select, (uchar)dev->drive);
 		port_byte_out(dev->sectorCount, len / 512 + (int)((len % 512) > 0));
+		ASSERT((len / 512 + (int)((len % 512) > 0)) > 0);
 		port_byte_out(dev->lbaLow, lba & 0xFF);
-		port_byte_out(dev->lbaMid, (lba >> 8) & 0xFF);
-		port_byte_out(dev->lbaHigh, (lba >> 16) & 0xFF);
+		// port_byte_out(dev->lbaMid, (lba >> 8) & 0xFF);
+		port_byte_out(dev->lbaMid, (lba & 0x0000FF00) >> 8);
+		// port_byte_out(dev->lbaHigh, (lba >> 16) & 0xFF);
+		port_byte_out(dev->lbaHigh, (lba & 0x00FF0000) >> 16);
+
+		current_drive = const_cast<DMADrive*>(this);
+		int_fired = false;
+		ASSERT(int_fired == false);
+		TRACE("int_fired = false\n");
+
 		port_byte_out(dev->command, (uchar)ATACmd::ReadDMA);
 		port_byte_out(dev->BMR + (uint16_t)Register::Command, 0x8 | 0x1);
 		
-		while (true)
-		{
-			auto stat = port_byte_in(dev->BMR + (uint16_t)Register::Status);
-			auto dstat = port_byte_in(dev->status);
+		// unsigned long count = 0;
+		// while (++count < 10000000)
+		// {
 			
-			if ((dstat & 0x04) == 0)
-			{
-				continue;
-			}
+		// 	auto stat = port_byte_in(dev->BMR + (uint16_t)Register::Status);
+		// 	auto dstat = port_byte_in(dev->altStatus);
 			
-			if ((dstat & ATAState::Busy) == 0)
-			{
-				break;
-			}
-		}
+		// 	if ((stat & 0x04) == 0)
+		// 	{
+		// 		continue;
+		// 	}
+			
+		// 	if ((dstat & ATAState::Busy) == 0)
+		// 	{
+		// 		break;
+		// 	}
+		// 	//ASSERT(Status::Get(stat).done);
+		// }
+		// ASSERT(count < 10000000);
+		while (!int_fired) ;
+
+		ASSERT(!(port_byte_in(BMR + 0x2) & 0x2));
 		
+		ASSERT(!Status::Get(port_byte_in(BMR + 0x2)).done);
+		VGA::Write("Command: ");
+		VGA::Write((void*)port_byte_in(BMR));
+		VGA::Write("\n");
+
+		ASSERT(!Status::Get(port_byte_in(BMR + (uint16_t)Register::Status)).failed);
 		
 		auto last = (len % (64*1024) > 0) ? (len / (64*1024)) : (len / (64*1024)) - 1;
 		
@@ -156,6 +232,7 @@ namespace Drivers { namespace IDE {
 			memcpy(ptr, bufs[i], bufsSize[i]);
 			ptr += bufsSize[i];
 		}
+		TRACE("Returning...\n");
 		return 0;
 	}
 	

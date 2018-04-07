@@ -137,6 +137,7 @@ namespace Drivers {
 		PCIType type();
 		bool reachedEnd();
 		uint32_t secondaryBus();
+		void write(PCIRegister, uint32_t);
 	};
 
 	inline bool operator==(const PCIDevice_t d1, const PCIDevice_t d2)

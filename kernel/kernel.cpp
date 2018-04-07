@@ -5,7 +5,7 @@
 #include <kernel/Registers.h>
 #include <kernel/Memory/Paging.hh>
 #include <kernel/Timer.h>
-#include <kernel/utils/OrderedList.hh>
+#include <Utils/OrderedList.hh>
 #include <kernel/KernelAllocator.hh>
 #include <kernel/Memory/kheap.hh>
 #include <kernel/Debug.h>
@@ -17,8 +17,11 @@
 #include <kernel/Task.hh>
 #include <boot/multiboot.h>
 #include <drivers/IDE/IDE.hh>
-#define private public
 #include <kernel/Memory/GDT.hh>
+#include <drivers/IDE/DMA.hh>
+#define private public
+#include <drivers/VGA_Stream.hh>
+#include <Utils/iostream>
 
 
 #if !defined(__cplusplus)
@@ -100,7 +103,7 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     Drivers::VGA::Write("Initializing paging...\n");
     Kernel::Memory::init_paging();
     Drivers::VGA::Write("Paging initialized.\n");
-    //Kernel::init_tasking();
+    Kernel::init_tasking();
     Drivers::VGA::Write("Tasking initialized.\n");
 
     Drivers::VGA::Write("Hello, kernel world!\nThis is a test.\n");
@@ -115,13 +118,21 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     ASSERT(b == 33554432);
 
 
-    
+    Drivers::VGAStreamBuf vgaBuf;
+    Utils::ostream out(&vgaBuf);
 
     Kernel::Interrupts::register_interrupt_handler(0x4, &handler04);
 
     asm volatile ("int $0x4");
 
-    
+
+    out << "GDT Table Address: " << (void*)&Kernel::Memory::gdt_table << "\n";
+    out << "Initial ESP: " << (void*)init_esp << "\n";
+    addr_t ebp;
+    asm volatile("mov %%esp, %0" : "=r"(ebp));
+    out << "EBP: " << (void*)ebp << "\n";
+    out.flush();
+    while (1);
 
     
     {
@@ -248,8 +259,8 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
 
     if (Kernel::fork() != 0)
     {
-        //Drivers::VGA::Write("First process running!\n");
-        //while(1);
+        Drivers::VGA::Write("First process running!\n");
+        while(1);
     }
     else
     {
@@ -265,49 +276,121 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     Drivers::VGA::Write("Done sleeping.\n");
 
 
-    Drivers::VGA::Write("Initializing ATA Devices...\n");
-    //Drivers::IDE::Device::Initialize(0x1F0, 0x3F6, 0x170, 0x376, 0x000);
-    Drivers::IDE::Device::Initialize();
-    ASSERT(Drivers::IDE::Device::Initialized());
-    Drivers::VGA::Write("ATA Initialized.\n");
-    Drivers::VGA::Write("Device 0 Present? ");
-    Drivers::VGA::Write(Drivers::IDE::Device::Devices[0].reserved != 0);
-    Drivers::VGA::Write("\n");
+    // Drivers::VGA::Write("Initializing ATA Devices...\n");
+    // //Drivers::IDE::Device::Initialize(0x1F0, 0x3F6, 0x170, 0x376, 0x000);
+    // Drivers::IDE::Device::Initialize();
+    // ASSERT(Drivers::IDE::Device::Initialized());
+    // Drivers::VGA::Write("ATA Initialized.\n");
+    // Drivers::VGA::Write("Device 0 Present? ");
+    // Drivers::VGA::Write(Drivers::IDE::Device::Devices[0].reserved != 0);
+    // Drivers::VGA::Write("\n");
     
-    for (int i = 0; i < 4; ++i)
-    {
-        if (Drivers::IDE::Device::Devices[i].reserved != 0)
-        {
-            Drivers::VGA::Write("Drive: ");
-            Drivers::VGA::Write(i);
-            Drivers::VGA::Write("\n");
-            Drivers::VGA::Write("Drive Size: ");
-            Drivers::VGA::Write(Drivers::IDE::Device::Devices[i].size);
-            Drivers::VGA::Write("\n");
-            Drivers::VGA::Write("Model: '");
-            Drivers::VGA::Write(Drivers::IDE::Device::Devices[i].model);
-            Drivers::VGA::Write("'\n");
-            Drivers::VGA::Write("Signature: ");
-            Drivers::VGA::Write((void*)(addr_t)Drivers::IDE::Device::Devices[i].signature);
-            Drivers::VGA::Write("\n");
+    // for (int i = 0; i < 4; ++i)
+    // {
+    //     if (Drivers::IDE::Device::Devices[i].reserved != 0)
+    //     {
+    //         Drivers::VGA::Write("Drive: ");
+    //         Drivers::VGA::Write(i);
+    //         Drivers::VGA::Write("\n");
+    //         Drivers::VGA::Write("Drive Size: ");
+    //         Drivers::VGA::Write(Drivers::IDE::Device::Devices[i].size);
+    //         Drivers::VGA::Write("\n");
+    //         Drivers::VGA::Write("Model: '");
+    //         Drivers::VGA::Write(Drivers::IDE::Device::Devices[i].model);
+    //         Drivers::VGA::Write("'\n");
+    //         Drivers::VGA::Write("Signature: ");
+    //         Drivers::VGA::Write((void*)(addr_t)Drivers::IDE::Device::Devices[i].signature);
+    //         Drivers::VGA::Write("\n");
 
-            // for (int j = 0; j < 40; ++j)
-            // {
-            //     if (Drivers::IDE::Device::Devices[i].model[j] != 0)
-            //     {
-            //         Drivers::VGA::Write((unsigned int)Drivers::IDE::Device::Devices[i].model[j]);
-            //         Drivers::VGA::Write(", ");
-            //     }
-            //     else
-            //     {
-            //         break;
-            //     }
-            // }
-            // Drivers::VGA::Write("\n");
-        }
+    //         // for (int j = 0; j < 40; ++j)
+    //         // {
+    //         //     if (Drivers::IDE::Device::Devices[i].model[j] != 0)
+    //         //     {
+    //         //         Drivers::VGA::Write((unsigned int)Drivers::IDE::Device::Devices[i].model[j]);
+    //         //         Drivers::VGA::Write(", ");
+    //         //     }
+    //         //     else
+    //         //     {
+    //         //         break;
+    //         //     }
+    //         // }
+    //         // Drivers::VGA::Write("\n");
+    //     }
+    // }
+
+
+    out << "Testing! " << 4 << "\n";
+    out.flush();
+    Drivers::IDE::Device::Initialize();
+    Drivers::IDE::Device pm(Drivers::IDE::Channel::Primary, Drivers::IDE::Role::Master);
+    if (pm.reserved)
+    {
+        // out << "Model: ";
+        //out.flush();
+        //Drivers::VGA::Write(pm.model);
+        out << "Model: " << pm.model << "\n";
+        out.flush();
+    }
+    
+    Drivers::IDE::Device ps(Drivers::IDE::Channel::Primary, Drivers::IDE::Role::Slave);
+    if (ps.reserved)
+    {
+        //out << "\nModel: ";
+        //out.flush();
+        // Drivers::VGA::Write(ps.model);
+        //out << "\n";
+        //out.flush();
+        out << "Model: " << ps.model << "\n";
+        out.flush();
     }
 
 
-    Drivers::VGA::Write("Kernel main() is finished!!\n");
+    Drivers::IDE::Device sm(Drivers::IDE::Channel::Secondary, Drivers::IDE::Role::Master);
+    if (sm.reserved)
+    {
+        //out << "Model: ";
+        //out.flush();
+        // Drivers::VGA::Write(sm.model);
+        out << "Model: " << sm.model << "\n";
+        out.flush();
+    }
+    
+    
+    Drivers::IDE::Device ss(Drivers::IDE::Channel::Secondary, Drivers::IDE::Role::Slave);
+    if (ss.reserved)
+    {
+        //out << "\nModel: ";
+        //out.flush();
+        Drivers::VGA::Write(ss.model);
+        //out << "\n";
+        //out.flush();
+        out << "Model: " << ss.model << "\n";
+        out.flush();
+    }
+
+    out << "Testing DMADrive...\n";
+    out.flush();
+    Drivers::IDE::DMADrive dmdrive(Drivers::IDE::Channel::Primary, Drivers::IDE::Role::Master);
+
+    auto sec1 = dmdrive.readSector(0, 512);
+    out << "Returned.\n";
+    out.flush();
+    uint32_t sec1_1 = *(uint32_t*)sec1;
+    out << (void*)sec1_1 << "\n";
+    out << (void*)(uint32_t)sec1[511] << "\n";
+    for (int i = 0; i < 512; ++i)
+    {
+        if (sec1[i] != 1)
+        {
+            out << (uint32_t)sec1[i] << "\n";
+        }
+    }
+
+    free(sec1);
+
+
+    out << "Kernel main() is finished!!\n";
+    out.flush();
+    //Drivers::VGA::Write("Kernel main() is finished!!\n");
     return 0;
 }
