@@ -10,6 +10,9 @@
 *.asm.out.s
 *.optimized
 
+#Compiled Resource Files
+initrd.img
+
 # Precompiled Headers
 *.gch
 *.pch
@@ -39,5 +42,8 @@
 *.bin
 
 #IDE Settings
-.vscode/**
 .c4droid
+.vscode/**
+
+#Non-Committed Libraries
+Libraries/**
