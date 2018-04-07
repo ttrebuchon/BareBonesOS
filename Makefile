@@ -7,7 +7,7 @@ GET_SRC = $(call rwildcard,$1/,*.$2)
 
 
 
-C_SRC = $(call GET_SRC,kernel,c) $(call GET_SRC,drivers,c) $(call GET_SRC,Libraries,c)
+C_SRC = $(call GET_SRC,kernel,c) $(call GET_SRC,drivers,c) $(call GET_SRC,Libraries,c)  $(call GET_SRC,Utils,c)
 CPP_SRC = $(call GET_SRC,kernel,cpp) $(call GET_SRC,drivers,cpp) $(call GET_SRC,Libraries,cpp) $(call GET_SRC,Utils,cpp)
 BOOT_SRC = $(call GET_SRC,boot,s)
 #ASM_SRC_ASM = $(wildcard kernel/*.asm drivers/*.asm)
