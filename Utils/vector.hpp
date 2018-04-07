@@ -139,7 +139,34 @@ namespace Utils
 	template <class T, class A>
 	void vector<T, A>::resize(size_type n)
 	{
-		resize(n, value_type());
+		if (n > _size)
+		{
+			if (n > _cap)
+			{
+				ensure_capacity(n);
+			}
+			
+			while (_size < n)
+			{
+				alloc.construct(_data+_size);
+				++_size;
+			}
+		}
+		else if (n > 0)
+		{
+			for (size_type i = n; i < _size; ++i)
+			{
+				alloc.destroy(_data + i);
+			}
+			_size = n;
+		}
+		else if (_data != nullptr)
+		{
+			clear();
+			ATraits::deallocate(alloc, _data, _cap);
+			_data = nullptr;
+			_size = _cap = 0;
+		}
 	}
 	
 	template <class T, class A>
