@@ -8,7 +8,7 @@ GET_SRC = $(call rwildcard,$1/,*.$2)
 
 
 C_SRC = $(call GET_SRC,kernel,c) $(call GET_SRC,drivers,c) $(call GET_SRC,Libraries,c)
-CPP_SRC = $(call GET_SRC,kernel,cpp) $(call GET_SRC,drivers,cpp) $(call GET_SRC,Libraries,cpp)
+CPP_SRC = $(call GET_SRC,kernel,cpp) $(call GET_SRC,drivers,cpp) $(call GET_SRC,Libraries,cpp) $(call GET_SRC,Utils,cpp)
 BOOT_SRC = $(call GET_SRC,boot,s)
 #ASM_SRC_ASM = $(wildcard kernel/*.asm drivers/*.asm)
 ASM_SRC_ASM = $(call GET_SRC,kernel,asm) $(call GET_SRC,drivers,asm)
@@ -45,16 +45,25 @@ CRTEND_OBJ = $(shell $(CC) $(CFLAGS) -print-file-name=crtend.o)
 
 NO_WARN = -Wno-unused-parameter -Wno-unused-variable -Wno-unused-but-set-variable -Wno-unused-function
 
-BOTH_FLAGS += -DFIXED_PAGE_STRUCT -D_TRACE $(NO_WARN)
+BOTH_FLAGS += -DFIXED_PAGE_STRUCT
+BOTH_FLAGS += -D_TRACE
+BOTH_FLAGS += $(NO_WARN)
+BOTH_FLAGS += -DDEBUG
 CFLAGS	= -nostdlib $(WARNINGS_FLAGS) -ffreestanding -Og -MMD -I. -Werror-implicit-function-declaration --sysroot=$(SYSROOT) $(BOTH_FLAGS)
 CXX_FLAGS	= -std=c++14 -nostdlib $(WARNINGS_FLAGS) -ffreestanding -Og -MMD -I. -fno-exceptions -fno-rtti --sysroot=$(SYSROOT) $(BOTH_FLAGS)
 ASM_FLAGS	= 
 
-all: $(HDD2) myos.iso
+all: .fake $(HDD2) myos.iso
 	#@echo $(CPP_DEPS)
+
+.fake:
+	@echo '   '
+	@echo '$$OBJS = ' $(BOOT_OBJS) $(CRTBEGIN_OBJ) $(CPP_OBJS) $(C_OBJS) $(ASM_OBJS) $(CRTEND_OBJ)
+	@echo '   '
 
 clean:
 	-@rm -f $(C_OBJS) $(CPP_OBJS) $(CPP_DEPS) $(BOOT_OBJS) *.bin $(wildcard boot/*.o boot/*.bin) $(ASM_OBJS)
+	-@rm -f $(CPP_DEPS) $(C_DEPS)
 
 myos.iso: myos.bin
 	@cp $< grub/isodir/boot/$<
