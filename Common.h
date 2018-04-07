@@ -42,6 +42,15 @@ typedef decltype(sizeof(0)) size_t;
 #define IF_CPP(X) X
 #define IF_C(X) 
 
+
+
+	#if __cplusplus >= 201703L
+		#define IFCPP17(X) X
+	#else
+		#define IFCPP17(X)
+	#endif
+
+
 #else
 
 //#ifndef TESTING
@@ -58,6 +67,8 @@ typedef unsigned long size_t;
 #define IF_CPP_ELSE(X, Y) Y
 #define IF_CPP(X)
 #define IF_C(X) X
+
+#define IFCPP17(X)
 
 #endif
 
