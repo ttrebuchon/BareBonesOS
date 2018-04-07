@@ -1,5 +1,5 @@
 #include "VGA.hh"
-//#include <kernel/utils/String.hh>
+//#include <Utils/String.hh>
 #include <Utils/int_to_str.h>
 #include <kernel/Memory.h>
 
@@ -180,7 +180,11 @@ namespace Drivers
 
     void VGA::Write(const uint8_t n)
     {
-        Write((unsigned int)n);
+        char buf[256];
+        if (c_uint_to_str(n, buf, 256))
+        {
+            Write(buf);
+        }
     }
 
     void VGA::Write(const int64_t n)
@@ -192,13 +196,22 @@ namespace Drivers
         }
     }
 
-    void VGA::Write(const int n)
+    // void VGA::Write(const int32_t n)
+    // {
+    //     char buf[256];
+    //     if (c_int_to_str(n, buf, 256))
+    //     {
+    //         Write(buf);
+    //     }
+    // }
+
+    void VGA::Write_HardcodedMark()
     {
-        char buf[256];
-        if (c_int_to_str(n, buf, 256))
-        {
-            Write(buf);
-        }
+        PutChar('M');
+        PutChar('a');
+        PutChar('r');
+        PutChar('k');
+        PutChar('\n');
     }
 }
 

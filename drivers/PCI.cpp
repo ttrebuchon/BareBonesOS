@@ -260,4 +260,13 @@ namespace Drivers {
 	{
 		return read(PCIRegister::SecondaryBusNo);
 	}
+
+	void PCIDevice_t::write(PCIRegister reg, uint32_t value)
+	{
+		data.fieldNo = (((uint32_t)reg) & 0xFC) >> 2;
+		data.enabled = 1;
+		port_long_out((uint16_t)PCIPort::ConfigAddress, data);
+
+		port_long_out((uint16_t)PCIPort::ConfigData, value);
+	}
 }

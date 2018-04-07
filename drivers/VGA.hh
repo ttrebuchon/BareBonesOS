@@ -4,9 +4,23 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <kernel/c_cpp.h>
-//#include <kernel/utils/String.hh>
 
 #ifdef __cplusplus
+namespace Utils
+{
+    template <class Char_t, class CharTraits, class Alloc>
+    class basic_string;
+
+    template <class>
+    struct Char_Traits;
+
+    template <class>
+    class Allocator;
+
+    typedef basic_string<char, Char_Traits<char>, Allocator<char>> string;
+}
+
+
 namespace Drivers
 {
     //Static Class
@@ -61,6 +75,7 @@ namespace Drivers
         static void Write(const char* cstr, const size_t len);
         static void Write(const char* cstr);
         static void Write(const unsigned char* cstr);
+        static void Write(const Utils::string&);
         //static void Write(const Utils::String str);
         static void Write(const void* ptr);
         static void Write(const bool);
@@ -69,7 +84,9 @@ namespace Drivers
         static void Write(const uint16_t);
         static void Write(const uint8_t);
         static void Write(const int64_t);
-        static void Write(const int32_t);
+        //static void Write(const int32_t);
+
+        static void Write_HardcodedMark();
     };
 
 

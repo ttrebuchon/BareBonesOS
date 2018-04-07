@@ -5,6 +5,7 @@
 #include "PRDT.hh"
 #include "IDEDisk.hh"
 #include "IDE.hh"
+#include <kernel/Registers.h>
 
 namespace Drivers { namespace IDE {
 	
@@ -18,7 +19,7 @@ namespace Drivers { namespace IDE {
 			Read = true
 		};
 		
-		struct alignas(char) Status
+		struct alignas(unsigned char) Status
 		{
 			bool obsolete : 1;
 			char biosDMA : 2;
@@ -31,6 +32,11 @@ namespace Drivers { namespace IDE {
 			{
 				return *reinterpret_cast<const unsigned char*>(this);
 			}
+
+			static Status Get(unsigned char byte)
+			{
+				return *reinterpret_cast<Status*>(&byte);
+			}
 		};
 		
 		static_assert(sizeof(Status) == 1);
@@ -38,6 +44,10 @@ namespace Drivers { namespace IDE {
 		constexpr static size_t PRDT_Size = 10;
 		
 		private:
+		static bool _initted;
+		static void Initialize();
+
+		static void HandleInterrupt(Registers_t);
 		
 		// Second bus is offset by 0x8
 		enum class Register : uint16_t

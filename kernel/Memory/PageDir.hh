@@ -18,6 +18,8 @@ namespace Kernel { namespace Memory {
         uint32_t avail : 3;
         uint32_t frame : 20;
 
+        Page();
+
         void alloc_frame(bool is_kernel, bool is_writeable);
         void free_frame();
         
@@ -66,7 +68,7 @@ namespace Kernel { namespace Memory {
         void flush() const;
     };
     
-    static_assert(sizeof(PageTable*) == 8);
+    static_assert(sizeof(PageTable*) == 4);
     static_assert(sizeof(PageDir) == 1024*sizeof(PageDir_Entry) + 1024*sizeof(PageTable*));
 }
 }

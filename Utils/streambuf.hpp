@@ -1,6 +1,8 @@
 #ifndef INCLUDED_STREAMBUF_HPP
 #define INCLUDED_STREAMBUF_HPP
 
+#include "streambuf.hh"
+
 namespace Utils {
 	
 	template <class T, class Traits>

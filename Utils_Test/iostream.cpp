@@ -4,7 +4,7 @@
 #include <Utils/iostream.hh>
 #include <sstream>
 
-//#include <kernel/utils/String.hh>
+//#include <Utils/String.hh>
 #include <Utils/locale>
 #include <drivers/VGA_Stream.hh>
 

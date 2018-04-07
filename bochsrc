@@ -1,0 +1,6 @@
+floppya: 1_44=myos.iso, status=inserted
+#ata0-master: type=disk, path="dummy.img", mode=flat, cylinders=8322, heads=16, spt=63
+#ata1-master: type=cdrom, path=".'myos.iso", status=inserted
+boot: floppy
+
+cpuid: x86_64=1

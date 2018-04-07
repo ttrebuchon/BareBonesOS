@@ -57,7 +57,7 @@ namespace Kernel { namespace Memory
 
 	void init_paging()
 	{
-		uint32_t mem_end = 0x1000000;
+		uint32_t mem_end = 0xF0000000;
 		
 		TRACE_C("Initializing frame collection...\n");
 		init_frame_collection(mem_end/0x1000);
@@ -72,12 +72,17 @@ namespace Kernel { namespace Memory
 		TRACE_C("identity_dir allocated.\n");
 		
 		ASSERT(iphys == (uint32_t)&identity_dir->tables);
-		
+		Drivers::VGA::Write("Identity_Dir Physical Address: ");
+		c_vga_write_addr(identity_dir);
+		Drivers::VGA::Write("\n");
 		
 		for (addr_t q = 0; q < 0xFFFFF; ++q)
 		{
-			auto pg = identity_dir->getPage(i, true);
-			ASSERT(pg->map(q*0x1000, true, true, true));
+			uint64_t q2 = q;
+			q2 *= 0x1000;
+			ASSERT(q*0x1000 == q2);
+			auto pg = identity_dir->getPage(q*0x1000, true);
+			ASSERT(pg->map(q*0x1000, true, false, true));
 			
 		}
 		
@@ -129,25 +134,33 @@ namespace Kernel { namespace Memory
 		TRACE_C("Page fault handler registered\n");
 		
 		current_dir = 0x0;
-		switch_page_dir(kernel_dir);
+		switch_page_dir(identity_dir);
 		TRACE_C("Page directory switched\n");
+		//while (true);
 
 		//kheap = create_heap(KHEAP_START, KHEAP_START + KHEAP_INITIAL_SIZE, KHEAP_MAX_ADDR, 0, 0);
 		//kheap = (KHeap*)kmalloc(sizeof(KHeap), false, 0);
 		TRACE("KHeap space allocated\n");
 		//new (kheap) KHeap(KHEAP_START, KHEAP_START + KHEAP_INITIAL_SIZE, KHEAP_MAX_ADDR, 0, 0);   
-		kheap = new KHeap(KHEAP_START, KHEAP_START + KHEAP_INITIAL_SIZE, KHEAP_MAX_ADDR, 0, 0);
+		//kheap = new KHeap(KHEAP_START, KHEAP_START + KHEAP_INITIAL_SIZE, KHEAP_MAX_ADDR, 0, 0);
 		TRACE_C("Kernel Heap created.\n");
 		
 		auto tmp_dir = kernel_dir->clone();
 		TRACE_C("Kernel page directory cloned.\n");
 		
+		#ifndef DEBUG
 		switch_page_dir(tmp_dir);
 		TRACE_C("Switched page directory.\n");
+		#else
+		ASSERT(virtual_to_physical(current_dir, identity_dir) != 0x0);
+		switch_page_dir(identity_dir);
+		TRACE_C("Switched to identity directory\n");
+		#endif
 	}
 
 	void switch_page_dir(struct PageDir* dir)
 	{
+		asm volatile ("sti");
 		uint32_t phys;
 		if (current_dir == 0)
 		{
@@ -166,6 +179,7 @@ namespace Kernel { namespace Memory
 		asm volatile ("mov %%cr0, %0" : "=r"(cr0));
 		cr0 |= 0x80000000;
 		asm volatile ("mov %0, %%cr0":: "r"(cr0));
+		asm volatile ("cli");
 	}
 
 	
@@ -236,12 +250,12 @@ namespace Kernel { namespace Memory
 
 	void page_fault(Registers_t regs)
 	{
-		Drivers::VGA::Write("PAGE_FAULT\n");
 		uint32_t fault_addr;
 		asm volatile ("mov %%cr2, %0" : "=r" (fault_addr));
+		Drivers::VGA::Write("PAGE_FAULT\n");
 		
-		bool present = !(regs.err_code & 0x1);
-		bool rw = (regs.err_code & 0x2);
+		bool present = ((regs.err_code & 0x1) != 0);
+		bool rw = ((regs.err_code & 0x2) != 0);
 		bool usr = ((regs.err_code & 0x4) != 0);
 		bool reserved = ((regs.err_code & 0x8) != 0);
 		bool instr_fetch = ((regs.err_code & 0x10) != 0);
@@ -269,6 +283,36 @@ namespace Kernel { namespace Memory
 		Drivers::VGA::Write("Physical Address: ");
 		Drivers::VGA::Write(virtual_to_physical(current_dir, (void*)fault_addr));
 		Drivers::VGA::Write("\n");
+
+		Drivers::VGA::Write("Upper Bits: ");
+		Drivers::VGA::Write((void*)upperBits);
+		Drivers::VGA::Write("\nMiddle Bits: ");
+		Drivers::VGA::Write((void*)midBits);
+		Drivers::VGA::Write("\n");
+
+		auto pgEntry = &Kernel::Memory::current_dir->ref_tables[upperBits]->pages[midBits];
+		Drivers::VGA::Write("Entry Info: \n");
+		//Drivers::VGA::Write(pgEntry->present == 1);
+		Drivers::VGA::Write(Kernel::Memory::current_dir->tables[upperBits].present == 1);
+
+		Drivers::VGA::Write("\nPhys Tables Addr: ");
+		addr_t cr3;
+		asm volatile("mov %%cr3, %0" : "=r"(cr3));
+		Drivers::VGA::Write((void*)cr3);
+		Drivers::VGA::Write("\n");
+		Drivers::VGA::Write((void*)virtual_to_physical(Kernel::Memory::current_dir, (void*)0xefc05000));
+
+		uint32_t page_dir_index = ((uint32_t)0xefc05000)/(1024*4096); // >> 22
+		uint32_t page_table_index = (((uint32_t)0xefc05000)/4096)&0x3ff;
+		uint32_t frame_offset = ((uint32_t)0xefc05000)&0xfff;
+		Drivers::VGA::Write("\n");
+		Drivers::VGA::Write(Kernel::Memory::current_dir->tables[page_dir_index].present == 1);
+		Drivers::VGA::Write("\n");
+		Drivers::VGA::Write((void*)Kernel::Memory::current_dir->tables[page_dir_index].frame);
+		Drivers::VGA::Write("\n");
+		Drivers::VGA::Write(Kernel::Memory::current_dir->ref_tables[page_dir_index]->pages[page_table_index].present == 1);
+		Drivers::VGA::Write("\n");
+		Drivers::VGA::Write((void*)Kernel::Memory::current_dir->ref_tables[page_dir_index]->pages[page_table_index].frame);
 
 		// auto pg = current_dir->getPage(fault_addr, 0);
 		// Drivers::VGA::Write("\n\n");

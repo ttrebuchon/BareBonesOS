@@ -5,14 +5,14 @@
 unsigned char port_byte_in(const unsigned short port)
 {
     unsigned char data;
-    __asm__("in %%dx, %%al " : "=a" (data) : "d" (port));
+    __asm__("inb %%dx, %%al " : "=a" (data) : "d" (port));
     return data;
 }
 
 
 void port_byte_out(const unsigned short port, const unsigned char data)
 {
-    __asm__("out %%al, %%dx" : :"a" (data), "d" (port));
+    __asm__("outb %%al, %%dx" : :"a" (data), "d" (port));
 }
 
 

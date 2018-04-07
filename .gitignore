@@ -44,6 +44,9 @@ initrd.img
 #IDE Settings
 .c4droid
 .vscode/**
+.c4droid
+Barebones.code-workspace
+
 
 #Non-Committed Libraries
 Libraries/**

@@ -1,13 +1,17 @@
 #include "GDT.hh"
 #include <Debug.h>
-
+#include "kheap.hh"
 
 namespace Kernel { namespace Memory {
 
-    GDTEntry gdt_table[5];
+    GDTEntry* gdt_table;
 
     void init_gdt()
     {
+        addr_t gdtPhys;
+        gdt_table = (GDTEntry*)kmalloc(sizeof(GDTEntry)*5, 1, &gdtPhys);
+        kmemset(gdt_table, 0, sizeof(GDTEntry)*5);
+
         ASSERT(*reinterpret_cast<uint64_t*>(&gdt_table[0]) == 0);
         gdt_table[1].limit(0xFFFFFFFF);
         gdt_table[1].base(0);
@@ -45,7 +49,7 @@ namespace Kernel { namespace Memory {
         ASSERT(reinterpret_cast<uint8_t*>(&gdt_table[1])[5] == 0x9A);
 
         Kernel::Memory::GDTEntry::Pointer.limit = (sizeof(Kernel::Memory::GDTEntry)*5 - 1);
-        Kernel::Memory::GDTEntry::Pointer.base = (uint32_t)&gdt_table;
+        Kernel::Memory::GDTEntry::Pointer.base = (uint32_t)gdt_table;
         Kernel::Memory::GDTEntry::Flush();
     }
 
