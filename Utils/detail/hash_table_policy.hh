@@ -25,6 +25,14 @@ namespace Utils
 			size_t nextBuckets(size_t n) const;
 			
 			hash_table_policy(float load = 1.0);
+			
+			constexpr float max_load_factor() const noexcept
+			{
+				return maxLoad;
+			}
+			
+			void max_load_factor(float) noexcept;
+			size_t max_buckets() const noexcept;
 		};
 	}
 }

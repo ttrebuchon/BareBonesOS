@@ -31,7 +31,7 @@ namespace Utils
 	
 	template <class T>
 	template <class Y, class Deleter, class Alloc>
-	shared_ptr<T>::shared_ptr(Y* ptr, Deleter d, Alloc alloc) : ctrl(detail::shared_ptr_control::CreateControl(ptr, d, alloc))
+	shared_ptr<T>::shared_ptr(Y* ptr, Deleter d, const Alloc& alloc) : ctrl(detail::shared_ptr_control::CreateControl(ptr, forward<Deleter>(d), forward<const Alloc&>(alloc)))
 	{
 		
 	}

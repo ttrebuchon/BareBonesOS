@@ -2,10 +2,9 @@
 #include <Utils/unordered_map>
 //#include "Tests.hh"
 #include <unordered_map>
+#include <fstream>
 
 
-
-#define NO_IT_YET
 
 template <template <class...> class map, class T, class F, template <class> class H, class K = int>
 static void do_tests(const int n, const std::vector<K>& positions, F);
@@ -36,7 +35,7 @@ TEST(unordered_map)
 	//run_for(100000, 10);
 	
 	Bar_t::SetPrinting(false);
-	run_for<int, Bar_t>(10000, 3, barReset);
+	//run_for<int, Bar_t>(10000, 3, barReset);
 	Bar_t::SetPrinting(true);
 	
 	enum E
@@ -46,7 +45,7 @@ TEST(unordered_map)
 		E3
 	};
 	
-	run_for<E>(10000, 3);
+	run_for<E>(100, 3);
 }
 
 
@@ -64,14 +63,8 @@ void run_for(const int n, const int shuffles, F f)
 	std::clog << "Testing std..." << std::endl;
 	do_tests<std::unordered_map, T, F, std::hash, K>(n, positions, f);
 	
-	std::clog << "Testing std (Utils hash)..." << std::endl;
-	do_tests<std::unordered_map, T, F, Utils::hash, K>(n, positions, f);
-	
 	std::clog << "Testing Utils..." << std::endl;
 	do_tests<Utils::unordered_map, T, F, Utils::hash, K>(n, positions, f);
-	
-	std::clog << "Testing Utils (std hash)..." << std::endl;
-	do_tests<Utils::unordered_map, T, F, std::hash, K>(n, positions, f);
 	
 	if (shuffles <= 0)
 	{
@@ -87,14 +80,8 @@ void run_for(const int n, const int shuffles, F f)
 	std::clog << "Testing std..." << std::endl;
 	do_tests<std::unordered_map, T, F, std::hash, K>(n, positions, f);
 	
-	std::clog << "Testing std (Utils hash)..." << std::endl;
-	do_tests<std::unordered_map, T, F, Utils::hash, K>(n, positions, f);
-	
 	std::clog << "Testing Utils..." << std::endl;
 	do_tests<Utils::unordered_map, T, F, Utils::hash, K>(n, positions, f);
-	
-	std::clog << "Testing Utils (std hash)..." << std::endl;
-	do_tests<Utils::unordered_map, T, F, std::hash, K>(n, positions, f);
 }
 
 
@@ -130,6 +117,8 @@ static void do_tests(const int n, const std::vector<K>& positions, F f)
 		m[K(20)] = T(-1);
 		ASSERTEQ(m.size(), 3);
 		ASSERTEQ(m[K(20)], T(-1));
+		
+		ASSERTEQ(m.at(K(20)), T(-1));
 	}
 	
 	
@@ -228,7 +217,7 @@ static void do_tests(const int n, const std::vector<K>& positions, F f)
 		}
 	}
 	
-	/*
+	
 	std::clog << "--------------\n" << std::endl;
 	{
 		map<K, long, H> m;
@@ -362,27 +351,176 @@ static void do_tests(const int n, const std::vector<K>& positions, F f)
 		}
 		
 		
-		#ifndef NO_IT_YET
+		map<K, long, H> m3;
+		ASSERTEQ(m3.size(), 0);
+		m3 = m2;
+		ASSERTEQ(m2.size(), m3.size());
+		ASSERTEQ(m3.size(), n);
+		size_t z = 0;
 		for (auto it = m2.begin(); it != m2.end(); ++it)
 		{
-			
+			ASSERTEQ(it->second, m3.at(it->first));
+			++z;
 		}
-		#endif
+		
+		
+		ASSERTEQ(z, m2.size());
+		ASSERTEQ(m2.size(), n);
+		
+		z = 0;
+		for (const auto& p : m2)
+		{
+			ASSERT(p.first < n);
+			MASSERTEQ(p.second, m3.at(p.first), p.first);
+			ASSERTEQ(m3.count(p.first), 1);
+			++z;
+		}
+		
+		ASSERTEQ(z, m2.size());
+		ASSERTEQ(m2.size(), n);
+		
+		z = 0;
+		for (auto& p : m2)
+		{
+			ASSERT(p.first < n);
+			ASSERTEQ(m3.count(p.first), 1);
+			ASSERTEQ(p.second, m3.at(p.first));
+			++z;
+		}
+		ASSERTEQ(z, m2.size());
+		ASSERTEQ(m2.size(), n);
 	}
 	
 	
+	std::clog << "--------------\n" << std::endl;
 	{
 		map<K, long, H> m;
 		for (int i = 0; i < n; ++i)
 		{
 			m[positions.at(i)] = positions.at(i);
 		}
-		
 		m.clear();
-		#ifndef NO_IT_YET
+		ASSERTEQ(m.size(), 0);
 		ASSERT(m.begin() == m.end());
-		#endif
-	}*/
+		
+		map<K, long, H> em;
+		for (int i = 0; i < n; ++i)
+		{
+			ASSERTEQ(em.count(positions.at(i)), 0);
+		}
+		
+		for (int i = 0; i < n; ++i)
+		{
+			ASSERTEQ(m.count(positions.at(i)), 0);
+		}
+		
+		for (int i = 0; i < n; ++i)
+		{
+			long h = m[positions.at(i)];
+			MASSERTEQ(h, 0, positions.at(i));
+		}
+	}
+	
+	
+	std::clog << "--------------\n" << std::endl;
+	{
+		map<K, long, H> m;
+		const map<K, long, H>& mc = m;
+		
+		for (int i = 0; i < n; ++i)
+		{
+			m[positions.at(i)] = i;
+		}
+		
+		ASSERTEQ(m.size(), n);
+		
+		for (int i = 0; i < n; ++i)
+		{
+			ASSERTEQ(mc.count(positions.at(i)), 1);
+			ASSERTEQ(m.count(positions.at(i)), 1);
+			ASSERTEQ(mc.at(positions.at(i)), i);
+		}
+		
+		long double bc = m.bucket_count();
+		long double ec = m.size();
+		ASSERTEQ(m.max_load_factor(), 1);
+		MASSERT(m.max_load_factor() >= m.load_factor(), m.max_load_factor(), m.load_factor(), (ec/bc), ec, bc);
+		MASSERT(bc*m.max_load_factor() >= ec, bc, ec);
+		m.rehash(bc*2);
+		MASSERT(m.bucket_count() >= 2*bc, m.bucket_count(), 2*bc);
+		bc = m.bucket_count();
+		MASSERT(m.load_factor() <= 1, m.load_factor(), bc, ec, (ec/bc));
+		
+		
+		map<K, long, H> m2 = m;
+		const map<K, long, H>& mc2 = m2;
+		
+		for (int i = 0; i < n; ++i)
+		{
+			ASSERTEQ(mc2.count(positions.at(i)), 1);
+			ASSERTEQ(m2.count(positions.at(i)), 1);
+			ASSERTEQ(mc2.at(positions.at(i)), i);
+		}
+		
+		for (int i = 0; i < n; ++i)
+		{
+			m2[positions.at(i)] = 100 - i;
+		}
+		
+		for (int i = 0; i < n; ++i)
+		{
+			ASSERTEQ(mc.count(positions.at(i)), 1);
+			ASSERTEQ(m.count(positions.at(i)), 1);
+			ASSERTEQ(mc.at(positions.at(i)), i);
+		}
+		
+		for (int i = 0; i < n; ++i)
+		{
+			ASSERTEQ(mc2.count(positions.at(i)), 1);
+			ASSERTEQ(m2.count(positions.at(i)), 1);
+			ASSERTEQ(mc2.at(positions.at(i)), 100 - i);
+		}
+		
+		
+		map<K, long, H> m3;
+		ASSERTEQ(m3.size(), 0);
+		m3 = m2;
+		ASSERTEQ(m2.size(), m3.size());
+		ASSERTEQ(m3.size(), n);
+		size_t z = 0;
+		for (auto it = m2.begin(); it != m2.end(); ++it)
+		{
+			ASSERTEQ(it->second, m3.at(it->first));
+			++z;
+		}
+		
+		
+		ASSERTEQ(z, m2.size());
+		ASSERTEQ(m2.size(), n);
+		
+		z = 0;
+		for (const auto& p : m2)
+		{
+			ASSERT(p.first < n);
+			MASSERTEQ(p.second, m3.at(p.first), p.first);
+			ASSERTEQ(m3.count(p.first), 1);
+			++z;
+		}
+		
+		ASSERTEQ(z, m2.size());
+		ASSERTEQ(m2.size(), n);
+		
+		z = 0;
+		for (auto& p : m2)
+		{
+			ASSERT(p.first < n);
+			ASSERTEQ(m3.count(p.first), 1);
+			ASSERTEQ(p.second, m3.at(p.first));
+			++z;
+		}
+		ASSERTEQ(z, m2.size());
+		ASSERTEQ(m2.size(), n);
+	}
 }
 
 

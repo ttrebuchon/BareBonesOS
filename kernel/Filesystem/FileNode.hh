@@ -3,17 +3,44 @@
 
 #include <Common.h>
 #include "Node.hh"
+#include <Utils/mutex>
+#include <kernel/ResourceHandles/FileHandle.hh>
+
+namespace Kernel
+{
+	class ReadFileHandle;
+}
 
 namespace Kernel { namespace Filesystem {
-
-    class FileNode : public Node
-    {
-        protected:
-
-        public:
-
-        
-    };
+	
+	class File;
+	
+	class FileNode : public Node
+	{
+		protected:
+		File* file;
+		mutable Utils::mutex lock_m;
+		
+		virtual File* initFile();
+		//virtual void releaseHandle(FileHandle*);
+		//virtual void releaseHandle(ReadFileHandle*);
+		
+		
+		FileNode(const NodeType);
+		
+		public:
+		FileNode();
+		virtual ~FileNode();
+		
+		virtual File* getFile();
+		virtual ResourcePtr<FileHandle>&& handle();
+		//virtual ReadFileHandle* readOnlyHandle();
+		virtual bool inUse() const;
+		//virtual bool readInUse() const;
+		
+		friend FileHandle;
+		friend ReadFileHandle;
+	};
 }
 }
 #endif

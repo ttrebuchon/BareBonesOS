@@ -3,20 +3,21 @@
 #include <typeinfo>
 #include <list>
 #include <string>
+#include "QA.hh"
 
-namespace QA
-{
-	class Memory final
+
+	class QA::Memory final
 	{
 		public:
 		
-		static void Init();
-		static void* Allocate(size_t s);
-		static void* AllocateArray(size_t s);
-		static void Release(void*);
-		static void Release(void*, size_t);
-		static void ReleaseArray(void*);
-		static void ReleaseArray(void*, size_t);
+		static void Start();
+		static void Pause();
+		static void* Allocate(size_t s, bool meta = false);
+		static void* AllocateArray(size_t s, bool meta = false);
+		static void Release(void*, bool meta = false);
+		static void Release(void*, size_t, bool meta = false);
+		static void ReleaseArray(void*, bool meta = false);
+		static void ReleaseArray(void*, size_t, bool meta = false);
 		
 		static void Reset();
 		
@@ -24,9 +25,6 @@ namespace QA
 		
 		
 		private:
-		static void* metaPool;
-		static void* metaPtr;
-		static size_t metaLimit;
 		
 		
 		template <class T>
@@ -72,14 +70,12 @@ namespace QA
 			
 			pointer allocate(size_type n, std::allocator<void>::const_pointer hint = 0)
 			{
-				auto p = metaPtr;
-				metaPtr += sizeof(T)*n;
-				return (pointer)p;
+				return (pointer)Memory::Allocate(n*sizeof(T), true);
 			}
 			
 			void deallocate(pointer p, size_type n)
 			{
-				
+				Memory::Release(p, n*sizeof(T), true);
 			}
 			template <class U, class... Args>
 			void construct(U* p, Args&&... args)
@@ -134,7 +130,6 @@ namespace QA
 		
 		static MetaAllocator<Allocation> alloc;
 		static bool __initted;
-		
 		static size_t _total;
 		
 		public:
@@ -143,7 +138,7 @@ namespace QA
 		static const std::list<Allocation*, MetaAllocator<Allocation*>>& Allocations;
 		
 		static const size_t& Total;
+		
 	};
 	
 	
-}

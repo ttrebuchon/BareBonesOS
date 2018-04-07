@@ -58,7 +58,7 @@ namespace Utils
 		typedef T element_type;
 		typedef Deleter deleter_type;
 		
-		private:
+		//private:
 		pointer obj;
 		Deleter del;
 		
@@ -86,9 +86,20 @@ namespace Utils
 		
 		
 		// Operators
-		ref_type operator*() const noexcept;
-		pointer operator->() const noexcept;
-		operator bool() const noexcept;
+		__attribute__((always_inline))
+		ref_type operator*() const noexcept
+		{ return *obj; }
+		
+		__attribute__((always_inline))
+		pointer operator->() const noexcept
+		{ return obj; }
+		
+		__attribute__((always_inline))
+		operator bool() const noexcept
+		{
+			return (obj != nullptr);
+		}
+		
 		unique_ptr& operator=(unique_ptr&&) noexcept;
 		unique_ptr& operator=(nullptr_t) noexcept;
 		ref_type operator[](ptrdiff_t) const;
@@ -103,6 +114,8 @@ namespace Utils
 		
 		template <class>
 		friend struct make_unique_t;
+		template <class, class>
+		friend class unique_ptr;
 		
 		/*template <class G, class Y>
 		friend bool operator==(const unique_ptr<G>&, const unique_ptr<Y>&) noexcept;

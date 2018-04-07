@@ -11,6 +11,7 @@ namespace Kernel { namespace Filesystem {
         protected:
 
         public:
+        DirectoryNode(const NodeType = NodeType::Directory);
 
         virtual void addChild(Node*) = 0;
     };

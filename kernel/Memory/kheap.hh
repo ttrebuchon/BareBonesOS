@@ -4,6 +4,7 @@
 #include <Common.h>
 #include <kernel/Debug.h>
 #include <Utils/OrderedArray.hh>
+#include "kheap_c.h"
 
 #define KHEAP_START         0xC0000000
 #define KHEAP_INITIAL_SIZE  0x100000
@@ -16,12 +17,15 @@ extern "C" {
     extern uint32_t kPlacement;
 
 
-    void* kmalloc(uint32_t size, int align, addr_t* phys);
+    /*void* kmalloc(uint32_t size, int align, addr_t* phys);
+    void kfree(void*);
 
     void kmemset(void*, unsigned char, uint32_t);
 
     void* malloc(size_t);
     void free(void*);
+    void* krealloc(void*, size_t);
+    void* realloc(void*, size_t);*/
 
     struct KHeapHeader
     {
@@ -66,6 +70,7 @@ namespace Kernel { namespace Memory {
 
         void* alloc(uint32_t size, bool page_align);
         void free(void*);
+        void* realloc(void*, size_t);
 
         uint32_t endAddr() const;
         uint32_t startAddr() const;

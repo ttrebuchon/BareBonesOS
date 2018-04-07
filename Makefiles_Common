@@ -1,0 +1,4 @@
+
+
+CXXFLAGS += -Werror=return-local-addr
+CXXFLAGS += -Werror=delete-incomplete

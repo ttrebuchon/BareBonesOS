@@ -17,6 +17,7 @@ namespace Utils
 	class unordered_map
 	{
 		public:
+		
 		// Member Types
 		typedef pair<const Key, T> value_type;
 		typedef Alloc allocator_type;
@@ -62,72 +63,99 @@ namespace Utils
 		};
 		
 		
-		/*struct value_type_hasher
-		{
-			hasher key;
-			
-			value_type_hasher(const hasher& h) : key(h)
-			{}
-			value_type_hasher() = default;
-			
-			bool operator()(const value_type& v) const noexcept
-			{
-				return key(v);
-			}
-		};*/
-		
-		//typedef hash_table<key_type, value_type, Select1st, value_type_hasher, value_type_equal, allocator_type> Table;
 		typedef hash_table<key_type, value_type, Select1st, hasher, key_equal, allocator_type> Table;
 		
 		Table _table;
 		
 		public:
-		class iterator// : public iterator_base<_VNode*>
+		
+		// Iterator Types
+		
+		class const_iterator;
+		class iterator
 		{
-			private:
-			//typedef iterator_base<_VNode*> _Base;
+			protected:
+			typedef typename Table::iterator Table_it;
 			
-			public:
-			/*iterator() : _Base(nullptr)
+			Table_it _it;
+			
+			iterator(const Table_it& it) : _it(it)
 			{}
 			
-			iterator(_VNode* n) : _Base(n)
-			{}*/
+			
+			public:
+			iterator() : _it()
+			{}
+			
+			iterator(const iterator& it) : _it(it._it)
+			{}
+			
+			iterator(iterator&& it) : _it(move(it._it))
+			{}
 			
 			iterator& operator++();
 			iterator operator++(int);
-			iterator& operator--();
-			iterator operator--(int);
-			value_type& operator*();
+			value_type& operator*() const;
+			value_type* operator->() const;
+			
+			explicit operator const_iterator() const;
 			
 			bool operator==(const iterator&) const;
 			bool operator!=(const iterator&) const;
+			bool operator==(const const_iterator&) const;
+			bool operator!=(const const_iterator&) const;
+			
+			friend class const_iterator;
+			friend class unordered_map;
 		};
 		
 		
-		class const_iterator// : public iterator_base<const _VNode*>
+		class const_iterator
 		{
 			protected:
+			typedef typename Table::const_iterator Table_it;
 			
-			private:
-			//typedef iterator_base<const _VNode*> _Base;
+			Table_it _it;
+			
+			const_iterator(const Table_it& it) : _it(it)
+			{}
+			
+			
 			
 			public:
-			/*const_iterator() : _Base(nullptr)
+			const_iterator() : _it()
 			{}
-			const_iterator(const _VNode* n) : _Base(n)
-			{}*/
+			
+			const_iterator(const const_iterator& it) : _it(it._it)
+			{}
+			
+			const_iterator(const_iterator&& it) : _it(move(it._it))
+			{}
+			
+			explicit const_iterator(const iterator& it) : _it((Table_it)it._it)
+			{}
+			
+			
 			
 			const_iterator& operator++();
 			const_iterator operator++(int);
-			const_iterator& operator--();
-			const_iterator operator--(int);
-			bool operator==(const const_iterator) const;
-			bool operator!=(const const_iterator) const;
+			const value_type& operator*();
+			
+			bool operator==(const const_iterator&) const;
+			bool operator!=(const const_iterator&) const;
+			bool operator==(const iterator&) const;
+			bool operator!=(const iterator&) const;
+			
+			
+			friend class iterator;
+			friend class unordered_map;
 		};
 		
 		
+		
+		
 		// Constructors / Destructors
+		
 		unordered_map();
 		explicit unordered_map(size_t bucketHint, const hasher& = hasher(), const key_equal& = key_equal(), const allocator_type& alloc = allocator_type());
 		unordered_map(const unordered_map&);
@@ -149,13 +177,25 @@ namespace Utils
 		size_type count(const key_type&) const;
 		size_type count(key_type&&) const;
 		void clear();
-		
+		float max_load_factor() const noexcept;
+		void max_load_factor(float);
+		float load_factor() const noexcept;
+		hasher hash_function() const noexcept;
+		key_equal key_eq() const noexcept;
+		size_type bucket_count() const noexcept;
+		size_type max_bucket_count() const noexcept;
+		size_type bucket_size(size_type n) const;
+		void rehash(size_type);
+		void reserve(size_type);
 		
 		
 		
 		// Operators
 		mapped_type& operator[](const key_type&);
 		mapped_type& operator[](key_type&&);
+		
+		unordered_map& operator=(const unordered_map&);
+		unordered_map& operator=(unordered_map&&);
 		
 		
 		// Iteration

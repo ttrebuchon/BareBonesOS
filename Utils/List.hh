@@ -8,36 +8,67 @@ namespace Utils
 {
 	namespace detail
 	{
-		template <class T, class A>
+		template <class T>
 		class List_Node
 		{
-			List_Node *prev, *next;
-			unsigned char elem[sizeof(T)];
+			private:
 			
-			List_Node() : prev(nullptr), next(nullptr), elem()
+			template <class NA>
+			List_Node* clone(NA& alloc, List_Node* prev, List_Node** tail) const
+			{
+				List_Node* n = alloc.allocate(1);
+				alloc.construct(n, elem);
+				if (prev)
+				{
+					n->prev = prev;
+				}
+				if (next)
+				{
+					n->next = next->clone(alloc, n, tail);
+				}
+				else if (tail)
+				{
+					*tail = n;
+				}
+				return n;
+			}
+			
+			public:
+			List_Node *prev, *next;
+			T elem;
+			
+			List_Node(const T& value) : prev(nullptr), next(nullptr), elem(value)
 			{
 				
 			}
 			
-			List_Node(const T& t, A& alloc) : prev(nullptr), next(nullptr), elem()
+			List_Node(T&& value) : prev(nullptr), next(nullptr), elem(forward<T&&>(value))
 			{
-				alloc.template construct<T>(reinterpret_cast<T*>(elem), t);
+				
 			}
-			
 			
 			template <class... Args>
-			void init(A& alloc, Args&&... args)
+			List_Node(Args... args) : prev(nullptr), next(nullptr), elem(forward<Args>(args)...)
 			{
-				alloc.template construct<T>(reinterpret_cast<T*>(elem), args...);
+				
 			}
 			
-			void uninit(A& alloc)
+			template <class NA>
+			List_Node* clone(NA& alloc, bool includeNext = true, List_Node** tail = nullptr) const
 			{
-				alloc.template destroy<T>(reinterpret_cast<T*>(elem));
+				typename NA::template rebind<List_Node>::other nalloc(alloc);
+				if (includeNext)
+				{
+					return clone(nalloc, nullptr, tail);
+				}
+				List_Node* n = nalloc.allocate(1);
+				nalloc.construct(n, elem);
+				if (tail && !next)
+				{
+					*tail = n;
+				}
+				return n;
 			}
-			
-			template <class, class>
-			friend class List;
 		};
 		
 	}
@@ -46,7 +77,7 @@ namespace Utils
 	class List
 	{
 		protected:
-		typedef detail::List_Node<T, Alloc> Node;
+		typedef detail::List_Node<T> Node;
 		
 		public:
 		
@@ -82,7 +113,7 @@ namespace Utils
 
 			T& operator*()
 			{
-				return reinterpret_cast<T&>(*n->elem);
+				return n->elem;
 			}
 
 			friend List<T, Alloc>;

@@ -19,4 +19,9 @@ namespace Utils
 		_GLIBCXX_THROW_OR_ABORT(length_error(_(s)));
 	}
 	
+	void __throw_out_of_range(const char* s __attribute__((unused)))
+	{
+		_GLIBCXX_THROW_OR_ABORT(out_of_range(_(s)));
+	}
+	
 }

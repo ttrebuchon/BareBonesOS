@@ -1,0 +1,19 @@
+#ifndef INCLUDED_TYPEINFO
+#define INCLUDED_TYPEINFO
+
+#include <typeinfo>
+
+namespace Utils
+{
+	/*class type_info
+	{
+		
+		
+	};*/
+	
+	typedef std::type_info type_info;
+	
+}
+
+
+#endif

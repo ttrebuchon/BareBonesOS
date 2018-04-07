@@ -11,7 +11,7 @@ namespace Utils
 	
 	#else
 	
-	#define __try trt
+	#define __try try
 	#define __catch(X) catch (X)
 	#define __throw_exception_again throw
 	

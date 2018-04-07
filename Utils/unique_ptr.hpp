@@ -36,7 +36,7 @@ namespace Utils
 	
 	template <class T, class Deleter>
 	template <class U, class E>
-	unique_ptr<T, Deleter>::unique_ptr(unique_ptr<U, E>&& r) : obj(r.obj), del(r.del)
+	unique_ptr<T, Deleter>::unique_ptr(unique_ptr<U, E>&& r) : obj(Utils::move(r.obj)), del(Utils::move(r.del))
 	{
 		r.obj = nullptr;
 	}
@@ -88,21 +88,18 @@ namespace Utils
 	
 	
 	template <class T, class Deleter>
-	auto unique_ptr<T, Deleter>::operator*() const -> ref_type
+	auto unique_ptr<T, Deleter>::operator=(unique_ptr&& p) noexcept -> unique_ptr&
 	{
-		return *obj;
-	}
-	
-	template <class T, class Deleter>
-	auto unique_ptr<T, Deleter>::operator->() const -> pointer
-	{
-		return obj;
-	}
-	
-	template <class T, class Deleter>
-	unique_ptr<T, Deleter>::operator bool() const
-	{
-		return (obj != nullptr);
+		if (obj)
+		{
+			reset();
+		}
+		
+		obj = p.obj;
+		p.obj = nullptr;
+		del = Utils::move(p.del);
+		
+		return *this;
 	}
 	
 	

@@ -4,3 +4,5 @@
 #include "detail/enable_if.hh"
 #include "detail/bits/is_lvalue_reference.hh"
 #include "detail/bits/is_rvalue_reference.hh"
+#include "detail/bits/common_type.hh"
+#include "detail/bits/decay.hh"

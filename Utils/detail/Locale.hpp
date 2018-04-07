@@ -2,8 +2,8 @@
 #define INCLUDED_LOCALE_HPP
 
 #include "Locale.hh"
-#include "detail/ios_base.hh"
-#include "detail/num_put.hh"
+#include "ios_base.hh"
+#include "num_put.hh"
 
 namespace Utils {
 	

@@ -3,7 +3,7 @@
 
 #include <Common.h>
 #include <Debug.h>
-#include "Iterator.hh"
+#include "../Iterator.hh"
 #include <Utils/StringFwd.hh>
 
 namespace Utils

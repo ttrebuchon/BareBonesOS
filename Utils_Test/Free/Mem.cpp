@@ -1,8 +1,8 @@
 
 extern "C" {
 	
-	void free(void*)
+	/*void free(void*)
 	{
 		
-	}
+	}*/
 }

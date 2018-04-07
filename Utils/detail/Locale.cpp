@@ -1,4 +1,4 @@
-#include "Locale"
+#include "../Locale"
 #include "Locale.hpp"
 #ifdef TESTING
 #include <assert.h>

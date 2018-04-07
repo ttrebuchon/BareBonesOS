@@ -1,7 +1,7 @@
 #ifndef INCLUDED_STREAMBUF_HH
 #define INCLUDED_STREAMBUF_HH
 
-#include "Locale.hh"
+#include "detail/Locale.hh"
 #include "detail/ios_base.hh"
 
 namespace Utils {
