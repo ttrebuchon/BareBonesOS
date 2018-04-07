@@ -4,7 +4,7 @@ namespace Kernel { namespace Filesystem { namespace Init_RD {
 
     FileNode::FileNode(const char* name, void* data, uint32_t size)
     {
-        this->name = name;
+        this->_name = name;
     }
 
     uint32_t FileNode::read(uint32_t, uint32_t, uint8_t*)
