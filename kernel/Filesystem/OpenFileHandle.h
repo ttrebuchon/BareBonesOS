@@ -10,12 +10,12 @@ C_CODE
 C_namespace(Kernel)
 C_namespace(Filesystem)
 
-IF_CPP(class FileNode);
+IF_CPP(class File);
 
 
 struct OpenFile_Hndl
 {
-	IF_CPP_ELSE(FileNode*, void*) ptr;
+	IF_CPP_ELSE(File*, void*) ptr;
 };
 
 

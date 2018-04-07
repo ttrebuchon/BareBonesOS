@@ -4,11 +4,10 @@
 #include <Common.h>
 #include "Node.hh"
 #include <Utils/mutex>
-#include <Utils/unique_ptr>
+#include <kernel/ResourceHandles/FileHandle.hh>
 
 namespace Kernel
 {
-	class FileHandle;
 	class ReadFileHandle;
 }
 
@@ -20,8 +19,9 @@ namespace Kernel { namespace Filesystem {
 	{
 		protected:
 		File* file;
-		Utils::mutex lock_m;
+		mutable Utils::mutex lock_m;
 		
+		virtual File* initFile();
 		//virtual void releaseHandle(FileHandle*);
 		//virtual void releaseHandle(ReadFileHandle*);
 		
@@ -32,8 +32,8 @@ namespace Kernel { namespace Filesystem {
 		FileNode();
 		virtual ~FileNode();
 		
-		virtual File* getFile() const;
-		virtual Utils::unique_ptr<FileHandle> handle();
+		virtual File* getFile();
+		virtual ResourcePtr<FileHandle>&& handle();
 		//virtual ReadFileHandle* readOnlyHandle();
 		virtual bool inUse() const;
 		//virtual bool readInUse() const;

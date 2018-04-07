@@ -3,12 +3,14 @@
 
 namespace Kernel
 {
-	FileHandle::FileHandle(Filesystem::FileNode& node, Filesystem::File& file) : ResourceHandle(), node(&node), file(&file)
+	
+	typedef Utils::unique_lock<Utils::mutex> unique_lock_t;
+	FileHandle::FileHandle(Filesystem::FileNode& node, Filesystem::File& file, unique_lock_t&& lock) : ResourceHandle(), _node(&node), _file(&file), lock(Utils::forward<unique_lock_t&&>(lock))
 	{
 		
 	}
 	
-	void FileHandle::cleanup()
+	void FileHandle::__cleanup()
 	{
 		//node->releaseHandle(this);
 	}

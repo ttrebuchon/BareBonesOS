@@ -13,7 +13,52 @@ namespace Kernel { namespace Filesystem {
 		
 	}
 	
-	int FileDescriptors::map(FileNode* n)
+	void FileDescriptors::reset() noexcept
+	{
+		needNext = false;
+		nextFree = 0;
+		descriptors.clear();
+		
+		// If clearing doesn't reallocate,
+		// force it to shrink to <= 5
+		if (descriptors.capacity() > 5)
+		{
+			descriptors.resize(5);
+			descriptors.shrink_to_fit();
+			descriptors.clear();
+		}
+	}
+	
+	void FileDescriptors::makeInactive() noexcept
+	{
+		if (this == FileDescriptors::Current)
+		{
+			FileDescriptors::Current = nullptr;
+			for (auto& fd : descriptors)
+			{
+				if (fd)
+				{
+					fd->makeInactive();
+				}
+			}
+		}
+	}
+	
+	void FileDescriptors::makeActive() noexcept
+	{
+		ASSERT(this != FileDescriptors::Current);
+		FileDescriptors::Current = this;
+		for (auto& fd : descriptors)
+		{
+			if (fd)
+			{
+				fd->makeActive();
+			}
+		}
+	}
+	
+	
+	int FileDescriptors::map(ResourcePtr<FileHandle>&& n)
 	{
 		int index;
 		if (needNext)
@@ -45,7 +90,7 @@ namespace Kernel { namespace Filesystem {
 			if (nIndex != -1)
 			{
 				nextFree = nIndex;
-				descriptors[index] = n;
+				descriptors[index] = Utils::move(n);
 				needNext = false;
 				return index;
 			}
@@ -58,13 +103,13 @@ namespace Kernel { namespace Filesystem {
 				
 				if (index != -1)
 				{
-					descriptors[index] = n;
+					descriptors[index] = Utils::move(n);
 					nextFree = oldSize;
 					return index;
 				}
 				else
 				{
-					descriptors[oldSize] = n;
+					descriptors[oldSize] = Utils::move(n);
 					nextFree = oldSize + 1;
 					return oldSize;
 				}
@@ -74,7 +119,7 @@ namespace Kernel { namespace Filesystem {
 		
 		needNext = true;
 		index = nextFree++;
-		descriptors[index] = n;
+		descriptors[index] = Utils::move(n);
 		if (nextFree >= descriptors.size())
 		{
 			nextFree = -1;
@@ -82,12 +127,35 @@ namespace Kernel { namespace Filesystem {
 		return index;
 	}
 	
+	bool FileDescriptors::unmap(int fd)
+	{
+		
+		if (fd > 0 && fd < descriptors.size())
+		{
+			if (descriptors[fd] != nullptr)
+			{
+				descriptors[fd] = nullptr;
+				if (fd < nextFree || needNext)
+				{
+					nextFree = fd;
+					needNext = false;
+				}
+				return true;
+			}
+		}
+		
+		return false;
+	}
 	
-	FileNode* FileDescriptors::resolve(int fd)
+	
+	File* FileDescriptors::resolve(int fd)
 	{
 		if (fd > 0 && fd < descriptors.size())
 		{
-			return descriptors[fd];
+			if (descriptors[fd] != nullptr)
+			{
+				return descriptors[fd]->file();
+			}
 		}
 		
 		// TODO: Better error
@@ -128,10 +196,10 @@ namespace Kernel { namespace Filesystem {
 	{
 		if (FileDescriptors::Current)
 		{
-			auto node = FileDescriptors::Current->resolve(fd);
-			if (node)
+			auto file = FileDescriptors::Current->resolve(fd);
+			if (file)
 			{
-				return OpenFile_Hndl{node};
+				return OpenFile_Hndl{file};
 			}
 		}
 		
@@ -140,5 +208,27 @@ namespace Kernel { namespace Filesystem {
 	
 	
 	}
+	
+	
+	FileDescriptors_Hndl::~FileDescriptors_Hndl() noexcept
+	{
+		delete desc;
+	}
+	
+	
+	void FileDescriptors_Hndl::__cleanup() noexcept
+	{
+		desc->reset();
+	}
+	
+	void FileDescriptors_Hndl::__makeActive() noexcept
+	{
+		if (FileDescriptors::Current)
+		{
+			FileDescriptors::Current->makeInactive();
+		}
+		desc->makeActive();
+	}
+	
 }
 }

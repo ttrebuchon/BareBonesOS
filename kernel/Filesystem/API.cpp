@@ -1,5 +1,15 @@
 #include "API.hh"
+#include "FileNode.hh"
 #include "Filesystem.hh"
+#include "Descriptors.h"
+#include "File.hh"
+#include "Files/File_streambuf.hh"
+#include "Files/StreamFile.hh"
+
+using namespace Kernel;
+using namespace Filesystem;
+
+typedef char fchar_type;
 
 extern "C"
 {
@@ -23,6 +33,10 @@ extern "C"
 	
 	ssize_t write(int fd, const void* buffer, size_t bytes)
 	{
+		auto file = FileDescriptors::Current->resolve(fd);
+		file->stream.write(reinterpret_cast<const fchar_type*>(buffer), bytes);
+		return bytes;
+		
 		// TODO
 		ASSERT(false);
 	}
@@ -35,14 +49,53 @@ extern "C"
 	
 	ssize_t read(int fd, void* buffer, size_t bytes)
 	{
+		auto file = FileDescriptors::Current->resolve(fd);
+		
+		file->stream.read(reinterpret_cast<fchar_type*>(buffer), bytes);
+		return bytes;
 		// TODO
 		ASSERT(false);
 	}
 	
 	int close(int fd)
 	{
+		if (FileDescriptors::Current->unmap(fd))
+		{
+			return 0;
+		}
+		else
+		{
+			return -1;
+		}
 		// TODO
 		ASSERT(false);
+	}
+	
+	int open(const char* path, int oflags, mode_t mode)
+	{
+		
+		if (!Filesystem::Filesystem::Current || path == nullptr)
+		{
+			return -1;
+		}
+		
+		auto node = Filesystem::Filesystem::Current->getNode(path);
+		if (!node)
+		{
+			return -1;
+		}
+		
+		if (!node->isKind(NodeType::File))
+		{
+			return -1;
+		}
+		
+		auto fnode = static_cast<FileNode*>(node);
+		
+		// TODO
+		ASSERT(false);
+		
+		return -1;
 	}
 	
 	int fcntl(int fd, int cmd, ...)

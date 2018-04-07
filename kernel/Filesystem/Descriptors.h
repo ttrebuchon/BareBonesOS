@@ -6,6 +6,8 @@
 
 #ifdef __cplusplus
 #include <Utils/vector>
+#include <kernel/ResourceHandles/ResourceHandle.hh>
+#include <kernel/ResourceHandles/FileHandle.hh>
 
 namespace Kernel { namespace Filesystem {
 	
@@ -18,22 +20,47 @@ namespace Kernel { namespace Filesystem {
 		private:
 		bool needNext;
 		int nextFree;
+		Utils::vector<ResourcePtr<FileHandle>> descriptors;
 		
-		Utils::vector<FileNode*> descriptors;
+		void reset() noexcept;
+		
+		// In case we ever do decide to
+		// have a descriptor set take
+		// an action when made in/active,
+		// we have these functions to
+		// expand
+		void makeInactive() noexcept;
+		void makeActive() noexcept;
 		
 		
 		public:
 		FileDescriptors();
 		
-		int map(FileNode*);
-		void unmap(int);
-		FileNode* resolve(int fd);
+		int map(ResourcePtr<FileHandle>&&);
+		bool unmap(int);
+		File* resolve(int fd);
 		
 		
 		
 		static FileDescriptors* Current;
+		friend class FileDescriptors_Hndl;
 	};
 	C_END
+	
+	class FileDescriptors_Hndl : public ResourceHandle
+	{
+		protected:
+		FileDescriptors* desc;
+		
+		virtual void __cleanup() noexcept;
+		virtual void __makeActive() noexcept;
+		virtual void __makeInactive() noexcept;
+		
+		public:
+		
+		virtual ~FileDescriptors_Hndl() noexcept;
+		
+	};
 
 	
 }
