@@ -1,0 +1,8 @@
+fnPATH_CUR := $(dir $(lastword $(MAKEFILE_LIST)))
+
+
+
+CXXFLAGS += -Werror=attributes
+
+
+include $(call fnPATH_CUR)../Makefiles_Common

@@ -7,27 +7,64 @@ GET_SRC = $(wildcard ../../$1/*.cpp ../../$1/*.c)
 LASTPART = $(shell basename $1)
 LASTPARTS = $(foreach x,$1,$(call LASTPART,$x))
 
-SRC = $(call GET_SRC_R,../../Libraries,c) $(wildcard ../../kernel/CppSupport/*.cpp) $(wildcard ../Dummies/*.cpp) Mem.cpp $(call GET_SRC_R,../../Utils,cpp) $(call GET_SRC_R,../../Utils,c) ../../kernel/Error.c ../../drivers/VGA.cpp ../../kernel/MetaInfo.cpp ../../kernel/Filesystem/Filesystem.cpp ../../kernel/Memory/Memory.cpp ../../kernel/Memory/memcpy.cpp ../../kernel/Filesystem/API.cpp $(call GET_SRC_R,../../Support,cpp) $(call GET_SRC_R,../../kernel/Filesystem,cpp) $(call GET_SRC_R,../../kernel/ResourceHandles,cpp)
+SRC += $(call GET_SRC_R,../../Libraries,c)
+SRC += $(wildcard ../../kernel/CppSupport/*.cpp)
+SRC += $(wildcard ../Dummies/*.cpp)
+SRC += Mem.cpp
+SRC += $(call GET_SRC_R,../../Utils,cpp)
+SRC += $(call GET_SRC_R,../../Utils,c)
+SRC += ../../kernel/Error.c
+SRC += ../../drivers/VGA.cpp
+SRC += ../../kernel/MetaInfo.cpp
+SRC += ../../kernel/Filesystem/Filesystem.cpp
+SRC += ../../kernel/Memory/Memory.cpp
+SRC += ../../kernel/Memory/memcpy.cpp
+SRC += ../../kernel/Filesystem/API.cpp
+SRC += $(call GET_SRC_R,../../Support,cpp)
+SRC += $(call GET_SRC_R,../../kernel/Filesystem,cpp)
+SRC += $(call GET_SRC_R,../../kernel/ResourceHandles,cpp)
 
 
-C_SRC = $(call GET_SRC_R,../../kernel,c) $(call GET_SRC,../../drivers,c) $(call GET_SRC_R,../../Libraries,c)
+C_SRC += $(call GET_SRC_R,../../kernel,c)
+C_SRC += $(call GET_SRC,../../drivers,c)
+C_SRC += $(call GET_SRC_R,../../Libraries,c)
 
-CPP_SRC = $(call GET_SRC_R,../../kernel,cpp) $(call GET_SRC_R,../../drivers,cpp) $(call GET_SRC_R,../../Libraries,cpp)
+CPP_SRC += $(call GET_SRC_R,../../kernel,cpp)
+CPP_SRC += $(call GET_SRC_R,../../drivers,cpp)
+CPP_SRC += $(call GET_SRC_R,../../Libraries,cpp)
 
 
 CPP_OBJS = $(SRC:.cpp=.o) #$(CPP_SRC:.cpp=.o) $(C_SRC:.c=.o)
 OBJS = $(CPP_OBJS:.c=.o)
 
-FREE_C_SRC = $(call GET_SRC_R,../../Std,c) $(call GET_SRC_R,../../Libraries,c)
-FREE_CPP_SRC = $(call GET_SRC_R,../../Std,cpp) $(call GET_SRC_R,../../Libraries,cpp)
+FREE_C_SRC += $(call GET_SRC_R,../../Std,c)
+FREE_C_SRC += $(call GET_SRC_R,../../Libraries,c)
+
+FREE_CPP_SRC += $(call GET_SRC_R,../../Std,cpp)
+FREE_CPP_SRC += $(call GET_SRC_R,../../Libraries,cpp)
 FREE_OBJS = $(FREE_C_SRC:.c=.o) $(FREE_CPP_SRC:.cpp=.o) $(C_OBJS) $(OBJS)
 FREE_TESTS = SQLite_Free.o
 
-BOTH_FLAGS += -DFREE_TESTING -ffreestanding -DSTACK_INFO_V -DDEBUG -I../../ -I../../Libraries  -D"weak_alias(name, aliasname)"="extern __typeof (name) aliasname __attribute__ ((weak, alias ( \#name )));" -D"attribute_hidden"="__attribute__((hidden))" -D"libc_hidden_proto(X)"="" -D"rtld_hidden_proto(X)"="" -D"weak_hidden_alias(name,aliasname)"="extern __typeof (name) aliasname __attribute__ ((weak, alias ( \#name )))  __attribute__((hidden));" -D"stub_warning(X)"="" -D"libc_hidden_builtin_def(x)"="" -D"libc_hidden_def(x)"="" 
+#BOTH_FLAGS += -D"Utils"="std"
+BOTH_FLAGS += -DFREE_TESTING
+BOTH_FLAGS += -ffreestanding
+BOTH_FLAGS += -DSTACK_INFO_V
+BOTH_FLAGS += -DDEBUG
+BOTH_FLAGS += -I../../
+BOTH_FLAGS += -I../../Libraries
+BOTH_FLAGS += -D"weak_alias(name, aliasname)"="extern __typeof (name) aliasname __attribute__ ((weak, alias ( \#name )));"
+BOTH_FLAGS += -D"attribute_hidden"="__attribute__((hidden))"
+BOTH_FLAGS += -D"libc_hidden_proto(X)"=""
+BOTH_FLAGS += -D"rtld_hidden_proto(X)"=""
+BOTH_FLAGS += -D"weak_hidden_alias(name,aliasname)"="extern __typeof (name) aliasname __attribute__ ((weak, alias ( \#name )))  __attribute__((hidden));"
+BOTH_FLAGS += -D"stub_warning(X)"=""
+BOTH_FLAGS += -D"libc_hidden_builtin_def(x)"=""
+BOTH_FLAGS += -D"libc_hidden_def(x)"="" 
 
 BOTH_FLAGS += -ffreestanding
 BOTH_FLAGS += -nostdlib
-BOTH_FLAGS += -Wfatal-errors
+BOTH_FLAGS += #-Wfatal-errors
+BOTH_FLAGS += -fmax-errors=5
 BOTH_FLAGS += #-nostdinc
 BOTH_FLAGS += #-DINCLUDED_DEBUG_H_ENABLED
 BOTH_FLAGS += #-D"kassert(x)"="assert(x)"
@@ -69,6 +106,11 @@ all: .fake FreeTests.out
 	@echo ' '
 	@echo ' '
 	@echo ' '
+	@echo 'CXXFLAGS: ' $(CXXFLAGS)
+	@echo ' '
+	@echo ' '
+	@echo ' '
+	@echo ' '
 	
 
 FreeTests.out: $(FREE_OBJS) $(FREE_TESTS)
@@ -93,3 +135,4 @@ FreeTests.out: $(FREE_OBJS) $(FREE_TESTS)
 
 
 -include $(DEPS)
+-include ../Makefiles_Common
