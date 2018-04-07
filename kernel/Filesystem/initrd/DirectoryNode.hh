@@ -3,7 +3,7 @@
 
 #include <Common.h>
 #include <kernel/Filesystem/DirectoryNode.hh>
-#include <Utils/List.hh>
+#include <Utils/vector>
 
 namespace Kernel { namespace Filesystem { namespace Init_RD {
 
@@ -13,7 +13,7 @@ namespace Kernel { namespace Filesystem { namespace Init_RD {
         
         
         public:
-        Utils::List<Node*> children;
+        Utils::vector<Node*> children;
         DirectoryNode(const char* name);
 
 
@@ -24,6 +24,11 @@ namespace Kernel { namespace Filesystem { namespace Init_RD {
         virtual DirEnt* readDir(uint32_t) override;
         virtual Node* findDir(const char* name) override;
         virtual void addChild(Node*) override;
+        
+        virtual size_t size() const noexcept override
+        { return children.size(); }
+        virtual Node* at(size_t index) const override
+        { return children.at(index); }
     };
 
 }

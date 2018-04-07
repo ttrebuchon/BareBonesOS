@@ -400,9 +400,21 @@ namespace Utils
         
         
         //Members
-        size_type size() const
+        size_type size() const noexcept
         {
         	return _M_rep()->_M_length;
+        }
+        
+        __attribute__((always_inline))
+        size_type length() const noexcept
+        {
+        	return size();
+        }
+        
+        __attribute__((always_inline))
+        bool empty() const noexcept
+        {
+        	return size() == 0;
         }
         
         const Char_t* c_str() const

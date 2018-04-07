@@ -12,8 +12,8 @@ namespace Kernel
 		protected:
 		
 		virtual void __cleanup() noexcept = 0;
-		virtual void __makeActive() noexcept = 0;
-		virtual void __makeInactive() noexcept = 0;
+		virtual void __makeActive() noexcept {}
+		virtual void __makeInactive() noexcept {}
 		bool __active;
 		bool __cleaned;
 		

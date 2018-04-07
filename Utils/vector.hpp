@@ -104,6 +104,17 @@ namespace Utils
 	template <class T, class A>
 	void vector<T, A>::reallocate(size_type n)
 	{
+		if (n == 0)
+		{
+			if (_data)
+			{
+				clear();
+				ATraits::deallocate(alloc, _data, _cap);
+				_data = nullptr;
+				_cap = 0;
+			}
+			return;
+		}
 		auto nData = static_cast<T*>(ATraits::allocate(alloc, n));
 		for (size_type i = 0; i < _size; ++i)
 		{
@@ -220,6 +231,15 @@ namespace Utils
 		if (capacity() < n)
 		{
 			reallocate(n);
+		}
+	}
+	
+	template <class T, class A>
+	void vector<T, A>::shrink_to_fit()
+	{
+		if (capacity() > size())
+		{
+			reallocate(size());
 		}
 	}
 	

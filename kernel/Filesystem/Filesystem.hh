@@ -10,11 +10,15 @@ namespace Kernel { namespace Filesystem {
 	
 	class Filesystem
 	{
+		private:
+		
+		protected:
+		Node* root;
 		
 		public:
 		static Filesystem* Current;
 		
-		Node* getNode(const Utils::string path);
+		Node* getNode(const Utils::string& path, const Utils::string& relative = Utils::string());
 	};
 	
 }

@@ -8,6 +8,7 @@
 namespace Kernel { namespace Filesystem {
 	
 	class DirEnt;
+	class DirectoryNode;
 	
 	class Node
 	{
@@ -17,12 +18,14 @@ namespace Kernel { namespace Filesystem {
 		
 		protected:
 		NodeType _type;
+		DirectoryNode* parent;
+		Utils::string _name;
 		
 		Node(const NodeType);
 		
 		public:
 		uint32_t inode;
-		Utils::string name;
+		const Utils::string& name;
 		const NodeType& type;
 
 		virtual uint32_t read(uint32_t, uint32_t, uint8_t*) = 0;

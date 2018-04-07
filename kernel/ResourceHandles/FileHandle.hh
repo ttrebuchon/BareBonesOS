@@ -22,8 +22,6 @@ namespace Kernel
 		Utils::unique_lock<Utils::mutex> lock;
 		
 		virtual void __cleanup() noexcept;
-		virtual void __makeActive() noexcept {};
-		virtual void __makeInactive() noexcept;
 		
 		public:
 		// References to guarantee no null-pointers here

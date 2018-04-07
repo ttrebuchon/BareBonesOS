@@ -18,7 +18,8 @@ namespace Kernel { namespace Filesystem {
 	class FileNode : public Node
 	{
 		protected:
-		File* file;
+		typedef File* FilePtr;
+		mutable FilePtr file;
 		mutable Utils::mutex lock_m;
 		
 		virtual File* initFile();
@@ -32,7 +33,7 @@ namespace Kernel { namespace Filesystem {
 		FileNode();
 		virtual ~FileNode();
 		
-		virtual File* getFile();
+		virtual File* getFile() const;
 		virtual ResourcePtr<FileHandle>&& handle();
 		//virtual ReadFileHandle* readOnlyHandle();
 		virtual bool inUse() const;

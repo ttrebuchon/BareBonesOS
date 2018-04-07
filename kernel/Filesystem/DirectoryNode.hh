@@ -14,6 +14,12 @@ namespace Kernel { namespace Filesystem {
         DirectoryNode(const NodeType = NodeType::Directory);
 
         virtual void addChild(Node*) = 0;
+        
+        virtual Node* findChild(const Utils::string& relativePath);
+        
+        virtual size_t size() const noexcept = 0;
+        virtual Node* at(size_t index) const = 0;
+        virtual Node* at(const Utils::string& name) const;
     };
 }
 }

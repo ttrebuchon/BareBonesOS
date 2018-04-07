@@ -29,6 +29,24 @@ namespace Kernel { namespace Filesystem
 	
 	
 	
+	File* FileNode::initFile()
+	{
+		// TODO
+		ASSERT(false);
+	}
+	
+	
+	
+	
+	File* FileNode::getFile() const
+	{
+		if (!file)
+		{
+			file = initFile();
+		}
+		return file;
+	}
+	
 	ResourcePtr<FileHandle>&& FileNode::handle()
 	{
 		if (!file)
@@ -41,7 +59,7 @@ namespace Kernel { namespace Filesystem
 		{
 			return Utils::move(ResourcePtr<FileHandle>(nullptr));
 		}
-		ResourcePtr<FileHandle> ptr(new FileHandle(*this, *file, Utils::move(lock)));
+		return Utils::move(ResourcePtr<FileHandle>(new FileHandle(*this, *file, Utils::move(lock))));
 	}
 	
 	bool FileNode::inUse() const

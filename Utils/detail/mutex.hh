@@ -42,6 +42,8 @@ namespace Utils
 		typedef M mutex_type;
 		
 		private:
+		mutex_type* _m;
+		bool _owns;
 		
 		public:
 		
@@ -59,9 +61,12 @@ namespace Utils
 		template <class Clock, class Dur>
 		unique_lock(mutex_type&, const Utils::chrono::time_point<Clock, Dur>& timeout_point);
 		
+		~unique_lock();
 		
 		
-		bool owns_lock() const noexcept;
+		__attribute__((always_inline))
+		bool owns_lock() const noexcept
+		{ return _owns; }
 		
 	};
 }
