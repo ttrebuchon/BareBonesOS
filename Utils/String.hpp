@@ -2,14 +2,15 @@
 #define INCLUDED_STRING_HPP
 
 #include "String.hh"
+#include "detail/functexcept.hh"
 
 namespace Utils
 {
-#define STRTEMP template <class Char_t, class T, class Alloc>
+#define __STRTEMP__ template <class Char_t, class T, class Alloc>
 	
-	STRTEMP constexpr Char_t basic_string<Char_t, T, Alloc>::_Rep::_S_terminal;
+	__STRTEMP__ constexpr Char_t basic_string<Char_t, T, Alloc>::_Rep::_S_terminal;
 	
-	STRTEMP template <class InIt>
+	__STRTEMP__ template <class InIt>
 	Char_t* basic_string<Char_t, T, Alloc>::_S_construct(InIt _begin, InIt _end, const Alloc& a)//, input_iterator_tag)
 	{
 		/*#ifndef GLIBXX_FULLY_DYNAMIC_STRING
@@ -52,23 +53,23 @@ namespace Utils
 		return r->_M_refdata();
 	}
 	
-	STRTEMP basic_string<Char_t, T, Alloc>::basic_string(const Char_t* cstr, const Alloc& a) : _M_dataplus(_S_construct(cstr, cstr ? cstr + traits_type::length(cstr) : cstr + npos, a), a)
+	__STRTEMP__ basic_string<Char_t, T, Alloc>::basic_string(const Char_t* cstr, const Alloc& a) : _M_dataplus(_S_construct(cstr, cstr ? cstr + traits_type::length(cstr) : cstr + npos, a), a)
 	{
 		
 	}
 	
-	STRTEMP basic_string<Char_t, T, Alloc>::basic_string(const basic_string& str) : _M_dataplus(str._M_rep()->_M_grab(Alloc(str.get_allocator()), str.get_allocator()), str.get_allocator())
+	__STRTEMP__ basic_string<Char_t, T, Alloc>::basic_string(const basic_string& str) : _M_dataplus(str._M_rep()->_M_grab(Alloc(str.get_allocator()), str.get_allocator()), str.get_allocator())
 	{
 		
 	}
 	
-	STRTEMP template <class It>
+	__STRTEMP__ template <class It>
 	basic_string<Char_t, T, Alloc>::basic_string(It first, It last, const Alloc& a) : _M_dataplus(_S_construct(first, last, a), a)
 	{
 		
 	}
 	
-	STRTEMP typename basic_string<Char_t, T, Alloc>::_Rep* basic_string<Char_t, T, Alloc>::_Rep::_S_create(size_type _capacity, size_type oldCapacity, const Alloc& a)
+	__STRTEMP__ typename basic_string<Char_t, T, Alloc>::_Rep* basic_string<Char_t, T, Alloc>::_Rep::_S_create(size_type _capacity, size_type oldCapacity, const Alloc& a)
 	{
 		if (_capacity > _S_max_size)
 		{
@@ -110,7 +111,7 @@ namespace Utils
 	
 	
 	
-	STRTEMP basic_string<Char_t, T, Alloc>& basic_string<Char_t, T, Alloc>::assign(const basic_string<Char_t, T, Alloc>& s)
+	__STRTEMP__ basic_string<Char_t, T, Alloc>& basic_string<Char_t, T, Alloc>::assign(const basic_string<Char_t, T, Alloc>& s)
 	{
 		if (_M_rep() != s._M_rep())
 		{
@@ -122,7 +123,7 @@ namespace Utils
 		return *this;
 	}
 	
-	STRTEMP Char_t* basic_string<Char_t, T, Alloc>::_Rep::_M_clone(const Alloc& a, size_type res)
+	__STRTEMP__ Char_t* basic_string<Char_t, T, Alloc>::_Rep::_M_clone(const Alloc& a, size_type res)
 	{
 		const size_type req_cap = this->_M_length + res;
 		_Rep* r = _Rep::_S_create(req_cap, this->_M_capacity, a);
@@ -138,7 +139,7 @@ namespace Utils
 	
 	
 	
-	STRTEMP basic_string<Char_t, T, Alloc>& basic_string<Char_t, T, Alloc>::append(const Char_t* s, size_type n)
+	__STRTEMP__ basic_string<Char_t, T, Alloc>& basic_string<Char_t, T, Alloc>::append(const Char_t* s, size_type n)
 	{
 		if (n)
 		{
@@ -166,7 +167,7 @@ namespace Utils
 	
 	
 	
-	STRTEMP basic_string<Char_t, T, Alloc>& basic_string<Char_t, T, Alloc>::append(const basic_string& s)
+	__STRTEMP__ basic_string<Char_t, T, Alloc>& basic_string<Char_t, T, Alloc>::append(const basic_string& s)
 	{
 		const size_type _size = s.size();
 		if (_size)
@@ -183,7 +184,7 @@ namespace Utils
 		return *this;
 	}
 	
-	STRTEMP basic_string<Char_t, T, Alloc>& basic_string<Char_t, T, Alloc>::append(size_type n, Char_t c)
+	__STRTEMP__ basic_string<Char_t, T, Alloc>& basic_string<Char_t, T, Alloc>::append(size_type n, Char_t c)
 	{
 		if (n)
 		{
@@ -200,7 +201,7 @@ namespace Utils
 		return *this;
 	}
 	
-	STRTEMP void basic_string<Char_t, T, Alloc>::reserve(size_type _res)
+	__STRTEMP__ void basic_string<Char_t, T, Alloc>::reserve(size_type _res)
 	{
 		if (_res != this->capacity() || _M_rep()->_M_is_shared())
 		{
@@ -215,7 +216,7 @@ namespace Utils
 		}
 	}
 	
-	STRTEMP void basic_string<Char_t, T, Alloc>::swap(basic_string& str)
+	__STRTEMP__ void basic_string<Char_t, T, Alloc>::swap(basic_string& str)
 	{
 		if (_M_rep()->_M_is_leaked())
 		{
@@ -239,6 +240,38 @@ namespace Utils
 			str = tmp1;
 		}
 	}
+	
+	__STRTEMP__ auto basic_string<Char_t, T, Alloc>::operator[](size_t pos) -> value_type&
+	{
+		return _M_data()[pos];
+	}
+	
+	__STRTEMP__ auto basic_string<Char_t, T, Alloc>::operator[](size_t pos) const -> const value_type&
+	{
+		return _M_data()[pos];
+	}
+	
+	__STRTEMP__ auto basic_string<Char_t, T, Alloc>::at(size_t pos) -> value_type&
+	{
+		if (pos > length())
+		{
+			__throw_out_of_range("pos out of range");
+		}
+		return _M_data()[pos];
+	}
+	
+	__STRTEMP__ auto basic_string<Char_t, T, Alloc>::at(size_t pos) const -> const value_type&
+	{
+		if (pos > length())
+		{
+			__throw_out_of_range("pos out of range");
+		}
+		return _M_data()[pos];
+	}
+	
+	
+	
+	#undef __STRTEMP__
 }
 
 #endif
