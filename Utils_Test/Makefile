@@ -5,7 +5,7 @@ GET_SRC = $(wildcard ../$1/*.cpp ../$1/*.c)
 LASTPART = $(shell basename $1)
 LASTPARTS = $(foreach x,$1,$(call LASTPART,$x))
 
-SRC = $(call GET_SRC,Utils) $(call GET_SRC,Utils/detail) ../kernel/Memory/memcpy.c ../kernel/MetaInfo.cpp ../drivers/IDE/DMA.cpp $(call GET_SRC,drivers/IDE) ../drivers/PCI.cpp $(wildcard Dummies/*.cpp Dummies/*.c) ../drivers/VGA_Stream.cpp ../drivers/VGA.cpp ../Libraries/sqlite3/sqlite3.c ../kernel/Error.c $(call GET_SRC,Support/sqlite)
+SRC = $(call GET_SRC,Utils) $(call GET_SRC,Utils/detail) ../kernel/Memory/memcpy.c ../kernel/MetaInfo.cpp ../drivers/IDE/DMA.cpp $(call GET_SRC,drivers/IDE) ../drivers/PCI.cpp $(wildcard Dummies/*.cpp Dummies/*.c) ../drivers/VGA_Stream.cpp ../drivers/VGA.cpp ../Libraries/sqlite3/sqlite3.c ../kernel/Error.c $(call GET_SRC,Support/sqlite) ../kernel/Interrupts/ISR.c ../kernel/Interrupts/IRQ_c.c
 
 ASM_SRC = ../kernel/Utility_asm.asm
 ASM_OBJS = $(ASM_SRC:.asm=.o)

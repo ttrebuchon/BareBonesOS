@@ -23,7 +23,7 @@ SRC += ../../kernel/Filesystem/API.cpp
 SRC += $(call GET_SRC_R,../../Support,cpp)
 SRC += $(call GET_SRC_R,../../kernel/Filesystem,cpp)
 SRC += $(call GET_SRC_R,../../kernel/ResourceHandles,cpp)
-
+SRC += $(call GET_SRC_R,../../kernel/Filesystem/Files,cpp)
 
 C_SRC += $(call GET_SRC_R,../../kernel,c)
 C_SRC += $(call GET_SRC,../../drivers,c)
@@ -63,8 +63,8 @@ BOTH_FLAGS += -D"libc_hidden_def(x)"=""
 
 BOTH_FLAGS += -ffreestanding
 BOTH_FLAGS += -nostdlib
-BOTH_FLAGS += #-Wfatal-errors
-BOTH_FLAGS += -fmax-errors=5
+#BOTH_FLAGS += -Wfatal-errors
+BOTH_FLAGS += -fmax-errors=3
 BOTH_FLAGS += #-nostdinc
 BOTH_FLAGS += #-DINCLUDED_DEBUG_H_ENABLED
 BOTH_FLAGS += #-D"kassert(x)"="assert(x)"
@@ -77,9 +77,20 @@ SQLITE_FLAGS += -DSQLITE_OMIT_LOAD_EXTENSION
 SQLITE_FLAGS += -DSQLITE_OS_OTHER=1
 SQLITE_FLAGS += -DSQLITE_TEMP_STORE=3
 
-CXXFLAGS += -fpermissive -std=c++14 -MMD -I.. -fno-rtti -fno-exceptions -DDEBUG $(BOTH_FLAGS) -DINCLUDED_NEW_HH
+#CXXFLAGS += -fpermissive
+CXXFLAGS += -std=c++14
+CXXFLAGS += -MMD
+CXXFLAGS += -I..
+CXXFLAGS += -fno-rtti
+CXXFLAGS += -fno-exceptions
+CXXFLAGS += $(BOTH_FLAGS)
+CXXFLAGS += -DINCLUDED_NEW_HH
 
-CFLAGS += -MMD -I.. $(BOTH_FLAGS) 
+
+
+CFLAGS += -MMD
+CFLAGS += -I..
+CFLAGS += $(BOTH_FLAGS) 
 
 
 FREEFLAGS += -I../..
