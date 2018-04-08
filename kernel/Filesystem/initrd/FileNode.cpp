@@ -3,6 +3,7 @@
 namespace Kernel { namespace Filesystem { namespace Init_RD {
 	
 
+
 	FileNode::FileNode(const char* name, void* data, uint32_t size) noexcept : Filesystem::FileNode(NodeType::RAMFile), _size(size), _data(data)
 	{
 		this->_name = name;

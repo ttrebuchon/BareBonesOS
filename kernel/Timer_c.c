@@ -21,7 +21,7 @@ static void timer_callback(Registers_t regs)
 	task_switch();
 }
 
-extern "C" {
+
 
 void init_timer(uint32_t freq)
 {
@@ -42,7 +42,7 @@ void init_timer(uint32_t freq)
 unsigned int sleep(unsigned int secs)
 {
 	cli();
-	sleep_for = seconds*current_freq;
+	sleep_for = secs*current_freq;
 	while (sleep_for != 0)
 	{
 		sti();
@@ -91,4 +91,3 @@ int usleep(useconds_t microseconds)
 	return 0;
 }
 
-}

@@ -107,7 +107,7 @@ namespace Drivers { namespace IDE {
 	
 	unsigned char* DMADrive::readSector(uint32_t lba, uint32_t len)
 	{
-		assert(len <= 512);
+		ASSERT(len <= 512);
 		auto data = (unsigned char*)kmalloc(len, 0, 0);
 		
 		// DEBUG

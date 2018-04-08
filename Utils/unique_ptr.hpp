@@ -1,6 +1,8 @@
 #ifndef INCLUDED_UNIQUE_PTR_HPP
 #define INCLUDED_UNIQUE_PTR_HPP
 
+#include "unique_ptr.hh"
+
 namespace Utils
 {
 	
@@ -72,6 +74,7 @@ namespace Utils
 		{
 			del(obj);
 			obj = nullptr;
+			del = Utils::move(Deleter());
 		}
 	}
 	
@@ -90,15 +93,18 @@ namespace Utils
 	template <class T, class Deleter>
 	auto unique_ptr<T, Deleter>::operator=(unique_ptr&& p) noexcept -> unique_ptr&
 	{
-		if (obj)
-		{
-			reset();
-		}
-		
+		reset();
 		obj = p.obj;
 		p.obj = nullptr;
 		del = Utils::move(p.del);
 		
+		return *this;
+	}
+
+	template <class T, class Deleter>
+	auto unique_ptr<T, Deleter>::operator=(nullptr_t) noexcept -> unique_ptr&
+	{
+		reset();
 		return *this;
 	}
 	
