@@ -29,11 +29,13 @@ namespace Kernel { namespace Filesystem
 			{
 				if (which & ios_base::out)
 				{
-					pos = off + pbase_pos + (pptr() - pbase());
+					pos = outPos(off);
+					//pos = off + pbase_pos + (pptr() - pbase());
 				}
 				else if (which & ios_base::in)
 				{
-					pos = off + eback_pos + (gptr() - eback());
+					pos = inPos(off);
+					//pos = off + eback_pos + (gptr() - eback());
 				}
 				else
 				{
@@ -83,10 +85,114 @@ namespace Kernel { namespace Filesystem
 	
 	Utils::streamsize File_streambuf::xsgetn(char_type* s, Utils::streamsize n)
 	{
+		// TODO: Account for errors,
+		// EOF, etc.
+		auto ptr = gptr();
+		auto back = egptr();
 		
+		Utils::streamsize i = 0;
+		while (i < n)
+		{
+			if (ptr == back)
+			{
+				seekoff(back - gptr(), ios_base::cur, ios_base::in);
+				ptr = gptr();
+				back = egptr();
+				ASSERT(ptr != back);
+			}
+			s[i++] = *(ptr++);
+		}
+		
+		gbump(ptr - gptr());
+		
+		return i;
+	}
+	
+	auto File_streambuf::underflow() -> int_type
+	{
+		ASSERT(gptr() == egptr());
+		
+		unsigned char* seqBegin;
+		size_t rem;
+		auto addr = addrForPos(inPos(), true, &rem, &seqBegin);
+		eback_pos = basePosForPos(inPos());
+		ASSERT(addr);
+		if (!addr)
+		{
+			return traits_type::eof();
+		}
+		
+		setg(reinterpret_cast<char_type*>(seqBegin), reinterpret_cast<char_type*>(addr), reinterpret_cast<char_type*>(addr + rem));
+		return traits_type::to_int_type(*gptr());
+	}
+	
+	/*auto File_streambuf::pbackfail(int_type c) -> int_type
+	{
+		
+	}*/
+	
+	Utils::streamsize File_streambuf::xsputn(const char_type* s, Utils::streamsize n)
+	{
+		// TODO: Account for errors,
+		// EOF, etc.
+		auto ptr = pptr();
+		auto back = epptr();
+		
+		Utils::streamsize i = 0;
+		while (i < n)
+		{
+			if (ptr == back)
+			{
+				seekoff(back - pptr(), ios_base::cur, ios_base::in);
+				ptr = pptr();
+				back = epptr();
+				ASSERT(ptr != back);
+			}
+			*(ptr++) = s[i++];
+		}
+		
+		pbump(ptr - pptr());
+		
+		return i;
+	}
+	
+	auto File_streambuf::overflow(int_type c) -> int_type
+	{
+		ASSERT(pptr() == epptr());
+		
+		unsigned char* seqBegin;
+		size_t rem;
+		auto addr = addrForPos(outPos(), false, &rem, &seqBegin);
+		pbase_pos = basePosForPos(outPos());
+		ASSERT(addr);
+		if (!addr)
+		{
+			return traits_type::eof();
+		}
+		
+		setp(reinterpret_cast<char_type*>(seqBegin), reinterpret_cast<char_type*>(addr + rem));
+		pbump(addr - seqBegin);
+		return traits_type::to_int_type(*pptr());
+	}
+	
+	int File_streambuf::sync()
+	{
+		return fileSync();
 	}
 	
 	
+	
+	
+	
+	size_t File_streambuf::inPos(off_t off) const noexcept
+	{
+		return eback_pos + off + (gptr() - eback());
+	}
+	
+	size_t File_streambuf::outPos(off_t off) const noexcept
+	{
+		return pbase_pos + off + (pptr() - pbase());
+	}
 	
 	
 	

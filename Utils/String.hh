@@ -392,6 +392,10 @@ namespace Utils
         	return this->append(1, _rhs);
         }
         
+        value_type& operator[](size_t pos);
+        const value_type& operator[](size_t pos) const;
+        
+        
         
         
         
@@ -444,6 +448,9 @@ namespace Utils
         {
         	return this->replace(_M_iend(), _M_iend(), _beg, _end);
         }
+        
+        value_type& at(size_t pos);
+        const value_type& at(size_t pos) const;
         
         
         

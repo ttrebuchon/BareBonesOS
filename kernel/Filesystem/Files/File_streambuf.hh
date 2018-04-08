@@ -39,20 +39,22 @@ namespace Kernel { namespace Filesystem
 		virtual Utils::streamsize showmanyc();
 		virtual Utils::streamsize xsgetn(char_type* s, Utils::streamsize n);
 		virtual int_type underflow();
-		virtual int_type uflow();
 		
-		virtual int_type pbackfail(int_type c = traits_type::eof());
+		//virtual int_type pbackfail(int_type c = traits_type::eof());
 		
 		virtual Utils::streamsize xsputn(const char_type* s, Utils::streamsize n);
 		virtual int_type overflow(int_type c = traits_type::eof());
 		virtual int sync();
-		virtual File_streambuf* setbuf(char_type*, Utils::streamsize);
+		//virtual File_streambuf* setbuf(char_type*, Utils::streamsize);
 		
 		
 		
+		size_t inPos(off_t off = 0) const noexcept;
+		size_t outPos(off_t off = 0) const noexcept;
 		
 		virtual unsigned char* addrForPos(size_t, bool forReading, size_t* remainingContinuous = nullptr, unsigned char** seqBegin = nullptr) = 0;
 		virtual size_t basePosForPos(const size_t pos) const noexcept = 0;
+		virtual int fileSync() = 0;
 		
 		
 		
