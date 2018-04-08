@@ -229,15 +229,15 @@ namespace Utils
 		
 		
 		// Member Functions
-		bool empty() const;
-		size_type size() const;
-		size_type max_size() const;
+		bool empty() const noexcept;
+		size_type size() const noexcept;
+		size_type max_size() const noexcept;
 		allocator_type get_allocator() const noexcept;
 		mapped_type& at(const key_type&);
 		mapped_type& at(key_type&&);
 		const mapped_type& at(const key_type&) const;
 		const mapped_type& at(key_type&&) const;
-		size_type count(const key_type&) const;
+		size_type count(const key_type&) const noexcept;
 		void clear();
 		
 		

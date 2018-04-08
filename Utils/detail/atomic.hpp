@@ -20,19 +20,19 @@ namespace Utils
 		
 		
 		template <class T>
-		constexpr atomic_base<T>::atomic_base() : _val()
+		constexpr atomic_base<T>::atomic_base() noexcept : _val()
 		{
 			
 		}
 		
 		template <class T>
-		constexpr atomic_base<T>::atomic_base(T desired) : _val(desired)
+		constexpr atomic_base<T>::atomic_base(T desired) noexcept : _val(desired)
 		{
 			
 		}
 		
 		template <class T>
-		void atomic_base<T>::store(T desired, memory_order order)
+		void atomic_base<T>::store(T desired, memory_order order) noexcept
 		{
 			if (order == memory_order_relaxed)
 			{
@@ -50,7 +50,7 @@ namespace Utils
 		}
 		
 		template <class T>
-		void atomic_base<T>::store(T desired, memory_order order) volatile
+		void atomic_base<T>::store(T desired, memory_order order) volatile noexcept
 		{
 			if (order == memory_order_relaxed)
 			{
@@ -68,7 +68,7 @@ namespace Utils
 		}
 		
 		template <class T>
-		T atomic_base<T>::load(memory_order order) const
+		T atomic_base<T>::load(memory_order order) const noexcept
 		{
 			__sync_synchronize();
 			T v = _val;
@@ -77,7 +77,7 @@ namespace Utils
 		}
 		
 		template <class T>
-		T atomic_base<T>::load(memory_order order) const volatile
+		T atomic_base<T>::load(memory_order order) const volatile noexcept
 		{
 			__sync_synchronize();
 			T v = _val;
@@ -86,38 +86,38 @@ namespace Utils
 		}
 		
 		template <class T>
-		T atomic_base<T>::exchange(T desired, memory_order order)
+		T atomic_base<T>::exchange(T desired, memory_order order) noexcept
 		{
 			return __sync_lock_test_and_set(&_val, desired);
 		}
 		
 		template <class T>
-		bool atomic_base<T>::compare_exchange_weak(T& expected, T desired, memory_order success, memory_order failure)
+		bool atomic_base<T>::compare_exchange_weak(T& expected, T desired, memory_order success, memory_order failure) noexcept
 		{
 			return compare_exchange_strong(expected, desired, success, failure);
 		}
 		
 		template <class T>
-		bool atomic_base<T>::compare_exchange_weak(T& expected, T desired, memory_order success, memory_order failure) volatile
+		bool atomic_base<T>::compare_exchange_weak(T& expected, T desired, memory_order success, memory_order failure) volatile noexcept
 		{
 			return compare_exchange_strong(expected, desired, success, failure);
 		}
 		
 		template <class T>
-		bool atomic_base<T>::compare_exchange_weak(T& expected, T desired, memory_order order)
+		bool atomic_base<T>::compare_exchange_weak(T& expected, T desired, memory_order order) noexcept
 		{
 			return compare_exchange_weak(expected, desired, order, __calculate_memory_order(order));
 		}
 		
 		template <class T>
-		bool atomic_base<T>::compare_exchange_weak(T& expected, T desired, memory_order order) volatile
+		bool atomic_base<T>::compare_exchange_weak(T& expected, T desired, memory_order order) volatile noexcept
 		{
 			return compare_exchange_weak(expected, desired, order, __calculate_memory_order(order));
 		}
 		
 		
 		template <class T>
-		bool atomic_base<T>::compare_exchange_strong(T& expected, T desired, memory_order success, memory_order failure)
+		bool atomic_base<T>::compare_exchange_strong(T& expected, T desired, memory_order success, memory_order failure) noexcept
 		{
 			ASSERT(failure != memory_order_release);
 			ASSERT(failure != memory_order_acq_rel);
@@ -130,7 +130,7 @@ namespace Utils
 		}
 		
 		template <class T>
-		bool atomic_base<T>::compare_exchange_strong(T& expected, T desired, memory_order success, memory_order failure) volatile
+		bool atomic_base<T>::compare_exchange_strong(T& expected, T desired, memory_order success, memory_order failure) volatile noexcept
 		{
 			ASSERT(failure != memory_order_release);
 			ASSERT(failure != memory_order_acq_rel);
@@ -143,13 +143,13 @@ namespace Utils
 		}
 		
 		template <class T>
-		bool atomic_base<T>::compare_exchange_strong(T& expected, T desired, memory_order order)
+		bool atomic_base<T>::compare_exchange_strong(T& expected, T desired, memory_order order) noexcept
 		{
 			return compare_exchange_strong(expected, desired, order, __calculate_memory_order(order));
 		}
 		
 		template <class T>
-		bool atomic_base<T>::compare_exchange_strong(T& expected, T desired, memory_order order) volatile
+		bool atomic_base<T>::compare_exchange_strong(T& expected, T desired, memory_order order) volatile noexcept
 		{
 			return compare_exchange_strong(expected, desired, order, __calculate_memory_order(order));
 		}
@@ -169,25 +169,25 @@ namespace Utils
 		// atomic_arithmetic<T, Y>
 		
 		template <class T, class Y>
-		T atomic_arithmetic<T, Y, true>::fetch_add(Y arg, memory_order order)
+		T atomic_arithmetic<T, Y, true>::fetch_add(Y arg, memory_order order) noexcept
 		{
 			return __sync_fetch_and_add(&((atomic_base<T>*)this)->_val, arg);
 		}
 		
 		template <class T, class Y>
-		T atomic_arithmetic<T, Y, true>::fetch_add(Y arg, memory_order order) volatile
+		T atomic_arithmetic<T, Y, true>::fetch_add(Y arg, memory_order order) volatile noexcept
 		{
 			return __sync_fetch_and_add(&((atomic_base<T>*)this)->_val, arg);
 		}
 		
 		template <class T, class Y>
-		T atomic_arithmetic<T, Y, true>::fetch_sub(Y arg, memory_order order)
+		T atomic_arithmetic<T, Y, true>::fetch_sub(Y arg, memory_order order) noexcept
 		{
 			return __sync_fetch_and_sub(&((atomic_base<T>*)this)->_val, arg);
 		}
 		
 		template <class T, class Y>
-		T atomic_arithmetic<T, Y, true>::fetch_sub(Y arg, memory_order order) volatile
+		T atomic_arithmetic<T, Y, true>::fetch_sub(Y arg, memory_order order) volatile noexcept
 		{
 			return __sync_fetch_and_sub(&((atomic_base<T>*)this)->_val, arg);
 		}
@@ -263,37 +263,37 @@ namespace Utils
 		
 		
 		template <class T>
-		T atomic_integral<T, true>::fetch_and(T arg, memory_order order)
+		T atomic_integral<T, true>::fetch_and(T arg, memory_order order) noexcept
 		{
 			return __sync_fetch_and_and(&((atomic_base<T>*)this)->_val, arg);
 		}
 		
 		template <class T>
-		T atomic_integral<T, true>::fetch_and(T arg, memory_order order) volatile
+		T atomic_integral<T, true>::fetch_and(T arg, memory_order order) volatile noexcept
 		{
 			return __sync_fetch_and_and(&((atomic_base<T>*)this)->_val, arg);
 		}
 		
 		template <class T>
-		T atomic_integral<T, true>::fetch_or(T arg, memory_order order)
+		T atomic_integral<T, true>::fetch_or(T arg, memory_order order) noexcept
 		{
 			return __sync_fetch_and_or(&((atomic_base<T>*)this)->_val, arg);
 		}
 		
 		template <class T>
-		T atomic_integral<T, true>::fetch_or(T arg, memory_order order) volatile
+		T atomic_integral<T, true>::fetch_or(T arg, memory_order order) volatile noexcept
 		{
 			return __sync_fetch_and_or(&((atomic_base<T>*)this)->_val, arg);
 		}
 		
 		template <class T>
-		T atomic_integral<T, true>::fetch_xor(T arg, memory_order order)
+		T atomic_integral<T, true>::fetch_xor(T arg, memory_order order) noexcept
 		{
 			return __sync_fetch_and_xor(&((atomic_base<T>*)this)->_val, arg);
 		}
 		
 		template <class T>
-		T atomic_integral<T, true>::fetch_xor(T arg, memory_order order) volatile
+		T atomic_integral<T, true>::fetch_xor(T arg, memory_order order) volatile noexcept
 		{
 			return __sync_fetch_and_xor(&((atomic_base<T>*)this)->_val, arg);
 		}

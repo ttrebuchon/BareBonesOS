@@ -1,0 +1,16 @@
+#ifndef INCLUDED_EXCEPTION_HH
+#define INCLUDED_EXCEPTION_HH
+
+#include <Common.h>
+
+namespace Utils
+{
+	class exception
+	{
+		
+		public:
+		virtual const char* what() const = 0;
+	};
+}
+
+#endif

@@ -66,7 +66,7 @@ namespace Utils
 	// Member Functions
 	
 	template <class Key, class T, class Comp, class Alloc>
-	bool map<Key, T, Comp, Alloc>::empty() const
+	bool map<Key, T, Comp, Alloc>::empty() const noexcept
 	{
 		return size() == 0;
 	}

@@ -142,7 +142,7 @@ namespace Utils
 	
 	
 	template <class T, class A>
-	constexpr auto vector<T, A>::size() const -> size_type
+	constexpr auto vector<T, A>::size() const noexcept -> size_type
 	{
 		return _size;
 	}
@@ -214,13 +214,13 @@ namespace Utils
 	}
 	
 	template <class T, class A>
-	constexpr auto vector<T, A>::capacity() const -> size_type
+	constexpr auto vector<T, A>::capacity() const noexcept -> size_type
 	{
 		return _cap;
 	}
 	
 	template <class T, class A>
-	constexpr bool vector<T, A>::empty() const
+	constexpr bool vector<T, A>::empty() const noexcept
 	{
 		return _size == 0;
 	}

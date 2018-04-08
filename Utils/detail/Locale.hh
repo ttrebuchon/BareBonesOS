@@ -4,7 +4,7 @@
 #include <Common.h>
 #include <Debug.h>
 #include "../Iterator.hh"
-#include <Utils/StringFwd.hh>
+#include <Utils/stringFwd.hh>
 
 namespace Utils
 {
@@ -108,9 +108,9 @@ namespace Utils
 		locale();
 		locale(const locale&);
 		explicit locale(const char* name);
-		explicit locale(const String& name);
+		explicit locale(const string& name);
 		locale(const locale& other, const char* name, category cat);
-		locale(const locale& other, const String& name, category cat);
+		locale(const locale& other, const string& name, category cat);
 		locale(const locale& other, const locale& second, category cat);
 		template <class Facet>
 		locale(const locale&, Facet* f);
@@ -123,7 +123,7 @@ namespace Utils
 		bool operator!=(const locale&) const;
 		
 		template <class charT, class Traits, class Alloc>
-		bool operator()(const Basic_String<charT, Traits, Alloc>& s1, const Basic_String<charT, Traits, Alloc>& s2) const;
+		bool operator()(const basic_string<charT, Traits, Alloc>& s1, const basic_string<charT, Traits, Alloc>& s2) const;
 		
 		
 		
@@ -131,7 +131,7 @@ namespace Utils
 		locale combine(const locale& other) const;
 		
 		//"*" is default/undetermimed
-		String name() const;
+		string name() const;
 		
 		
 		private:

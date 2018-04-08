@@ -5,13 +5,13 @@ namespace Utils
 {
 	
 	template <class T, class Deleter>
-	constexpr unique_ptr<T, Deleter>::unique_ptr() : obj(nullptr)
+	constexpr unique_ptr<T, Deleter>::unique_ptr() noexcept : obj(nullptr)
 	{
 		
 	}
 	
 	template <class T, class Deleter>
-	constexpr unique_ptr<T, Deleter>::unique_ptr(nullptr_t n) : obj(n)
+	constexpr unique_ptr<T, Deleter>::unique_ptr(nullptr_t n) noexcept : obj(n)
 	{
 		
 	}
@@ -23,33 +23,33 @@ namespace Utils
 	}
 	
 	template <class T, class Deleter>
-	unique_ptr<T, Deleter>::unique_ptr(pointer ptr, typename detail::unique_ptr_deleter_args<Deleter>::type1 d1) : obj(ptr), del(d1)
+	unique_ptr<T, Deleter>::unique_ptr(pointer ptr, typename detail::unique_ptr_deleter_args<Deleter>::type1 d1) noexcept : obj(ptr), del(d1)
 	{
 		
 	}
 	
 	template <class T, class Deleter>
-	unique_ptr<T, Deleter>::unique_ptr(pointer ptr, typename detail::unique_ptr_deleter_args<Deleter>::type2 d2) : obj(ptr), del(d2)
+	unique_ptr<T, Deleter>::unique_ptr(pointer ptr, typename detail::unique_ptr_deleter_args<Deleter>::type2 d2) noexcept : obj(ptr), del(d2)
 	{
 		
 	}
 	
 	template <class T, class Deleter>
 	template <class U, class E>
-	unique_ptr<T, Deleter>::unique_ptr(unique_ptr<U, E>&& r) : obj(Utils::move(r.obj)), del(Utils::move(r.del))
+	unique_ptr<T, Deleter>::unique_ptr(unique_ptr<U, E>&& r) noexcept : obj(Utils::move(r.obj)), del(Utils::move(r.del))
 	{
 		r.obj = nullptr;
 	}
 	
 	template <class T, class Deleter>
-	unique_ptr<T, Deleter>::unique_ptr(unique_ptr&& r) : obj(r.obj), del(r.del)
+	unique_ptr<T, Deleter>::unique_ptr(unique_ptr&& r) noexcept : obj(r.obj), del(r.del)
 	{
 		r.obj = nullptr;
 	}
 	
 	
 	template <class T, class Deleter>
-	unique_ptr<T, Deleter>::~unique_ptr()
+	unique_ptr<T, Deleter>::~unique_ptr() noexcept
 	{
 		reset();
 	}
@@ -58,7 +58,7 @@ namespace Utils
 	
 	
 	template <class T, class Deleter>
-	auto unique_ptr<T, Deleter>::release() -> pointer
+	auto unique_ptr<T, Deleter>::release() noexcept -> pointer
 	{
 		auto other = obj;
 		obj = nullptr;
@@ -66,7 +66,7 @@ namespace Utils
 	}
 	
 	template <class T, class Deleter>
-	void unique_ptr<T, Deleter>::reset()
+	void unique_ptr<T, Deleter>::reset() noexcept
 	{
 		if (obj != nullptr)
 		{
@@ -76,7 +76,7 @@ namespace Utils
 	}
 	
 	template <class T, class Deleter>
-	auto unique_ptr<T, Deleter>::get() const -> pointer
+	auto unique_ptr<T, Deleter>::get() const noexcept -> pointer
 	{
 		return obj;
 	}

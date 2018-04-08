@@ -15,7 +15,7 @@ namespace Utils { namespace chrono
 	
 	
 	
-	auto system_clock::now() -> time_point
+	auto system_clock::now() noexcept -> time_point
 	{
 		return time_point(chrono::seconds(time(nullptr)));
 	}

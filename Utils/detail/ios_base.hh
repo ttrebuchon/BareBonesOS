@@ -120,7 +120,7 @@ namespace Utils {
 		constexpr static iostate goodbit = 0x0;
 		
 		
-		struct openmode
+		/*struct openmode
 		{
 			bool app : 1;
 			bool ate : 1;
@@ -138,9 +138,17 @@ namespace Utils {
 		constexpr static openmode binary = {0,0,1,0,0,0};
 		constexpr static openmode in = {0,0,0,1,0,0};
 		constexpr static openmode out = {0,0,0,0,1,0};
-		constexpr static openmode trunc = {0,0,0,0,0,1};
+		constexpr static openmode trunc = {0,0,0,0,0,1};*/
 		
-		struct seekdir
+		typedef char openmode;
+		constexpr static openmode app = 1;
+		constexpr static openmode ate = 2;
+		constexpr static openmode binary = 4;
+		constexpr static openmode in = 8;
+		constexpr static openmode out = 16;
+		constexpr static openmode trunc = 32;
+		
+		/*struct seekdir
 		{
 			bool beg : 1;
 			bool cur : 1;
@@ -152,7 +160,12 @@ namespace Utils {
 		
 		constexpr static seekdir beg = {1, 0, 0};
 		constexpr static seekdir cur = {0, 1, 0};
-		constexpr static seekdir end = {0, 0, 1};
+		constexpr static seekdir end = {0, 0, 1};*/
+		
+		typedef char seekdir;
+		constexpr static seekdir beg = 1;
+		constexpr static seekdir cur = 2;
+		constexpr static seekdir end = 4;
 		
 		
 		private:
