@@ -70,6 +70,22 @@ namespace Kernel { namespace Filesystem
 		return blockIndex * BlockSize;
 	}
 	
+	int BlockFile::fileSync()
+	{
+		for (size_t i = 0; i < blocks.size(); ++i)
+		{
+			if (blocks[i])
+			{
+				if (blocks[i]->dirty)
+				{
+					auto wrote = __node->write(i*BlockSize, BlockSize, reinterpret_cast<uint8_t*>(blocks[i]->data));
+					blocks[i]->dirty = false;
+					ASSERT(wrote == BlockSize);
+				}
+			}
+		}
+	}
+	
 	
 	
 	

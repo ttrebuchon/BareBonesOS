@@ -30,18 +30,17 @@ namespace Kernel { namespace Filesystem
 		
 		virtual unsigned char* addrForPos(size_t, bool forReading, size_t* remainingContinuous = nullptr, unsigned char** blockBegin = nullptr);
 		virtual size_t basePosForPos(const size_t pos) const noexcept;
+		virtual int fileSync();
 		
 		void expandToBlock(size_t index);
 		bool readTo(size_t index);
 		bool writeTo(size_t index, bool force = false);
 		
+		
 		public:
 		
 		BlockFile(FileNode*);
 	};
-	
-	
-	
 	
 }
 }
