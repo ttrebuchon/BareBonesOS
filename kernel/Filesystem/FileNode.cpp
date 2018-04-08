@@ -42,7 +42,7 @@ namespace Kernel { namespace Filesystem
 	{
 		if (!file)
 		{
-			file = initFile();
+			file = const_cast<FileNode*>(this)->initFile();
 		}
 		return file;
 	}

@@ -34,7 +34,7 @@ namespace Kernel { namespace Filesystem {
 		int i = 0;
 		while (recordName[i++] != 0x0) ;
 		void* data = recordName + i;
-		auto size = span - sizeof(int) - ((uint32_t)data - (uint32_t)addr);
+		auto size = span - sizeof(int) - ((addr_t)data - (addr_t)addr);
 		if (endAddr != nullptr)
 		{
 			*endAddr = (char*)data + size;

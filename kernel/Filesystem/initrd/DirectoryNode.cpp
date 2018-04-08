@@ -5,7 +5,7 @@ namespace Kernel { namespace Filesystem { namespace Init_RD {
 
     DirectoryNode::DirectoryNode(const char* name) : Filesystem::DirectoryNode(NodeType::Directory)
     {
-        this->name = name;
+        this->_name = name;
     }
 
 

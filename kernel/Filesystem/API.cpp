@@ -34,7 +34,7 @@ extern "C"
 	ssize_t write(int fd, const void* buffer, size_t bytes)
 	{
 		auto file = FileDescriptors::Current->resolve(fd);
-		file->stream.write(reinterpret_cast<const fchar_type*>(buffer), bytes);
+		file->out.write(reinterpret_cast<const fchar_type*>(buffer), bytes);
 		return bytes;
 		
 		// TODO
@@ -51,7 +51,7 @@ extern "C"
 	{
 		auto file = FileDescriptors::Current->resolve(fd);
 		
-		file->stream.read(reinterpret_cast<fchar_type*>(buffer), bytes);
+		file->in.read(reinterpret_cast<fchar_type*>(buffer), bytes);
 		return bytes;
 		// TODO
 		ASSERT(false);

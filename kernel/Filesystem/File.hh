@@ -3,7 +3,9 @@
 
 #include <Common.h>
 #include <Utils/vector>
-#include "Files/iofstream.hh"
+//#include "Files/iofstream.hh"
+#include <Utils/iostream>
+#include "Files/File_streambuf.hh"
 
 namespace Kernel { namespace Filesystem
 {
@@ -13,11 +15,16 @@ namespace Kernel { namespace Filesystem
 	{
 		protected:
 		FileNode* __node;
+		File_streambuf* sbuf;
+		
 		
 		
 		public:
-		iofstream stream;
+		Utils::basic_istream<char> in;
+		Utils::basic_ostream<char> out;
 		
+		File(FileNode*);
+		~File();
 	};
 	
 	

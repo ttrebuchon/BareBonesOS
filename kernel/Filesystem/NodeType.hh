@@ -11,6 +11,7 @@ namespace Kernel { namespace Filesystem {
 		Directory = 1,
 		File = 2,
 		Link = 4,
+		RAMFile = 8,
 	};
 	
 	ENUM_OPS(NodeType, short);

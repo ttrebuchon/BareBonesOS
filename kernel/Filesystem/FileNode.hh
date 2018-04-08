@@ -39,6 +39,8 @@ namespace Kernel { namespace Filesystem {
 		virtual bool inUse() const;
 		//virtual bool readInUse() const;
 		
+		virtual size_t size() const noexcept = 0;
+		
 		friend FileHandle;
 		friend ReadFileHandle;
 	};
