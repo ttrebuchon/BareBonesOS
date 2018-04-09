@@ -205,6 +205,262 @@ namespace Kernel { namespace Memory {
 		}
 		return dest;
 	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	PageDirectory* PageDirectory::Current = nullptr;
+	
+	
+	PageDirectory::PageDirectory() : dir{}, tables(), dir_phys(nullptr)
+	{
+		kmemset(&dir, 0, sizeof(_Dir));
+		kmemset(tables, 0, sizeof(Table*)*1024);
+		if (Current)
+		{
+			dir_phys = Current->getPhysicalAddress(&dir);
+			ASSERT(dir_phys != nullptr);
+		}
+		else
+		{
+			dir_phys = &dir;
+		}
+	}
+	
+	PageDirectory::Page* PageDirectory::at(const void* const p) noexcept
+	{
+		const addr_t a = (addr_t)p;
+		const size_t tableIndx = GetTableIndex(p);
+		if (!tables[tableIndx])
+		{
+			return nullptr;
+		}
+		else
+		{
+			return &tables[tableIndx]->at(GetPageIndex(p));
+		}
+	}
+	
+	const PageDirectory::Page* PageDirectory::at(const void* const p) const noexcept
+	{
+		const size_t tableIndx = GetTableIndex(p);
+		if (!tables[tableIndx])
+		{
+			return nullptr;
+		}
+		else
+		{
+			return &tables[tableIndx]->at(GetPageIndex(p));
+		}
+	}
+	
+	PageDirectory::Table* PageDirectory::table(const size_t n, bool create) noexcept
+	{
+		ASSERT(n < 1024);
+		if (!tables[n])
+		{
+			if (!create)
+			{
+				return nullptr;
+			}
+			
+			tables[n] = new Table(dir.tables[n]);
+		}
+		
+		return tables[n];
+	}
+	
+	PageDirectory::Table* PageDirectory::table(const void* const p, bool create) noexcept
+	{
+		const size_t n = GetTableIndex(p);
+		if (!tables[n])
+		{
+			if (!create)
+			{
+				return nullptr;
+			}
+			
+			tables[n] = new Table(dir.tables[n]);
+		}
+		
+		return tables[n];
+	}
+	
+	const PageDirectory::Table* PageDirectory::table(const size_t n) const noexcept
+	{
+		ASSERT(n < 1024);
+		if (!tables[n])
+		{
+			return nullptr;
+		}
+		
+		return tables[n];
+	}
+	
+	const PageDirectory::Table* PageDirectory::table(const void* const p) const noexcept
+	{
+		const size_t n = GetTableIndex(p);
+		if (!tables[n])
+		{
+			return nullptr;
+		}
+		
+		return tables[n];
+	}
+	
+	void* PageDirectory::getPhysicalAddress(const void* const p) const noexcept
+	{
+		const auto pg = at(p);
+		if (!pg)
+		{
+			return nullptr;
+		}
+		if (!pg->present())
+		{
+			return nullptr;
+		}
+		
+		return (void*)(((addr_t)pg->frame())+(((addr_t)p) & 0xfff));
+	}
+	
+	PageDirectory::Page& PageDirectory::operator[](const void* const p) noexcept
+	{
+		auto t = table(p, true);
+		return t->at(GetPageIndex(p));
+	}
+	
+	
+	PageDirectory::Table::Table(_Table& t) : table(&t), _pages(nullptr), pages(), _pages_phys(nullptr)
+	{
+		addr_t phys;
+		auto ptr = kmalloc(sizeof(_Pages), 1, &phys);
+		_pages_phys = (void*)phys;
+		kmemset(ptr, 0, sizeof(_Pages));
+		
+		_pages = (_Pages*)ptr;
+		
+		for (auto i = 0; i < 1024; ++i)
+		{
+			pages[i].page = &_pages->pages[i];
+		}
+		
+		table->frame = (((addr_t)_pages_phys) >> 12);
+		table->rw = 1;
+		table->user = 1;
+		table->present = 1;
+	}
+	
+	PageDirectory::Page& PageDirectory::Table::operator[](size_t index) noexcept
+	{
+		return pages[index];
+	}
+	
+	PageDirectory::Page& PageDirectory::Table::at(size_t index) noexcept
+	{
+		return pages[index];
+	}
+	
+	const PageDirectory::Page& PageDirectory::Table::at(size_t index) const noexcept
+	{
+		return pages[index];
+	}
+	
+	PageDirectory::_Table* PageDirectory::Table::operator->() noexcept
+	{
+		return table;
+	}
+	
+	const PageDirectory::_Table* PageDirectory::Table::operator->() const noexcept
+	{
+		return table;
+	}
+	
+	PageDirectory::_Table& PageDirectory::Table::operator*() noexcept
+	{
+		return *table;
+	}
+	
+	const PageDirectory::_Table& PageDirectory::Table::operator*() const noexcept
+	{
+		return *table;
+	}
+	
+	
+	PageDirectory::Page::Page() : page(nullptr)
+	{
+		
+	}
+	
+	PageDirectory::Page::Page(_Page& p) : page(&p)
+	{
+		
+	}
+	
+	PageDirectory::_Page& PageDirectory::Page::operator*() noexcept
+	{
+		return *page;
+	}
+	
+	PageDirectory::_Page* PageDirectory::Page::operator->() noexcept
+	{
+		return page;
+	}
+	
+	const PageDirectory::_Page& PageDirectory::Page::operator*() const noexcept
+	{
+		return *page;
+	}
+	
+	const PageDirectory::_Page* PageDirectory::Page::operator->() const noexcept
+	{
+		return page;
+	}
+	
+	PageDirectory::Page& PageDirectory::Page::operator=(const void* const p) noexcept
+	{
+		frame(p);
+		if (!page->present)
+		{
+			page->present = 1;
+		}
+		return *this;
+	}
+	
+	void* PageDirectory::Page::frame() const noexcept
+	{
+		return (void*)(((addr_t)page->frame) << 12);
+	}
+	
+	void PageDirectory::Page::frame(const void* const p) noexcept
+	{
+		page->frame = ((addr_t)p) >> 12;
+	}
+	
+	bool PageDirectory::Page::present() const noexcept
+	{
+		return page->present;
+	}
+	
+	void PageDirectory::Page::present(bool b) noexcept
+	{
+		page->present = b;
+	}
 
 }
 }
