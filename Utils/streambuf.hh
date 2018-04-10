@@ -3,6 +3,7 @@
 
 #include "detail/Locale.hh"
 #include "detail/ios_base.hh"
+#include "detail/bits/fpos.hh"
 
 namespace Utils {
 	

@@ -4,7 +4,7 @@
 namespace Utils {
 	
 	typedef long long streamsize;
-	
+	typedef long long streamoff;
 }
 
 #endif

@@ -9,17 +9,10 @@ namespace Utils
 	template <class>
 	struct Char_Traits;
 	
-	template <class StateT>
-	class fpos
-	{
-		private:
-		StateT _state;
-		public:
-		StateT state() const
-		{ return _state; }
-		void state(StateT state)
-		{ _state = state; }
-	};
+	template <class>
+	class fpos;
+	
+	struct mbstate_t;
 	
 	typedef fpos<mbstate_t> streampos;
 	
