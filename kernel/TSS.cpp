@@ -1,7 +1,7 @@
 #include "TSS.h"
 
 
-namespace Kernel
+extern "C"
 {
-    TSS* TSS::myTSS;
+    TaskStateSegment_x86_t TSS;
 }
