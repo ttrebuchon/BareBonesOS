@@ -7,6 +7,9 @@
 extern "C" {
 #endif
 
+#ifdef __cplusplus
+[[ noreturn ]]
+#endif
 void __do_kernel_panic(const char* msg, const char* file, const int line, const char* function);
 
 
