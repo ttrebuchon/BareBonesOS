@@ -3,8 +3,17 @@
 #qemu-system-x86_64 -cpu athlon -m 32 -monitor stdio --drive format=raw,file=dummy.img,if=ide,index=1  myos.iso
 #qemu-system-x86_64 -cpu athlon -m 32 -monitor stdio myos.iso
 #sudo qemu-system-x86_64 -monitor stdio -hda myos.iso -hdb dummy.img
-sudo qemu-system-x86_64 -s -S -d int -no-reboot -m 256 -monitor stdio --drive format=raw,file=myos.iso,if=ide,index=0 --drive format=raw,file=dummy.img,if=ide,index=1
+
+
+#sudo qemu-system-x86_64 -s -S -d int -no-reboot -no-shutdown -m 256 -monitor stdio --drive format=raw,file=myos.iso,if=ide,index=0 --drive format=raw,file=dummy.img,if=ide,index=1
 
 #sudo qemu-system-i386 -kernel os_kernel -vga std -k en-us -m 2047M -hda ext2_hda.img -hdb ext2_hdb.img -hdc ext2_hdc.img -hdd ext2_hdd.img \
 # \
 #-serial stdio \
+
+
+
+
+
+
+sudo qemu-system-x86_64 -no-reboot -no-shutdown -m 256 -monitor stdio --drive format=raw,file=myos.iso,if=ide,index=0 --drive format=raw,file=dummy.img,if=ide,index=1

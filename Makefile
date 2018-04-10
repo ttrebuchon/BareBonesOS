@@ -49,6 +49,8 @@ BOTH_FLAGS += -DFIXED_PAGE_STRUCT
 BOTH_FLAGS += -D_TRACE
 BOTH_FLAGS += $(NO_WARN)
 BOTH_FLAGS += -DDEBUG
+#BOTH_FLAGS += -DDEBUG_IDENTITY_DIR
+
 CFLAGS	= -nostdlib $(WARNINGS_FLAGS) -ffreestanding -Og -MMD -I. -Werror-implicit-function-declaration --sysroot=$(SYSROOT) $(BOTH_FLAGS)
 CXX_FLAGS	= -std=c++14 -nostdlib $(WARNINGS_FLAGS) -ffreestanding -Og -MMD -I. -fno-exceptions -fno-rtti --sysroot=$(SYSROOT) $(BOTH_FLAGS)
 ASM_FLAGS	= 
