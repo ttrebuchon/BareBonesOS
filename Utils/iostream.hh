@@ -2,7 +2,7 @@
 #define INCLUDED_IOSTREAM_HH
 
 #include "ostream.hh"
-#include "istream.hh"
+#include "detail/istream.hh"
 #include "streambuf"
 
 namespace Utils

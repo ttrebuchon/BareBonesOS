@@ -237,6 +237,17 @@ namespace Utils {
 	{
 		return seekpos(sp, which);
 	}
+
+
+
+
+
+	template <class T, class Traits>
+	streamsize basic_streambuf<T, Traits>::sgetn(char_type* s, streamsize n)
+	{
+		// TODO
+		ASSERT(false);
+	}
 	
 	
 	

@@ -218,6 +218,22 @@ namespace Utils {
 	
 	
 	template <class T, class Traits>
+	auto basic_ostream<T, Traits>::write(const char_type* data, streamsize n) -> basic_ostream&
+	{
+		sentry __cerb(*this);
+
+		if (__cerb)
+		{
+			ios_base::iostate __err = this->rdstate();
+			if (this->rdbuf()->sputn(data, n) != n)
+			{
+				this->setstate(this->rdstate() | ios_base::badbit);
+			}
+		}
+		return *this;
+	}
+	
+	template <class T, class Traits>
 	basic_ostream<T, Traits>& basic_ostream<T, Traits>::flush()
 	{
 		sentry __cerb(*this);

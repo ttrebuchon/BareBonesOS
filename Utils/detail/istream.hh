@@ -1,7 +1,7 @@
 #ifndef INCLUDED_ISTREAM_HH
 #define INCLUDED_ISTREAM_HH
 
-#include "detail/basic_ios.hh"
+#include "basic_ios.hh"
 
 namespace Utils {
 	
@@ -31,7 +31,36 @@ namespace Utils {
 		#undef BASETYPE
 		
 		explicit basic_istream(basic_streambuf<T, Traits>* sb);
-		virtual ~basic_istream();
+		virtual ~basic_istream() = default;
+
+        class sentry
+		{
+			private:
+			bool _good;
+			protected:
+			basic_istream& is;
+			public:
+			explicit sentry(basic_istream& is) : _good(true), is(is)
+			{
+				if (!is.good())
+				{
+					_good = false;
+					return;
+				}
+			}
+			sentry& operator=(const sentry&) = delete;
+			
+			operator bool()
+			{
+				if (!_good)
+				{
+					return false;
+				}
+				
+				
+				return true;
+			}
+		};
 		
 		
 		
@@ -77,9 +106,9 @@ namespace Utils {
  
     basic_istream<T, Traits>& ignore(
         streamsize n = 1, int_type delim = Traits::eof());
-    int_type                     peek();
-    basic_istream<T, Traits>& read    (char_type* s, streamsize n);
-    streamsize                   readsome(char_type* s, streamsize n);
+    int_type peek();
+    basic_istream<T, Traits>& read(char_type* s, streamsize n);
+    streamsize readsome(char_type* s, streamsize n);
     basic_istream<T, Traits>& putback(char_type c);
     basic_istream<T, Traits>& unget();
     int sync();

@@ -1,4 +1,4 @@
 #include "iostream.hh"
 #include "ostream.hpp"
-//#include "istream.hpp"
+#include "detail/istream.hpp"
 #include "locale"
