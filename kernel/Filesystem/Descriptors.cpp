@@ -229,6 +229,11 @@ namespace Kernel { namespace Filesystem {
 		}
 		desc->makeActive();
 	}
+
+	void FileDescriptors_Hndl::__makeInactive() noexcept
+	{
+		desc->makeInactive();
+	}
 	
 }
 }

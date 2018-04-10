@@ -66,6 +66,135 @@ namespace Kernel { namespace Filesystem
 		return result;
 	}
 	
-	
+	auto Path::Combine(const string_type& p1, const string_type& p2, const string_type& ps...) noexcept -> string_type
+	{
+		return Combine(Combine(p1, p2), ps);
+	}
+
+	auto Path::Combine(const string_type& p1, const string_type& p2) noexcept -> string_type
+	{
+		if (p1.empty())
+		{
+			return p2;
+		}
+
+		if (p2.empty())
+		{
+			return p1;
+		}
+
+		if (p1[p1.length() - 1] == '/')
+		{
+			if (p2[0] == '/')
+			{
+				return p1 + p2.substr(1);
+			}
+			else
+			{
+				return p1 + p2;
+			}
+		}
+		else if (p2[0] == '/')
+		{
+			return p1 + p2;
+		}
+		else
+		{
+			return p1 + "/" + p2;
+		}
+	}
+
+	auto Path::Combine(const string_type* ps, const size_t count) noexcept -> string_type
+	{
+		if (count == 0)
+		{
+			return string_type();
+		}
+		
+		size_t max_poss = 0;
+		for (size_t i = 0; i < count; ++i)
+		{
+			max_poss += ps[i].length();
+		}
+		max_poss += count - 1;
+		
+
+		string_type accum;
+		accum.reserve(max_poss);
+		accum += ps[0];
+		bool hasSlash = true;
+		if (accum.length() > 0)
+		{
+			hasSlash = accum[accum.length()-1] == '/';
+		}
+		
+		for (size_t i = 1; i < count; ++i)
+		{
+			if (ps[i].length() > 0)
+			{
+				if (ps[i][0] == '/')
+				{
+					if (hasSlash)
+					{
+						accum += ps[i].substr(1);
+					}
+					else
+					{
+						accum += ps[i];
+					}
+				}
+				else if (hasSlash)
+				{
+					accum += ps[i];
+				}
+				else
+				{
+					accum += "/" + ps[i];
+				}
+
+				hasSlash = accum[accum.length()-1] == '/';
+			}
+		}
+
+		return accum;
+	}
+
+	auto Path::Split(const string_type& path, size_t& count) noexcept -> string_type*
+	{
+		count = 0;
+		for (size_t i = 0; i < path.length() - 1; ++i)
+		{
+			if (path[i] == '/')
+			{
+				++count;
+			}
+		}
+
+		string_type* array = new string_type[count];
+		for (size_t i = 0, n = 0; i < path.length() - 1; ++i)
+		{
+			if (path[i] == '/')
+			{
+				++n;
+			}
+			else
+			{
+				array[n] += path[i];
+			}
+		}
+		return array;
+	}
+
+	bool Path::CanSimplify(const string_type&)
+	{
+		// TODO
+		ASSERT(false);
+	}
+
+	bool Path::Simplify(string_type&)
+	{
+		// TODO
+		ASSERT(false);
+	}
 }
 }
