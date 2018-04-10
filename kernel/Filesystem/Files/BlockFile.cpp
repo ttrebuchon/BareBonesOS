@@ -22,7 +22,7 @@ namespace Kernel { namespace Filesystem
 		
 		if (blockStart)
 		{
-			*blockStart == nullptr;
+			*blockStart = nullptr;
 		}
 		
 		if (forReading && pos >= size)
@@ -84,6 +84,9 @@ namespace Kernel { namespace Filesystem
 				}
 			}
 		}
+
+		// TODO: Figure out what to return
+		ASSERT(false);
 	}
 	
 	

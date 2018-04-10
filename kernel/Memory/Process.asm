@@ -28,6 +28,8 @@ copy_page_physical:
     OR EDX, 0x80000000
     MOV CR0, EDX
 
+    STI
+
     POPF
     POP EBX
 
