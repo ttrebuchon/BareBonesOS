@@ -72,14 +72,18 @@ Kernel::Memory::GDTEntry gdt_table2[5];
 //In Task_c.c
 extern "C" uint32_t init_esp;
 
+
+void testPaging();
+
 #if defined(__cplusplus)
 extern "C"
 #endif
 int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
 {
 	init_esp = initial_stack;
-    Kernel::TSS _myTSS{0};
-    Kernel::TSS::myTSS = &_myTSS;
+    // TaskStateSegment_x86_t myTSS;
+    // Kernel::TSS _myTSS{0};
+    // Kernel::TSS::myTSS = &_myTSS;
 
     Kernel::Interrupts::cli();
 
@@ -95,14 +99,18 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     Drivers::VGA::Write("Initializing IDT...\n");
     Kernel::Interrupts::init_idt();
     Drivers::VGA::Write("IDT Initialized.\n");
-    Drivers::VGA::Write("Initializing timer...\n");
-    init_timer(50);
-    Drivers::VGA::Write("Timer initialized.\n");
+    // Drivers::VGA::Write("Initializing timer...\n");
+    // init_timer(50);
+    // Drivers::VGA::Write("Timer initialized.\n");
     ASSERT(init_esp != 0);
     ASSERT(mboot_ptr != 0);
     Drivers::VGA::Write("Initializing paging...\n");
     Kernel::Memory::init_paging();
     Drivers::VGA::Write("Paging initialized.\n");
+    Drivers::VGA::Write("Testing paging...\n");
+    testPaging();
+    Drivers::VGA::Write("Paging tested.\n");
+    ASSERT(false);
     Kernel::init_tasking();
     Drivers::VGA::Write("Tasking initialized.\n");
 
@@ -134,6 +142,8 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     out.flush();
     while (1);
 
+    
+    
     
     {
         ASSERT(Kernel::Memory::kheap != 0x0);
@@ -393,4 +403,75 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     out.flush();
     //Drivers::VGA::Write("Kernel main() is finished!!\n");
     return 0;
+}
+
+void testPaging()
+{
+    asm volatile ("cli");
+    Drivers::VGA::Write("KPlacement: ");
+    Drivers::VGA::Write((void*)kPlacement);
+    Drivers::VGA::Write("\n");
+    // ASSERT(false);
+    using namespace Kernel;
+    using namespace Memory;
+
+    const addr_t ADDR   = 0xE0000000;
+    const addr_t ADDR2  = 0xE0200000;
+
+    const size_t len = 0x2000;
+
+    auto current_dir = PageDirectory::Current;
+
+    current_dir->switch_to();
+
+    ASSERT(current_dir->at((void*)ADDR) == nullptr);
+    // ASSERT(current_dir->getPage(ADDR, false) == nullptr);
+
+    ASSERT(current_dir);
+    ASSERT(current_dir->at(ADDR, false) == nullptr);
+    ASSERT(current_dir->map((ADDR - 0x0000), ADDR, len, true, false, false));
+    unsigned char* a1 = (unsigned char*)ADDR;
+
+    current_dir->at((void*)ADDR)->flush();
+    // current_dir->flush((void*)ADDR);
+
+    ASSERT(current_dir);
+    ASSERT(current_dir->map((ADDR2 - 0x0000), ADDR, len, true, false, false));
+    unsigned char* a2 = (unsigned char*)ADDR2;
+
+    // current_dir->flush((void*)ADDR2);
+    current_dir->at((void*)ADDR2)->flush();
+
+
+    // auto phys = virtual_to_physical(current_dir, (const void*)ADDR);
+    auto phys = current_dir->physical((void*)ADDR);
+    ASSERT(phys != 0);
+    Drivers::VGA::Write(phys);
+    Drivers::VGA::Write("\n");
+
+    for (volatile int i = 0; i < 100; ++i)
+    {
+        current_dir->flush();
+    }
+    
+
+    
+
+    for (int i = 0; i < len; ++i)
+    {
+        a1[i] = (i % 256);
+    }
+
+    // auto p = current_dir->getPage(ADDR, false);
+    auto p = current_dir->at((void*)ADDR);
+    ASSERT(p);
+    Drivers::VGA::Write((void*)((addr_t)p->frame() << 12));
+    ASSERT((ADDR & 0xfffff000) == ADDR);
+    Drivers::VGA::Write("\n");
+
+    for (int i = 0; i < len; ++i)
+    {
+        ASSERT(a2[i] == (i % 256));
+    }
+    asm volatile ("sti");
 }

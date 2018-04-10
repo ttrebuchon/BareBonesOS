@@ -3,6 +3,10 @@
 
 #include <Common.h>
 
+#define PAGE_SIZE 0x1000
+
+extern "C" void flush_tlb_page(addr_t addr);
+
 namespace Kernel { namespace Memory {
 	
 	
@@ -192,6 +196,10 @@ namespace Kernel { namespace Memory {
 			
 			bool present() const noexcept;
 			void present(bool) noexcept;
+
+			void flush() const noexcept;
+
+			bool allocate(bool, bool) noexcept;
 			
 			friend class Table;
 			friend class PageDirectory;
@@ -236,7 +244,7 @@ namespace Kernel { namespace Memory {
 		
 		
 		protected:
-		_Dir dir;
+		_Dir* dir;
 		Table* tables[1024];
 		void* dir_phys;
 		
@@ -251,8 +259,11 @@ namespace Kernel { namespace Memory {
 		PageDirectory();
 		
 		
-		Page* at(const void* const) noexcept;
+		Page* at(const void* const, bool create = false) noexcept;
 		const Page* at(const void* const) const noexcept;
+
+		Page* at(const addr_t, bool create = false) noexcept;
+		const Page* at(const addr_t) const noexcept;
 		
 		Table* table(const size_t, bool create = false) noexcept;
 		Table* table(const void* const, bool create = false) noexcept;
@@ -262,8 +273,20 @@ namespace Kernel { namespace Memory {
 		__attribute__((always_inline))
 		void* physical(const void* const p) const noexcept
 		{ return getPhysicalAddress(p); }
+		void switch_to() noexcept;
+		bool flush() const noexcept;
+		const void* thisPhysical() const noexcept
+		{
+			return dir_phys;
+		}
+
+		bool map(const void* virt, const void* phys, size_t len, bool writeable, bool kernel_only, bool overwrite = false) noexcept;
+		bool map(addr_t virt, addr_t phys, size_t len, bool writeable, bool kernel_only, bool overwrite = false) noexcept;
+		bool map(const void* virt, size_t len, bool writeable, bool kernel_only) noexcept;
+		bool map(addr_t virt, size_t len, bool writeable, bool kernel_only) noexcept;
 		
-		
+		PageDirectory* clone(PageDirectory* linkWith = nullptr) const noexcept;
+		PageDirectory* clone(PageDirectory** linkWith, size_t count) const noexcept;
 		
 		
 		Page& operator[](const void*) noexcept;

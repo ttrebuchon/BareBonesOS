@@ -11,14 +11,15 @@
 namespace Kernel { namespace Memory {
 
 
-	extern PageDir* kernel_dir;
-	extern PageDir* current_dir;
-	#ifdef DEBUG
-	extern PageDir* identity_dir;
+	extern PageDirectory* kernel_dir;
+	//extern PageDir* current_dir;
+	#ifdef DEBUG_IDENTITY_DIR
+	extern PageDirectory* identity_dir;
 	#endif
 
 	void init_paging();
-	void switch_page_dir(PageDir*);
+	// void switch_page_dir(PageDir*);
+	void switch_page_dir(void* tables_phys);
 	void page_fault(Registers_t);
 	PageDir* create_empty_page_dir(uint32_t* phys);
 	void* virtual_to_physical(const PageDir* dir, const void* virt_addr);

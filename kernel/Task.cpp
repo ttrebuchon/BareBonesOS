@@ -344,7 +344,7 @@ void init_tasking()
 	Task::current_task->id = next_pid++;
 	Task::current_task->ebp = Task::current_task->esp = 0;
 	Task::current_task->instr_ptr = 0;
-	Task::current_task->page_dir = Memory::current_dir;
+	Task::current_task->page_dir = Memory::PageDirectory::Current;
 
 	tasks = new Utils::List<Task*>();
 	tasks->push_back(Task::current_task);
@@ -359,7 +359,7 @@ int fork()
 	if (!Task::current_task) return -1;
 	
 	Task* caller = Task::current_task;
-	Memory::PageDir* new_dir = Memory::current_dir->clone();
+	Memory::PageDirectory* new_dir = Memory::PageDirectory::Current->clone(Memory::kernel_dir);
 	
 	
 	
@@ -428,7 +428,8 @@ extern "C" void task_switch()
 	{
 		uint32_t _cr3;
 		asm volatile ("mov %%cr3, %0" : "=r"(_cr3));
-		ASSERT((void*)_cr3 == virtual_to_physical(Memory::current_dir, (*task_iterator)->page_dir));
+		ASSERT((void*)_cr3 == Memory::PageDirectory::Current->physical((*task_iterator)->page_dir));
+		// ASSERT((void*)_cr3 == virtual_to_physical(Memory::current_dir, (*task_iterator)->page_dir));
 		//ASSERT(false);
 	}
 	//ASSERT(false);
@@ -439,12 +440,12 @@ extern "C" void task_switch()
 	ebp = Task::current_task->ebp;
 
 	
-
-	uint32_t dir_phys = (uint32_t)virtual_to_physical(Memory::current_dir, &Task::current_task->page_dir->tables);
+	addr_t dir_phys = (addr_t)Memory::PageDirectory::Current->physical(Task::current_task->page_dir->thisPhysical());
+	// uint32_t dir_phys = (uint32_t)virtual_to_physical(Memory::current_dir, &Task::current_task->page_dir->tables);
 	ASSERT(dir_phys != 0);
-	ASSERT((void*)&Task::current_task->page_dir->tables == Task::current_task->page_dir->tables);
+	// ASSERT((void*)&Task::current_task->page_dir->tables == Task::current_task->page_dir->tables);
 
-	Memory::current_dir = Task::current_task->page_dir;
+	Memory::PageDirectory::Current = Task::current_task->page_dir;
 
 	asm volatile("	\
 	cli;	\

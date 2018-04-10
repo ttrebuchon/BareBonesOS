@@ -14,10 +14,10 @@ extern "C" uint32_t end;
 namespace Kernel { namespace Memory
 {
 
-	PageDir* kernel_dir;
-	PageDir* current_dir;
-	#ifdef DEBUG
-	PageDir* identity_dir;
+	PageDirectory* kernel_dir;
+	// PageDir* current_dir;
+	#ifdef DEBUG_IDENTITY_DIR
+	PageDirectory* identity_dir;
 	#endif
 	Utils::Bitset_Ptr<>* frame_collection;
 
@@ -57,6 +57,8 @@ namespace Kernel { namespace Memory
 
 	void init_paging()
 	{
+		asm volatile("cli");
+
 		uint32_t mem_end = 0xF0000000;
 		
 		TRACE_C("Initializing frame collection...\n");
@@ -65,7 +67,7 @@ namespace Kernel { namespace Memory
 		
 		
 		
-		#ifdef DEBUG
+		#ifdef DEBUG_IDENTITY_DIR
 		TRACE_C("Allocating identity_dir...\n");
 		addr_t iphys;
 		identity_dir = create_empty_page_dir(&iphys);
@@ -90,34 +92,51 @@ namespace Kernel { namespace Memory
 		#endif
 		
 		
-		
-		
-		
-		TRACE_C("Allocating kernel_dir...\n");
-		addr_t phys;
-		kernel_dir = (struct PageDir*)kmalloc(sizeof(struct PageDir), 1, &phys);
+		kernel_dir = new PageDirectory();
 		TRACE_C("kernel_dir allocated.\n");
-		kmemset(kernel_dir, 0, sizeof(struct PageDir));
-		ASSERT(phys == (uint32_t)&kernel_dir->tables);
-		
-		//kernel_dir->physicalAddress = (uint32_t)kernel_dir->physicalTables;
-		
+
 		TRACE_C("Getting kheap pages...\n");
 		unsigned int i = 0;
 		for (i = KHEAP_START; i < KHEAP_START+KHEAP_INITIAL_SIZE; i += 0x1000)
 		{
-			kernel_dir->getPage(i, 1);
+			ASSERT(kernel_dir->at(i, true) != nullptr);
+			// kernel_dir->getPage(i, 1);
 		}
 		TRACE_C("Pages created.\n");
+
 		
 		
+		// TRACE_C("Allocating kernel_dir...\n");
+		// addr_t phys;
+		// kernel_dir = (struct PageDir*)kmalloc(sizeof(struct PageDir), 1, &phys);
+		// TRACE_C("kernel_dir allocated.\n");
+		// kmemset(kernel_dir, 0, sizeof(struct PageDir));
+		// for (int i = 0; i < sizeof(PageDir); ++i)
+		// {
+		// 	ASSERT(((unsigned char*)kernel_dir)[i] == 0);
+		// }
+		// ASSERT(phys == (uint32_t)&kernel_dir->thisPhysical());
+		
+		// //kernel_dir->physicalAddress = (uint32_t)kernel_dir->physicalTables;
+		
+		// TRACE_C("Getting kheap pages...\n");
+		// unsigned int i = 0;
+		// for (i = KHEAP_START; i < KHEAP_START+KHEAP_INITIAL_SIZE; i += 0x1000)
+		// {
+		// 	kernel_dir->getPage(i, 1);
+		// }
+		// TRACE_C("Pages created.\n");
+		
+		KHeap* kheap_tmp = (KHeap*)kmalloc(sizeof(KHeap), true, 0);\
+		kmemset(kheap_tmp, 0, sizeof(KHeap));
 		
 		
 		TRACE_C("Allocating frames...\n");
 		i = 0;
 		while (i < kPlacement + 0x1000)
 		{
-			kernel_dir->getPage(i, 1)->alloc_frame(0, 0);
+			kernel_dir->at(i, true)->allocate(true, false);
+			// kernel_dir->getPage(i, 1)->alloc_frame(0, 0);
 			i += 0x1000;
 		}
 		TRACE_C("Frames Allocated.\n");
@@ -125,7 +144,13 @@ namespace Kernel { namespace Memory
 		TRACE_C("Allocating kheap frames...\n");
 		for (i = KHEAP_START; i < KHEAP_START + KHEAP_INITIAL_SIZE; i += 0x1000)
 		{
-			kernel_dir->getPage(i, 1)->alloc_frame(0, 0);
+			auto pg = kernel_dir->at(i, true);
+			ASSERT(pg);
+			ASSERT(!pg->present());
+			pg->allocate(true, false);
+			ASSERT(pg->present());
+			ASSERT(pg->frame() != 0);
+			// kernel_dir->getPage(i, 1)->alloc_frame(0, 0);
 			//alloc_frame(get_page(i, 1, kernel_dir), 0, 0);
 		}
 		TRACE_C("kheap frames allocated.\n");
@@ -133,45 +158,59 @@ namespace Kernel { namespace Memory
 		Kernel::Interrupts::register_interrupt_handler(14, page_fault);
 		TRACE_C("Page fault handler registered\n");
 		
-		current_dir = 0x0;
-		switch_page_dir(identity_dir);
+		TRACE_C("Switching page directories...");
+		PageDirectory::Current = 0x0;
+		#ifdef DEBUG_IDENTITY_DIR
+		//switch_page_dir(identity_dir);
+		identity_dir->switch_to();
+		ASSERT(identity_dir == PageDirectory::Current);
+		#else
+		kernel_dir->switch_to();
+		//switch_page_dir(kernel_dir);
+		ASSERT(kernel_dir == PageDirectory::Current);
+		#endif
 		TRACE_C("Page directory switched\n");
-		//while (true);
 
-		//kheap = create_heap(KHEAP_START, KHEAP_START + KHEAP_INITIAL_SIZE, KHEAP_MAX_ADDR, 0, 0);
-		//kheap = (KHeap*)kmalloc(sizeof(KHeap), false, 0);
-		TRACE("KHeap space allocated\n");
-		//new (kheap) KHeap(KHEAP_START, KHEAP_START + KHEAP_INITIAL_SIZE, KHEAP_MAX_ADDR, 0, 0);   
-		//kheap = new KHeap(KHEAP_START, KHEAP_START + KHEAP_INITIAL_SIZE, KHEAP_MAX_ADDR, 0, 0);
+		// kheap = (KHeap*)kmalloc(sizeof(KHeap), true, 0);
+		
+		//TRACE("KHeap space allocated\n");
+		
+		new (kheap_tmp) KHeap(KHEAP_START, KHEAP_START + KHEAP_INITIAL_SIZE, KHEAP_MAX_ADDR, 0, 0);
+		kheap = kheap_tmp;
 		TRACE_C("Kernel Heap created.\n");
 		
-		auto tmp_dir = kernel_dir->clone();
-		TRACE_C("Kernel page directory cloned.\n");
+		// auto tmp_dir = kernel_dir->clone();
+		// TRACE_C("Kernel page directory cloned.\n");
+		//kmalloc(16384, 1, nullptr);
 		
-		#ifndef DEBUG
-		switch_page_dir(tmp_dir);
-		TRACE_C("Switched page directory.\n");
+		#ifndef DEBUG_IDENTITY_DIR
+		//switch_page_dir(tmp_dir);
+		// TRACE_C("Switched page directory to clone.\n");
 		#else
 		ASSERT(virtual_to_physical(current_dir, identity_dir) != 0x0);
 		switch_page_dir(identity_dir);
 		TRACE_C("Switched to identity directory\n");
 		#endif
+		
+		asm volatile("sti");
+		asm volatile("nop");
 	}
 
-	void switch_page_dir(struct PageDir* dir)
+	void switch_page_dir(void* tables_phys)
 	{
-		asm volatile ("sti");
-		uint32_t phys;
-		if (current_dir == 0)
-		{
-			phys = (uint32_t)&dir->tables;
-		}
-		else
-		{
-			phys = (uint32_t)virtual_to_physical(current_dir, &dir->tables);
-		}
-		ASSERT(phys != 0);
-		current_dir = dir;
+		TRACE("CHANGING PAGE DIRECTORY\n");
+		asm volatile ("cli");
+		addr_t phys = (addr_t)tables_phys;
+		// if (PageDirectory::Current == 0)
+		// {
+		// 	phys = (uint32_t)&dir->tables;
+		// }
+		// else
+		// {
+		// 	phys = (uint32_t)virtual_to_physical(PageDirectory::Current, &dir->tables);
+		// }
+		ASSERT(tables_phys != 0);
+		// PageDirectory::Current = dir;
 		// asm volatile ("mov %0, %%cr3":: "r"(dir->physicalAddress));
 		
 		asm volatile ("mov %0, %%cr3":: "r"(phys));
@@ -179,7 +218,7 @@ namespace Kernel { namespace Memory
 		asm volatile ("mov %%cr0, %0" : "=r"(cr0));
 		cr0 |= 0x80000000;
 		asm volatile ("mov %0, %%cr0":: "r"(cr0));
-		asm volatile ("cli");
+		asm volatile ("sti");
 	}
 
 	
@@ -281,7 +320,7 @@ namespace Kernel { namespace Memory
 		Drivers::VGA::Write((void*)regs.eip);
 		Drivers::VGA::Write("\n");
 		Drivers::VGA::Write("Physical Address: ");
-		Drivers::VGA::Write(virtual_to_physical(current_dir, (void*)fault_addr));
+		Drivers::VGA::Write(PageDirectory::Current->physical((void*)fault_addr));
 		Drivers::VGA::Write("\n");
 
 		Drivers::VGA::Write("Upper Bits: ");
@@ -290,62 +329,62 @@ namespace Kernel { namespace Memory
 		Drivers::VGA::Write((void*)midBits);
 		Drivers::VGA::Write("\n");
 
-		auto pgEntry = &Kernel::Memory::current_dir->ref_tables[upperBits]->pages[midBits];
-		Drivers::VGA::Write("Entry Info: \n");
-		//Drivers::VGA::Write(pgEntry->present == 1);
-		Drivers::VGA::Write(Kernel::Memory::current_dir->tables[upperBits].present == 1);
+		// auto pgEntry = &PageDirectory::Current->ref_tables[upperBits]->pages[midBits];
+		// Drivers::VGA::Write("Entry Info: \n");
+		// //Drivers::VGA::Write(pgEntry->present == 1);
+		// Drivers::VGA::Write(Kernel::Memory::current_dir->tables[upperBits].present == 1);
 
-		Drivers::VGA::Write("\nPhys Tables Addr: ");
-		addr_t cr3;
-		asm volatile("mov %%cr3, %0" : "=r"(cr3));
-		Drivers::VGA::Write((void*)cr3);
-		Drivers::VGA::Write("\n");
-		Drivers::VGA::Write((void*)virtual_to_physical(Kernel::Memory::current_dir, (void*)0xefc05000));
-
-		uint32_t page_dir_index = ((uint32_t)0xefc05000)/(1024*4096); // >> 22
-		uint32_t page_table_index = (((uint32_t)0xefc05000)/4096)&0x3ff;
-		uint32_t frame_offset = ((uint32_t)0xefc05000)&0xfff;
-		Drivers::VGA::Write("\n");
-		Drivers::VGA::Write(Kernel::Memory::current_dir->tables[page_dir_index].present == 1);
-		Drivers::VGA::Write("\n");
-		Drivers::VGA::Write((void*)Kernel::Memory::current_dir->tables[page_dir_index].frame);
-		Drivers::VGA::Write("\n");
-		Drivers::VGA::Write(Kernel::Memory::current_dir->ref_tables[page_dir_index]->pages[page_table_index].present == 1);
-		Drivers::VGA::Write("\n");
-		Drivers::VGA::Write((void*)Kernel::Memory::current_dir->ref_tables[page_dir_index]->pages[page_table_index].frame);
-
-		// auto pg = current_dir->getPage(fault_addr, 0);
-		// Drivers::VGA::Write("\n\n");
-		// Drivers::VGA::Write("Read/Write: ");
-		// Drivers::VGA::Write(pg->rw == 1);
-
-		// Drivers::VGA::Write("                                             \n");
-		// Drivers::VGA::Write("                                             \r");
-		// Drivers::VGA::Write("Upper Bits: ");
-		// Drivers::VGA::Write((void*)upperBits);
+		// Drivers::VGA::Write("\nPhys Tables Addr: ");
+		// addr_t cr3;
+		// asm volatile("mov %%cr3, %0" : "=r"(cr3));
+		// Drivers::VGA::Write((void*)cr3);
 		// Drivers::VGA::Write("\n");
-		// Drivers::VGA::Write("                                             \r");
-		// Drivers::VGA::Write("Middle Bits: ");
-		// Drivers::VGA::Write((void*)midBits);
-		// Drivers::VGA::Write("\n");
-		// Drivers::VGA::Write("Combined Bits:                ");
-		// Drivers::VGA::Write((void*)((fault_addr >> 12)));
-		
-		// Drivers::VGA::Write("\nTable Present?   ");
-		// Drivers::VGA::Write(current_dir->tables[upperBits].present == 1);
-		// Drivers::VGA::Write("\nTable R/W?   ");
-		// Drivers::VGA::Write(current_dir->tables[upperBits].rw == 1);
-		// Drivers::VGA::Write("\nTable User?   ");
-		// Drivers::VGA::Write(current_dir->tables[upperBits].user == 1);
-		// Drivers::VGA::Write("\nTable Cache?   ");
-		// Drivers::VGA::Write(current_dir->tables[upperBits].cache == 1);
-		// Drivers::VGA::Write("\nTable Accessed?   ");
-		// Drivers::VGA::Write(current_dir->tables[upperBits].access == 1);
-		
-		// ASSERT(current_dir->ref_tables[upperBits] != 0);
+		// Drivers::VGA::Write((void*)virtual_to_physical(PageDirectory::Current, (void*)0xefc05000));
 
-		// Drivers::VGA::Write("\nPage Present?   ");
-		// Drivers::VGA::Write(current_dir->ref_tables[upperBits]->pages[midBits].present == 1);
+		// uint32_t page_dir_index = ((uint32_t)0xefc05000)/(1024*4096); // >> 22
+		// uint32_t page_table_index = (((uint32_t)0xefc05000)/4096)&0x3ff;
+		// uint32_t frame_offset = ((uint32_t)0xefc05000)&0xfff;
+		// Drivers::VGA::Write("\n");
+		// Drivers::VGA::Write(Kernel::Memory::current_dir->tables[page_dir_index].present == 1);
+		// Drivers::VGA::Write("\n");
+		// Drivers::VGA::Write((void*)Kernel::Memory::current_dir->tables[page_dir_index].frame);
+		// Drivers::VGA::Write("\n");
+		// Drivers::VGA::Write(Kernel::Memory::current_dir->ref_tables[page_dir_index]->pages[page_table_index].present == 1);
+		// Drivers::VGA::Write("\n");
+		// Drivers::VGA::Write((void*)Kernel::Memory::current_dir->ref_tables[page_dir_index]->pages[page_table_index].frame);
+
+		// // auto pg = current_dir->getPage(fault_addr, 0);
+		// // Drivers::VGA::Write("\n\n");
+		// // Drivers::VGA::Write("Read/Write: ");
+		// // Drivers::VGA::Write(pg->rw == 1);
+
+		// // Drivers::VGA::Write("                                             \n");
+		// // Drivers::VGA::Write("                                             \r");
+		// // Drivers::VGA::Write("Upper Bits: ");
+		// // Drivers::VGA::Write((void*)upperBits);
+		// // Drivers::VGA::Write("\n");
+		// // Drivers::VGA::Write("                                             \r");
+		// // Drivers::VGA::Write("Middle Bits: ");
+		// // Drivers::VGA::Write((void*)midBits);
+		// // Drivers::VGA::Write("\n");
+		// // Drivers::VGA::Write("Combined Bits:                ");
+		// // Drivers::VGA::Write((void*)((fault_addr >> 12)));
+		
+		// // Drivers::VGA::Write("\nTable Present?   ");
+		// // Drivers::VGA::Write(current_dir->tables[upperBits].present == 1);
+		// // Drivers::VGA::Write("\nTable R/W?   ");
+		// // Drivers::VGA::Write(current_dir->tables[upperBits].rw == 1);
+		// // Drivers::VGA::Write("\nTable User?   ");
+		// // Drivers::VGA::Write(current_dir->tables[upperBits].user == 1);
+		// // Drivers::VGA::Write("\nTable Cache?   ");
+		// // Drivers::VGA::Write(current_dir->tables[upperBits].cache == 1);
+		// // Drivers::VGA::Write("\nTable Accessed?   ");
+		// // Drivers::VGA::Write(current_dir->tables[upperBits].access == 1);
+		
+		// // ASSERT(current_dir->ref_tables[upperBits] != 0);
+
+		// // Drivers::VGA::Write("\nPage Present?   ");
+		// // Drivers::VGA::Write(current_dir->ref_tables[upperBits]->pages[midBits].present == 1);
 		
 		
 		

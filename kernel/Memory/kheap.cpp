@@ -5,7 +5,7 @@
 extern uint32_t end;
 uint32_t kPlacement = (addr_t)&end;
 
-extern Kernel::Memory::PageDir* Kernel::Memory::kernel_dir;
+extern Kernel::Memory::PageDirectory* Kernel::Memory::kernel_dir;
 
 
 
@@ -18,8 +18,10 @@ extern "C" {
             //void* addr = _alloc(size, (uint8_t)align, kheap);
             if (phys != 0)
             {
-                Kernel::Memory::Page* page = Kernel::Memory::kernel_dir->getPage((addr_t)addr, 0);
-                *phys = page->frame*0x1000 + ((addr_t)addr&0xFFF);
+                auto page = Kernel::Memory::kernel_dir->at(addr);
+                ASSERT(page != nullptr);
+                // *phys = page->frame*0x1000 + ((addr_t)addr&0xFFF);
+                *phys = (addr_t)page->frame() + ((addr_t)addr&0xFFF);
             }
             return addr;
         }
@@ -58,6 +60,24 @@ extern "C" {
             *d = c;
         }
         return ptr;
+    }
+
+    void* kmremap(void* old_addr, size_t oSize, size_t nSize, long unsigned int flags)
+    {
+        // TODO
+        ASSERT(false);
+    }
+
+    int kmunmap(void* addr, size_t len)
+    {
+        // TODO
+        ASSERT(false);
+    }
+
+    void* kmmap(void* addr, size_t len, int prot, int flags, int fileDescriptor, off_t off)
+    {
+        // TODO
+        ASSERT(false);
     }
 }
 
@@ -123,7 +143,7 @@ namespace Kernel { namespace Memory {
             start += 0x1000;
         }
 
-        TRACE("Setting up heap fields...\n");
+        //TRACE("Setting up heap fields...\n");
 
         _startAddr = start;
         _endAddr = end;
@@ -131,17 +151,17 @@ namespace Kernel { namespace Memory {
         supervisor = sup;
         readonly = readonly;
 
-        TRACE("Creating initial hole...\n");
+        //TRACE("Creating initial hole...\n");
         KHeapHeader* hole = (KHeapHeader*)start;
-        TRACE("Hole address identified.\n");
+        //TRACE("Hole address identified.\n");
         hole->size = end - start;
-        TRACE("Hole size set.\n");
+        //TRACE("Hole size set.\n");
         hole->magic = HEAP_MAGIC;
-        TRACE("Hole magic set.\n");
+        //TRACE("Hole magic set.\n");
         hole->is_hole = 1;
-        TRACE("Hole identified as a hole.\n");
+        //TRACE("Hole identified as a hole.\n");
         index.insert(hole);
-        TRACE("Initial hole inserted into index.\n");
+        //TRACE("Initial hole inserted into index.\n");
     }
 
     void KHeap::expand(uint32_t nSize)
@@ -155,15 +175,24 @@ namespace Kernel { namespace Memory {
             nSize += 0x1000;
         }
 
+        TRACE("_startAddr: ");
+        TRACE(_startAddr);
+        TRACE("\n");
+        TRACE("nSize: ");
+        TRACE(nSize);
+        TRACE("\n");
         ASSERT(_startAddr + nSize <= addrMax);
 
         uint32_t oSize = _endAddr - _startAddr;
-        uint32_t i = oSize;
-        while (i < nSize)
-        {
-            kernel_dir->getPage(_startAddr+i, 1)->alloc_frame((supervisor) ? 1 : 0, readonly ? 0 : 1);
-            i += 0x1000;
-        }
+        ASSERT(kernel_dir->map(_startAddr+oSize, nSize - oSize, supervisor, !readonly));
+        // uint32_t i = oSize;
+        // while (i < nSize)
+        // {
+            
+        //     (*kernel_dir)[_startAddr+i].
+        //     kernel_dir->getPage(_startAddr+i, 1)->alloc_frame((supervisor) ? 1 : 0, readonly ? 0 : 1);
+        //     i += 0x1000;
+        // }
         _endAddr = _startAddr + nSize;
     }
 
@@ -183,7 +212,13 @@ namespace Kernel { namespace Memory {
         uint32_t oSize = _endAddr - _startAddr;
         for (uint32_t i = oSize; i > nSize; i -= 0x1000)
         {
-            kernel_dir->getPage(_startAddr+i, 0)->free_frame();
+            auto page = kernel_dir->at((void*)(_startAddr+i));
+            ASSERT(page);
+            clear_frame(((addr_t)page->frame()) >> 12);
+            page->present(false);
+            page->frame(nullptr);
+            page->flush();
+            // kernel_dir->getPage(_startAddr+i, 0)->free_frame();
         }
         _endAddr = _startAddr + nSize;
         return nSize;
@@ -370,6 +405,12 @@ namespace Kernel { namespace Memory {
         {
             index.insert(head);
         }
+    }
+
+    void* KHeap::realloc(void*, size_t)
+    {
+        // TODO
+        ASSERT(false);
     }
 
     uint32_t KHeap::endAddr() const

@@ -11,7 +11,7 @@
 START_NS(Kernel)
 
 namespace Memory {
-	class PageDir;
+	class PageDirectory;
 }
 
 class SystemResource;
@@ -24,7 +24,7 @@ class Task
 	int id;
 	addr_t esp, ebp;
 	uint32_t instr_ptr;
-	Memory::PageDir* page_dir;
+	Memory::PageDirectory* page_dir;
 	Utils::list<Utils::shared_ptr<SystemResource>> resources;
 };
 

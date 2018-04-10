@@ -50,7 +50,7 @@ namespace Kernel { namespace Memory
 		
 		for (auto i = 0; i < tableCount; ++i)
 		{
-			tables[i] = new Table(dir.tables[i], alloc);
+			tables[i] = new Table(dir->tables[i], alloc);
 		}
 	}
 	
