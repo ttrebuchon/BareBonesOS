@@ -1,6 +1,7 @@
 #include "DMA.hh"
 #include <drivers/PortIO.h>
 #include <kernel/Interrupts.h>
+#include <drivers/VGA.hh>
 
 namespace Drivers { namespace IDE {
 
