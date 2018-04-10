@@ -451,6 +451,7 @@ namespace Utils
         
         value_type& at(size_t pos);
         const value_type& at(size_t pos) const;
+        basic_string substr(size_t pos = 0, size_t len = npos) const;
         
         
         
@@ -543,6 +544,15 @@ namespace Utils
     
     template <class Char_t, class T, class Alloc>
     inline basic_string<Char_t, T, Alloc> operator+(const basic_string<Char_t, T, Alloc>& _lhs, const Char_t* _rhs)
+    {
+    	basic_string<Char_t, T, Alloc> res = _lhs;
+    	res += _rhs;
+    	return res;
+    }
+    
+    
+    template <class Char_t, class T, class Alloc>
+    inline basic_string<Char_t, T, Alloc> operator+(const Char_t* _lhs, const basic_string<Char_t, T, Alloc>& _rhs)
     {
     	basic_string<Char_t, T, Alloc> res = _lhs;
     	res += _rhs;

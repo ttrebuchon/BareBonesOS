@@ -68,6 +68,24 @@ namespace Utils
 	{
 		
 	}
+
+	__STRTEMP__ basic_string<Char_t, T, Alloc>::basic_string(basic_string&& str) noexcept : _M_dataplus(str._M_dataplus)
+	{
+		#ifndef _GLIBCXX_FULLY_DYNAMIC_STRING
+			str._M_data(_S_empty_rep()._M_refdata());
+		#else
+			str._M_data(_S_construct(size_type(), Char_t(), get_allocator()));
+		#endif
+	}
+
+	__STRTEMP__ basic_string<Char_t, T, Alloc>::basic_string(const basic_string& str, size_t pos, size_t len, const Alloc& alloc)
+		: _M_dataplus(_S_construct(str._M_data() + str._M_check(pos, "basic_string::basic_string"),
+												str._M_data() + str._M_limit(pos, len)
+												+ pos, alloc), alloc)
+		
+	{
+
+	}
 	
 	__STRTEMP__ typename basic_string<Char_t, T, Alloc>::_Rep* basic_string<Char_t, T, Alloc>::_Rep::_S_create(size_type _capacity, size_type oldCapacity, const Alloc& a)
 	{
@@ -267,6 +285,11 @@ namespace Utils
 			__throw_out_of_range("pos out of range");
 		}
 		return _M_data()[pos];
+	}
+
+	__STRTEMP__ auto basic_string<Char_t, T, Alloc>::substr(size_t pos, size_t len) const -> basic_string
+	{
+		return basic_string(*this, pos, len, get_allocator());
 	}
 	
 	
