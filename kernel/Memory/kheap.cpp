@@ -36,7 +36,7 @@ extern "C" {
             {
                 *phys = kPlacement;
             }
-            uint32_t tmp = kPlacement;
+            addr_t tmp = kPlacement;
             kPlacement += size;
             return (void*)tmp;
         }
@@ -121,7 +121,7 @@ namespace Kernel { namespace Memory {
     }
 
 
-    KHeap::KHeap(uint32_t start, uint32_t end, uint32_t max, uint8_t sup, uint8_t readonly) : index((void*)start, HEAP_INDEX_SIZE)
+    KHeap::KHeap(addr_t start, addr_t end, addr_t max, uint8_t sup, uint8_t readonly) : Heap(start + sizeof(KHeapHeader*)*HEAP_INDEX_SIZE, end, PAGE_SIZE, sup, readonly), index((void*)start, HEAP_INDEX_SIZE), addrMax(max)
     {
         //KHeap* heap = (KHeap*)kmalloc(sizeof(KHeap), false, 0x0);
         //TRACE("Heap memory allocated.\n");
@@ -145,11 +145,11 @@ namespace Kernel { namespace Memory {
 
         //TRACE("Setting up heap fields...\n");
 
-        _startAddr = start;
+        /*_startAddr = start;
         _endAddr = end;
         addrMax = max;
         supervisor = sup;
-        readonly = readonly;
+        readonly = readonly;*/
 
         //TRACE("Creating initial hole...\n");
         KHeapHeader* hole = (KHeapHeader*)start;
@@ -164,10 +164,10 @@ namespace Kernel { namespace Memory {
         //TRACE("Initial hole inserted into index.\n");
     }
 
-    void KHeap::expand(uint32_t nSize)
+    void KHeap::expand(size_t nSize)
     {
 
-        ASSERT(nSize > _endAddr - _startAddr);
+        ASSERT(nSize > endAddr() - startAddr());
 
         if ((nSize & 0xFFFFF000) != 0)
         {
@@ -176,15 +176,15 @@ namespace Kernel { namespace Memory {
         }
 
         TRACE("_startAddr: ");
-        TRACE(_startAddr);
+        TRACE(startAddr());
         TRACE("\n");
         TRACE("nSize: ");
         TRACE(nSize);
         TRACE("\n");
-        ASSERT(_startAddr + nSize <= addrMax);
+        ASSERT(startAddr() + nSize <= addrMax);
 
-        uint32_t oSize = _endAddr - _startAddr;
-        ASSERT(kernel_dir->map(_startAddr+oSize, nSize - oSize, supervisor, !readonly));
+        uint32_t oSize = endAddr() - startAddr();
+        ASSERT(kernel_dir->map(startAddr()+oSize, nSize - oSize, supervisor(), !readonly()));
         // uint32_t i = oSize;
         // while (i < nSize)
         // {
@@ -193,10 +193,11 @@ namespace Kernel { namespace Memory {
         //     kernel_dir->getPage(_startAddr+i, 1)->alloc_frame((supervisor) ? 1 : 0, readonly ? 0 : 1);
         //     i += 0x1000;
         // }
-        _endAddr = _startAddr + nSize;
+        
+        setEnd(startAddr() + nSize);
     }
 
-    uint32_t KHeap::contract(uint32_t nSize)
+    uint32_t KHeap::contract(size_t nSize)
     {
         if (nSize & 0x1000)
         {
@@ -209,10 +210,10 @@ namespace Kernel { namespace Memory {
             nSize = HEAP_MIN_SIZE;
         }
 
-        uint32_t oSize = _endAddr - _startAddr;
-        for (uint32_t i = oSize; i > nSize; i -= 0x1000)
+        size_t oSize = endAddr() - startAddr();
+        for (size_t i = oSize; i > nSize; i -= 0x1000)
         {
-            auto page = kernel_dir->at((void*)(_startAddr+i));
+            auto page = kernel_dir->at((void*)(startAddr()+i));
             ASSERT(page);
             clear_frame(((addr_t)page->frame()) >> 12);
             page->present(false);
@@ -220,22 +221,22 @@ namespace Kernel { namespace Memory {
             page->flush();
             // kernel_dir->getPage(_startAddr+i, 0)->free_frame();
         }
-        _endAddr = _startAddr + nSize;
+        setEnd(startAddr() + nSize);
         return nSize;
     }
 
-    void* KHeap::alloc(uint32_t size, bool page_align)
+    void* KHeap::alloc(size_t size, bool page_align)
     {
-        uint32_t nSize = size + sizeof(KHeapHeader) + sizeof(KHeapFooter);
+        size_t nSize = size + sizeof(KHeapHeader) + sizeof(KHeapFooter);
         int32_t it = find_smallest_hole(nSize, page_align);
 
         if (it == -1)
         {
-            uint32_t oldLen = _endAddr - _startAddr;
-            uint32_t old_endAddr = _endAddr;
+            size_t oldLen = endAddr() - startAddr();
+            addr_t old_endAddr = endAddr();
 
             expand(oldLen + nSize);
-            uint32_t newLen = _endAddr - _startAddr;
+            size_t newLen = endAddr() - startAddr();
 
             it = 0;
             int32_t idx = -1;
@@ -276,8 +277,8 @@ namespace Kernel { namespace Memory {
         }
 
         KHeapHeader* origHoleHead = (KHeapHeader*)index[it];
-        uint32_t origHolePos = (addr_t)origHoleHead;
-        uint32_t origHoleSize = origHoleHead->size;
+        addr_t origHolePos = (addr_t)origHoleHead;
+        size_t origHoleSize = origHoleHead->size;
 
         if (origHoleSize - nSize < sizeof(KHeapHeader)+sizeof(KHeapFooter))
         {
@@ -320,7 +321,7 @@ namespace Kernel { namespace Memory {
             holeHeader->size = origHoleSize - nSize;
 
             auto holeFoot = (KHeapFooter*)((addr_t)holeHeader + origHoleSize - nSize - sizeof(KHeapFooter));
-            if ((addr_t)holeFoot < _endAddr)
+            if ((addr_t)holeFoot < endAddr())
             {
                 holeFoot->magic = HEAP_MAGIC;
                 holeFoot->header = holeHeader;
@@ -350,7 +351,7 @@ namespace Kernel { namespace Memory {
         auto testFoot = (KHeapFooter*)((addr_t)ptr - sizeof(KHeapFooter));
         if (testFoot->magic == HEAP_MAGIC && testFoot->header->is_hole == 1)
         {
-            uint32_t cachedSize = head->size;
+            size_t cachedSize = head->size;
             head = testFoot->header;
             foot->header = head;
             head->size += cachedSize;
@@ -375,10 +376,10 @@ namespace Kernel { namespace Memory {
         }
         
         
-        if ((addr_t)foot + sizeof(KHeapFooter) == _endAddr)
+        if ((addr_t)foot + sizeof(KHeapFooter) == endAddr())
         {
-            uint32_t oldLen = _endAddr - _startAddr;
-            uint32_t newLen = contract((addr_t)head - _startAddr);
+            size_t oldLen = endAddr() - startAddr();
+            size_t newLen = contract((addr_t)head - startAddr());
             
             if (head->size - (oldLen - newLen) > 0)
             {
@@ -413,7 +414,7 @@ namespace Kernel { namespace Memory {
         ASSERT(false);
     }
 
-    uint32_t KHeap::endAddr() const
+    /*uint32_t KHeap::endAddr() const
     {
         return _endAddr;
     }
@@ -421,7 +422,7 @@ namespace Kernel { namespace Memory {
     uint32_t KHeap::startAddr() const
     {
         return _startAddr;
-    }
+    }*/
 
 }
 }

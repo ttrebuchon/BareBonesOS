@@ -5,6 +5,7 @@
 #include <kernel/Debug.h>
 #include <Utils/OrderedArray.hh>
 #include "kheap_c.h"
+#include "Heap.hh"
 
 #define KHEAP_START         0xC0000000
 #define KHEAP_INITIAL_SIZE  0x100000
@@ -51,29 +52,26 @@ namespace Kernel { namespace Memory {
         }
     };
 
-    class KHeap
+    class KHeap : public Heap
     {
         private:
         Utils::OrderedArray<struct KHeapHeader*, HeapComp> index;
-        uint32_t _startAddr;
-        uint32_t _endAddr;
+        //uint32_t _startAddr;
+        //uint32_t _endAddr;
         uint32_t addrMax;
-        uint8_t supervisor;
-        uint8_t readonly;
+        //uint8_t supervisor;
+        //uint8_t readonly;
 
-        void expand(uint32_t nSize);
-        uint32_t contract(uint32_t nSize);
+        void expand(size_t nSize);
+        uint32_t contract(size_t nSize);
         int32_t find_smallest_hole(uint32_t size, bool pageAlign);
 
         public:
-        KHeap(uint32_t start, uint32_t end, uint32_t max, uint8_t supervisor, uint8_t readonly);
+        KHeap(addr_t start, addr_t end, addr_t max, uint8_t supervisor, uint8_t readonly);
 
-        void* alloc(uint32_t size, bool page_align);
-        void free(void*);
-        void* realloc(void*, size_t);
-
-        uint32_t endAddr() const;
-        uint32_t startAddr() const;
+        virtual void* alloc(size_t size, bool page_align);
+        virtual void free(void*);
+        virtual void* realloc(void*, size_t);
     };
 
     extern KHeap* kheap;
