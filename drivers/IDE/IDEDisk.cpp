@@ -30,17 +30,26 @@ namespace Drivers { namespace IDE {
 	{
 		Device::Write(dev->channel, Register::Command, 0);
 		//port_byte_out(, 0);
+
+		// TODO
+		ASSERT(false);
 	}
 	
 	
 	int IDEDisk::read(size_t start, size_t len, unsigned char* buf) const
 	{
 		//return dev->ATA_access(false, start, len/512, 1, (addr_t)buf);
+
+		// TODO
+		ASSERT(false);
 	}
 	
 	int IDEDisk::write(size_t start, size_t len, const unsigned char* buf)
 	{
 		//return dev->ATA_access(true, start, len/512, 1, (addr_t)buf);
+		
+		// TODO
+		ASSERT(false);
 	}
 	
 	size_t IDEDisk::capacity() const

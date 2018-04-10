@@ -76,6 +76,12 @@ namespace Kernel { namespace Filesystem
 		 // TODO (Return value)
 		 ASSERT(false);
 	}
+
+	auto File_streambuf::seekpos(pos_type sp, ios_base::openmode which) -> pos_type
+	{
+		// TODO
+		ASSERT(false);
+	}
 	
 	Utils::streamsize File_streambuf::showmanyc()
 	{

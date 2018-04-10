@@ -250,6 +250,7 @@ namespace Drivers { namespace IDE {
 		
 		
 		// TODO
+		ASSERT(false);
 		
 	}
 	

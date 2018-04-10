@@ -91,3 +91,9 @@ int usleep(useconds_t microseconds)
 	return 0;
 }
 
+time_t time(time_t* ptr)
+{
+	// TODO
+	ASSERT(0);
+}
+
