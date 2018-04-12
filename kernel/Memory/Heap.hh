@@ -25,14 +25,14 @@ namespace Kernel { namespace Memory
 		
 
 		public:
-		Heap(addr_t start, addr_t end, size_t pSize, bool supervisor, bool readonly);
+		Heap(addr_t start, addr_t end, size_t pSize, bool supervisor, bool readonly) noexcept;
 		
-		virtual ~Heap() = default;
+		virtual ~Heap() noexcept = default;
 
 		virtual void* alloc(size_t size, size_t alignment = 0) = 0;
 		virtual void free(void*) = 0;
 		void* realloc(void*, size_t, size_t alignment = 0);
-		virtual size_t allocated_size(void*) const = 0;
+		virtual size_t allocated_size(void*) const noexcept = 0;
 		
 		
 		__attribute__((always_inline))
