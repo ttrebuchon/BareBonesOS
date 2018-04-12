@@ -83,21 +83,21 @@ extern "C" {
 
 namespace Kernel { namespace Memory {
 
-    Kernel::Memory::KHeap* kheap = 0;
+    Kernel::Memory::Heap* kheap = 0;
 
-    int32_t KHeap::find_smallest_hole(uint32_t size, bool pageAlign)
+    int32_t KHeap::find_smallest_hole(uint32_t size, size_t alignment)
     {
         uint32_t i;
         for (i = 0; i < index.size(); ++i)
         {
             const KHeapHeader* header = index[i];
-            if (!pageAlign)
+            if (alignment == 0)
             {
                 uint32_t loc = (addr_t)header;
                 int32_t offset = 0;
-                if (((loc + sizeof(struct KHeapHeader)) & 0xFFFFF000) != 0)
+                if (((loc + sizeof(struct KHeapHeader)) & (size_t(0)-pageSize())) != 0)
                 {
-                    offset = 0x1000 - (loc+sizeof(struct KHeapHeader))%0x1000;
+                    offset = pageSize() - (loc+sizeof(struct KHeapHeader))%pageSize();
                 }
                 int32_t holeSize = (int32_t)header->size - offset;
                 if (holeSize >= (int32_t)size)
@@ -225,10 +225,10 @@ namespace Kernel { namespace Memory {
         return nSize;
     }
 
-    void* KHeap::alloc(size_t size, bool page_align)
+    void* KHeap::alloc(size_t size, size_t alignment)
     {
         size_t nSize = size + sizeof(KHeapHeader) + sizeof(KHeapFooter);
-        int32_t it = find_smallest_hole(nSize, page_align);
+        int32_t it = find_smallest_hole(nSize, alignment);
 
         if (it == -1)
         {
@@ -273,7 +273,7 @@ namespace Kernel { namespace Memory {
                 foot->header = head;
             }
 
-            return alloc(size, page_align);
+            return alloc(size, alignment);
         }
 
         KHeapHeader* origHoleHead = (KHeapHeader*)index[it];
@@ -286,11 +286,11 @@ namespace Kernel { namespace Memory {
             nSize = origHoleSize;
         }
 
-        if (page_align && origHolePos & 0xFFFFF000)
+        if (alignment > 0 && origHolePos % alignment != 0)
         {
-            uint32_t newLoc = origHolePos + 0x1000 - (origHoleSize&0xFFF) - sizeof(KHeapHeader);
+            uint32_t newLoc = origHolePos + alignment - (origHoleSize&(alignment-1)) - sizeof(KHeapHeader);
             KHeapHeader* holeHead = (KHeapHeader*)origHolePos;
-            holeHead->size = 0x1000 - (origHolePos&0xFFF) - sizeof(KHeapHeader);
+            holeHead->size = alignment - (origHolePos&(alignment-1)) - sizeof(KHeapHeader);
             holeHead->magic = HEAP_MAGIC;
             holeHead->is_hole = true;
             KHeapFooter* holeFoot = (KHeapFooter*)((uint32_t)newLoc - sizeof(KHeapFooter));
@@ -408,21 +408,11 @@ namespace Kernel { namespace Memory {
         }
     }
 
-    void* KHeap::realloc(void*, size_t)
+    size_t KHeap::allocated_size(void* p) const
     {
         // TODO
         ASSERT(false);
     }
-
-    /*uint32_t KHeap::endAddr() const
-    {
-        return _endAddr;
-    }
-
-    uint32_t KHeap::startAddr() const
-    {
-        return _startAddr;
-    }*/
 
 }
 }

@@ -64,22 +64,22 @@ namespace Kernel { namespace Memory {
 
         void expand(size_t nSize);
         uint32_t contract(size_t nSize);
-        int32_t find_smallest_hole(uint32_t size, bool pageAlign);
+        int32_t find_smallest_hole(uint32_t size, size_t alignment);
 
         public:
         KHeap(addr_t start, addr_t end, addr_t max, uint8_t supervisor, uint8_t readonly);
 
-        virtual void* alloc(size_t size, bool page_align);
+        virtual void* alloc(size_t size, size_t alignment = 0);
         virtual void free(void*);
-        virtual void* realloc(void*, size_t);
+        virtual size_t allocated_size(void*) const;
     };
 
-    extern KHeap* kheap;
+    extern Heap* kheap;
 
 
     KHeap* create_heap(uint32_t start, uint32_t end, uint32_t max, uint8_t supervisor, uint8_t readonly);
-    void* _alloc(uint32_t size, uint8_t page_align, KHeap*);
-    void _free(void*, KHeap*);
+    void* _alloc(uint32_t size, uint8_t page_align, Heap*);
+    void _free(void*, Heap*);
 
 }
 }

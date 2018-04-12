@@ -50,6 +50,10 @@ namespace Kernel { namespace Memory
 		__attribute__((always_inline))
 		bool readonly() const
 		{ return _readonly; }
+
+		__attribute__((always_inline))
+		size_t pageSize() const
+		{ return pSize; }
     };
 }
 }
