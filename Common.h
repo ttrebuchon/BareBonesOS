@@ -21,7 +21,7 @@ typedef uint64_t addr_t;
 #define unlikely(X) __builtin_expect((X), 0)
 
 #ifdef __cplusplus
-#include <new>
+//#include <new>
 //#ifndef TESTING
 
 typedef unsigned long size_t;
@@ -41,6 +41,7 @@ typedef decltype(sizeof(0)) size_t;
 #define IF_CPP_ELSE(X, Y) X
 #define IF_CPP(X) X
 #define IF_C(X) 
+#define _NOEX noexcept
 
 
 
@@ -67,12 +68,29 @@ typedef unsigned long size_t;
 #define IF_CPP_ELSE(X, Y) Y
 #define IF_CPP(X)
 #define IF_C(X) X
+#define _NOEX 
 
 #define IFCPP17(X)
 
 #endif
 
+
+
+#ifdef __cplusplus
+	
+	#include <Utils/constexpr_string.hh>
+	
+	#define __YEAR__ (::Utils::compile::constexpr_launder<::Utils::compile::cstring(__DATE__).substr<7>().parse_int()>::value)
+	
+	#define __DAY__ (::Utils::compile::constexpr_launder<::Utils::compile::cstring(__DATE__).substr<4, 2>().parse_int()>::value)
+	
+	static_assert(__DAY__ == 12);
 #endif
+
+
+
+
+#endif //INCLUDED...
 
 #ifdef __cplusplus
 #include <kernel/CppSupport/new.hh>
