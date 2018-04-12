@@ -24,6 +24,15 @@ SRC += $(call GET_SRC_R,../../Support,cpp)
 SRC += $(call GET_SRC_R,../../kernel/Filesystem,cpp)
 SRC += $(call GET_SRC_R,../../kernel/ResourceHandles,cpp)
 SRC += $(call GET_SRC_R,../../kernel/Filesystem/Files,cpp)
+SRC += ../../kernel/Memory/Heap.cpp
+SRC += ../../kernel/Memory/Heaps/DumbHeap.cpp
+SRC += ../../Drivers/CMOS.cpp
+SRC += ../Dummies/PortIO.c
+SRC += ../Dummies/sleep.c
+SRC += ../Dummies/Interrupts.c
+SRC += ../../kernel/Interrupts/Interrupts_cpp.cpp
+SRC += ../../kernel/Interrupts/irq_guard.cpp
+
 
 C_SRC += $(call GET_SRC_R,../../kernel,c)
 C_SRC += $(call GET_SRC,../../drivers,c)
@@ -84,7 +93,7 @@ CXXFLAGS += -I..
 CXXFLAGS += -fno-rtti
 CXXFLAGS += -fno-exceptions
 CXXFLAGS += $(BOTH_FLAGS)
-CXXFLAGS += -DINCLUDED_NEW_HH
+#CXXFLAGS += -DINCLUDED_NEW_HH
 
 
 

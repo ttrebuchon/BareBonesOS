@@ -10,6 +10,7 @@
 #include "detail/functexcept.hh"
 #include "Atomicity.hh"
 #include "detail/c++config.hh"
+#include "hash"
 
 namespace Utils
 {
@@ -561,6 +562,26 @@ namespace Utils
 
 
     typedef basic_string<char, Char_Traits<char>, Allocator<char>> string;
+    
+    
+    template <class>
+    struct hash;
+    
+    template <class Char_t, class Traits, class Alloc>
+    struct hash<basic_string<Char_t, Traits, Alloc>> : public hash_base<size_t, basic_string<Char_t, Traits, Alloc>>
+    {
+    	private:
+    	typedef hash_base<size_t, basic_string<Char_t, Traits, Alloc>> _Base;
+    	
+    	public:
+    	typedef typename _Base::result_type result_type;
+    	typedef typename _Base::argument_type argument_type;
+    	
+    	result_type operator()(const argument_type& arg) const
+    	{
+    		return detail::a_hash_func<result_type>::hash(arg.c_str(), arg.length()*sizeof (argument_type::char_type));
+    	}
+    };
 
 }
 #endif

@@ -82,7 +82,13 @@ namespace Kernel
 
 #endif
 
-
+#if !defined(TESTING) && !defined(FREE_TESTING)
+	#define __DO_CLI__ asm volatile("cli")
+	#define __DO_STI__ asm volatile("sti")
+#else
+	#define __DO_CLI__
+	#define __DO_STI__ 
+#endif
 
 
 
