@@ -13,7 +13,7 @@
 #include <stddef.h>
 #include <stdnoreturn.h>
 typedef unsigned char uchar;
-typedef uint64_t addr_t;
+typedef uint32_t addr_t;
 
 #include "Types.h"
 

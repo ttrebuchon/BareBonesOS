@@ -368,14 +368,16 @@ namespace Kernel { namespace Memory {
 
 	bool PageDirectory::flush() const noexcept
 	{
+		ASSERT(Current == this);
 		if (Current != this)
 		{
 			return false;
 		}
 		else
-		{
-			asm volatile("	movl %cr3, %eax ; \
-							movl %eax, %cr3");
+		{	asm volatile("	movl %0, %%ecx" : : "r"(dir_phys));
+			asm volatile("	movl %ecx, %cr3");
+			// asm volatile("	movl %cr3, %eax ; \
+			// 				movl %eax, %cr3");
 			return true;
 		}
 	}
@@ -392,7 +394,11 @@ namespace Kernel { namespace Memory {
 				TRACE("Was present!\n");
 				return false;
 			}
-			success &= pg->allocate(writeable, kernel_only);
+			pg->frame((void*)(phys+i));
+			ASSERT(pg->frame() == (void*)(phys+i));
+			pg->read_write(writeable);
+			pg->supervisor(kernel_only);
+			pg->present(true);
 		}
 		ASSERT(success);
 		return success;
@@ -448,6 +454,8 @@ namespace Kernel { namespace Memory {
 		table->frame = (((addr_t)_pages_phys) >> 12);
 		table->rw = 1;
 		table->user = 1;
+		table->cacheDisabled = 0;
+		table->w_through = 1;
 		table->present = 1;
 	}
 	
@@ -544,6 +552,26 @@ namespace Kernel { namespace Memory {
 	void PageDirectory::Page::frame(const void* const p) noexcept
 	{
 		page->frame = ((addr_t)p) >> 12;
+	}
+
+	bool PageDirectory::Page::read_write() const noexcept
+	{
+		return page->rw;
+	}
+
+	void PageDirectory::Page::read_write(const bool nValue) noexcept
+	{
+		page->rw = nValue;
+	}
+
+	bool PageDirectory::Page::supervisor() const noexcept
+	{
+		return !page->user;
+	}
+
+	void PageDirectory::Page::supervisor(const bool nValue) noexcept
+	{
+		page->user = !nValue;
 	}
 	
 	bool PageDirectory::Page::present() const noexcept

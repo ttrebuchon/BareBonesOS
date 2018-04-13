@@ -25,7 +25,7 @@ namespace Utils { namespace compile
 		return i >= len ? *(unsigned*)nullptr : i;
 	}
 	
-	#define REQUIRES(X) { (!(X) ? *(unsigned*)nullptr : 1); }
+	// #define REQUIRES(X) { (!(X) ? *(unsigned*)nullptr : 1); }
 	
 	template <unsigned, unsigned, unsigned>
 	struct const_string;
@@ -87,16 +87,16 @@ namespace Utils { namespace compile
 		
 		constexpr const_string(const char (&arr) [Size]) : str(arr)
 		{
-			REQUIRES(End < Size);
-			REQUIRES(Start <= End);
+			// REQUIRES(End < Size);
+			// REQUIRES(Start <= End);
 			//static_assert(Start <= End);
 			//static_assert(End < Size);
 		}
 		
 		constexpr const_string(const const_string& c) : str(c.str)
 		{
-			REQUIRES(End < Size);
-			REQUIRES(Start <= End);
+			// REQUIRES(End < Size);
+			// REQUIRES(Start <= End);
 			//static_assert(Start <= End);
 			//static_assert(End < Size);
 		}

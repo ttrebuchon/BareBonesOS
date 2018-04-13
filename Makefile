@@ -7,8 +7,18 @@ GET_SRC = $(call rwildcard,$1/,*.$2)
 
 
 
-C_SRC = $(call GET_SRC,kernel,c) $(call GET_SRC,drivers,c) $(call GET_SRC,Libraries,c)  $(call GET_SRC,Utils,c)
-CPP_SRC = $(call GET_SRC,kernel,cpp) $(call GET_SRC,drivers,cpp) $(call GET_SRC,Libraries,cpp) $(call GET_SRC,Utils,cpp)
+C_SRC += $(call GET_SRC,kernel,c)
+C_SRC += $(call GET_SRC,drivers,c)
+#C_SRC += $(call GET_SRC,Libraries,c)
+C_SRC += $(call GET_SRC,Utils,c)
+#C_SRC += $(call GET_SRC,Std,c)
+CPP_SRC += $(call GET_SRC,kernel,cpp)
+CPP_SRC += $(call GET_SRC,drivers,cpp)
+CPP_SRC += $(call GET_SRC,Libraries,cpp)
+# CPP_SRC += $(call GET_SRC,Std,cpp)
+CPP_SRC += $(call GET_SRC,Utils,cpp)
+CPP_SRC += $(call GET_SRC,Support,cpp)
+CPP_SRC += Std/time.cpp
 BOOT_SRC = $(call GET_SRC,boot,s)
 #ASM_SRC_ASM = $(wildcard kernel/*.asm drivers/*.asm)
 ASM_SRC_ASM = $(call GET_SRC,kernel,asm) $(call GET_SRC,drivers,asm)
@@ -50,8 +60,20 @@ BOTH_FLAGS += -D_TRACE
 BOTH_FLAGS += $(NO_WARN)
 BOTH_FLAGS += -DDEBUG
 #BOTH_FLAGS += -DDEBUG_IDENTITY_DIR
+BOTH_FLAGS += -ILibraries
+BOTH_FLAGS += $(SQLITE_FLAGS)
+#BOTH_FLAGS += -lsupc++
 
-CFLAGS	= -nostdlib $(WARNINGS_FLAGS) -ffreestanding -Og -MMD -I. -Werror-implicit-function-declaration --sysroot=$(SYSROOT) $(BOTH_FLAGS)
+
+
+SQLITE_FLAGS += -DSQLITE_THREADSAFE=0
+SQLITE_FLAGS += -DSQLITE_OMIT_LOAD_EXTENSION
+SQLITE_FLAGS += -DSQLITE_OS_OTHER=1
+SQLITE_FLAGS += -DSQLITE_TEMP_STORE=3
+
+
+
+CFLAGS		= -nostdlib $(WARNINGS_FLAGS) -ffreestanding -Og -MMD -I. -Werror-implicit-function-declaration --sysroot=$(SYSROOT) $(BOTH_FLAGS)
 CXX_FLAGS	= -std=c++14 -nostdlib $(WARNINGS_FLAGS) -ffreestanding -Og -MMD -I. -fno-exceptions -fno-rtti --sysroot=$(SYSROOT) $(BOTH_FLAGS)
 ASM_FLAGS	= 
 

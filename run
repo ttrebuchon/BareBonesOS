@@ -16,4 +16,4 @@
 
 
 
-sudo qemu-system-x86_64 -no-reboot -no-shutdown -m 256 -monitor stdio --drive format=raw,file=myos.iso,if=ide,index=0 --drive format=raw,file=dummy.img,if=ide,index=1
+qemu-system-x86_64 -no-reboot -no-shutdown -m 256 -monitor stdio --drive format=raw,file=myos.iso,if=ide,index=0 --drive format=raw,file=dummy.img,if=ide,index=1

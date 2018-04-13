@@ -1,3 +1,5 @@
+#define private public
+#define protected public
 #include <drivers/VGA.hh>
 #include <kernel/TSS.h>
 #include <kernel/Interrupts.h>
@@ -19,7 +21,7 @@
 #include <drivers/IDE/IDE.hh>
 #include <kernel/Memory/GDT.hh>
 #include <drivers/IDE/DMA.hh>
-#define private public
+
 #include <drivers/VGA_Stream.hh>
 #include <Utils/iostream>
 
@@ -107,10 +109,10 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     Drivers::VGA::Write("Initializing paging...\n");
     Kernel::Memory::init_paging();
     Drivers::VGA::Write("Paging initialized.\n");
-    Drivers::VGA::Write("Testing paging...\n");
-    testPaging();
-    Drivers::VGA::Write("Paging tested.\n");
-    ASSERT(false);
+    // Drivers::VGA::Write("Testing paging...\n");
+    // testPaging();
+    // Drivers::VGA::Write("Paging tested.\n");
+    // ASSERT(false);
     Kernel::init_tasking();
     Drivers::VGA::Write("Tasking initialized.\n");
 
@@ -140,7 +142,7 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     asm volatile("mov %%esp, %0" : "=r"(ebp));
     out << "EBP: " << (void*)ebp << "\n";
     out.flush();
-    while (1);
+
 
     
     
@@ -415,28 +417,23 @@ void testPaging()
     using namespace Kernel;
     using namespace Memory;
 
-    const addr_t ADDR   = 0xE0000000;
-    const addr_t ADDR2  = 0xE0200000;
+    const addr_t ADDR   = 0xF0000000;
+    const addr_t ADDR2  = 0xF0200000;
 
-    const size_t len = 0x2000;
+    const size_t len = 0x1000;
 
     auto current_dir = PageDirectory::Current;
 
     current_dir->switch_to();
+    TRACE("SWITCHED.\n");
 
-    ASSERT(current_dir->at((void*)ADDR) == nullptr);
-    // ASSERT(current_dir->getPage(ADDR, false) == nullptr);
-
-    ASSERT(current_dir);
-    ASSERT(current_dir->at(ADDR, false) == nullptr);
     ASSERT(current_dir->map((ADDR - 0x0000), ADDR, len, true, false, false));
     unsigned char* a1 = (unsigned char*)ADDR;
-
     current_dir->at((void*)ADDR)->flush();
     // current_dir->flush((void*)ADDR);
 
     ASSERT(current_dir);
-    ASSERT(current_dir->map((ADDR2 - 0x0000), ADDR, len, true, false, false));
+    //ASSERT(current_dir->map((ADDR2 - 0x0000), ADDR, len, true, false, false));
     unsigned char* a2 = (unsigned char*)ADDR2;
 
     // current_dir->flush((void*)ADDR2);
@@ -449,28 +446,78 @@ void testPaging()
     Drivers::VGA::Write(phys);
     Drivers::VGA::Write("\n");
 
-    for (volatile int i = 0; i < 100; ++i)
-    {
-        current_dir->flush();
-    }
+    // for (volatile int i = 0; i < 100; ++i)
+    // {
+    //     ASSERT(current_dir->flush());
+    // }
     
+    //static_assert(alignof(PageDirectory::_Table) == 1024*4);
+    TRACE(alignof(PageDirectory::_Table));
+    TRACE("\n\n");
+    
+    auto p = current_dir->at((void*)ADDR);
+    addr_t p_addr = (addr_t)(void*)p;
+    addr_t p_phys = (addr_t)current_dir->physical(&**p);
+    ASSERT(sizeof(**p) == sizeof(PageDirectory::_Page));
+    
+    Drivers::VGA::Write("P_Virtual: ");
+    Drivers::VGA::Write((void*)&**p);
+    Drivers::VGA::Write("\n");
 
+    Drivers::VGA::Write("P_Physical: ");
+    Drivers::VGA::Write((void*)p_phys);
+    Drivers::VGA::Write("\n");
+    addr_t dir_phys = (addr_t)current_dir->physical(current_dir);
+    auto pTable = current_dir->table(p_addr/(1024*0x1000));
+    ASSERT(pTable);
+    void* pTable_phys = current_dir->physical(&**pTable);
+    size_t tIndex = p_addr >> 22;
+    addr_t tmp = (((addr_t)current_dir->thisPhysical()) + tIndex*4);
+    ASSERT(&**pTable == *reinterpret_cast<void**>(&tmp));
+    Drivers::VGA::Write("Table_Physical: ");
+    Drivers::VGA::Write((void*)pTable_phys);
+    Drivers::VGA::Write("\n");
+    Drivers::VGA::Write("Dir_Physical: ");
+    Drivers::VGA::Write((void*)dir_phys);
+    Drivers::VGA::Write("\n");
+    Drivers::VGA::Write("Dir_Virtual: ");
+    Drivers::VGA::Write((void*)current_dir);
+    Drivers::VGA::Write("\n");
+    Drivers::VGA::Write("Stored Dir_Physical: ");
+    Drivers::VGA::Write((void*)current_dir->thisPhysical());
+    Drivers::VGA::Write("\n");
+    ASSERT(p);
+    Drivers::VGA::Write((void*)((addr_t)p->frame()));
+    ASSERT((ADDR & 0xfffff000) == ADDR);
+    Drivers::VGA::Write("\n");
     
 
     for (int i = 0; i < len; ++i)
     {
         a1[i] = (i % 256);
     }
+    ASSERT((**current_dir->at((void*)ADDR)).accessed);
 
     // auto p = current_dir->getPage(ADDR, false);
-    auto p = current_dir->at((void*)ADDR);
+    p = current_dir->at((void*)ADDR);
     ASSERT(p);
     Drivers::VGA::Write((void*)((addr_t)p->frame() << 12));
     ASSERT((ADDR & 0xfffff000) == ADDR);
     Drivers::VGA::Write("\n");
+    
+    current_dir->flush();
 
     for (int i = 0; i < len; ++i)
     {
+        a1[i] = (i % 256);
+    }
+    ASSERT(current_dir->map((ADDR2 - 0x0000), ADDR, len, true, false, false));
+    current_dir->at((void*)ADDR2)->flush();
+    ASSERT(current_dir->physical(a1) == current_dir->physical(a2));
+    for (int i = 0; i < len; ++i)
+    {
+        TRACE((uint32_t)i);
+        TRACE("\n");
         ASSERT(a2[i] == (i % 256));
     }
     asm volatile ("sti");

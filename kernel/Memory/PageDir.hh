@@ -104,7 +104,7 @@ namespace Kernel { namespace Memory {
 		static_assert(alignof (_Page) == alignof (uint32_t));
 		
 		
-		struct _Pages
+		struct alignas(1024*4) _Pages
 		{
 			_Page pages[1024];
 			
@@ -193,6 +193,12 @@ namespace Kernel { namespace Memory {
 			
 			void* frame() const noexcept;
 			void frame(const void* const) noexcept;
+			
+			void read_write(const bool nValue) noexcept;
+			bool read_write() const noexcept;
+
+			void supervisor(const bool nValue) noexcept;
+			bool supervisor() const noexcept;
 			
 			bool present() const noexcept;
 			void present(bool) noexcept;
@@ -297,12 +303,14 @@ namespace Kernel { namespace Memory {
 		__attribute__((always_inline))
 		constexpr static size_t GetTableIndex(const void* const p) noexcept
 		{
+			return (addr_t)p >> 22;
 			return (((addr_t)p)/PAGE_SIZE)/1024;
 		}
 		
 		__attribute__((always_inline))
 		constexpr static size_t GetPageIndex(const void* const p) noexcept
 		{
+			return (addr_t)p >> 12 & 0x03FF;
 			return (((addr_t)p)/PAGE_SIZE) % 1024;
 		}
 		

@@ -1,9 +1,11 @@
+#define protected public
 #include "Paging.hh"
 #include "kheap.hh"
 #include <kernel/Interrupts.h>
 #include <drivers/VGA.hh>
 #include <kernel/Debug.h>
 #include <Utils/Bitset.hh>
+#include "Heaps/DumbHeap.hh"
 
 
 
@@ -127,8 +129,10 @@ namespace Kernel { namespace Memory
 		// }
 		// TRACE_C("Pages created.\n");
 		
-		KHeap* kheap_tmp = (KHeap*)kmalloc(sizeof(KHeap), true, 0);\
-		kmemset(kheap_tmp, 0, sizeof(KHeap));
+		// KHeap* kheap_tmp = (KHeap*)kmalloc(sizeof(KHeap), true, 0);
+		// kmemset(kheap_tmp, 0, sizeof(KHeap));
+		Heap* dheap_tmp = (Heap*)kmalloc(sizeof(DumbHeap), true, 0);
+		kmemset(dheap_tmp, 0, sizeof(DumbHeap));
 		
 		
 		TRACE_C("Allocating frames...\n");
@@ -140,6 +144,13 @@ namespace Kernel { namespace Memory
 			i += 0x1000;
 		}
 		TRACE_C("Frames Allocated.\n");
+
+		
+
+		for (i = 0; i < 0xE1000000; i += 0x1000)
+		{
+			
+		}
 		
 		TRACE_C("Allocating kheap frames...\n");
 		for (i = KHEAP_START; i < KHEAP_START + KHEAP_INITIAL_SIZE; i += 0x1000)
@@ -158,6 +169,8 @@ namespace Kernel { namespace Memory
 		Kernel::Interrupts::register_interrupt_handler(14, page_fault);
 		TRACE_C("Page fault handler registered\n");
 		
+		addr_t sanity_checker = (addr_t)&mem_end;
+		ASSERT(kernel_dir->dir == kernel_dir->dir_phys);
 		TRACE_C("Switching page directories...");
 		PageDirectory::Current = 0x0;
 		#ifdef DEBUG_IDENTITY_DIR
@@ -171,12 +184,21 @@ namespace Kernel { namespace Memory
 		#endif
 		TRACE_C("Page directory switched\n");
 
-		// kheap = (KHeap*)kmalloc(sizeof(KHeap), true, 0);
+		ASSERT(sanity_checker == (addr_t)&mem_end);
+		ASSERT(mem_end == 0xF0000000);
+		
+		ASSERT(kernel_dir->dir == kernel_dir->thisPhysical());
+
+		
 		
 		//TRACE("KHeap space allocated\n");
 		
-		new (kheap_tmp) KHeap(KHEAP_START, KHEAP_START + KHEAP_INITIAL_SIZE, KHEAP_MAX_ADDR, 0, 0);
-		kheap = kheap_tmp;
+		new (dheap_tmp) DumbHeap(KHEAP_START, KHEAP_MAX_ADDR, 0, 0);
+		kheap = dheap_tmp;
+
+		
+		//new (kheap_tmp) KHeap(KHEAP_START, KHEAP_START + KHEAP_INITIAL_SIZE, KHEAP_MAX_ADDR, 0, 0);
+		// kheap = kheap_tmp;
 		TRACE_C("Kernel Heap created.\n");
 		
 		// auto tmp_dir = kernel_dir->clone();

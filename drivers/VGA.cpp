@@ -1,5 +1,5 @@
 #include "VGA.hh"
-//#include <Utils/String.hh>
+#include <Utils/string>
 #include <Utils/int_to_str.h>
 #include <kernel/Memory.h>
 
@@ -94,10 +94,10 @@ namespace Drivers
         }
     }
 
-    // void VGA::Write(const Utils::String str)
-    // {
-    //     //TODO
-    // }
+    void VGA::Write(const Utils::string& str)
+    {
+        Write(str.c_str());
+    }
 
     void VGA::Write(const void* addr)
     {

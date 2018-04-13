@@ -71,7 +71,7 @@ namespace Kernel { namespace Memory {
 
         virtual void* alloc(size_t size, size_t alignment = 0);
         virtual void free(void*);
-        virtual size_t allocated_size(void*) const;
+        virtual size_t allocated_size(void*) const noexcept;
     };
 
     extern Heap* kheap;

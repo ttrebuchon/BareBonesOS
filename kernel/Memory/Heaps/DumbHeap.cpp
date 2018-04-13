@@ -21,12 +21,15 @@ namespace Kernel { namespace Memory
 		{
 			if (_placement % al != 0)
 			{
-				constexpr addr_t iz = ~(size_t(0));
-				const addr_t mask = al*(iz/al);
-				_placement &= mask;
+				_placement -= (_placement % al);
 				_placement += al;
+				// constexpr addr_t iz = ~(size_t(0));
+				// const addr_t mask = al*(iz/al);
+				// _placement &= mask;
+				// _placement += al;
 				ASSERT(_placement % al == 0);
 			}
+			ASSERT(_placement % al == 0);
 		}
 		
 		ASSERT(endAddr() - _placement >= s);

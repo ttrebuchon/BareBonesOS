@@ -283,7 +283,9 @@ void move_stack(void* new_addr, uint32_t size)
 	// while (true) ;
 
 	// return;
-
+	ASSERT(Memory::PageDirectory::Current->map((addr_t)new_addr-size, size, true, false));
+	TRACE("STARTING TASKING\n");
+	
 	addr_t i;
 
 
@@ -296,12 +298,13 @@ void move_stack(void* new_addr, uint32_t size)
 
 	addr_t newSP = oldSP + offset;
 	addr_t newBP = oldBP + offset;
-
+	TRACE("COPYING\n");
 	memcpy((void*)newSP, (void*)oldSP, init_esp - oldSP);
+	TRACE("COPIED\n");
 
 	// Adjust stack addresses
 
-	for (i = (addr_t)new_addr; i > (addr_t)new_addr - size; i -= sizeof(addr_t))
+	for (i = (addr_t)new_addr-4; i > (addr_t)new_addr - size; i -= sizeof(addr_t))
 	{
 		addr_t tmp = *(addr_t*)i;
 
@@ -311,6 +314,15 @@ void move_stack(void* new_addr, uint32_t size)
 			*(addr_t*)i = tmp;
 		}
 	}
+	TRACE("MK.\n");
+	asm volatile ("mov %%esp, %0" : "=r"(i));
+	ASSERT(i == oldSP);
+	newSP += i - oldSP;
+	asm volatile ("mov %%ebp, %0" : "=r"(i));
+	ASSERT(i >= oldBP);
+	newBP += i - oldBP;
+
+	TRACE("JUMPING.\n");
 
 	asm volatile ("mov %0, %%esp" : : "r"(newSP));
 	asm volatile ("mov %0, %%ebp" : : "r"(newBP));
@@ -329,14 +341,11 @@ void init_tasking()
 {
 	asm volatile ("cli");
 	move_stack((void*)0xE0000000, 0x2000);
-	asm volatile ("; \
-				MOV $1, %eax ; \
-				MOV $0, %ecx ; \
-				DIV %ecx");
+	// asm volatile ("; \
+	// 			MOV $1, %eax ; \
+	// 			MOV $0, %ecx ; \
+	// 			DIV %ecx");
 	Drivers::VGA::Write("Stack moved.\n");
-	while (true);
-	asm volatile ("mov $0, %ebx");
-	while (true);
 	
 	
 	Task::current_task = new Task;
