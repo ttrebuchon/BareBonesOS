@@ -3,9 +3,9 @@
 #include <kernel/Filesystem/API.hh>
 #include <Std/cstring>
 //#include <sys/file.h>
-//#include <sys/stat.h>
+#include <Std/stat.h>
 #include <kernel/Memory.h>
-//#include <errno.h>
+#include <Std/errno.h>
 //#include <unistd.h>
 #include <Std.h>
 #include <Utils/chrono>
