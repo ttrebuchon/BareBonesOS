@@ -3,7 +3,7 @@
 
 namespace Kernel { namespace Memory
 {
-	Heap::Heap(addr_t start, addr_t end, size_t pSize, bool super, bool readonly) : _startAddr(start), _endAddr(end), pSize(pSize), _supervisor(super), _readonly(readonly)
+	Heap::Heap(addr_t start, addr_t end, size_t pSize, bool super, bool readonly) noexcept : _startAddr(start), _endAddr(end), pSize(pSize), _supervisor(super), _readonly(readonly)
 	{
 		
 	}

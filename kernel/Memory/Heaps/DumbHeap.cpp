@@ -4,7 +4,7 @@
 namespace Kernel { namespace Memory
 {
 	
-	DumbHeap::DumbHeap(addr_t start, addr_t end, bool super, bool readonly) : Heap(start, end, 0, super, readonly), _placement(start)
+	DumbHeap::DumbHeap(addr_t start, addr_t end, bool super, bool readonly) noexcept : Heap(start, end, 0, super, readonly), _placement(start)
 	{
 		
 	}
