@@ -13,7 +13,7 @@
 #include <stddef.h>
 #include <stdnoreturn.h>
 typedef unsigned char uchar;
-typedef uint32_t addr_t;
+typedef uint64_t addr_t;
 
 #include "Types.h"
 
@@ -21,6 +21,7 @@ typedef uint32_t addr_t;
 #define unlikely(X) __builtin_expect((X), 0)
 
 #ifdef __cplusplus
+#include <kernel/CppSupport/new.hh>
 //#include <new>
 //#ifndef TESTING
 
@@ -84,7 +85,6 @@ typedef unsigned long size_t;
 	
 	#define __DAY__ (::Utils::compile::constexpr_launder<::Utils::compile::cstring(__DATE__).substr<4, 2>().parse_int()>::value)
 	
-	static_assert(__DAY__ == 12);
 #endif
 
 
