@@ -1,11 +1,14 @@
 #include "icxxabi.h"
+#include <Common.h>
 
 extern "C"
 {
     atexit_func_entry_t __atexit_funcs[ATEXIT_MAX_FUNCS];
     uarch_t __atexit_func_count = 0;
-
-    //void* __dso_handle;
+    
+    #ifdef __NOSTDLIB__
+    void* __dso_handle;
+    #endif
 
     int __cxa_atexit(void (*f)(void*), void* objptr, void* dso)
     {
@@ -56,4 +59,18 @@ extern "C"
     }
 
 
+}
+
+extern "C" {
+	int dl_iterate_phdr(int (*)(struct dl_phdr_info*, size_t, void*), void*)
+	{
+		// TODO
+		
+		return -1;
+	}
+}
+
+namespace __cxxabiv1
+{
+	
 }
