@@ -116,12 +116,6 @@ extern "C"
 		ASSERT(false);
 	}
 	
-	int fstat(int fd, struct stat* buf)
-	{
-		// TODO
-		ASSERT(false);
-	}
-	
 	int stat(const char* __restrict path, struct stat* __restrict buf)
 	{
 		if (Kernel::Filesystem::Filesystem::Current)
@@ -193,5 +187,24 @@ extern "C"
 		}
 		return -1;
 	}
+	
+	int fstat(int fd, struct stat* buf)
+	{
+		// TODO
+		ASSERT(false);
+	}
+	
+	off_t lseek(int fd, off_t offset, int whence)
+	{
+		// TODO
+		ASSERT(false);
+	}
+	
+	int fsync(int fd)
+	{
+		// TODO
+		ASSERT(false);
+	}
+	
 	
 }

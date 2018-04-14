@@ -43,7 +43,6 @@ extern "C"
 	int truncate(const char* path, off_t len);
 	
 	// Get File Status
-	int fstat(int fd, struct stat*);
 	int stat(const char* __restrict path, struct stat* __restrict buf);
 	
 	// Get SymLink status

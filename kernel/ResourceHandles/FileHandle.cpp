@@ -10,7 +10,7 @@ namespace Kernel
 		ASSERT(lock.owns_lock());
 	}
 	
-	void FileHandle::__cleanup()
+	void FileHandle::__cleanup() noexcept
 	{
 		//node->releaseHandle(this);
 	}
