@@ -1,0 +1,44 @@
+#ifndef INCLUDED_INITIALIZER_LIST
+#define INCLUDED_INITIALIZER_LIST
+
+#include <Common.h>
+
+namespace Utils
+{
+	template <class T>
+	class initializer_list
+	{
+		private:
+		const T* _begin;
+		size_t _size;
+		
+		constexpr initializer_list(const T* b, size_t s) throw() : _begin(b), _size(s)
+		{}
+		
+		public:
+		typedef T value_type;
+		typedef const T& reference;
+		typedef const T& const_reference;
+		typedef size_t size_type;
+		typedef const T* iterator;
+		typedef const T* const_iterator;
+		
+		constexpr initializer_list() throw() : _begin(nullptr), _size(0)
+		{}
+		
+		__attribute__((always_inline))
+		constexpr size_type size() const noexcept { return _size; }
+		
+		
+		__attribute__((always_inline))
+		const_iterator begin()  const noexcept
+		{ return _begin; }
+		
+		__attribute__((always_inline))
+		const_iterator end()  const noexcept
+		{ return _begin + _size; }
+	};
+}
+
+
+#endif
