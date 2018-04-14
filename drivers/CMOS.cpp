@@ -7,7 +7,7 @@ namespace Drivers
 {
 	CMOS CMOS::instance;
 	
-	CMOS::CMOS() : initialized(false), NMI_disabled(false), f24(false), fBinary(false)
+	CMOS::CMOS() noexcept : initialized(false), NMI_disabled(false), f24(false), fBinary(false)
 	{
 		
 	}
