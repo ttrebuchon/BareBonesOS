@@ -1,12 +1,11 @@
 #ifndef INCLUDED_DEBUG_H
 #define INCLUDED_DEBUG_H
 
-
+#include "Error.h"
 
 #ifndef TESTING
 
 #include <drivers/VGA.hh>
-#include "Error.h"
 
 
 
@@ -16,7 +15,7 @@ extern "C" {
 
 inline void __ASSERT_TRUE() {}
 
-#define ASSERT(X) do { (X) ? __ASSERT_TRUE() : KPANIC(#X); } while (0)
+//#define ASSERT(X) do { (X) ? __ASSERT_TRUE() : KPANIC(#X); } while (0)
 
 #ifdef _TRACE
 
@@ -38,15 +37,13 @@ inline void __ASSERT_TRUE() {}
 //Are testing
 #else
 
-#include "assert.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 
 
-#define ASSERT(X) assert(X)
+//#define ASSERT(X) assert(X)
 
 #ifdef _TRACE
 
@@ -64,5 +61,8 @@ extern "C" {
 }
 #endif
 
-#endif
+#endif //ifndef TESTING
+
+#define ASSERT(x) assert(x)
+
 #endif

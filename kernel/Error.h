@@ -2,6 +2,7 @@
 #define INCLUDED_ERROR_H
 
 #include <Common.h>
+#include <Std/assert.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -14,8 +15,6 @@ void __do_kernel_panic(const char* msg, const char* file, const int line, const 
 
 
 #define KPANIC(X) __do_kernel_panic(X, __FILE__, __LINE__, __func__)
-
-
 
 
 
