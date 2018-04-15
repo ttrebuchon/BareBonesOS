@@ -1,23 +1,25 @@
 #include "assert.h"
 #include "stdio.h"
-#include <dlfcn.h>
+#include "stdlib.h"
 
 
 C_CODE
 
 #ifndef TESTING
 
-void exit(int) __noreturn;
+void __do_kernel_panic(const char* msg, const char* file, const int line, const char* function);
+
 
 void __assert2(const char* filename, int line, const char* func, const char* exp)
 {
+
+	__do_kernel_panic(exp, filename, line, func);
 	//int g = stderr;
 	
 	//fprintf(stderr, "%s:%d: %s: assertion "%s" failed\n", filename, line, func, exp);
-	dlopen("Test", RTLD_NOW);
 	
 	//asm volatile("hlt 0");
-	//exit(1);
+	exit(-1);
 }
 
 #endif
