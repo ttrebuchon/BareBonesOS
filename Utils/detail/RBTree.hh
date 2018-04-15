@@ -27,14 +27,14 @@ namespace Utils { namespace detail
 			/*constexpr Color color() const;
 			Color color(const Color);*/
 			
-			NodeBase* sibling();
-			const NodeBase* sibling() const;
-			NodeBase* ancestor(size_t n);
-			const NodeBase* ancestor(size_t n) const;
+			inline NodeBase* sibling();
+			inline const NodeBase* sibling() const;
+			inline NodeBase* ancestor(size_t n);
+			inline const NodeBase* ancestor(size_t n) const;
 			
-			bool rotateLeft();
-			bool rotateRight();
-			void rebalance();
+			inline bool rotateLeft();
+			inline bool rotateRight();
+			inline void rebalance();
 			
 			/*constexpr size_t size() const
 			{
@@ -42,7 +42,7 @@ namespace Utils { namespace detail
 			}*/
 			
 			#ifdef DEBUG_VERIFY
-			bool verify() const;
+			inline bool verify() const;
 			#endif
 		};
 		
