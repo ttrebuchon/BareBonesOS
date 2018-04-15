@@ -11,8 +11,8 @@ namespace Kernel { namespace Interrupts {
 extern "C" {
 #endif
 
-volatile void cli();
-volatile void sti();
+void cli();
+void sti();
 void register_interrupt_handler(uint8_t n, isr_t handler);
 
 

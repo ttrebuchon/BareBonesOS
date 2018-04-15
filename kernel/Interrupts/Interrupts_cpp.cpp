@@ -7,13 +7,13 @@ extern "C" {
 	
 	static volatile Utils::atomic_int cli_count(0);
 	
-	volatile void cli()
+	void cli()
 	{
 		++cli_count;
 		__DO_CLI__;
 	}
 	
-	volatile void sti()
+	void sti()
 	{
 		if (cli_count.fetch_sub(1) == 0)
 		{
