@@ -435,7 +435,7 @@ namespace Kernel { namespace Memory {
 	
 	
 	
-	PageDirectory::Table::Table(_Table& t) : table(&t), pages(), _pages(nullptr), _pages_phys(nullptr)
+	PageDirectory::Table::Table(_Table& t) noexcept : table(&t), pages(), _pages(nullptr), _pages_phys(nullptr)
 	{
 		addr_t phys;
 		auto ptr = kmalloc(sizeof(_Pages), 1, &phys);

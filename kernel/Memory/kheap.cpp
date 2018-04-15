@@ -408,7 +408,7 @@ namespace Kernel { namespace Memory {
         }
     }
 
-    size_t KHeap::allocated_size(void* p) const
+    size_t KHeap::allocated_size(void* p) const noexcept
     {
         // TODO
         ASSERT(false);

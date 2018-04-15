@@ -1,6 +1,8 @@
 #ifndef INCLUDED_COMMON_H
 #define INCLUDED_COMMON_H
 
+#define __USE_GNU
+
 #include "kernel/c_cpp.h"
 
 #include <stdint.h>
@@ -13,7 +15,7 @@
 #include <stddef.h>
 #include <stdnoreturn.h>
 typedef unsigned char uchar;
-typedef uint64_t addr_t;
+typedef uint32_t addr_t;
 
 #include "Types.h"
 
@@ -87,6 +89,24 @@ typedef unsigned long size_t;
 	
 #endif
 
+
+
+/* GCC can always grok prototypes.  For C++ programs we add throw()
+   to help it optimize the function calls.  But this works only with
+   gcc 2.8.x and egcs.  For gcc 3.2 and up we even mark C functions
+   as non-throwing using a function attribute since programs can use
+   the -fexceptions options for C code as well.  */
+# if !defined __cplusplus
+#  define __THROW	__attribute__ ((__nothrow__ __LEAF))
+#  define __THROWNL	__attribute__ ((__nothrow__))
+#  define __NTH(fct)	__attribute__ ((__nothrow__ __LEAF)) fct
+# else
+#   define __THROW	throw ()
+#   define __THROWNL	throw ()
+#   define __NTH(fct)	__LEAF_ATTR fct throw ()
+# endif
+
+# define __nonnull(params) __attribute__ ((__nonnull__ params))
 
 
 

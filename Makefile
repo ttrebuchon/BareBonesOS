@@ -11,14 +11,14 @@ C_SRC += $(call GET_SRC,kernel,c)
 C_SRC += $(call GET_SRC,drivers,c)
 #C_SRC += $(call GET_SRC,Libraries,c)
 C_SRC += $(call GET_SRC,Utils,c)
-#C_SRC += $(call GET_SRC,Std,c)
+C_SRC += $(call GET_SRC,Std,c)
 CPP_SRC += $(call GET_SRC,kernel,cpp)
 CPP_SRC += $(call GET_SRC,drivers,cpp)
 CPP_SRC += $(call GET_SRC,Libraries,cpp)
-# CPP_SRC += $(call GET_SRC,Std,cpp)
+#CPP_SRC += $(call GET_SRC,Libraries,cc)
+CPP_SRC += $(call GET_SRC,Std,cpp)
 CPP_SRC += $(call GET_SRC,Utils,cpp)
 CPP_SRC += $(call GET_SRC,Support,cpp)
-CPP_SRC += Std/time.cpp
 BOOT_SRC = $(call GET_SRC,boot,s)
 #ASM_SRC_ASM = $(wildcard kernel/*.asm drivers/*.asm)
 ASM_SRC_ASM = $(call GET_SRC,kernel,asm) $(call GET_SRC,drivers,asm)
@@ -30,7 +30,8 @@ HDD2_GEN = Tools/Dummy_Img/Main.out
 HDD2_SRC = $(wildcard Tools/Dummy_Img/*.cpp)
 
 C_OBJS = $(C_SRC:.c=.o)
-CPP_OBJS = $(CPP_SRC:.cpp=.o)
+_CPP_OBJS = $(CPP_SRC:.cpp=.o)
+CPP_OBJS = $(_CPP_OBJS:.cc=.o)
 BOOT_OBJS = $(BOOT_SRC:.s=.o)
 ASM_OBJS = $(ASM_SRC_ASM:.asm=.o) $(ASM_SRC_S:.S=.o) $(ASM_SRC_s:.s=.o)
 
@@ -43,7 +44,9 @@ WARNINGS_FLAGS += -Wextra
 #WARNINGS_FLAGS += -fpermissive
 #WARNINGS_FLAGS += --pedantic
 #WARNINGS_FLAGS += -Werror
-#WARNINGS_FLAGS += -Wfatal-errors
+WARNINGS_FLAGS += -Wfatal-errors
+WARNINGS_FLAGS += -Werror=ignored-qualifiers
+WARNINGS_FLAGS += -Werror=attributes
 
 CC = i686-elf-gcc
 CXX = i686-elf-g++
@@ -53,7 +56,7 @@ SYSROOT = sysroot
 CRTBEGIN_OBJ = $(shell $(CC) $(CFLAGS) -print-file-name=crtbegin.o)
 CRTEND_OBJ = $(shell $(CC) $(CFLAGS) -print-file-name=crtend.o)
 
-NO_WARN = -Wno-unused-parameter -Wno-unused-variable -Wno-unused-but-set-variable -Wno-unused-function
+NO_WARN = -Wno-unused-parameter -Wno-unused-variable -Wno-unused-but-set-variable -Wno-unused-function -Wno-comment
 
 BOTH_FLAGS += -DFIXED_PAGE_STRUCT
 BOTH_FLAGS += -D_TRACE
@@ -62,7 +65,9 @@ BOTH_FLAGS += -DDEBUG
 #BOTH_FLAGS += -DDEBUG_IDENTITY_DIR
 BOTH_FLAGS += -ILibraries
 BOTH_FLAGS += $(SQLITE_FLAGS)
-#BOTH_FLAGS += -lsupc++
+BOTH_FLAGS += -I./Std
+#BOTH_FLAGS += -D__USING_CXXRT__
+#BOTH_FLAGS += -DPTHREAD_IGNORE
 
 
 
@@ -74,7 +79,17 @@ SQLITE_FLAGS += -DSQLITE_TEMP_STORE=3
 
 
 CFLAGS		= -nostdlib $(WARNINGS_FLAGS) -ffreestanding -Og -MMD -I. -Werror-implicit-function-declaration --sysroot=$(SYSROOT) $(BOTH_FLAGS)
-CXX_FLAGS	= -std=c++14 -nostdlib $(WARNINGS_FLAGS) -ffreestanding -Og -MMD -I. -fno-exceptions -fno-rtti --sysroot=$(SYSROOT) $(BOTH_FLAGS)
+CXX_FLAGS	= -std=c++14
+CXX_FLAGS  += -nostdlib
+CXX_FLAGS  += $(WARNINGS_FLAGS)
+CXX_FLAGS  += -ffreestanding
+CXX_FLAGS  += -Og
+CXX_FLAGS  += -MMD
+CXX_FLAGS  += -I.
+CXX_FLAGS  += -fno-exceptions
+CXX_FLAGS  += -fno-rtti
+CXX_FLAGS  += --sysroot=$(SYSROOT)
+CXX_FLAGS  += $(BOTH_FLAGS)
 ASM_FLAGS	= 
 
 all: .fake $(HDD2) myos.iso
@@ -104,6 +119,9 @@ myos.bin: $(BOOT_OBJS) $(CRTBEGIN_OBJ) $(CPP_OBJS) $(C_OBJS) $(ASM_OBJS) $(CRTEN
 	$(CC) $(CFLAGS) -c $< -o $@
 
 %.o: %.cpp
+	$(CXX) $(CXX_FLAGS) -c $< -o $@
+
+%.o: %.cc
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
 
 %.o: %.asm

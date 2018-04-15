@@ -11,7 +11,7 @@ namespace Utils
 	}
 	
 	template <class T, class A>
-	List<T, A>::List(List&& r) : head(r.head), tail(r.tail), _size(r._size), alloc(r.alloc), nalloc(r.nalloc)
+	List<T, A>::List(List&& r) noexcept : head(r.head), tail(r.tail), _size(r._size), alloc(r.alloc), nalloc(r.nalloc)
 	{
 		r.head = r.tail = nullptr;
 		r._size = 0;

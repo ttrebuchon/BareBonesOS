@@ -57,11 +57,11 @@ namespace Utils
 		explicit shared_ptr(const weak_ptr<Y>&);
 		
 		
-		~shared_ptr() noexcept;
+		~shared_ptr();
 		
 		// Methods
 		ptr_type get() const noexcept;
-		void reset() noexcept;
+		void reset();
 		void swap(shared_ptr&) noexcept;
 		long use_count() const noexcept;
 		

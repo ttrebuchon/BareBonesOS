@@ -11,13 +11,13 @@ namespace Utils
 {
 	
 	template <class T>
-	constexpr shared_ptr<T>::shared_ptr() : ctrl(nullptr)
+	constexpr shared_ptr<T>::shared_ptr() noexcept : ctrl(nullptr)
 	{
 		
 	}
 	
 	template <class T>
-	constexpr shared_ptr<T>::shared_ptr(nullptr_t n) : ctrl(n)
+	constexpr shared_ptr<T>::shared_ptr(nullptr_t n) noexcept : ctrl(n)
 	{
 		
 	}
@@ -45,14 +45,14 @@ namespace Utils
 	
 	template <class T>
 	template <class Y>
-	shared_ptr<T>::shared_ptr(const shared_ptr<Y>& r) : ctrl(r.ctrl)
+	shared_ptr<T>::shared_ptr(const shared_ptr<Y>& r) noexcept : ctrl(r.ctrl)
 	{
 		++ctrl->refcount;
 		++ctrl->usecount;
 	}
 	
 	template <class T>
-	shared_ptr<T>::shared_ptr(const shared_ptr& r) : ctrl(r.ctrl)
+	shared_ptr<T>::shared_ptr(const shared_ptr& r) noexcept : ctrl(r.ctrl)
 	{
 		if (ctrl)
 		{
@@ -63,7 +63,7 @@ namespace Utils
 	
 	template <class T>
 	template <class Y>
-	shared_ptr<T>::shared_ptr(shared_ptr<Y>&& r) : ctrl(r.ctrl)
+	shared_ptr<T>::shared_ptr(shared_ptr<Y>&& r) noexcept : ctrl(r.ctrl)
 	{
 		r.ctrl = nullptr;
 		/*++ctrl->refcount;
@@ -113,7 +113,7 @@ namespace Utils
 	
 	
 	template <class T>
-	typename shared_ptr<T>::ptr_type shared_ptr<T>::get() const
+	typename shared_ptr<T>::ptr_type shared_ptr<T>::get() const noexcept
 	{
 		return (ctrl != nullptr ? (T*)ctrl->obj : nullptr);
 	}
@@ -154,7 +154,7 @@ namespace Utils
 	
 	
 	template <class T>
-	shared_ptr<T>& shared_ptr<T>::operator=(const shared_ptr& r)
+	shared_ptr<T>& shared_ptr<T>::operator=(const shared_ptr& r) noexcept
 	{
 		auto ctrl2 = r.ctrl;
 		if (ctrl2)
@@ -174,13 +174,13 @@ namespace Utils
 	}
 	
 	template <class T>
-	typename shared_ptr<T>::ref_type shared_ptr<T>::operator*() const
+	typename shared_ptr<T>::ref_type shared_ptr<T>::operator*() const noexcept
 	{
 		return *(T*)ctrl->obj;
 	}
 	
 	template <class T>
-	typename shared_ptr<T>::ptr_type shared_ptr<T>::operator->() const
+	typename shared_ptr<T>::ptr_type shared_ptr<T>::operator->() const noexcept
 	{
 		return get();
 	}
