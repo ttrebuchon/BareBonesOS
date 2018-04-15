@@ -17,6 +17,10 @@ void __do_kernel_panic(const char* msg, const char* file, const int line, const 
 #define KPANIC(X) __do_kernel_panic(X, __FILE__, __LINE__, __func__)
 
 
+enum
+{
+    NOT_IMPLEMENTED = 0x0,
+};
 
 
 #ifdef __cplusplus
