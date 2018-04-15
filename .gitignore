@@ -50,4 +50,4 @@ Barebones.code-workspace
 
 
 #Non-Committed Libraries
-Libraries/**
+Libraries/sqlite3**
