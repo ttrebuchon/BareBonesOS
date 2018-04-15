@@ -8,4 +8,14 @@
 
 #include <kernel/Timer.h>
 
+
+
+C_CODE
+
+#ifdef __cplusplus
+[[ noreturn ]]
+#endif
+void abort();
+
+C_END
 #endif
