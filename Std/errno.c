@@ -22,8 +22,7 @@
 
 
 __thread int errno;
-extern __thread int __libc_errno __attribute__ ((alias ("errno")))
-  __attribute__((hidden));
+extern __thread int __libc_errno __attribute__ ((alias ("errno")));
 
 volatile int* __errno()
 {
@@ -31,11 +30,9 @@ volatile int* __errno()
 }
 
 
-void __set_errno(int n)
+void set_errno(int n)
 {
 	errno = n;
 }
-
-weak_alias (__set_errno, set_errno)
 
 
