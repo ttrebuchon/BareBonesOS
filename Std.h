@@ -4,6 +4,7 @@
 #include <Common.h>
 #include <kernel/Memory.h>
 #include <kernel/Filesystem/API.hh>
+#include <kernel/Scheduling/API.h>
 
 #include <kernel/Timer.h>
 

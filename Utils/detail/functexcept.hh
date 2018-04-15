@@ -22,6 +22,8 @@ namespace Utils
 	
 	class logic_error : public std::exception
 	{
+		protected:
+		string* _msg;
 		public:
 		explicit logic_error(const string&);
 		explicit logic_error(const char*);
@@ -46,7 +48,7 @@ namespace Utils
 		explicit length_error(const string& s) : logic_error(s) {}
 		explicit length_error(const char* s) : logic_error(s) {}
 		
-		virtual ~length_error() throw();
+		virtual ~length_error() throw() = default;
 	};
 	
 	class out_of_range : public logic_error
@@ -57,7 +59,7 @@ namespace Utils
 		explicit out_of_range(const string& s) : logic_error(s) {}
 		explicit out_of_range(const char* s) : logic_error(s) {}
 		
-		virtual ~out_of_range() throw();
+		virtual ~out_of_range() throw() = default;
 	};
 	
 	
