@@ -1,5 +1,6 @@
 namespace __cxxabiv1
 {
+	#ifndef __USING_CXXRT__
     __extension__ typedef int __guard __attribute__((mode(__DI__)));
 
     extern "C" int __cxa_guard_acquire(__guard*);
@@ -21,4 +22,5 @@ namespace __cxxabiv1
     {
 
     }
+    #endif
 }

@@ -68,6 +68,16 @@ extern "C" {
 		
 		return -1;
 	}
+	
+	#ifdef __EXCEPTIONS
+	#ifdef __USING_CXXRT__
+	void __cxa_throw_bad_array_new_length()
+	{
+		// TODO
+		throw 0;
+	}
+	#endif
+	#endif
 }
 
 namespace __cxxabiv1
