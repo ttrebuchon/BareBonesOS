@@ -118,4 +118,18 @@ long int strtol(const char* str, char** endptr, int base)
 	return n;
 }
 
+__attribute__((noreturn))
+void abort()
+{
+	// TODO
+	KPANIC("abort()");
+}
+
+[[ noreturn ]]
+void exit(int code)
+{
+	// TODO
+	assert(false);
+}
+
 C_END
