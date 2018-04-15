@@ -30,6 +30,7 @@ size_t strlen(const char*);
 char* strdup(const char*);
 
 int strcmp(const char *p1, const char *p2);
+int strncmp(const char* str1, const char* str2, size_t num);
 
 char* strcpy(char* dest, const char* src);
 

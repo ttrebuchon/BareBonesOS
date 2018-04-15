@@ -10,7 +10,8 @@ C_CODE
 
 time_t mktime(struct tm*);
 
-struct tm* localtime_r(const time_t*, tm*);
+struct tm* localtime(const time_t*);
+struct tm* localtime_r(const time_t*, struct tm*);
 time_t time(time_t*);
 
 C_END

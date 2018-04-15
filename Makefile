@@ -9,13 +9,13 @@ GET_SRC = $(call rwildcard,$1/,*.$2)
 
 C_SRC += $(call GET_SRC,kernel,c)
 C_SRC += $(call GET_SRC,drivers,c)
-#C_SRC += $(call GET_SRC,Libraries,c)
+C_SRC += $(call GET_SRC,Libraries,c)
 C_SRC += $(call GET_SRC,Utils,c)
 C_SRC += $(call GET_SRC,Std,c)
 CPP_SRC += $(call GET_SRC,kernel,cpp)
 CPP_SRC += $(call GET_SRC,drivers,cpp)
 CPP_SRC += $(call GET_SRC,Libraries,cpp)
-#CPP_SRC += $(call GET_SRC,Libraries,cc)
+CPP_SRC += $(call GET_SRC,Libraries,cc)
 CPP_SRC += $(call GET_SRC,Std,cpp)
 CPP_SRC += $(call GET_SRC,Utils,cpp)
 CPP_SRC += $(call GET_SRC,Support,cpp)
@@ -66,7 +66,7 @@ BOTH_FLAGS += -DDEBUG
 BOTH_FLAGS += -ILibraries
 BOTH_FLAGS += $(SQLITE_FLAGS)
 BOTH_FLAGS += -I./Std
-#BOTH_FLAGS += -D__USING_CXXRT__
+BOTH_FLAGS += -D__USING_CXXRT__
 #BOTH_FLAGS += -DPTHREAD_IGNORE
 
 
@@ -86,8 +86,8 @@ CXX_FLAGS  += -ffreestanding
 CXX_FLAGS  += -Og
 CXX_FLAGS  += -MMD
 CXX_FLAGS  += -I.
-CXX_FLAGS  += -fno-exceptions
-CXX_FLAGS  += -fno-rtti
+#CXX_FLAGS  += -fno-exceptions
+#CXX_FLAGS  += -fno-rtti
 CXX_FLAGS  += --sysroot=$(SYSROOT)
 CXX_FLAGS  += $(BOTH_FLAGS)
 ASM_FLAGS	= 

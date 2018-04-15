@@ -8,13 +8,13 @@ C_CODE
 
 struct FILE;
 
-extern FILE* stderr;
-extern FILE* stdout;
+extern struct FILE* stderr;
+extern struct FILE* stdout;
 
-int fprintf(FILE* fd, const char* fmt, ...);
+int fprintf(struct FILE* fd, const char* fmt, ...);
 int printf(const char* fmt, ...);
 
-size_t fwrite(const void* ptr, size_t size, size_t nmemb, FILE*);
+size_t fwrite(const void* ptr, size_t size, size_t nmemb, struct FILE*);
 
 int snprintf(char* s, size_t n, const char* fmt, ...);
 
