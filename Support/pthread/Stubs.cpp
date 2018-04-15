@@ -2,7 +2,7 @@
 #include <Common.h>
 
 #ifndef PTHREAD_IGNORE
-	#define FAIL assert(false)
+	#define FAIL assert(NOT_IMPLEMENTED)
 #else
 	#define FAIL 
 #endif
@@ -21,12 +21,6 @@ extern "C" {
 		return -1;
 	}
 	
-	int pthread_once(pthread_once_t*, void (*)(void))
-	{
-		FAIL;
-		return -1;
-	}
-	
 	int pthread_mutex_lock(pthread_mutex_t*)
 	{
 		FAIL;
@@ -34,12 +28,6 @@ extern "C" {
 	}
 	
 	int pthread_mutex_unlock(pthread_mutex_t*)
-	{
-		FAIL;
-		return -1;
-	}
-	
-	int pthread_key_create(pthread_key_t*, void (*)(void*))
 	{
 		FAIL;
 		return -1;
