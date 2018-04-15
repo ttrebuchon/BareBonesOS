@@ -1,7 +1,11 @@
 #ifndef INCLUDED_COMMON_H
 #define INCLUDED_COMMON_H
 
+#ifndef TESTING
+
 #define __USE_GNU
+
+#endif
 
 #include "kernel/c_cpp.h"
 
@@ -15,7 +19,7 @@
 #include <stddef.h>
 #include <stdnoreturn.h>
 typedef unsigned char uchar;
-typedef uint32_t addr_t;
+typedef uint64_t addr_t;
 
 #include "Types.h"
 
@@ -89,7 +93,7 @@ typedef unsigned long size_t;
 	
 #endif
 
-
+#ifndef TESTING
 
 /* GCC can always grok prototypes.  For C++ programs we add throw()
    to help it optimize the function calls.  But this works only with
@@ -108,7 +112,7 @@ typedef unsigned long size_t;
 
 # define __nonnull(params) __attribute__ ((__nonnull__ params))
 
-
+#endif
 
 #endif //INCLUDED...
 
