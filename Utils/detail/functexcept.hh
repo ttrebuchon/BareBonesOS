@@ -20,7 +20,7 @@ namespace Utils
 	#define __catch(X) catch (X)
 	#define __throw_exception_again throw
 	
-	class logic_error : public std::exception
+	class logic_error : public Utils::exception
 	{
 		protected:
 		string* _msg;
