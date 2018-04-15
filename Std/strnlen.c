@@ -27,12 +27,8 @@
 /* Find the length of S, but scan at most MAXLEN characters.  If no
    '\0' terminator is found in that many characters, return MAXLEN.  */
 
-#ifdef STRNLEN
-# define __strnlen STRNLEN
-#endif
 
-size_t
-__strnlen (const char *str, size_t maxlen)
+size_t strnlen(const char *str, size_t maxlen)
 {
   const char *char_ptr, *end_ptr = str + maxlen;
   const unsigned long int *longword_ptr;
@@ -161,8 +157,3 @@ __strnlen (const char *str, size_t maxlen)
     char_ptr = end_ptr;
   return char_ptr - str;
 }
-#ifndef STRNLEN
-libc_hidden_def (__strnlen)
-weak_alias (__strnlen, strnlen)
-#endif
-libc_hidden_def (strnlen)

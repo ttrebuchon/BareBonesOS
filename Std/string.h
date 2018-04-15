@@ -29,6 +29,8 @@ size_t strlen(const char*);
 
 char* strdup(const char*);
 
+int strcmp(const char *p1, const char *p2);
+
 char* strcpy(char* dest, const char* src);
 
 #ifndef __cplusplus

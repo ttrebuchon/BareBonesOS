@@ -5,7 +5,7 @@
 
 C_CODE
 
-__dead void __assert2(const char* filename, int line, const char* function, const char* exp) __noreturn;
+void __assert2(const char* filename, int line, const char* function, const char* exp);
 
 #undef assert
 

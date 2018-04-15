@@ -22,18 +22,8 @@
 #define NO_MEMPCPY_STPCPY_REDIRECT
 #include <string.h>
 
-#undef mempcpy
-#undef __mempcpy
 
-#ifndef MEMPCPY
-# define MEMPCPY __mempcpy
-#endif
-
-void *
-MEMPCPY (void *dest, const void *src, size_t len)
+void* mempcpy(void *dest, const void *src, size_t len)
 {
   return memcpy (dest, src, len) + len;
 }
-libc_hidden_def (__mempcpy)
-weak_alias (__mempcpy, mempcpy)
-libc_hidden_builtin_def (mempcpy)

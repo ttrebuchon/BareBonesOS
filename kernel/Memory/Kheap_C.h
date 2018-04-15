@@ -22,6 +22,7 @@ void* malloc(size_t);
 void free(void*);
 void* realloc(void*, size_t);
 void* memset(void*, int, size_t);
+void* calloc(size_t num, size_t size);
 
 // Expand memory to nsize, if (flags & MREMAP_MAYMOVE), function may remap
 void* mremap(void* old_addr, size_t osize, size_t nsize, long unsigned int flags);
