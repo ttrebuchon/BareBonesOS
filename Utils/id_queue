@@ -1,0 +1,40 @@
+#ifndef INCLUDED_ID_QUEUE
+#define INCLUDED_ID_QUEUE
+
+#include <Common.h>
+
+
+namespace Utils
+{
+    template <class ID>
+    class id_queue
+    {
+        public:
+        typedef ID id_type;
+
+        private:
+        id_type counter;
+
+        public:
+
+        ID next()
+        {
+            // TODO
+            return counter++;
+        }
+        void reuse(const ID&)
+        {
+            // TODO
+        }
+
+        size_t available() const noexcept
+        {
+            // TODO
+            return 1;
+        }
+    };
+}
+
+
+
+#endif
