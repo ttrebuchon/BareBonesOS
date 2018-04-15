@@ -133,4 +133,96 @@ size_t strcspn(const char* str, const char* chars)
 	ASSERT(false);
 }
 
+char* strdup(const char* s1)
+{
+	auto len = strlen(s1) + 1;
+	char* s2 = new char[len];
+	strcpy(s2, s1);
+	return s2;
+}
+
+}
+
+const char* strstr(const char* hay, const char* needle)
+{
+	auto hlen = strlen(hay);
+	auto nlen = strlen(needle);
+	
+	if (nlen > hlen)
+	{
+		return nullptr;
+	}
+	
+	if (nlen == 0)
+	{
+		// Return nullptr or hay?
+		return hay;
+	}
+	
+	for (int i = 0; i <= hlen - nlen; ++i)
+	{
+		if (hay[i] == needle[0])
+		{
+			int j;
+			for (j = 1; j < nlen; ++j)
+			{
+				if (hay[i+j] != needle[j])
+				{
+					break;
+				}
+			}
+			if (j == nlen)
+			{
+				return &hay[i];
+			}
+			else
+			{
+				i += j - 1;
+			}
+		}
+	}
+	
+	return nullptr;
+}
+
+char* strstr(char* hay, const char* needle)
+{
+	auto hlen = strlen(hay);
+	auto nlen = strlen(needle);
+	
+	if (nlen > hlen)
+	{
+		return nullptr;
+	}
+	
+	if (nlen == 0)
+	{
+		// Return nullptr or hay?
+		return hay;
+	}
+	
+	for (int i = 0; i <= hlen - nlen; ++i)
+	{
+		if (hay[i] == needle[0])
+		{
+			int j;
+			for (j = 1; j < nlen; ++j)
+			{
+				if (hay[i+j] != needle[j])
+				{
+					break;
+				}
+			}
+			if (j == nlen)
+			{
+				return &hay[i];
+			}
+			else
+			{
+				i += j - 1;
+			}
+		}
+	}
+	
+	return nullptr;
 }

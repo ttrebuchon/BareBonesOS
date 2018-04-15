@@ -27,9 +27,21 @@ size_t strcspn(const char*, const char*);
 
 size_t strlen(const char*);
 
+char* strdup(const char*);
+
+char* strcpy(char* dest, const char* src);
+
+#ifndef __cplusplus
+char* strstr(const char* hay, const char* needle);
+#endif
 
 #ifdef __cplusplus
 }
+#endif
+
+#ifdef __cplusplus
+const char* strstr(const char* hay, const char* needle);
+char* strstr(char* hay, const char* needle);
 #endif
 
 #endif
