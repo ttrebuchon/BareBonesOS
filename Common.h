@@ -19,7 +19,12 @@
 #include <stddef.h>
 #include <stdnoreturn.h>
 typedef unsigned char uchar;
+
+#ifdef __aarch64__
 typedef uint64_t addr_t;
+#else
+typedef uint32_t addr_t;
+#endif
 
 #include "Types.h"
 
