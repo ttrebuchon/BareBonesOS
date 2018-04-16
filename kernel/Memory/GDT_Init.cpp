@@ -1,6 +1,7 @@
 #include "GDT.hh"
 #include <Debug.h>
 #include "kheap.hh"
+#include "PageDir.hh"
 
 namespace Kernel { namespace Memory {
 
@@ -9,7 +10,7 @@ namespace Kernel { namespace Memory {
     void init_gdt()
     {
         addr_t gdtPhys;
-        gdt_table = (GDTEntry*)kmalloc(sizeof(GDTEntry)*5, 1, &gdtPhys);
+        gdt_table = (GDTEntry*)kmalloc(sizeof(GDTEntry)*5, PAGE_SIZE, &gdtPhys);
         kmemset(gdt_table, 0, sizeof(GDTEntry)*5);
 
         ASSERT(*reinterpret_cast<uint64_t*>(&gdt_table[0]) == 0);

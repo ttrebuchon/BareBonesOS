@@ -1,4 +1,4 @@
-#include "ISR.h"
+#include "Interrupts.h"
 #include <kernel/Registers.h>
 #include <drivers/VGA.hh>
 

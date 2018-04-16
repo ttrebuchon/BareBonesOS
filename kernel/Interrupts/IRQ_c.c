@@ -1,3 +1,4 @@
+#include "Interrupts.h"
 #include "IRQ.h"
 #include "ISR.h"
 #include <kernel/Registers.h>
