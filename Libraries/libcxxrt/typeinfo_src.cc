@@ -1,3 +1,29 @@
+/* 
+ * Copyright 2010-2012 PathScale, Inc. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS
+ * IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 #include "typeinfo.h"
 #include <string.h>
 #include <stdlib.h>
@@ -46,19 +72,6 @@ ABI_NAMESPACE::__pointer_to_member_type_info::~__pointer_to_member_type_info() {
 // From libelftc
 extern "C" char    *__cxa_demangle_gnu3(const char *);
 
-/**
- * Demangles a C++ symbol or type name.  The buffer, if non-NULL, must be
- * allocated with malloc() and must be *n bytes or more long.  This function
- * may call realloc() on the value pointed to by buf, and will return the
- * length of the string via *n.
- *
- * The value pointed to by status is set to one of the following:
- *
- * 0: success
- * -1: memory allocation failure
- * -2: invalid mangled name
- * -3: invalid arguments
- */
 extern "C" char* __cxa_demangle(const char* mangled_name,
                                 char* buf,
                                 size_t* n,
@@ -73,23 +86,38 @@ extern "C" char* __cxa_demangle(const char* mangled_name,
 	if (NULL != demangled)
 	{
 		size_t len = strlen(demangled);
-		buf = (char*)realloc(buf, len+1);
+		if (!buf || (*n < len+1))
+		{
+			buf = static_cast<char*>(realloc(buf, len+1));
+		}
 		if (0 != buf)
 		{
 			memcpy(buf, demangled, len);
 			buf[len] = 0;
-			*n = len;
-			*status = 0;
+			if (n)
+			{
+				*n = len;
+			}
+			if (status)
+			{
+				*status = 0;
+			}
 		}
 		else
 		{
-			*status = -1;
+			if (status)
+			{
+				*status = -1;
+			}
 		}
 		free(demangled);
 	}
 	else
 	{
-		*status = -2;
+		if (status)
+		{
+			*status = -2;
+		}
 		return NULL;
 	}
 	return buf;
