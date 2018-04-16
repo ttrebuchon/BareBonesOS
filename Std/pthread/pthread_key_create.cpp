@@ -1,14 +1,14 @@
-#include <pthread.h>
-#include "pthread.hh"
+// #include <pthread.h>
+// #include "pthread.hh"
 
 
-C_CODE
+// C_CODE
 
-int pthread_key_create(pthread_key_t* key, void (*destr)(void*))
-{
-    *key = pThread::GetKey(destr);
+// int pthread_key_create(pthread_key_t* key, void (*destr)(void*))
+// {
+//     *key = pThread::GetKey(destr);
+    
+//     return 0;
+// }
 
-    return 0;
-}
-
-C_END
+// C_END
