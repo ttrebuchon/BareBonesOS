@@ -88,6 +88,7 @@ _start:
 	*/
 	push %esp
 	push %ebx
+	call _init
 	call main
 
 	/*
