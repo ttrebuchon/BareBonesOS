@@ -6,7 +6,7 @@ extern "C"
 {
 	void* malloc(size_t size)
 	{
-		return kmalloc(size, 0, 0);
+		return kmalloc(((size + 7) / 8) * 8, 0, 0);
 	}
 	
 	void free(void* ptr)

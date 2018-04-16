@@ -14,7 +14,7 @@ extern "C" {
     {
         if (Kernel::Memory::kheap != 0)
         {
-            void* addr = Kernel::Memory::kheap->alloc(size, PAGE_SIZE);
+            void* addr = Kernel::Memory::kheap->alloc(size, align);
             //void* addr = _alloc(size, (uint8_t)align, kheap);
             if (phys != 0)
             {
@@ -27,7 +27,7 @@ extern "C" {
         }
         else
         {
-            if (align == 1 && (kPlacement & 0xFFFFF000))
+            if (align != 0 && (kPlacement & 0xFFFFF000))
             {
                 kPlacement &= 0xFFFFF000;
                 kPlacement += 0x1000;

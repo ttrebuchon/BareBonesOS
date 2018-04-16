@@ -131,7 +131,7 @@ namespace Kernel { namespace Memory
 		
 		// KHeap* kheap_tmp = (KHeap*)kmalloc(sizeof(KHeap), true, 0);
 		// kmemset(kheap_tmp, 0, sizeof(KHeap));
-		Heap* dheap_tmp = (Heap*)kmalloc(sizeof(DumbHeap), true, 0);
+		Heap* dheap_tmp = (Heap*)kmalloc(sizeof(DumbHeap), PAGE_SIZE, 0);
 		kmemset(dheap_tmp, 0, sizeof(DumbHeap));
 		
 		
@@ -251,7 +251,7 @@ namespace Kernel { namespace Memory
 
 	struct PageDir* create_empty_page_dir(addr_t* phys)
 	{
-		struct PageDir* dir = (struct PageDir*)kmalloc(sizeof(struct PageDir), 1, phys);
+		struct PageDir* dir = (struct PageDir*)kmalloc(sizeof(struct PageDir), PAGE_SIZE, phys);
 		kmemset(dir, 0, sizeof(struct PageDir));
 		return dir;
 	}
@@ -270,8 +270,8 @@ namespace Kernel { namespace Memory
 	{
 		typedef typename Utils::Bitset_Ptr<>::storage Unit_t;
 		
-		frame_collection = (Utils::Bitset_Ptr<>*)kmalloc(sizeof(Utils::Bitset_Ptr<>), 1, 0);
-		auto bits = (Unit_t*)kmalloc(size, 1, 0);
+		frame_collection = (Utils::Bitset_Ptr<>*)kmalloc(sizeof(Utils::Bitset_Ptr<>), PAGE_SIZE, 0);
+		auto bits = (Unit_t*)kmalloc(size, PAGE_SIZE, 0);
 		frame_collection = new (frame_collection) Utils::Bitset_Ptr<>(bits, size/sizeof(Unit_t));
 		
 		

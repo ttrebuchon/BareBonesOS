@@ -237,7 +237,7 @@ namespace Kernel { namespace Memory {
 	PageDirectory::PageDirectory() : dir(nullptr), tables(), dir_phys(nullptr)
 	{
 		addr_t phys;
-		dir = (_Dir*)kmalloc(sizeof(_Dir), 1, &phys);
+		dir = (_Dir*)kmalloc(sizeof(_Dir), PAGE_SIZE, &phys);
 		dir_phys = (void*)phys;
 		kmemset(dir, 0, sizeof(_Dir));
 		kmemset(tables, 0, sizeof(Table*)*1024);
@@ -438,7 +438,7 @@ namespace Kernel { namespace Memory {
 	PageDirectory::Table::Table(_Table& t) noexcept : table(&t), pages(), _pages(nullptr), _pages_phys(nullptr)
 	{
 		addr_t phys;
-		auto ptr = kmalloc(sizeof(_Pages), 1, &phys);
+		auto ptr = kmalloc(sizeof(_Pages), PAGE_SIZE, &phys);
 		ASSERT(phys != 0);
 		ASSERT(ptr != nullptr);
 		_pages_phys = (void*)phys;
