@@ -19,6 +19,7 @@
 
 #ifndef	_DLFCN_H
 #define	_DLFCN_H 1
+#define __USE_GNU
 #include <Common.h>
 //#include <features.h>
 #define __need_size_t
