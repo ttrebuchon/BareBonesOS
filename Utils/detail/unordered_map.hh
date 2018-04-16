@@ -169,7 +169,7 @@ namespace Utils
 		bool empty() const;
 		size_type size() const;
 		size_type max_size() const;
-		allocator_type get_allocator() const noexcept;
+		allocator_type get_allocator() const;
 		mapped_type& at(const key_type&);
 		mapped_type& at(key_type&&);
 		const mapped_type& at(const key_type&) const;
@@ -180,7 +180,7 @@ namespace Utils
 		float max_load_factor() const noexcept;
 		void max_load_factor(float);
 		float load_factor() const noexcept;
-		hasher hash_function() const noexcept;
+		hasher hash_function() const;
 		key_equal key_eq() const noexcept;
 		size_type bucket_count() const noexcept;
 		size_type max_bucket_count() const noexcept;

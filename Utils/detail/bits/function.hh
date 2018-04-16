@@ -55,7 +55,7 @@ namespace Utils
 		template <class Fn>
 		function(Fn);
 		function(const function&);
-		function(function&&);
+		function(function&&) noexcept;
 		
 		// Allocator-Constructors
 		template <class Alloc>

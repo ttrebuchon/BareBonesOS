@@ -94,7 +94,7 @@ namespace Utils
 	}
 	
 	template <class Key, class T, class Hash, class KeyEqual, class Alloc>
-	float unordered_map<Key, T, Hash, KeyEqual, Alloc>::max_load_factor() const
+	float unordered_map<Key, T, Hash, KeyEqual, Alloc>::max_load_factor() const noexcept
 	{
 		return _table.max_load_factor();
 	}
@@ -106,7 +106,7 @@ namespace Utils
 	}
 	
 	template <class Key, class T, class Hash, class KeyEqual, class Alloc>
-	float unordered_map<Key, T, Hash, KeyEqual, Alloc>::load_factor() const
+	float unordered_map<Key, T, Hash, KeyEqual, Alloc>::load_factor() const noexcept
 	{
 		return ((long double)_table.size())/_table.bucketsSize();
 	}
@@ -118,19 +118,19 @@ namespace Utils
 	}
 	
 	template <class Key, class T, class Hash, class KeyEqual, class Alloc>
-	auto unordered_map<Key, T, Hash, KeyEqual, Alloc>::key_eq() const -> key_equal
+	auto unordered_map<Key, T, Hash, KeyEqual, Alloc>::key_eq() const noexcept -> key_equal
 	{
 		return _table.key_eq();
 	}
 	
 	template <class Key, class T, class Hash, class KeyEqual, class Alloc>
-	auto unordered_map<Key, T, Hash, KeyEqual, Alloc>::bucket_count() const -> size_type
+	auto unordered_map<Key, T, Hash, KeyEqual, Alloc>::bucket_count() const noexcept -> size_type
 	{
 		return _table.bucketsSize();
 	}
 	
 	template <class Key, class T, class Hash, class KeyEqual, class Alloc>
-	auto unordered_map<Key, T, Hash, KeyEqual, Alloc>::max_bucket_count() const -> size_type
+	auto unordered_map<Key, T, Hash, KeyEqual, Alloc>::max_bucket_count() const noexcept -> size_type
 	{
 		return _table.max_bucketsSize();
 	}

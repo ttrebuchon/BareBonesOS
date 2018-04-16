@@ -43,10 +43,10 @@ namespace Utils
 		template <class Y>
 		weak_ptr(weak_ptr<Y>&&) noexcept;
 		
-		~weak_ptr() noexcept;
+		~weak_ptr();
 		
 		// Methods
-		void reset() noexcept;
+		void reset();
 		void swap(weak_ptr&) noexcept;
 		long use_count() const noexcept;
 		bool expired() const noexcept;
@@ -54,7 +54,7 @@ namespace Utils
 		
 		
 		// Operators
-		weak_ptr& operator=(const weak_ptr&) noexcept;
+		weak_ptr& operator=(const weak_ptr&);
 		
 		
 		template <class>

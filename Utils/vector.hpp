@@ -68,6 +68,14 @@ namespace Utils
 	}
 	
 	template <class T, class A>
+	vector<T, A>::vector(vector&& v) : _data(v._data), _size(v._size), _cap(v._cap), alloc(Utils::move(v.alloc))
+	{
+		v._data = nullptr;
+		v._size = 0;
+		v._cap = 0;
+	}
+	
+	template <class T, class A>
 	vector<T, A>::~vector()
 	{
 		if (_data)
@@ -266,6 +274,18 @@ namespace Utils
 	}
 	
 	template <class T, class A>
+	auto vector<T, A>::front() -> reference
+	{
+		return *_data;
+	}
+	
+	template <class T, class A>
+	auto vector<T, A>::front() const -> const_reference
+	{
+		return *_data;
+	}
+	
+	template <class T, class A>
 	void vector<T, A>::push_back(const value_type& v)
 	{
 		ensure_room_for(1);
@@ -279,6 +299,15 @@ namespace Utils
 		ensure_room_for(1);
 		ATraits::construct(alloc, _data + _size, forward<value_type&&>(v));
 		++_size;
+	}
+	
+	template <class T, class A>
+	void vector<T, A>::pop_back()
+	{
+		assert(!empty());
+		auto i = size()-1;
+		ATraits::destroy(alloc, _data + i);
+		--_size;
 	}
 	
 	template <class T, class A>

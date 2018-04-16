@@ -9,20 +9,20 @@
 namespace Utils
 {
 	template <class T>
-	constexpr weak_ptr<T>::weak_ptr() : ctrl(nullptr)
+	constexpr weak_ptr<T>::weak_ptr() noexcept : ctrl(nullptr)
 	{
 		
 	}
 	
 	template <class T>
-	constexpr weak_ptr<T>::weak_ptr(nullptr_t n) : ctrl(n)
+	constexpr weak_ptr<T>::weak_ptr(nullptr_t n) noexcept : ctrl(n)
 	{
 		
 	}
 	
 	template <class T>
 	template <class Y>
-	weak_ptr<T>::weak_ptr(const shared_ptr<Y>& r) : ctrl(r.ctrl)
+	weak_ptr<T>::weak_ptr(const shared_ptr<Y>& r) noexcept : ctrl(r.ctrl)
 	{
 		if (ctrl)
 		{
@@ -75,7 +75,7 @@ namespace Utils
 	}
 	
 	template <class T>
-	bool weak_ptr<T>::expired() const
+	bool weak_ptr<T>::expired() const noexcept
 	{
 		if (ctrl)
 		{
@@ -85,7 +85,7 @@ namespace Utils
 	}
 	
 	template <class T>
-	shared_ptr<T> weak_ptr<T>::lock() const
+	shared_ptr<T> weak_ptr<T>::lock() const noexcept
 	{
 		return expired() ? shared_ptr<T>(nullptr) : shared_ptr<T>(ctrl);
 	}

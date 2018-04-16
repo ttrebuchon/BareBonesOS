@@ -166,7 +166,7 @@ namespace Utils
 	template <class It>
 	struct iterator_traits
 	{
-		typedef typename It::type value_type;
+		typedef typename It::value_type value_type;
 		typedef typename It::difference_type difference_type;
 		typedef typename It::iterator_category iterator_category;
 		typedef typename It::pointer pointer;
@@ -192,6 +192,159 @@ namespace Utils
 		typedef const T* pointer;
 		typedef const T& reference;
 	};
+	
+	
+	
+	
+	
+	template <class It>
+	class reverse_iterator
+	{
+		public:
+		typedef It iterator_type;
+		typedef typename iterator_traits<It>::value_type value_type;
+		typedef typename iterator_traits<It>::difference_type difference_type;
+		typedef typename iterator_traits<It>::pointer pointer;
+		typedef typename iterator_traits<It>::reference reference;
+		typedef typename iterator_traits<It>::iterator_category iterator_category;
+		
+		protected:
+		iterator_type current;
+		
+		
+		public:
+		constexpr reverse_iterator() : current()
+		{}
+		constexpr explicit reverse_iterator(iterator_type i) : current(i)
+		{}
+		template <class U>
+		constexpr reverse_iterator(const reverse_iterator<U>& other) : current(other.current)
+		{}
+		
+		
+		constexpr iterator_type base() const
+		{ return current; }
+		
+		
+		
+		template <class U>
+		constexpr reverse_iterator& operator=(const reverse_iterator<U>& other)
+		{
+			current = other.current;
+		}
+		
+		constexpr reference operator*() const
+		{
+			return *current;
+		}
+		
+		constexpr pointer operator->() const
+		{
+			return current.operator->();
+		}
+		
+		constexpr auto operator[](difference_type n) const
+		{
+			return current[-n-1];
+		}
+		
+		constexpr reverse_iterator& operator++()
+		{
+			current.operator--();
+			return *this;
+		}
+		
+		constexpr reverse_iterator& operator--()
+		{
+			current.operator++();
+			return *this;
+		}
+		
+		constexpr reverse_iterator operator++(int)
+		{
+			reverse_iterator it2(current);
+			current.operator--(0);
+			return it2;
+		}
+		
+		constexpr reverse_iterator operator--(int)
+		{
+			reverse_iterator it2(current);
+			current.operator++(0);
+			return it2;
+		}
+		
+		constexpr reverse_iterator operator+(difference_type d) const
+		{
+			return reverse_iterator(current - d);
+		}
+		
+		constexpr reverse_iterator operator-(difference_type d) const
+		{
+			return reverse_iterator(current + d);
+		}
+		
+		constexpr reverse_iterator& operator+=(difference_type d)
+		{
+			current -= d;
+			return *this;
+		}
+		
+		constexpr reverse_iterator& operator-=(difference_type d)
+		{
+			current += d;
+			return *this;
+		}
+	};
+	
+	
+	template <class I1, class I2>
+	constexpr bool operator==(const reverse_iterator<I1>& it1, const reverse_iterator<I2>& it2)
+	{
+		return it1.base() == it2.base();
+	}
+	
+	template <class I1, class I2>
+	constexpr bool operator!=(const reverse_iterator<I1>& it1, const reverse_iterator<I2>& it2)
+	{
+		return it1.base() != it2.base();
+	}
+	
+	template <class I1, class I2>
+	constexpr bool operator>(const reverse_iterator<I1>& it1, const reverse_iterator<I2>& it2)
+	{
+		return it1.base() > it2.base();
+	}
+	
+	template <class I1, class I2>
+	constexpr bool operator<(const reverse_iterator<I1>& it1, const reverse_iterator<I2>& it2)
+	{
+		return it1.base() < it2.base();
+	}
+	
+	template <class I1, class I2>
+	constexpr bool operator>=(const reverse_iterator<I1>& it1, const reverse_iterator<I2>& it2)
+	{
+		return it1.base() >= it2.base();
+	}
+	
+	template <class I1, class I2>
+	constexpr bool operator<=(const reverse_iterator<I1>& it1, const reverse_iterator<I2>& it2)
+	{
+		return it1.base() <= it2.base();
+	}
+	
+	template <class It>
+	constexpr reverse_iterator<It> operator+(typename reverse_iterator<It>::difference_type n, const reverse_iterator<It>& rhs)
+	{
+		return rhs.operator+(n);
+	}
+	
+	template <class I1, class I2>
+	constexpr auto operator-(const reverse_iterator<I1>& lhs, const reverse_iterator<I2>& rhs) -> decltype(rhs.base() - lhs.base())
+	{
+		return rhs.base() - lhs.base();
+	}
 }
 
 #endif

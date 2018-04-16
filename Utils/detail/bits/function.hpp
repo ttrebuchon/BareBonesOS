@@ -6,13 +6,13 @@
 namespace Utils
 {
 	template <class Ret, class... Args>
-	function<Ret(Args...)>::function() : _imp(nullptr)
+	function<Ret(Args...)>::function() noexcept : _imp(nullptr)
 	{
 		
 	}
 	
 	template <class Ret, class... Args>
-	function<Ret(Args...)>::function(nullptr_t) : _imp(nullptr)
+	function<Ret(Args...)>::function(nullptr_t) noexcept : _imp(nullptr)
 	{
 		
 	}
@@ -32,21 +32,21 @@ namespace Utils
 	}
 	
 	template <class Ret, class... Args>
-	function<Ret(Args...)>::function(function&& f) : _imp()
+	function<Ret(Args...)>::function(function&& f) noexcept : _imp()
 	{
 		_imp.swap(f._imp);
 	}
 	
 	template <class Ret, class... Args>
 	template <class Alloc>
-	function<Ret(Args...)>::function(allocator_arg_t, const Alloc&) : _imp(nullptr)
+	function<Ret(Args...)>::function(allocator_arg_t, const Alloc&) noexcept : _imp(nullptr)
 	{
 		
 	}
 	
 	template <class Ret, class... Args>
 	template <class Alloc>
-	function<Ret(Args...)>::function(allocator_arg_t, const Alloc&, nullptr_t) : _imp(nullptr)
+	function<Ret(Args...)>::function(allocator_arg_t, const Alloc&, nullptr_t) noexcept : _imp(nullptr)
 	{
 		
 	}
