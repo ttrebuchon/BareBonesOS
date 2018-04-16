@@ -129,7 +129,7 @@ void abort()
 void exit(int code)
 {
 	// TODO
-	assert(false);
+	KPANIC("exit()");
 }
 
 C_END
