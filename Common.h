@@ -1,12 +1,6 @@
 #ifndef INCLUDED_COMMON_H
 #define INCLUDED_COMMON_H
 
-#ifndef TESTING
-
-#define __USE_GNU
-
-#endif
-
 #include "kernel/c_cpp.h"
 
 #include <stdint.h>
@@ -119,7 +113,7 @@ typedef unsigned long size_t;
 
 #endif
 
-#endif //INCLUDED...
+
 
 #ifdef __cplusplus
 #include <kernel/CppSupport/new.hh>
@@ -128,3 +122,7 @@ typedef unsigned long size_t;
 #include <kernel/Timer.h>
 #include <kernel/MetaInfo.h>
 #include <kernel/Debug.h>
+#include <kernel/Interrupts.h>
+
+#endif //INCLUDED...
+
