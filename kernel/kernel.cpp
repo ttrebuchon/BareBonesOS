@@ -21,6 +21,8 @@
 #include <drivers/IDE/IDE.hh>
 #include <kernel/Memory/GDT.hh>
 #include <drivers/IDE/DMA.hh>
+#include <kernel/Filesystem/FileNode.hh>
+#include <kernel/Filesystem/DirectoryNode.hh>
 
 #include <drivers/VGA_Stream.hh>
 #include <Utils/iostream>
@@ -144,8 +146,19 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     out.flush();
 
 
-    
-    
+
+
+    // try
+    // {
+    //     throw 4;
+    // }
+    // catch (...)
+    // {
+    //     assert(false);
+    //     out << "CAUGHT!\n";
+    //     out.flush();
+    // }
+    // assert(false);
     
     {
         ASSERT(Kernel::Memory::kheap != 0x0);

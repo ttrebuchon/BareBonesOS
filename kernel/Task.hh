@@ -6,7 +6,7 @@
 #include <Utils/shared_ptr>
 
 
-
+class pThread;
 
 START_NS(Kernel)
 
@@ -26,6 +26,7 @@ class Task
 	uint32_t instr_ptr;
 	Memory::PageDirectory* page_dir;
 	Utils::list<Utils::shared_ptr<SystemResource>> resources;
+	pThread* pthread;
 };
 
 #ifdef __cplusplus

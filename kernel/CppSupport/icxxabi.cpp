@@ -65,14 +65,15 @@ extern "C" {
 	int dl_iterate_phdr(int (*)(struct dl_phdr_info*, size_t, void*), void*)
 	{
 		// TODO
-		
+		TRACE("Called.");
 		return -1;
 	}
 	
 	#ifdef __EXCEPTIONS
-	#ifdef __USING_CXXRT__
+	#ifndef __USING_CXXRT__
 	void __cxa_throw_bad_array_new_length()
 	{
+        TRACE("Called.");
 		// TODO
 		throw 0;
 	}
