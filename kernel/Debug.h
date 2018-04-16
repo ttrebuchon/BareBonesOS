@@ -19,7 +19,7 @@ inline void __ASSERT_TRUE() {}
 
 #ifdef _TRACE
 
-#define TRACE(X) Drivers::VGA::Write(X)
+#define TRACE(X) do { ::Drivers::VGA::Write(__FILE__"::"); ::Drivers::VGA::Write((uint32_t)__LINE__); ::Drivers::VGA::Write("::"); ::Drivers::VGA::Write(__func__); ::Drivers::VGA::Write("::"); ::Drivers::VGA::Write(X); ::Drivers::VGA::Write("\n"); } while (false)
 #define TRACE_C(X) c_vga_write(X)
 
 #else
