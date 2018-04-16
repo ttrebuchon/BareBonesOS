@@ -8,24 +8,43 @@ namespace Kernel { namespace Filesystem {
 	
 	FileDescriptors* FileDescriptors::Current = nullptr;
 	
-	FileDescriptors::FileDescriptors() : needNext(false), nextFree(0), descriptors()
+	FileDescriptors::FileDescriptors() : handles(), descriptors()
 	{
 		
 	}
 	
 	void FileDescriptors::reset() noexcept
 	{
-		needNext = false;
-		nextFree = 0;
-		descriptors.clear();
+		handles.clear();
+		for (auto len = descriptors.size(); len > 0; --len)
+		{
+			descriptors.pop();
+		}
 		
 		// If clearing doesn't reallocate,
 		// force it to shrink to <= 5
-		if (descriptors.capacity() > 5)
+		if (handles.capacity() > 5)
 		{
-			descriptors.resize(5);
-			descriptors.shrink_to_fit();
-			descriptors.clear();
+			handles.resize(5);
+			handles.shrink_to_fit();
+			handles.clear();
+		}
+		
+		for (int i = 0, c = handles.size(); i < c; ++i)
+		{
+			descriptors.push(i);
+		}
+	}
+	
+	void FileDescriptors::expand() noexcept
+	{
+		auto oldSize = handles.size();
+		auto newSize = oldSize*1.5 + 2;
+		
+		handles.resize(newSize);
+		for (auto i = oldSize; i < newSize; ++i)
+		{
+			descriptors.push(i);
 		}
 	}
 	
@@ -34,7 +53,7 @@ namespace Kernel { namespace Filesystem {
 		if (this == FileDescriptors::Current)
 		{
 			FileDescriptors::Current = nullptr;
-			for (auto& fd : descriptors)
+			for (auto& fd : handles)
 			{
 				if (fd)
 				{
@@ -48,7 +67,7 @@ namespace Kernel { namespace Filesystem {
 	{
 		ASSERT(this != FileDescriptors::Current);
 		FileDescriptors::Current = this;
-		for (auto& fd : descriptors)
+		for (auto& fd : handles)
 		{
 			if (fd)
 			{
@@ -60,7 +79,7 @@ namespace Kernel { namespace Filesystem {
 	
 	int FileDescriptors::map(ResourcePtr<FileHandle>&& n)
 	{
-		int index;
+		/*int index;
 		if (needNext)
 		{
 			index = -1;
@@ -124,13 +143,34 @@ namespace Kernel { namespace Filesystem {
 		{
 			nextFree = -1;
 		}
+		return index;*/
+		
+		if (descriptors.empty())
+		{
+			expand();
+			assert(!descriptors.empty());
+		}
+		auto index = descriptors.top();
+		descriptors.pop();
+		
+		handles[index] = Utils::move(n);
 		return index;
 	}
 	
 	bool FileDescriptors::unmap(int fd)
 	{
+		assert(fd < handles.size());
 		
-		if (fd > 0 && fd < descriptors.size())
+		if (handles[fd])
+		{
+			handles[fd] = nullptr;
+			descriptors.push(fd);
+			return true;
+		}
+		
+		return false;
+		
+		/*if (fd > 0 && fd < descriptors.size())
 		{
 			if (descriptors[fd] != nullptr)
 			{
@@ -144,13 +184,21 @@ namespace Kernel { namespace Filesystem {
 			}
 		}
 		
-		return false;
+		return false;*/
 	}
 	
 	
 	File* FileDescriptors::resolve(int fd)
 	{
-		if (fd > 0 && fd < descriptors.size())
+		assert(fd < handles.size());
+		
+		if (handles[fd])
+		{
+			return handles[fd]->file();
+		}
+		// TODO: Better error
+		return nullptr;
+		/*if (fd > 0 && fd < descriptors.size())
 		{
 			if (descriptors[fd] != nullptr)
 			{
@@ -159,7 +207,7 @@ namespace Kernel { namespace Filesystem {
 		}
 		
 		// TODO: Better error
-		return nullptr;
+		return nullptr;*/
 	}
 	
 	

@@ -5,7 +5,7 @@
 #include "OpenFileHandle.h"
 
 #ifdef __cplusplus
-#include <Utils/vector>
+#include <Utils/queue>
 #include <kernel/ResourceHandles/ResourceHandle.hh>
 #include <kernel/ResourceHandles/FileHandle.hh>
 
@@ -18,11 +18,11 @@ namespace Kernel { namespace Filesystem {
 	struct FileDescriptors final
 	{
 		private:
-		bool needNext;
-		int nextFree;
-		Utils::vector<ResourcePtr<FileHandle>> descriptors;
+		Utils::vector<ResourcePtr<FileHandle>> handles;
+		Utils::priority_queue<int, Utils::vector<int>, Utils::greater<int>> descriptors;
 		
 		void reset() noexcept;
+		void expand() noexcept;
 		
 		// In case we ever do decide to
 		// have a descriptor set take
