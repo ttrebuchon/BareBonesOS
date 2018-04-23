@@ -1,6 +1,7 @@
 #include "Tests.hh"
 #include <iostream>
 #include <kernel/MetaInfo.hh>
+#include <boot/multiboot.h>
 
 
 TEST(List);
@@ -21,6 +22,8 @@ TEST(mutex);
 TEST(function);
 TEST(list_vector);
 CTEST(FileDescriptors);
+TEST(queue);
+TEST(PhysicalMemory);
 
 
 
@@ -68,7 +71,6 @@ int main()
 	MetaInfo::registerPrinter(mi_pr);
 	
 	
-	
 	RUN(IOSTREAM);
 	//RUN(map);
 	RUN(List);
@@ -89,6 +91,8 @@ int main()
 	RUN(function);
 	RUN(list_vector);
 	RUNC(FileDescriptors);
+	RUN(queue);
+	RUN(PhysicalMemory);
 	
 	std::cerr << "\n\n\nAll Done!\n" << std::flush;
 }
