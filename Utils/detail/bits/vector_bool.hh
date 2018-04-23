@@ -1,37 +1,110 @@
-#ifndef INCLUDED_VECTOR_HH
-#define INCLUDED_VECTOR_HH
+#ifndef INCLUDED_BITS_VECTOR_BOOL_HH
+#define INCLUDED_BITS_VECTOR_BOOL_HH
 
 #include <Common.h>
-#include "Allocator.hh"
-#include "Allocator_Traits.hh"
+#include <Utils/vector.hh>
 
 namespace Utils
 {
 	
-	template <class T, class Alloc = Allocator<T>>
-	class vector
+	template <class Alloc>
+	class vector<bool, Alloc>
 	{
 		protected:
-		typedef Allocator_Traits<Alloc> ATraits;
+		typedef uchar storage_type;
+		typedef typename Alloc::template rebind<storage_type>::other _alloc_type;
+		typedef Allocator_Traits<_alloc_type> ATraits;
 		
 		public:
 		
-		typedef T               value_type;
+		typedef bool               value_type;
 		typedef Alloc           allocator_type;
         typedef typename Allocator_Traits<Alloc>::pointer pointer;
         typedef typename Allocator_Traits<Alloc>::const_pointer const_pointer;
-        typedef typename Allocator_Traits<Alloc>::reference reference;
-        typedef typename Allocator_Traits<Alloc>::const_reference const_reference;
-        typedef size_t          size_type;
+        typedef bool const_reference;
+        typedef size_t size_type;
+        
+        class reference
+        {
+        	protected:
+        	storage_type& item;
+        	storage_type mask;
+        	
+        	reference(storage_type& s, const storage_type mask) noexcept : item(s), mask(mask)
+        	{}
+        	
+        	public:
+        	~reference() = default;
+        	
+        	operator bool() const noexcept
+        	{
+        		return (item & mask) != 0;
+        	}
+        	
+        	reference& operator=(bool x) noexcept
+        	{
+        		if (x)
+        		{
+        			item |= mask;
+        		}
+        		else
+        		{
+        			item &= ~mask;
+        		}
+        		return *this;
+        	}
+        	
+        	reference& operator=(const reference& rhs) noexcept
+        	{
+        		return (*this) = ((bool)rhs);
+        	}
+        	
+        	reference& flip() noexcept
+        	{
+        		item &= ~(mask & item);
+        		return *this;
+        	}
+        	
+        	bool operator~() const noexcept
+        	{
+        		return ~(mask & item) != 0;
+        	}
+        	
+        	friend class vector<bool, Alloc>;
+        };
+        
+        
+        
+        class iterator
+        {
+        	protected:
+        	storage_type* ptr;
+        	storage_type mask;
+        	
+        	public:
+        };
+        
+        class const_iterator
+        {
+        	protected:
+        	const storage_type* ptr;
+        	storage_type mask;
+        	
+        	public:
+        };
+        
+        
+        
 		
-		typedef value_type* iterator;
-		typedef const value_type* const_iterator;
 		
 		protected:
-		T* _data;
+		storage_type* _data;
 		size_type _size;
 		size_type _cap;
-		Alloc alloc;
+		size_type _under_count;
+		allocator_type alloc;
+		
+		constexpr static size_t storage_bits = sizeof(storage_type)*8;
 		
 		void ensure_capacity(size_type);
 		void ensure_room_for(size_type n)
@@ -39,6 +112,12 @@ namespace Utils
 			ensure_capacity(_size + n);
 		}
 		void reallocate(size_type);
+		_alloc_type getAlloc()
+		{
+			return _alloc_type(alloc);
+		}
+		
+		
 		
 		public:
 		constexpr vector();
@@ -69,10 +148,6 @@ namespace Utils
 		const_reference front() const;
 		reference back();
 		const_reference back() const;
-		value_type* data()
-		{ return _data; }
-		const value_type* data() const
-		{ return _data; }
 		
 		template <class InputIt>
 		void assign(InputIt first, InputIt last);
@@ -96,6 +171,8 @@ namespace Utils
 		template <class... Args>
 		void emplace_back(Args&&... args);
 		allocator_type get_allocator() const noexcept;
+		void flip();
+		static void swap(reference x, reference y);
 		
 		
 		// Operators
@@ -112,38 +189,6 @@ namespace Utils
 		const_iterator cend() const noexcept;
 		
 	};
-	
-	
-	template <class Alloc>
-	class vector<bool, Alloc>;
-	
-	
-	
-	template <class T, class A>
-	bool operator==(const vector<T, A>& l, const vector<T, A>& r)
-	{
-		if (l.size() != r.size())
-		{
-			return false;
-		}
-		auto lIt = l.begin();
-		auto rIt = r.begin();
-		while (lIt != l.end())
-		{
-			if (*lIt != *rIt)
-			{
-				return false;
-			}
-			++lIt;
-			++rIt;
-		}
-		return true;
-	}
-	
-	template <class T, class A>
-	bool operator!=(const vector<T, A>& l, const vector<T, A>& r)
-	{
-		return !(l == r);
-	}
+
 }
 #endif
