@@ -2,6 +2,9 @@
 #include <Utils/Bitset.hh>
 #include <cassert>
 #include <iomanip>
+#include <bitset>
+
+static void test_bitset();
 
 TEST(Bitset)
 {
@@ -140,4 +143,83 @@ TEST(Bitset)
 		assert(bs3.bits[i] == 0x0);
 	}
 	assert(bs3.firstFalse(nullptr));
+	
+	
+	test_bitset();
+}
+
+template <template <size_t> class T>
+static void test_type();
+
+static void test_bitset()
+{
+	test_type<std::bitset>();
+	test_type<Utils::bitset>();
+}
+
+template <template <size_t> class T, size_t N>
+static void test_type_standard();
+
+template <template <size_t> class T>
+static void test_type()
+{
+	test_type_standard<T, 8>();
+	test_type_standard<T, 4>();
+	test_type_standard<T, 8192>();
+	test_type_standard<T, 2048>();
+}
+
+
+template <template <size_t> class T, size_t N>
+static void test_type_standard()
+{
+	static_assert(N > 2);
+	T<N> s;
+		
+	s[2] = true;
+	s[0] = true;
+		
+	//assert(s.any());
+	//assert(!s.all());
+		
+	assert(s[0]);
+	assert(s[2]);
+		
+		
+	for (int i = 0; i < N; ++i)
+	{
+		s[i] = true;
+	}
+		
+	//assert(s.any());
+	//assert(s.all());
+		
+	for (int i = 0; i < N; ++i)
+	{
+		assert(s[i]);
+	}
+	
+	if (N <= 2048)
+	for (int i = 0; i < N; ++i)
+	{
+		s[i] = false;
+		for (int j = 0; j < N; ++j)
+		{
+			if (i != j)
+			{
+				assert(s[j]);
+			}
+		}
+		s[i] = true;
+	}
+	
+	for (int i = 0; i < N; ++i)
+	{
+		s[i] = (i % 2 == 0);
+	}
+	
+	for (int i = 0; i < N; ++i)
+	{
+		ASSERTEQ(s[i], (i % 2 == 0));
+	}
 }

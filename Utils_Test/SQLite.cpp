@@ -3,12 +3,16 @@
 
 TEST(SQLite)
 {
-	/*std::cout << "Opening a SQLite memory DB..." << std::endl;
+	std::cout << "Opening a SQLite memory DB..." << std::endl;
 	sqlite3* db;
 	//const auto dbName = "Test.sqlite";
 	const auto dbName = ":memory:";
 	//const auto dbName = "";
 	int rc = sqlite3_open(dbName, &db);
+	std::cout << "Result: " << rc << std::endl;
+	std::cout << sqlite3_errstr(rc) << std::endl;
+	ASSERT(rc == SQLITE_OK);
 	ASSERT(db != NULL);
-	ASSERT(rc == SQLITE_OK);*/
+	
+	sqlite3_close(db);
 }

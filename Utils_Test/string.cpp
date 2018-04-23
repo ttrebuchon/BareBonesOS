@@ -1,7 +1,7 @@
 #include <cassert>
 #include "Tests.hh"
 #include <Utils/string>
-//#include <string>
+#include <string>
 
 using namespace Utils;
 
@@ -42,6 +42,32 @@ TEST(String)
 	assert(s3 == "Test");
 	assert(s2 == "Testing!");
 	assert(s == "Testing!  ");
+	
+	{
+		char cstr[] = "Hello";
+		char scstr[] = "Hello";
+		
+		// Sanity checks and all that
+		static_assert(sizeof(cstr) == 6);
+		static_assert(sizeof(scstr) == 6);
+		
+		
+		
+		string st(cstr);
+		std::string sst(scstr);
+		
+		ASSERT(st == "Hello");
+		ASSERT(sst == "Hello");
+		
+		cstr[0] = scstr[0] = 'G';
+		ASSERT(st == "Hello");
+		ASSERT(sst == "Hello");
+		
+		
+		
+	}
+	
+	
 	
 	static_assert(std::is_same<typename Utils::iterator_traits<int*>::iterator_category, Utils::random_access_iterator_tag>::value);
 }
