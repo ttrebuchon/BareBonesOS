@@ -26,6 +26,7 @@
 
 #include <drivers/VGA_Stream.hh>
 #include <Utils/iostream>
+#include <boot/MultiBoot.hh>
 
 
 #if !defined(__cplusplus)
@@ -92,6 +93,10 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     Kernel::Interrupts::cli();
 
     Drivers::VGA::Init();
+    
+    
+    boot::mboot = new boot::MultiBoot(mboot_ptr);
+    
     Drivers::VGA::Write("Writing GDT...\n");
 
     
