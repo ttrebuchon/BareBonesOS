@@ -143,7 +143,7 @@ char* strdup(const char* s1)
 
 }
 
-const char* strstr(const char* hay, const char* needle)
+char* strstr(const char* hay, const char* needle)
 {
 	auto hlen = strlen(hay);
 	auto nlen = strlen(needle);
