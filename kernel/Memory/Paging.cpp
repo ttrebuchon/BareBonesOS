@@ -6,6 +6,8 @@
 #include <kernel/Debug.h>
 #include <Utils/Bitset.hh>
 #include "Heaps/DumbHeap.hh"
+#include "PhysicalMemory.hh"
+#include "Managers/Basic_Physical.hh"
 
 
 
@@ -59,7 +61,8 @@ namespace Kernel { namespace Memory
 
 	void init_paging()
 	{
-		asm volatile("cli");
+		irq_guard irq_lock;
+		//asm volatile("cli");
 
 		uint32_t mem_end = 0xF0000000;
 		
@@ -67,6 +70,8 @@ namespace Kernel { namespace Memory
 		init_frame_collection(mem_end/0x1000);
 		TRACE_C("Frame collection initialized.\n");
 		
+		
+		PhysicalMemory::Use<Basic_Physical>();
 		
 		
 		#ifdef DEBUG_IDENTITY_DIR
@@ -214,7 +219,7 @@ namespace Kernel { namespace Memory
 		TRACE_C("Switched to identity directory\n");
 		#endif
 		
-		asm volatile("sti");
+		//asm volatile("sti");
 		asm volatile("nop");
 	}
 

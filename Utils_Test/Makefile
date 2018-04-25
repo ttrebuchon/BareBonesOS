@@ -6,6 +6,14 @@ LASTPART = $(shell basename $1)
 LASTPARTS = $(foreach x,$1,$(call LASTPART,$x))
 
 SRC = $(call GET_SRC,Utils) $(call GET_SRC,Utils/detail) ../kernel/Memory/memcpy.c ../kernel/MetaInfo.cpp ../drivers/IDE/DMA.cpp $(call GET_SRC,drivers/IDE) ../drivers/PCI.cpp $(wildcard Dummies/*.cpp Dummies/*.c) ../drivers/VGA_Stream.cpp ../drivers/VGA.cpp ../Libraries/sqlite3/sqlite3.c ../kernel/Error.c $(call GET_SRC,Support/sqlite) ../kernel/Interrupts/ISR.c ../kernel/Interrupts/IRQ_c.c
+SRC += ../Std/stdlib.cpp
+#SRC += $(call GET_SRC,Support/unwinder)
+SRC += ../kernel/Memory/PhysicalMemory.cpp
+SRC += ../kernel/Interrupts/irq_guard.cpp
+SRC += ../kernel/Interrupts/Interrupts_cpp.cpp
+SRC += ../boot/MultiBoot.cpp
+SRC += $(call GET_SRC,kernel/Memory/Managers)
+SRC += ../kernel/Scheduling/context.cpp
 
 ASM_SRC = ../kernel/Utility_asm.asm
 ASM_OBJS = $(ASM_SRC:.asm=.o)
@@ -29,16 +37,17 @@ TESTS = $(TESTS_SRC:.cpp=.o) $(TESTS_SRC_C:.c=.o)
 
 
 
+BOTH_FLAGS += -O0
 BOTH_FLAGS += -DTESTING
 BOTH_FLAGS += -DSTACK_INFO_V
 BOTH_FLAGS += -I../Libraries
 BOTH_FLAGS += -I../../CppUtilities
-BOTH_FLAGS += #-Wfatal-errors
+BOTH_FLAGS += -Wfatal-errors
 BOTH_FLAGS += -fmax-errors=5
 BOTH_FLAGS += #-DINCLUDED_DEBUG_H_ENABLED
 BOTH_FLAGS += #-D"kassert(x)"="assert(x)"
 BOTH_FLAGS += -DDEBUG #-DDEBUG_VERIFY
-#BOTH_FLAGS += -DTRACK_ALLOC
+BOTH_FLAGS += #-DTRACK_ALLOC
 BOTH_FLAGS += -D__USE_STD_NEW__
 BOTH_FLAGS += -DIGNORE_PORT_IO
 
@@ -53,11 +62,10 @@ BASE_CXXFLAGS += -std=c++14 -I.. #-ffreestanding -DDEBUG
 #BASE_CXXFLAGS += -DINCLUDED_NEW_HH
 BASE_CXXFLAGS += $(BOTH_FLAGS)
 
-CXXFLAGS += $(BASE_CXXFLAGS) -lgcc -MMD
+CXXFLAGS += $(BASE_CXXFLAGS) -MMD
 
-BASE_CXXFLAGS += -fno-rtti
-BASE_CXXFLAGS += -fno-exceptions
-#CXXFLAGS += -fdump-tree-optimized
+#BASE_CXXFLAGS += -fno-rtti
+#BASE_CXXFLAGS += -fno-exceptions
 CXXFLAGS += -Werror=delete-incomplete
 
 CFLAGS += -MMD -I.. -ffreestanding -lgcc $(BOTH_FLAGS)

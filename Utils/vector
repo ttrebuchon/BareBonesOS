@@ -1,2 +1,4 @@
 #include "vector.hh"
+#include "detail/bits/vector_bool.hh"
 #include "vector.hpp"
+#include "detail/bits/vector_bool.hpp"

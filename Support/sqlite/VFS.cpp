@@ -49,7 +49,7 @@ extern "C" {
 	
 }
 	
-	#ifdef FREE_TESTING
+	#ifndef FREE_TESTING
 	// Write directly to the file, ignoring
 	// buffer even if present
 	static int directWrite(File* p, const void* zBuf, int size, sqlite3_int64 offset)
@@ -339,7 +339,11 @@ extern "C" {
 		int rc;
 		
 		rc = unlink(zPath);
-		if (rc != 0 && errno == ENOENT)
+		if (rc != 0
+		#ifndef TESTING
+		&& errno == ENOENT
+		#endif
+		)
 		{
 			return SQLITE_OK;
 		}

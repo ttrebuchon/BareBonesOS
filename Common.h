@@ -1,6 +1,8 @@
 #ifndef INCLUDED_COMMON_H
 #define INCLUDED_COMMON_H
 
+
+
 #include "kernel/c_cpp.h"
 
 #include <stdint.h>
@@ -14,7 +16,9 @@
 #include <stdnoreturn.h>
 typedef unsigned char uchar;
 
-#ifdef __aarch64__
+#include "Env.h"
+
+#if __P_ARCH__ == 64
 typedef uint64_t addr_t;
 #else
 typedef uint32_t addr_t;
@@ -109,7 +113,9 @@ typedef unsigned long size_t;
 #   define __NTH(fct)	__LEAF_ATTR fct throw ()
 # endif
 
+#ifndef __nonnull
 # define __nonnull(params) __attribute__ ((__nonnull__ params))
+#endif
 
 #endif
 
@@ -125,4 +131,3 @@ typedef unsigned long size_t;
 #include <kernel/Interrupts.h>
 
 #endif //INCLUDED...
-

@@ -18,6 +18,7 @@ int memcmp(const void*, const void*, size_t);
 // overlapping blocks
 void* memmove(void* dest, const void* src, size_t num);
 
+void* memset(void* ptr, int value, size_t num);
 
 void* memcpy(void*, const void*, size_t);
 
@@ -43,8 +44,8 @@ char* strstr(const char* hay, const char* needle);
 #endif
 
 #ifdef __cplusplus
-const char* strstr(const char* hay, const char* needle);
-char* strstr(char* hay, const char* needle);
+extern "C" char* strstr(const char* hay, const char* needle);
+//char* strstr(char* hay, const char* needle);
 #endif
 
 #endif

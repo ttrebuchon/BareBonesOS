@@ -20,6 +20,33 @@ extern "C" {
 #define MULTIBOOT_FLAG_APM     0x200
 #define MULTIBOOT_FLAG_VBE     0x400
 
+typedef struct multiboot_header
+{
+	
+	uint32_t magic;
+	
+	uint32_t flags;
+	
+	uint32_t checksum;
+	
+	// Only valid if 
+	// MULTIBOOT_AOUT_KLUDGE is set
+	uint32_t header_addr;
+	uint32_t load_addr;
+	uint32_t load_end_addr;
+	uint32_t bss_end_addr;
+	uint32_t entry_addr;
+	
+	// Valid if
+	// MULTIBOOT_VIDEO_MODE is set
+	uint32_t mode_type;
+	uint32_t width;
+	uint32_t height;
+	uint32_t depth;
+	
+	
+}__attribute__((packed)) multiboot_header_t;
+
 
 struct multiboot
 {
@@ -50,6 +77,18 @@ struct multiboot
 } __attribute__((packed));
 
 typedef struct multiboot_header multiboot_header_t;
+
+
+typedef struct multiboot_mmap_item
+{
+	uint32_t size;
+	uint64_t base_addr;
+	uint64_t len;
+	uint32_t type;
+	
+	
+	
+}__attribute__((packed)) multiboot_mmap_t;
 
 #ifdef __cplusplus
 }

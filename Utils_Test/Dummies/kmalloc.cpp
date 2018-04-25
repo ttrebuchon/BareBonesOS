@@ -3,6 +3,8 @@
 #include <cstdlib>
 
 extern "C" {
+	
+	uint32_t kPlacement;
 
 void* kmalloc(unsigned long size, int a, uint64_t* p)
 {

@@ -1,4 +1,20 @@
 -----------------
+Running test for context...
+-----------------
+
+-----------------
+context testing done.
+-----------------
+
+
+
+----------------------------------
+
+
+
+
+
+-----------------
 Running test for IOSTREAM...
 -----------------
 
@@ -232,12 +248,6 @@ mutex testing done.
 
 
 
-----------------------------------
-
-
-
-
-
 -----------------
 Running test for function...
 -----------------
@@ -276,6 +286,38 @@ Running C test for FileDescriptors...
 
 -----------------
 FileDescriptors C testing done.
+-----------------
+
+
+
+----------------------------------
+
+
+
+
+
+-----------------
+Running test for queue...
+-----------------
+
+-----------------
+queue testing done.
+-----------------
+
+
+
+----------------------------------
+
+
+
+
+
+-----------------
+Running test for PhysicalMemory...
+-----------------
+
+-----------------
+PhysicalMemory testing done.
 -----------------
 
 

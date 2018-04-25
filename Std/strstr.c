@@ -1,6 +1,6 @@
 #include "string.h"
 
-char* strstr(const char* hay, const char* needle)
+/*char* strstr(const char* hay, const char* needle)
 {
 	size_t hlen = strlen(hay);
 	size_t nlen = strlen(needle);
@@ -40,4 +40,4 @@ char* strstr(const char* hay, const char* needle)
 	}
 	
 	return 0;
-}
+}*/

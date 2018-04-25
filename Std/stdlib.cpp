@@ -118,6 +118,7 @@ long int strtol(const char* str, char** endptr, int base)
 	return n;
 }
 
+#if !defined(TESTING) && !defined(FREE_TESTING)
 __attribute__((noreturn))
 void abort()
 {
@@ -131,5 +132,6 @@ void exit(int code)
 	// TODO
 	KPANIC("exit()");
 }
+#endif
 
 C_END

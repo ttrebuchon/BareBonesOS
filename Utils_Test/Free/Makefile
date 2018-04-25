@@ -7,11 +7,12 @@ GET_SRC = $(wildcard ../../$1/*.cpp ../../$1/*.c)
 LASTPART = $(shell basename $1)
 LASTPARTS = $(foreach x,$1,$(call LASTPART,$x))
 
-#SRC += $(call GET_SRC_R,../../Libraries,c)
+SRC += Enter.c
+SRC += $(call GET_SRC_R,../../Libraries,c)
 SRC += $(call GET_SRC_R,../../Std,c)
 SRC += $(call GET_SRC_R,../../Std,cpp)
 SRC += $(wildcard ../../kernel/CppSupport/*.cpp)
-SRC += $(wildcard ../Dummies/*.cpp)
+#SRC += $(wildcard ../Dummies/*.cpp)
 SRC += Mem.cpp
 SRC += $(call GET_SRC_R,../../Utils,cpp)
 SRC += $(call GET_SRC_R,../../Utils,c)
@@ -22,7 +23,8 @@ SRC += ../../kernel/Filesystem/Filesystem.cpp
 SRC += ../../kernel/Memory/Memory.cpp
 SRC += ../../kernel/Memory/memcpy.cpp
 SRC += ../../kernel/Filesystem/API.cpp
-#SRC += $(call GET_SRC_R,../../Support,cpp)
+SRC += $(call GET_SRC_R,../../Support/pthread,cpp)
+SRC += $(call GET_SRC_R,../../Support/sqlite,cpp)
 SRC += $(call GET_SRC_R,../../kernel/Filesystem,cpp)
 SRC += $(call GET_SRC_R,../../kernel/ResourceHandles,cpp)
 SRC += $(call GET_SRC_R,../../kernel/Filesystem/Files,cpp)
@@ -35,9 +37,13 @@ SRC += ../Dummies/Interrupts.c
 SRC += ../../kernel/Interrupts/Interrupts_cpp.cpp
 SRC += ../../kernel/Interrupts/irq_guard.cpp
 SRC += $(call GET_SRC_R,Dummies,cpp)
-#SRC += $(call GET_SRC_R,../../Libraries/libcxxrt,cc)
-
-
+#SRC += $(call GET_SRC_R,../../Libraries,cc)
+SRC += $(call GET_SRC_R,../../kernel/Scheduling,cpp)
+SRC += $(call GET_SRC_R,../../Support/exceptions,cpp)
+SRC += ../../Libraries/libcxxrt/typeinfo_src.cc
+SRC += ../../Libraries/libcxxrt/stdexcept.cc
+#SRC += ../../Libraries/libcxxrt/exception.cc
+SRC += ../../Libraries/libcxxrt/dynamic_cast.cc
 
 
 C_SRC += $(call GET_SRC_R,../../kernel,c)
@@ -65,7 +71,8 @@ FREE_TESTS = SQLite_Free.o
 BOTH_FLAGS += -DFREE_TESTING
 BOTH_FLAGS += -ffreestanding
 BOTH_FLAGS += -nostdlib -D__NOSTDLIB__
-BOTH_FLAGS += -D__USE_STD_NEW__
+#BOTH_FLAGS += -D__USE_STD_NEW__
+#BOTH_FLAGS += -D__USING_CXXRT__
 BOTH_FLAGS += -DSTACK_INFO_V
 BOTH_FLAGS += -DDEBUG
 BOTH_FLAGS += -I../../
@@ -84,6 +91,9 @@ BOTH_FLAGS += #-nostdinc
 BOTH_FLAGS += #-DINCLUDED_DEBUG_H_ENABLED
 #BOTH_FLAGS += #-D"kassert(x)"="assert(x)"
 BOTH_FLAGS += #-I../../Std
+BOTH_FLAGS += -L../../Libraries/libcxxrt
+BOTH_FLAGS += -L../../Libraries/sqlite3
+BOTH_FLAGS += -I../../Std
 
 BOTH_FLAGS += $(SQLITE_FLAGS)
 
@@ -96,8 +106,8 @@ SQLITE_FLAGS += -DSQLITE_TEMP_STORE=3
 CXXFLAGS += -std=c++14
 CXXFLAGS += -MMD
 CXXFLAGS += -I..
-CXXFLAGS += -fno-rtti
-CXXFLAGS += -fno-exceptions
+#CXXFLAGS += -fno-rtti
+#CXXFLAGS += -fno-exceptions
 CXXFLAGS += $(BOTH_FLAGS)
 #CXXFLAGS += -DINCLUDED_NEW_HH
 
@@ -106,6 +116,7 @@ CXXFLAGS += $(BOTH_FLAGS)
 CFLAGS += -MMD
 CFLAGS += -I..
 CFLAGS += $(BOTH_FLAGS) 
+CFLAGS += 
 
 
 FREEFLAGS += -I../..
@@ -143,7 +154,7 @@ FreeTests.out: $(FREE_OBJS) $(FREE_TESTS)
 	@echo ' '
 	@echo $(CXX_F) $(call LASTPARTS,$^) ' > ' $(call LASTPART,$@)
 	@echo ' '
-	@$(CXX) $(CXXFLAGS) $(FREEFLAGS) -o $@ $^ -lgcc -ldl
+	@$(CXX) $(CXXFLAGS) $(FREEFLAGS) -fno-exceptions -o $@ $^ -ldl -lgcc
 
 
 %.o: %.cpp ../ForceRebuild.cpp
@@ -164,6 +175,11 @@ FreeTests.out: $(FREE_OBJS) $(FREE_TESTS)
 	@$(CC) $(CFLAGS) -o $@ -c $<
 	@echo ' '
 
+SQLite_Free.o: SQLite_Free.cpp ../ForceRebuild.cpp Makefile
+	@echo ' '
+	@echo $(CXX_F) $(call LASTPART,$<) ' > ' $(call LASTPART,$@)
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+	@echo ' '
 
 
 -include $(DEPS)

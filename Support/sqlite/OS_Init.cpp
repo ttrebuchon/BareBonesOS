@@ -6,7 +6,7 @@ extern "C" {
 	
 	int sqlite3_os_init()
 	{
-		//sqlite3_vfs_register(Support::SQLite::VFS(), 1);
+		sqlite3_vfs_register(Support::SQLite::VFS(), 1);
 	}
 	
 	int sqlite3_os_end()
