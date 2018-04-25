@@ -10,6 +10,7 @@ namespace Utils
 	
 	void mutex::lock()
 	{
+		
 		int i = 0;
 		while (!_lcount.compare_exchange_weak(i, 1))
 		{
