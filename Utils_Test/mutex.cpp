@@ -19,7 +19,7 @@ void run_for(const int n, F f = F());
 
 TEST(mutex)
 {
-	run_for<Foo_t>(500);
+	run_for<Foo_t>(50);
 }
 
 

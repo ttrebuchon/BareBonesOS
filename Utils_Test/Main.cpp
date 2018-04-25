@@ -24,6 +24,7 @@ TEST(list_vector);
 CTEST(FileDescriptors);
 TEST(queue);
 TEST(PhysicalMemory);
+TEST(context);
 
 
 
@@ -44,6 +45,13 @@ void checkMemoryTrack();
 	QA::out << "-----------------\n" << "Running C test for " << #X << "...\n-----------------\n" << std::endl; \
 	TestC_##X(); \
 	QA::out << "-----------------\n" << #X << " C testing done.\n-----------------\n\n\n\n" << "----------------------------------\n\n\n\n\n" << std::endl; \
+	} while (false)
+
+#define RUN_NO_TRACK_ALLOC(X) do { \
+	QA::out << "-----------------\n" << "Running test for " << #X << "...\n-----------------\n" << std::endl; \
+	QA::Memory::Reset(); \
+	Test_##X(); \
+	QA::out << "-----------------\n" << #X << " testing done.\n-----------------\n\n\n\n"; \
 	} while (false)
 
 class MI_Printer
@@ -71,6 +79,7 @@ int main()
 	MetaInfo::registerPrinter(mi_pr);
 	
 	
+	RUN(context);
 	RUN(IOSTREAM);
 	//RUN(map);
 	RUN(List);
@@ -87,7 +96,7 @@ int main()
 	RUN(map);
 	RUN(unordered_map);
 	RUN(kernel_utility);
-	RUN(mutex);
+	RUN_NO_TRACK_ALLOC(mutex);
 	RUN(function);
 	RUN(list_vector);
 	RUNC(FileDescriptors);

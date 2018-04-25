@@ -1,12 +1,11 @@
-#define C_CODE(...) namespace __VA_ARGS__ { extern "C" {
-#define C_END(...) __VA_OPT__(,) }
-
-C_CODE(Kernel)
+#include <Support/Unwinder/Unwinder.hh>
 
 
-struct OpenFile_Hndl
-{
-	
-};
+(_Unwind_InitContext(&context, &uc) < 0)
 
-C_END(Kernel)
+#define GAH He
+UNW_PASTE(GAH, llo)
+
+UNW_OBJ(TEST)
+
+unw_init_local (...)
