@@ -4,7 +4,6 @@
 #include <boot/MultiBoot.hh>
 #include <boot/multiboot.h>
 #include "kheap.hh"
-#include <iostream>
 
 namespace Kernel { namespace Memory
 {
@@ -39,12 +38,12 @@ namespace Kernel { namespace Memory
 		max_addr += lastSeg->len;
 		assert(max_addr > 0);
 		
-		auto lastPg = max_addr/PAGE_SIZE;
+		auto lastPg = max_addr/PageSize;
 		
 		frames.resize(lastPg + 1);
 		frames.setAll(false);
 		
-		auto tmp = kPlacement/PAGE_SIZE + 1;
+		auto tmp = kPlacement/PageSize + 1;
 		for (int i = 0; i < tmp; ++i)
 		{
 			frames[i] = true;
@@ -58,16 +57,16 @@ namespace Kernel { namespace Memory
 		{
 			auto start = mmap->base_addr;
 			auto end = mmap->len + start;
-			start /= PAGE_SIZE;
+			start /= PageSize;
 			
-			if (end % PAGE_SIZE != 0)
+			if (end % PageSize != 0)
 			{
-				end /= PAGE_SIZE;
+				end /= PageSize;
 				++end;
 			}
 			else
 			{
-				end /= PAGE_SIZE;
+				end /= PageSize;
 			}
 			
 			if (start > lastPg)

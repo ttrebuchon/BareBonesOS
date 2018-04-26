@@ -47,6 +47,24 @@ typedef struct multiboot_header
 	
 }__attribute__((packed)) multiboot_header_t;
 
+typedef struct
+{
+    uint32_t num;
+    uint32_t size;
+    uint32_t addr;
+    uint32_t shndx;
+    
+} multiboot_aout_symbol_table_t;
+
+typedef struct
+{
+    uint32_t num;
+    uint32_t size;
+    uint32_t addr;
+    uint32_t shndx;
+
+} multiboot_elf_section_header_table_t;
+
 
 struct multiboot
 {
@@ -57,10 +75,15 @@ struct multiboot
     uint32_t cmdline;
     uint32_t mods_count;
     uint32_t mods_addr;
-    uint32_t num;
-    uint32_t size;
-    uint32_t addr;
-    uint32_t shndx;
+    union
+    {
+        multiboot_aout_symbol_table_t aout_sym;
+        multiboot_elf_section_header_table_t elf_sec;
+    } u;
+    // uint32_t num;
+    // uint32_t size;
+    // uint32_t addr;
+    // uint32_t shndx;
     uint32_t mmap_length;
     uint32_t mmap_addr;
     uint32_t drives_length;

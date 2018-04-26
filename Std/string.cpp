@@ -156,7 +156,7 @@ char* strstr(const char* hay, const char* needle)
 	if (nlen == 0)
 	{
 		// Return nullptr or hay?
-		return hay;
+		return (char*)hay;
 	}
 	
 	for (int i = 0; i <= hlen - nlen; ++i)
@@ -173,7 +173,7 @@ char* strstr(const char* hay, const char* needle)
 			}
 			if (j == nlen)
 			{
-				return &hay[i];
+				return (char*)&hay[i];
 			}
 			else
 			{

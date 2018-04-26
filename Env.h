@@ -14,7 +14,13 @@
 	#define __P_ARCH__ 64
 	#define __ENV_AARCH64__ 1
 	#define __ENV__ aarch64
-	
+
+#elif defined(_x86__) || defined(_x86_) || defined(_i386_) || defined(__i386__)
+
+	#define __P_ARCH__ 32
+	#define __ENV_x86__ 1
+	#define __ENV__ x86
+
 #endif
 
 

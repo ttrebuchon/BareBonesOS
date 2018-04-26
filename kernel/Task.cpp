@@ -284,7 +284,7 @@ void move_stack(void* new_addr, uint32_t size)
 
 	// return;
 	ASSERT(Memory::PageDirectory::Current->map((addr_t)new_addr-size, size, true, false));
-	TRACE("STARTING TASKING\n");
+	TRACE("STARTING TASKING");
 	
 	addr_t i;
 
@@ -298,9 +298,7 @@ void move_stack(void* new_addr, uint32_t size)
 
 	addr_t newSP = oldSP + offset;
 	addr_t newBP = oldBP + offset;
-	TRACE("COPYING\n");
 	memcpy((void*)newSP, (void*)oldSP, init_esp - oldSP);
-	TRACE("COPIED\n");
 
 	// Adjust stack addresses
 
@@ -314,15 +312,14 @@ void move_stack(void* new_addr, uint32_t size)
 			*(addr_t*)i = tmp;
 		}
 	}
-	TRACE("MK.\n");
+
 	asm volatile ("mov %%esp, %0" : "=r"(i));
-	ASSERT(i == oldSP);
+	//ASSERT(i == oldSP);
 	newSP += i - oldSP;
 	asm volatile ("mov %%ebp, %0" : "=r"(i));
 	ASSERT(i >= oldBP);
 	newBP += i - oldBP;
 
-	TRACE("JUMPING.\n");
 
 	asm volatile ("mov %0, %%esp" : : "r"(newSP));
 	asm volatile ("mov %0, %%ebp" : : "r"(newBP));
@@ -339,6 +336,10 @@ void move_stack(void* new_addr, uint32_t size)
 
 void init_tasking()
 {
+	//assert(Memory::PageDirectory::Current == Memory::kernel_dir);
+	Memory::kernel_dir->clone(Memory::kernel_dir)->switch_to();
+
+
 	asm volatile ("cli");
 	move_stack((void*)0xE0000000, 0x2000);
 	// asm volatile ("; \
@@ -403,17 +404,25 @@ int fork()
 extern "C" void task_switch()
 {
 	if (!Task::current_task) return;
-	
+	asm volatile ("cli");
+	// TRACE("SWITCHING.");
 	addr_t esp, ebp, eip;
 	asm volatile ("mov %%esp, %0" : "=r"(esp));
 	asm volatile ("mov %%ebp, %0" : "=r"(ebp));
 	
+	if (tasks->size() == 1)
+	{
+		return;
+	}
+
 	eip = read_eip();
 	if (eip == EIP_MAGIC)
 	{
+		// asm volatile ("int $0x4");
+		// asm volatile ("cli");
 		//DEBUG
-		TRACE("Task rezzed.\n");
-		while (1);
+		TRACE("Task rezzed.");
+		asm volatile ("sti");
 		return;
 	}
 	
@@ -429,6 +438,7 @@ extern "C" void task_switch()
 	}
 	if (task_iterator == tasks->end())
 	{
+		TRACE("NOTHING TO SWITCH.");
 		return;
 	}
 
@@ -437,7 +447,7 @@ extern "C" void task_switch()
 	{
 		uint32_t _cr3;
 		asm volatile ("mov %%cr3, %0" : "=r"(_cr3));
-		ASSERT((void*)_cr3 == Memory::PageDirectory::Current->physical((*task_iterator)->page_dir));
+		//ASSERT((void*)_cr3 == Memory::PageDirectory::Current->physical((*task_iterator)->page_dir));
 		// ASSERT((void*)_cr3 == virtual_to_physical(Memory::current_dir, (*task_iterator)->page_dir));
 		//ASSERT(false);
 	}
@@ -449,7 +459,8 @@ extern "C" void task_switch()
 	ebp = Task::current_task->ebp;
 
 	
-	addr_t dir_phys = (addr_t)Memory::PageDirectory::Current->physical(Task::current_task->page_dir->thisPhysical());
+	// addr_t dir_phys = (addr_t)Memory::PageDirectory::Current->physical(Task::current_task->page_dir->thisPhysical());
+	addr_t dir_phys = (addr_t)Task::current_task->page_dir->thisPhysical();
 	// uint32_t dir_phys = (uint32_t)virtual_to_physical(Memory::current_dir, &Task::current_task->page_dir->tables);
 	ASSERT(dir_phys != 0);
 	// ASSERT((void*)&Task::current_task->page_dir->tables == Task::current_task->page_dir->tables);
@@ -457,16 +468,17 @@ extern "C" void task_switch()
 	Memory::PageDirectory::Current = Task::current_task->page_dir;
 
 	asm volatile("	\
-	cli;	\
+		\
 	mov %0, %%ecx;	\
 	mov %1, %%esp;	\
 	mov %2, %%ebp;	\
 	mov %3, %%cr3;	\
 	mov $0x12345, %%eax;	\
-	sti;	\
+		\
 	jmp *%%ecx	" : : "r"(eip), "r"(esp), "r"(ebp), "r"(dir_phys));
 	
 	//Should never reach here
+	TRACE("REACHED!");
 	while (1);
 }
 

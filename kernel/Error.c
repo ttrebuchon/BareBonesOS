@@ -5,7 +5,7 @@
 
 void __do_kernel_panic(const char* msg, const char* file, const int line, const char* function)
 {
-
+    asm volatile ("cli");
     c_vga_write(file);
     c_vga_write("::");
     char line_str[256];
@@ -22,6 +22,6 @@ void __do_kernel_panic(const char* msg, const char* file, const int line, const 
 
     c_vga_write(msg);
 
-
+    asm volatile("hlt");
     while (1) ;
 }

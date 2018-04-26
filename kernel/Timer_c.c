@@ -18,7 +18,11 @@ static void timer_callback(Registers_t regs)
 {
 	++ticks;
 	sleep_for > 0 ? --sleep_for : 0;
-	task_switch();
+	if (ticks % 100 == 0)
+	{
+		task_switch();
+	}
+	
 }
 
 
@@ -41,11 +45,14 @@ void init_timer(uint32_t freq)
 
 unsigned int sleep(unsigned int secs)
 {
-	cli();
+	uint32_t last;
+	int cycles = 0;
+	//cli();
 	sleep_for = secs*current_freq;
+	last = sleep_for;
 	while (sleep_for != 0)
 	{
-		sti();
+		//sti();
 		asm volatile ("NOP");
 		asm volatile ("NOP");
 		asm volatile ("NOP");
@@ -58,10 +65,19 @@ unsigned int sleep(unsigned int secs)
 		asm volatile ("NOP");
 		#ifndef __aarch64__
 		asm volatile ("PAUSE");
+		asm volatile ("PAUSE");
+		asm volatile ("PAUSE");
+		asm volatile ("PAUSE");
 		#endif
-		cli();
+		//cli();
+		if (++cycles == 100000)
+		{
+			cycles = 0;
+			assert(sleep_for < last);
+			last = sleep_for;
+		}
 	}
-	sti();
+	//sti();
 	return 0;
 }
 

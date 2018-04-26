@@ -55,15 +55,15 @@
 //     return (uint16_t) c | (uint16_t) color << 8;
 // }
 
-size_t strlen(const char* str)
-{
-    size_t len = 0;
-    while (str[len])
-    {
-        ++len;
-    }
-    return len;
-}
+// size_t strlen(const char* str)
+// {
+//     size_t len = 0;
+//     while (str[len])
+//     {
+//         ++len;
+//     }
+//     return len;
+// }
 
 void handler04(Registers_t regs)
 {
@@ -286,11 +286,9 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
         }
     }
 
-
     Drivers::VGA::Write("Testing sleeping (2s)...\n");
     sleep(2);
     Drivers::VGA::Write("Done sleeping.\n");
-    
 
     if (Kernel::fork() != 0)
     {

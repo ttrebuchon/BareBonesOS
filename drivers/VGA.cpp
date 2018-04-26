@@ -160,6 +160,15 @@ namespace Drivers
         }
     }
 
+    void VGA::Write(const uint64_t n)
+    {
+        char buf[256];
+        if (c_uint_to_str(n, buf, 256))
+        {
+            Write(buf);
+        }
+    }
+
     /*void VGA::Write(const unsigned int n)
     {
         char buf[256];
