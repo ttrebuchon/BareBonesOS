@@ -3,6 +3,11 @@
 
 #include <Common.h>
 
+#ifdef PAGE_SIZE
+#undef PAGE_SIZE
+#endif
+
+
 #define PAGE_SIZE 0x1000
 
 extern "C" void flush_tlb_page(addr_t addr);
