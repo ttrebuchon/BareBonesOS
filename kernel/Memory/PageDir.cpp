@@ -2,6 +2,7 @@
 #include "Paging.hh"
 #include <kernel/Debug.h>
 #include "kheap.hh"
+#include "PhysicalMemory.hh"
 
 
 
@@ -424,6 +425,63 @@ namespace Kernel { namespace Memory {
 
 	PageDirectory* PageDirectory::clone(PageDirectory* linkWith) const noexcept
 	{
+		TRACE("Cloning...");
+		addr_t phys = 0;
+		PageDirectory* dest = new PageDirectory();
+		ASSERT(dest != 0);
+		
+		TRACE("New directory allocated.");
+
+		addr_t physOffset = (addr_t)dest->dir - (addr_t)dest;
+		
+		//dest->physicalAddress = physOffset + phys;
+		
+		for (int i = 0; i < 1024; ++i)
+		{
+			if (!table(i))
+			{
+				continue;
+			}
+
+			// if (linkWith->table(i) == table(i))
+			// {
+			// 	**dest->table(i, true) = **this->table(i);
+			// 	// dest->tables[i] = tables[i];
+			// 	// dest->dir->tables[i] = this->dir->tables[i];
+			// 	assert(dest->dir->tables[i].frame == this->dir->tables[i].frame);
+			// }
+			
+			auto lnkTbl = linkWith->table(i);
+			if (lnkTbl)
+			{
+				**dest->table(i, true) = **lnkTbl;
+				assert(dest->dir->tables[i].frame == linkWith->dir->tables[i].frame);
+			}
+			else
+			{
+				// DEBUG
+				//assert(false);
+				
+				
+				// addr_t phys;
+                dest->tables[i] = this->table(i)->clone(dest->dir->tables[i]);
+				// addr_t phys2 = (addr_t)virtual_to_physical(this, dest->ref_tables[i]);
+				// ASSERT(phys == phys2);
+				
+				// DEBUG
+				// ASSERT(phys != phys2);
+				
+				// dest->tables[i].frame = phys >> 12;
+				// dest->tables[i].user = tables[i].user;
+				// dest->tables[i].rw = tables[i].rw;
+				// dest->tables[i].present = tables[i].present;
+			}
+		}
+		return dest;
+
+
+
+
 		// TODO
 		ASSERT(false);
 	}
@@ -472,6 +530,76 @@ namespace Kernel { namespace Memory {
 	const PageDirectory::Page& PageDirectory::Table::at(size_t index) const noexcept
 	{
 		return pages[index];
+	}
+
+	PageDirectory::Table* PageDirectory::Table::clone(_Table& tbl) const noexcept
+	{
+		Table* dest = new Table(tbl);
+		tbl.rw = table->rw;
+		tbl.user = table->user;
+		tbl.w_through = table->w_through;
+		tbl.cacheDisabled = table->cacheDisabled;
+		tbl.reserved = table->reserved;
+		assert(tbl.reserved == 0);
+		tbl.pageSize = table->pageSize;
+		tbl.global = table->global;
+		tbl.avail = table->avail;
+		tbl.present = table->present;
+
+		for (int i = 0; i < 1024; ++i)
+		{
+			if (!pages[i].frame()) continue;
+
+			auto& pg = *pages[i];
+			auto& pgDest = *dest->at(i);
+			addr_t sz = PAGE_SIZE;
+			addr_t region = PhysicalMemory::reserve(sz);
+			assert(sz >= PAGE_SIZE);
+			dest->at(i).frame((void*)region);
+			assert((addr_t)pgDest.frame == region);
+			pgDest.rw = pg.rw;
+			pgDest.user = pg.user;
+			pgDest.reserved = pg.reserved;
+			pgDest.reserved2 = pg.reserved2;
+			pgDest.avail = pg.avail;
+			pgDest.present = pg.present;
+
+			copy_page_physical(pg.frame * PAGE_SIZE, pgDest.frame * PAGE_SIZE);
+		}
+
+		
+		//kmemset(dest, 0, sizeof(struct PageTable));
+		
+		// for (int i = 0; i < 1024; ++i)
+		// {
+		// 	if (!pages[i].frame) continue;
+			
+		// 	dest->pages[i].alloc_frame(0,0);
+			
+		// 	if (pages[i].present)
+		// 	{
+		// 		dest->pages[i].present = 1;
+		// 	}
+		// 	if (pages[i].rw)
+		// 	{
+		// 		dest->pages[i].rw = 1;
+		// 	}
+		// 	if (pages[i].user)
+		// 	{
+		// 		dest->pages[i].user = 1;
+		// 	}
+		// 	if (pages[i].accessed)
+		// 	{
+		// 		dest->pages[i].accessed = 1;
+		// 	}
+		// 	if (pages[i].dirty)
+		// 	{
+		// 		dest->pages[i].dirty = 1;
+		// 	}
+		// 	copy_page_physical(pages[i].frame*0x1000, dest->pages[i].frame*0x1000);
+		// }
+		
+		return dest;
 	}
 	
 	PageDirectory::_Table* PageDirectory::Table::operator->() noexcept

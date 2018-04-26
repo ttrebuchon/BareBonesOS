@@ -242,6 +242,7 @@ namespace Kernel { namespace Memory {
 			Page& operator[](size_t index) noexcept;
 			Page& at(size_t index) noexcept;
 			const Page& at(size_t index) const noexcept;
+			Table* clone(_Table&) const noexcept;
 			
 			_Table* operator->() noexcept;
 			const _Table* operator->() const noexcept;

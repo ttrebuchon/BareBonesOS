@@ -103,11 +103,11 @@ C_END
 
 #else
 
-#define ASM_READ_ESP(X) ASM_GET(%ESP, X)
-#define ASM_SET_ESP(X) ASM_SET(%ESP, X)
+#define ASM_READ_ESP(X) ASM_GET(%%ESP, X)
+#define ASM_SET_ESP(X) ASM_SET(%%ESP, X)
 
-#define ASM_READ_EBP(X) ASM_GET(%EBP, X)
-#define ASM_SET_EBP(X) ASM_SET(%EBP, X)
+#define ASM_READ_EBP(X) ASM_GET(%%EBP, X)
+#define ASM_SET_EBP(X) ASM_SET(%%EBP, X)
 
 #define __IRET__ IRET
 

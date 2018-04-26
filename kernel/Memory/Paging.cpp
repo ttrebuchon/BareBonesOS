@@ -206,13 +206,13 @@ namespace Kernel { namespace Memory
 		// kheap = kheap_tmp;
 		TRACE_C("Kernel Heap created.\n");
 		
-		// auto tmp_dir = kernel_dir->clone();
+		// auto tmp_dir = kernel_dir->clone(kernel_dir);
 		// TRACE_C("Kernel page directory cloned.\n");
 		//kmalloc(16384, 1, nullptr);
 		
 		#ifndef DEBUG_IDENTITY_DIR
-		//switch_page_dir(tmp_dir);
-		// TRACE_C("Switched page directory to clone.\n");
+		// tmp_dir->switch_to();
+		// TRACE_C("Switched page directory to clone.");
 		#else
 		ASSERT(virtual_to_physical(current_dir, identity_dir) != 0x0);
 		switch_page_dir(identity_dir);

@@ -2,6 +2,8 @@
 #include <kernel/Utility.hh>
 #include <Utils/math>
 
+
+
 namespace Kernel
 {
 extern "C" {
@@ -31,8 +33,7 @@ extern "C" {
 		}
 		
 		
-		
-		#if __ENV__ == aarch64
+		#ifdef __ENV_AARCH64__
 		
 		asm volatile("\
 		mov SP, %0; \
@@ -45,9 +46,20 @@ extern "C" {
 		"br x1; \
 		NOP" : : "r"(esp), "r"(ebp), "r"(eip));
 		
-		#elif __ENV__ == x86
+		#elif defined(__ENV_x86__)
 		
-		#error TODO
+		asm volatile("\
+		mov %0, %%esp; \
+		mov %1, %%ebp;\
+		mov %2, %%ecx;\
+		mov %%eax, 0; "
+		#ifndef TESTING
+		"sti; "
+		#endif
+		"jmp *(%%ecx); \
+		NOP" : : "r"(esp), "r"(ebp), "r"(eip));
+
+		
 		
 		#else
 		#error Unknown processor architecture
@@ -78,6 +90,7 @@ extern "C" {
 	
 	void some_func(context_t* c, void* someP)
 	{
+		ASM_MOV(%0, %%ESP, : "=r"(c->ip));
 		ASM_READ_ESP(c->ip);
 		assert(c->ip == c->stack.sp - sizeof(addr_t)*6);
 		{

@@ -55,15 +55,15 @@
 //     return (uint16_t) c | (uint16_t) color << 8;
 // }
 
-size_t strlen(const char* str)
-{
-    size_t len = 0;
-    while (str[len])
-    {
-        ++len;
-    }
-    return len;
-}
+// size_t strlen(const char* str)
+// {
+//     size_t len = 0;
+//     while (str[len])
+//     {
+//         ++len;
+//     }
+//     return len;
+// }
 
 void handler04(Registers_t regs)
 {
@@ -108,9 +108,9 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     Drivers::VGA::Write("Initializing IDT...\n");
     Kernel::Interrupts::init_idt();
     Drivers::VGA::Write("IDT Initialized.\n");
-    // Drivers::VGA::Write("Initializing timer...\n");
-    // init_timer(50);
-    // Drivers::VGA::Write("Timer initialized.\n");
+    Drivers::VGA::Write("Initializing timer...\n");
+    init_timer(500);
+    Drivers::VGA::Write("Timer initialized.\n");
     ASSERT(init_esp != 0);
     ASSERT(mboot_ptr != 0);
     Drivers::VGA::Write("Initializing paging...\n");
@@ -285,25 +285,29 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
             }
         }
     }
-    
+
+    Drivers::VGA::Write("Testing sleeping (2s)...\n");
+    sleep(2);
+    Drivers::VGA::Write("Done sleeping.\n");
 
     if (Kernel::fork() != 0)
     {
         Drivers::VGA::Write("First process running!\n");
+        assert(Kernel::taskLength() > 0);
         while(1);
     }
     else
     {
+        //Drivers::VGA::Init();
         Drivers::VGA::Write("Second process running!\n");
+        while (1);
     }
 
     Drivers::VGA::Write("Tasks length: ");
     Drivers::VGA::Write(Kernel::taskLength());
     Drivers::VGA::Write("\n");
 
-    Drivers::VGA::Write("Testing sleeping (2s)...\n");
-    sleep(2000);
-    Drivers::VGA::Write("Done sleeping.\n");
+    
 
 
     // Drivers::VGA::Write("Initializing ATA Devices...\n");

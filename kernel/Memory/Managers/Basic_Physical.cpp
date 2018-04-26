@@ -12,15 +12,15 @@ namespace Kernel { namespace Memory
 	
 	addr_t Basic_Physical::reserve(size_t& size, addr_t hint) noexcept
 	{
-		size_t count = size / PAGE_SIZE;
+		size_t count = size / PhysicalMemory::PageSize;
 		
-		if (size % PAGE_SIZE != 0)
+		if (size % PhysicalMemory::PageSize != 0)
 		{
 			count += 1;
-			size = count * PAGE_SIZE;
+			size = count * PhysicalMemory::PageSize;
 		}
 		uint32_t index;
-		if (frames.firstFalse(&index, hint / PAGE_SIZE))
+		if (frames.firstFalse(&index, hint / PhysicalMemory::PageSize))
 		{
 			bool OK = true;
 			for (uint32_t i = 1; i < count && OK; ++i)
@@ -29,14 +29,20 @@ namespace Kernel { namespace Memory
 			}
 			if (!OK)
 			{
-				return reserve(size, (((addr_t)index)+count)*PAGE_SIZE);
+				return reserve(size, (((addr_t)index)+count)*PhysicalMemory::PageSize);
 			}
 			
 			for (uint32_t i = 0; i < count; ++i)
 			{
 				frames[i+index] = true;
 			}
-			return ((addr_t)index)*PAGE_SIZE;
+			return ((addr_t)index)*PhysicalMemory::PageSize;
+		}
+		else
+		{
+			TRACE("Couldn't find free physical memory!");
+			TRACE("Size: ");
+			TRACE(frames.size());
 		}
 		
 		assert(false);
@@ -49,10 +55,10 @@ namespace Kernel { namespace Memory
 	
 	size_t Basic_Physical::release(addr_t loc, size_t _count) noexcept
 	{
-		auto index = loc / PAGE_SIZE;
-		auto count = _count / PAGE_SIZE;
+		auto index = loc / PhysicalMemory::PageSize;
+		auto count = _count / PhysicalMemory::PageSize;
 		size_t released = 0;
-		if (_count % PAGE_SIZE)
+		if (_count % PhysicalMemory::PageSize)
 		{
 			++count;
 		}
@@ -69,7 +75,7 @@ namespace Kernel { namespace Memory
 		}
 		
 		
-		return released*PAGE_SIZE;
+		return released*PhysicalMemory::PageSize;
 	}
 }
 }
