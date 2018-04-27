@@ -691,6 +691,18 @@ namespace Utils
 		return iterator(nullptr);
 	}
 	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	auto hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::begin() const -> const_iterator
+	{
+		return const_iterator(_begin());
+	}
+	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	auto hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::end() const -> const_iterator
+	{
+		return const_iterator(nullptr);
+	}
+	
 	
 	
 	
