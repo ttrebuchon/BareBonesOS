@@ -240,6 +240,7 @@ namespace Utils
 		if (!(i < loc.imp->_facets_size && _facets[i]))
 		{
 			//TODO
+			assert(NOT_IMPLEMENTED);
 		}
 		return static_cast<const Facet&>(*_facets[i]);
 	}

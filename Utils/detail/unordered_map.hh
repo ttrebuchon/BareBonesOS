@@ -63,7 +63,35 @@ namespace Utils
 		};
 		
 		
-		typedef hash_table<key_type, value_type, Select1st, hasher, key_equal, allocator_type> Table;
+		struct pair_allocator : public allocator_type
+		{
+			pair_allocator() : allocator_type()
+			{
+				
+			}
+			
+			pair_allocator(const allocator_type& a) : allocator_type(a)
+			{
+				
+			}
+			
+			template <class U, class... Args>
+			void construct(U* ptr, Args... args)
+			{
+				allocator_type::construct(ptr, forward<Args>(args)...);
+			}
+			
+			
+			void construct(value_type* ptr, const key_type k)
+			{
+				allocator_type::construct(ptr, piecewise_construct, make_tuple(k), make_tuple());
+			}
+			
+			
+		};
+		
+		
+		typedef hash_table<key_type, value_type, Select1st, hasher, key_equal, pair_allocator> Table;
 		
 		Table _table;
 		

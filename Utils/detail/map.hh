@@ -54,7 +54,40 @@ namespace Utils
 		};
 		
 		
-		typedef detail::rb_tree::RBTree<value_type, value_type_compare, allocator_type> Tree_t;
+		struct pair_allocator : public allocator_type
+		{
+			pair_allocator() : allocator_type()
+			{
+				
+			}
+			
+			pair_allocator(const allocator_type& a) : allocator_type(a)
+			{
+				
+			}
+			
+			template <class U, class... Args>
+			void construct(U* ptr, Args... args)
+			{
+				allocator_type::construct(ptr, forward<Args>(args)...);
+			}
+			
+			
+			void construct(value_type* ptr, const key_type& k)
+			{
+				allocator_type::construct(ptr, piecewise_construct, make_tuple(k), make_tuple());
+			}
+			
+			void construct(value_type* ptr, key_type&& k)
+			{
+				allocator_type::construct(ptr, piecewise_construct, make_tuple(forward<key_type&&>(k)), make_tuple());
+			}
+			
+			
+		};
+		
+		
+		typedef detail::rb_tree::RBTree<value_type, value_type_compare, pair_allocator> Tree_t;
 		typedef detail::rb_tree::NodeBase _Node;
 		typedef detail::rb_tree::Node<value_type, value_type_compare> _VNode;
 		

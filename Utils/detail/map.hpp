@@ -47,7 +47,8 @@ namespace Utils
 		if (tree)
 		{
 			auto a = get_allocator();
-			tree->destroy(a);
+			pair_allocator p(a);
+			tree->destroy(p);
 			
 			typedef typename Alloc::template rebind<Tree_t>::other TAlloc;
 			TAlloc ta;
@@ -215,7 +216,7 @@ namespace Utils
 			#ifdef DEBUG_VERIFY
 			auto oldSize = tree->size();
 			#endif
-			auto ret = tree->create(parent, *ptr, forward<Key>(k));
+			auto ret = tree->create(parent, *ptr, forward<key_type&&>(k));
 			ASSERT(ret != nullptr);
 			#ifdef DEBUG_VERIFY
 			ASSERT(ret->size >= 1);

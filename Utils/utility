@@ -69,6 +69,25 @@ namespace Utils
 		return static_cast<typename remove_reference<T>::type&&>(t);
 	}
 	
+	
+	
+	
+	// integer sequence
+	template <class T, T... Ns>
+	class integer_sequence
+	{
+		public:
+		typedef T value_type;
+		constexpr static size_t size() noexcept
+		{
+			return sizeof...(Ns);
+		}
+	};
+	
+	// index_sequence
+	template <size_t... Ns>
+	using index_sequence = integer_sequence<size_t, Ns...>;
+	
 }
 #endif
 #include "detail/forward.hh"

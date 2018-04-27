@@ -3,6 +3,7 @@
 
 #include <Common.h>
 #include <Utils/utility>
+#include "bits/decay.hh"
 
 namespace Utils
 {
@@ -135,6 +136,24 @@ namespace Utils
 		friend struct tuple_element;
 	};
 	
+	template <>
+	class tuple<>
+	{
+		protected:
+		
+		public:
+		
+		constexpr tuple()
+		{
+			
+		}
+		
+		template <size_t, class>
+		friend struct tuple_element;
+	};
+	
+	
+	
 	template <size_t N, class>
 	struct tuple_element;
 	
@@ -160,6 +179,12 @@ namespace Utils
 	constexpr typename tuple_element<N, tuple<Types...>>::type& get(tuple<Types...>&) noexcept;
 	template <size_t N, class... Types>
 	constexpr const typename tuple_element<N, tuple<Types...>>::type& get(const tuple<Types...>&) noexcept;
+	
+	template <class... Types>
+	constexpr tuple<typename decay<Types>::type...> make_tuple(Types&&... a)
+	{
+		return tuple<typename decay<Types>::type...>(forward<Types&&>(a)...);
+	}
 }
 
 #endif

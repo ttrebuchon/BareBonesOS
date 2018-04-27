@@ -3,13 +3,55 @@
 
 #include <Common.h>
 #include "utility"
+#include "tuple"
 
 namespace Utils
 {
+	struct piecewise_construct_t {};
+	
+	IFCPP17(inline) constexpr piecewise_construct_t piecewise_construct = piecewise_construct_t();
+	
 	template <class T1, class T2>
 	class pair
 	{
 		private:
+		
+		template <size_t n, size_t... s>
+		struct __gen_indexes
+		{
+			typedef typename __gen_indexes<n-1, n, s...>::type type;
+		};
+		
+		template <size_t... s>
+		struct __gen_indexes<0, s...>
+		{
+			typedef index_sequence<0, s...> type;
+		};
+		
+		template <class N, class T, class... Args>
+		struct __constr_t;
+		
+		template <class T, class... Args, size_t... N>
+		struct __constr_t<index_sequence<N...>, T, Args...>
+		{
+			constexpr static T Call(tuple<Args...>&& t)
+			{
+				return T(Utils::get<N>(t)...);
+			}
+		};
+		
+		template <class T, class... Args>
+		constexpr static T __constr(tuple<Args...> t)
+		{
+			typedef typename __gen_indexes<sizeof...(Args)-1>::type indexes;
+			return __constr_t<indexes, T, Args...>::Call(move(t));
+		}
+		
+		template <class T>
+		constexpr static T __constr(tuple<> t)
+		{
+			return T();
+		}
 		
 		public:
 		T1 first;
@@ -20,32 +62,29 @@ namespace Utils
 			
 		}
 		
-		constexpr pair(const pair& p) : first(p.first), second(p.second)
-		{
-			
-		}
+		constexpr pair(const pair&) = default;
+		pair(pair&&) = default;
 		
 		template <class Arg1, class Arg2>
 		pair(Arg1&& a1, Arg2&& a2) : first(forward<Arg1>(a1)), second(forward<Arg2>(a2))
 		{}
 		
-		template <class Arg1, class Arg2>
-		pair(const Arg1& a1, const Arg2& a2) : first(a1), second(a2)
-		{}
+		template <class U, class V>
+		pair(const pair<U, V>& p) : first(p.first), second(p.second)
+		{ }
+		
+		template <class U, class V>
+		pair(pair<U, V>&& p) : first(move(p.first)), second(move(p.second))
+		{ }
 		
 		pair(const T1& f, const T2& s) : first(f), second(s)
 		{
 			
 		}
 		
-		pair(pair&& p) : first(forward<T1&&>((T1&&)p.first)), second(forward<T2&&>((T2&&)p.second))
-		{
-			
-		}
-		
-		template <class Arg1, class... Args>
-		pair(Arg1&& arg1, Args&&... args) : first(forward<Arg1>(arg1)), second(forward<Args>(args)...)
-		{}
+		template <class... Args1, class... Args2>
+		pair(piecewise_construct_t, tuple<Args1...> a, tuple<Args2...> b) : first(__constr<T1>(move(a))), second(__constr<T2>(move(b)))
+		{ }
 	};
 }
 

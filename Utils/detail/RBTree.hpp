@@ -649,7 +649,7 @@ namespace rb_tree
 		ASSERT(branch != nullptr);
 		nalloc.construct((NodeBase*)branch);
 		ASSERT(branch != nullptr);
-		alloc.template construct<T>(&branch->value, forward<Args>(args)...);
+		alloc.construct(&branch->value, forward<Args>(args)...);
 		ASSERT(branch != nullptr);
 		
 		branch->parent = parent;
