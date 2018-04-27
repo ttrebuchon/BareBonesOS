@@ -1,0 +1,95 @@
+#ifndef INCLUDED_TYPEINDEX_HH
+#define INCLUDED_TYPEINDEX_HH
+
+#include <Common.h>
+
+namespace Utils
+{
+	class type_index
+	{
+		const std::type_info* ptr;
+		
+		public:
+		type_index(const std::type_info& i) : ptr(&i)
+		{}
+		
+		bool operator==(const type_index& i) const noexcept
+		{
+			return *ptr == *i.ptr;
+		}
+		
+		bool operator!=(const type_index& i) const noexcept
+		{
+			return *ptr != *i.ptr;
+		}
+		
+		bool operator<(const type_index& i) const noexcept
+		{
+			return ptr->before(*i.ptr);
+		}
+		
+		bool operator>(const type_index& i) const noexcept
+		{
+			return i.ptr->before(*ptr);
+		}
+		
+		bool operator<=(const type_index& i) const noexcept
+		{
+			if (ptr->before(*i.ptr))
+			{
+				return true;
+			}
+			else if (!i.ptr->before(*ptr))
+			{
+				return true;
+			}
+			return false;
+		}
+		
+		bool operator>=(const type_index& i) const noexcept
+		{
+			if (i.ptr->before(*ptr))
+			{
+				return true;
+			}
+			else if (!ptr->before(*i.ptr))
+			{
+				return true;
+			}
+			return false;
+		}
+		
+		size_t hash_code() const noexcept
+		{
+			return hash<const std::type_info*>()(ptr);
+		}
+		
+		
+		friend struct hash<type_index>;
+	};
+	
+	
+	template <class>
+    struct hash;
+    
+    template <>
+    struct hash<type_index> : public hash_base<size_t, type_index>
+    {
+    	private:
+    	typedef hash_base<size_t, type_index> _Base;
+    	hash<const std::type_info*> phash;
+    	
+    	public:
+    	typedef typename _Base::result_type result_type;
+    	typedef typename _Base::argument_type argument_type;
+    	
+    	result_type operator()(const argument_type& arg) const
+    	{
+    		return phash(arg.ptr);
+    	}
+    	
+    };
+	
+}
+
+#endif
