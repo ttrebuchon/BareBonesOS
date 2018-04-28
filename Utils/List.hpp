@@ -47,7 +47,7 @@ namespace Utils
 	{
 		
 		auto ptr = nalloc.allocate(1);
-		nalloc.construct(ptr, forward<const T&>(t));
+		nalloc.construct(ptr, Utils::forward<const T&>(t));
 		if (!head)
 		{
 			head = ptr;
@@ -66,7 +66,7 @@ namespace Utils
 	void List<T, A>::push_back(T&& t)
 	{
 		auto ptr = nalloc.allocate(1);
-		nalloc.construct(ptr, forward<T&&>(t));
+		nalloc.construct(ptr, Utils::forward<T&&>(t));
 		if (!head)
 		{
 			head = ptr;
@@ -86,7 +86,7 @@ namespace Utils
 	void List<T, A>::emplace_back(Args&&... args)
 	{
 		auto ptr = nalloc.allocate(1);
-		nalloc.construct(ptr, forward<Args>(args)...);
+		nalloc.construct(ptr, Utils::forward<Args>(args)...);
 		if (!head)
 		{
 			head = ptr;
@@ -119,6 +119,22 @@ namespace Utils
 	typename List<T, A>::iterator List<T, A>::end()
 	{
 		iterator it;
+		it.n = nullptr;
+		return it;
+	}
+	
+	template <class T, class A>
+	typename List<T, A>::const_iterator List<T, A>::cbegin() const
+	{
+		const_iterator it;
+		it.n = head;
+		return it;
+	}
+
+	template <class T, class A>
+	typename List<T, A>::const_iterator List<T, A>::cend() const
+	{
+		const_iterator it;
 		it.n = nullptr;
 		return it;
 	}

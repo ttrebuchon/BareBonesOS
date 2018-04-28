@@ -42,13 +42,13 @@ namespace Utils
 				
 			}
 			
-			List_Node(T&& value) : prev(nullptr), next(nullptr), elem(forward<T&&>(value))
+			List_Node(T&& value) : prev(nullptr), next(nullptr), elem(Utils::forward<T&&>(value))
 			{
 				
 			}
 			
 			template <class... Args>
-			List_Node(Args... args) : prev(nullptr), next(nullptr), elem(forward<Args>(args)...)
+			List_Node(Args... args) : prev(nullptr), next(nullptr), elem(Utils::forward<Args>(args)...)
 			{
 				
 			}
@@ -119,6 +119,36 @@ namespace Utils
 			friend List<T, Alloc>;
 		};
 		
+		class const_iterator
+		{
+			const Node* n;
+
+			public:
+
+			const_iterator& operator++()
+			{
+				n = n->next;
+				return *this;
+			}
+
+			bool operator==(const const_iterator it2) const
+			{
+				return n == it2.n;
+			}
+
+			bool operator!=(const const_iterator it2) const
+			{
+				return n != it2.n;
+			}
+
+			const T& operator*()
+			{
+				return n->elem;
+			}
+
+			friend List<T, Alloc>;
+		};
+		
 		protected:
 		Node* head;
 		Node* tail;
@@ -150,6 +180,16 @@ namespace Utils
 
 		iterator begin();
 		iterator end();
+		const_iterator cbegin() const;
+		const_iterator cend() const;
+		const_iterator begin() const
+		{
+			return cbegin();
+		}
+		const_iterator end() const
+		{
+			return cend();
+		}
 	};
 	
 	template <class T, class A = Allocator<T>>
