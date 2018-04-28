@@ -292,7 +292,35 @@ namespace Utils
 	
 	
 	
+	// is_class
+	template <class T>
+	struct is_class : public integral_constant<bool, __is_class(T)>
+	{};
 	
+	
+	
+	// is_volatile
+	template <class T>
+	struct is_volatile : public integral_constant<bool, false>
+	{};
+	
+	template <class T>
+	struct is_volatile<volatile T> : public integral_constant<bool, true>
+	{};
+	
+	
+	
+	// is_polymorphic
+	template <class T>
+	struct is_polymorphic : public integral_constant<bool, __is_polymorphic(T)>
+	{ };
+	
+	
+	
+	// is_abstract
+	template <class T>
+	struct is_abstract : public integral_constant<bool, __is_abstract(T)>
+	{ };
 	
 }
 
