@@ -101,7 +101,7 @@ namespace Utils
 		template <class U, class... Args>
 		void construct(U* p, Args&&... args)
 		{
-			::new ((void*)p) U(forward<Args>(args)...);
+			::new ((void*)p) U(Utils::forward<Args>(args)...);
 		}
 		
 		template <class U>
@@ -236,7 +236,7 @@ namespace Utils
 		template <class U, class... Args>
 		void construct(U* p, Args&&... args)
 		{
-			::new ((void*)p) U(forward<Args>(args)...);
+			::new ((void*)p) U(Utils::forward<Args>(args)...);
 		}
 		
 		template <class U>
