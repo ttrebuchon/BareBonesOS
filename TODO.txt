@@ -6,7 +6,6 @@ TODO:
 	+ Drive Drivers
 	+ USB Drive Drivers(?)
 	+ Display
-	+ RTTI
 	+ Exceptions
 	+ Standard Library
 	+ Multitasking
@@ -14,7 +13,6 @@ TODO:
 		+ Threading
 		+ Processes
 		+ Mutexes
-		+ Atomic Types
 	}
 	+ I/O
 	{
@@ -25,17 +23,23 @@ TODO:
 	}
 	+ Userspace
 	+ Libraries/Linking
-	+ SQLite Port
 	+ Page Fault Recovery
-	+ System Time
 	+ Runtime Metrics
 	{
 		+ Resource Use
 		+ Performance
 	}
+	+ dlopen / Kernel Dynamic Linking
 	
 	
 	
 	
 Done: 
+	+ RTTI
+	+ MultiTasking
+	{
+		+ Atomic Types
+	}
+	+ SQLite Port
+	+ System Time
 }
