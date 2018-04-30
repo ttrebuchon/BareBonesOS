@@ -556,7 +556,7 @@ namespace Kernel { namespace Memory {
 			addr_t region = PhysicalMemory::reserve(sz);
 			assert(sz >= PAGE_SIZE);
 			dest->at(i).frame((void*)region);
-			assert((addr_t)pgDest.frame == region);
+			assert((addr_t)pgDest.frame == region/PAGE_SIZE);
 			pgDest.rw = pg.rw;
 			pgDest.user = pg.user;
 			pgDest.reserved = pg.reserved;
