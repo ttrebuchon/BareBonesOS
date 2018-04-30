@@ -79,12 +79,21 @@ namespace Drivers
         //static void Write(const Utils::String str);
         static void Write(const void* ptr);
         static void Write(const bool);
-        static void Write(const uint32_t);
-        static void Write(const uint64_t);
-        static void Write(const uint16_t);
-        static void Write(const uint8_t);
-        static void Write(const int64_t);
-        //static void Write(const int32_t);
+        // static void Write(const uint32_t);
+        // static void Write(const uint64_t);
+        // static void Write(const uint16_t);
+        // static void Write(const uint8_t);
+        // static void Write(const int64_t);
+        static void Write(const unsigned char);
+        static void Write(const unsigned short);
+        static void Write(const unsigned int);
+        static void Write(const unsigned long);
+        static void Write(const unsigned long long);
+        static void Write(const short);
+        static void Write(const int);
+        static void Write(const long);
+        static void Write(const long long);
+
 
         static void Write_HardcodedMark();
     };
