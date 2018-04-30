@@ -310,6 +310,29 @@ namespace Utils
 	
 	
 	
+	// is_const
+	template <class T>
+	struct is_const : public integral_constant<bool, false>
+	{};
+	
+	template <class T>
+	struct is_const<const T> : public integral_constant<bool, true>
+	{};
+	
+	template <class T>
+	struct is_const<const T*> : public integral_constant<bool, true>
+	{};
+	
+	template <class T>
+	struct is_const<T* const> : public integral_constant<bool, true>
+	{};
+	
+	template <class T>
+	struct is_const<const T* const> : public integral_constant<bool, true>
+	{};
+	
+	
+	
 	// is_polymorphic
 	template <class T>
 	struct is_polymorphic : public integral_constant<bool, __is_polymorphic(T)>
@@ -322,6 +345,38 @@ namespace Utils
 	struct is_abstract : public integral_constant<bool, __is_abstract(T)>
 	{ };
 	
+	
+	
+	// remove_pointer
+	template <class T>
+	struct remove_pointer
+	{
+		typedef T type;
+	};
+	
+	template <class T>
+	struct remove_pointer<T*>
+	{
+		typedef T type;
+	};
+	
+	template <class T>
+	struct remove_pointer<T* const>
+	{
+		typedef T type;
+	};
+	
+	template <class T>
+	struct remove_pointer<T* volatile>
+	{
+		typedef T type;
+	};
+	
+	template <class T>
+	struct remove_pointer<T* const volatile>
+	{
+		typedef T type;
+	};
 }
 
 #undef _DEFINE_SPEC

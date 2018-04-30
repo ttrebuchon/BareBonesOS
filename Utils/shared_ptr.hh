@@ -88,6 +88,9 @@ namespace Utils
 		template <class>
 		friend class weak_ptr;
 		
+		template <class>
+		friend class shared_ptr;
+		
 		template <class G, class Y>
 		friend bool operator==(const shared_ptr<G>&, const shared_ptr<Y>&) noexcept;
 		template <class G>
@@ -150,6 +153,8 @@ namespace Utils
 	{
 		return l.get() != r;
 	}
+	
+	
 	
 }
 #endif
