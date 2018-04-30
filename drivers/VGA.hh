@@ -76,14 +76,8 @@ namespace Drivers
         static void Write(const char* cstr);
         static void Write(const unsigned char* cstr);
         static void Write(const Utils::string&);
-        //static void Write(const Utils::String str);
         static void Write(const void* ptr);
         static void Write(const bool);
-        // static void Write(const uint32_t);
-        // static void Write(const uint64_t);
-        // static void Write(const uint16_t);
-        // static void Write(const uint8_t);
-        // static void Write(const int64_t);
         static void Write(const unsigned char);
         static void Write(const unsigned short);
         static void Write(const unsigned int);
