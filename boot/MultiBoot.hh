@@ -30,6 +30,8 @@ namespace boot
 		const mmap_type** free_ranges;
 		size_t free_ranges_len;
 		
+		void use_basic_availability() noexcept;
+		
 		public:
 		MultiBoot(const multiboot*) noexcept;
 		
@@ -48,6 +50,8 @@ namespace boot
 		}
 		
 		const mmap_type* mmap_next(const mmap_type*) const noexcept;
+		
+		bool hasFlag(const int16_t index) const noexcept;
 	};
 	
 	

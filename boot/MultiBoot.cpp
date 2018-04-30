@@ -52,15 +52,68 @@ namespace boot
 				it = (mmap_type*)((addr_t)it + it->size);
 			}
 		}
-		else
+		
+	}
+	
+	void MultiBoot::use_basic_availability() noexcept
+	{
+		assert(hasFlag(0));
+		
+		if (free_ranges)
 		{
-			TRACE("Multiboot mmap is NOT present");
-			assert(false);
+			delete[] free_ranges;
 		}
-		available_memory();
-		TRACE("Available Memory:");
-		TRACE(available_memory());
-		assert(false);
+		
+		addr_t low_start = PAGE_SIZE;
+		addr_t low_end = ((addr_t)ptr->mem_lower)*1024;
+		if (low_end % PAGE_SIZE != 0)
+		{
+			low_end = (low_end/PAGE_SIZE)*PAGE_SIZE;
+		}
+		addr_t high_start = 1024*1024;
+		addr_t high_end = ((addr_t)ptr->mem_upper)*1024;
+		if (high_end % PAGE_SIZE != 0)
+		{
+			high_end = (high_end/PAGE_SIZE)*PAGE_SIZE;
+		}
+		
+		_avail_mem = (high_end - high_start) + (low_end - low_start);
+		
+		auto it = mmap;
+		for (auto it = mmap; it != nullptr; it = mmap_next(it))
+		{
+			if (it->type == 1)
+			{
+				continue;
+			}
+			
+			if (it->base_addr < (addr_t)low_end)
+			{
+				if (it->base_addr+it->len <= (addr_t)low_end)
+				{
+					_avail_mem -= it->len;
+				}
+				else
+				{
+					_avail_mem -= ((addr_t)low_end - it->base_addr);
+				}
+			}
+			else if (it->base_addr < (addr_t)high_start)
+			{
+				if (it->base_addr+it->len > (addr_t)high_start)
+				{
+					_avail_mem -= ((it->base_addr+it->len) - (addr_t)high_start);
+				}
+			}
+			else if (it->base_addr + it->len <= (addr_t)high_end)
+			{
+				_avail_mem -= it->len;
+			}
+			else
+			{
+				_avail_mem -= ((addr_t)high_end - it->base_addr);
+			}
+		}
 	}
 	
 	
@@ -96,6 +149,14 @@ namespace boot
 			_avail_mem += end - start;
 		}
 		
+		if (_avail_mem <= 0)
+		{
+			if (hasFlag(0))
+			{
+				const_cast<MultiBoot*>(this)->use_basic_availability();
+			}
+		}
+		
 		return _avail_mem;
 	}
 	
@@ -115,4 +176,8 @@ namespace boot
 		return nullptr;
 	}
 	
+	bool MultiBoot::hasFlag(const int16_t index) const noexcept
+	{
+		return (ptr->flags & (1 << index)) > 0;
+	}
 }
