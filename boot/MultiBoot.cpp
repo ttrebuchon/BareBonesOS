@@ -30,26 +30,26 @@ namespace boot
 			assert(mmap != nullptr);
 			
 			auto it = mmap;
-			while (it < (void*)((addr_t)mmap + mmap_len))
+			while (it)
 			{
 				if (it->type == 1)
 				{
 					++free_ranges_len;
 				}
-				it = (mmap_type*)((addr_t)it + it->size);
+				it = mmap_next(it);
 			}
 			
 			free_ranges = new const mmap_type*[free_ranges_len];
 			
 			size_t i = 0;
 			it = mmap;
-			while (it < (void*)((addr_t)mmap + mmap_len))
+			while (it && i < free_ranges_len)
 			{
 				if (it->type == 1)
 				{
 					free_ranges[i++] = it;
 				}
-				it = (mmap_type*)((addr_t)it + it->size);
+				it = mmap_next(it);
 			}
 		}
 		
@@ -165,7 +165,7 @@ namespace boot
 		if (e != nullptr)
 		{
 			auto addr = (addr_t)e;
-			addr += e->size;
+			addr += e->size + sizeof(e->size);
 			if (addr < ptr->mmap_addr + ptr->mmap_length)
 			{
 				assert(e->size > 0);
