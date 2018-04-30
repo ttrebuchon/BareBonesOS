@@ -166,7 +166,7 @@ namespace boot
 		{
 			auto addr = (addr_t)e;
 			addr += e->size;
-			if (addr >= ptr->mmap_addr + ptr->mmap_length)
+			if (addr < ptr->mmap_addr + ptr->mmap_length)
 			{
 				assert(e->size > 0);
 				auto it = (const mmap_type*)addr;
