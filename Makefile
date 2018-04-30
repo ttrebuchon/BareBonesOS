@@ -46,6 +46,7 @@ WARNINGS_FLAGS += -Wextra
 #WARNINGS_FLAGS += --pedantic
 #WARNINGS_FLAGS += -Werror
 WARNINGS_FLAGS += -Wfatal-errors
+WARNINGS_FLAGS += -fmax-errors=3
 WARNINGS_FLAGS += -Werror=ignored-qualifiers
 WARNINGS_FLAGS += -Werror=attributes
 
