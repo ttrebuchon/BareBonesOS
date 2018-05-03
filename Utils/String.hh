@@ -99,6 +99,7 @@ namespace Utils
 
             Char_t* _M_refdata() throw()
             {
+            	assert(this + 1);
                 return reinterpret_cast<Char_t*>(this + 1);
             }
 
@@ -141,8 +142,9 @@ namespace Utils
                 #endif
                     {
                         /*__gnu_cxx::*/__atomic_add_dispatch(&this->_M_refcount, 1);
-                        return _M_refdata();
+                        
                     }
+                    return _M_refdata();
             }
 
             Char_t* _M_clone(const Alloc&, size_type __res = 0);
@@ -163,16 +165,19 @@ namespace Utils
 
         Char_t* _M_data() const
         {
+        	assert(_M_dataplus._M_p);
             return _M_dataplus._M_p;
         }
 
         Char_t* _M_data(Char_t* __p)
         {
+        	assert(__p);
             return (_M_dataplus._M_p = __p);
         }
 
         _Rep* _M_rep() const
         {
+        	assert(_M_data());
             return &((reinterpret_cast<_Rep*>(_M_data()))[-1]);
         }
 
@@ -328,7 +333,9 @@ namespace Utils
         #else
          : _M_dataplus(_S_construct(size_type(), Char_t(), Alloc()), Alloc())
         #endif
-        {}
+        {
+        	assert(_M_data());
+        }
         
         explicit basic_string(const Alloc& alloc);
 
@@ -407,6 +414,7 @@ namespace Utils
         //Members
         size_type size() const noexcept
         {
+        	assert(_M_rep());
         	return _M_rep()->_M_length;
         }
         
@@ -559,6 +567,78 @@ namespace Utils
     	res += _rhs;
     	return res;
     }
+    
+    template <class Char_t, class T, class Alloc>
+    inline bool operator>(const basic_string<Char_t, T, Alloc>& lhs, const basic_string<Char_t, T, Alloc>& rhs)
+    {
+    	return lhs.compare(rhs) > 0;
+    }
+    
+    template <class Char_t, class T, class Alloc>
+    inline bool operator>(const basic_string<Char_t, T, Alloc>& lhs, const Char_t* rhs)
+    {
+    	return lhs.compare(rhs) > 0;
+    }
+    
+    template <class Char_t, class T, class Alloc>
+    inline bool operator>(const Char_t* lhs, const basic_string<Char_t, T, Alloc>& rhs)
+    {
+    	return rhs.compare(lhs) < 0;
+    }
+    
+    template <class Char_t, class T, class Alloc>
+    inline bool operator>=(const basic_string<Char_t, T, Alloc>& lhs, const basic_string<Char_t, T, Alloc>& rhs)
+    {
+    	return lhs.compare(rhs) >= 0;
+    }
+    
+    template <class Char_t, class T, class Alloc>
+    inline bool operator>=(const basic_string<Char_t, T, Alloc>& lhs, const Char_t* rhs)
+    {
+    	return lhs.compare(rhs) >= 0;
+    }
+    
+    template <class Char_t, class T, class Alloc>
+    inline bool operator>=(const Char_t* lhs, const basic_string<Char_t, T, Alloc>& rhs)
+    {
+    	return rhs.compare(lhs) <= 0;
+    }
+    
+    template <class Char_t, class T, class Alloc>
+    inline bool operator<(const basic_string<Char_t, T, Alloc>& lhs, const basic_string<Char_t, T, Alloc>& rhs)
+    {
+    	return lhs.compare(rhs) < 0;
+    }
+    
+    template <class Char_t, class T, class Alloc>
+    inline bool operator<(const basic_string<Char_t, T, Alloc>& lhs, const Char_t* rhs)
+    {
+    	return lhs.compare(rhs) < 0;
+    }
+    
+    template <class Char_t, class T, class Alloc>
+    inline bool operator<(const Char_t* lhs, const basic_string<Char_t, T, Alloc>& rhs)
+    {
+    	return rhs.compare(lhs) > 0;
+    }
+    
+    template <class Char_t, class T, class Alloc>
+    inline bool operator<=(const basic_string<Char_t, T, Alloc>& lhs, const basic_string<Char_t, T, Alloc>& rhs)
+    {
+    	return lhs.compare(rhs) <= 0;
+    }
+    
+    template <class Char_t, class T, class Alloc>
+    inline bool operator<=(const basic_string<Char_t, T, Alloc>& lhs, const Char_t* rhs)
+    {
+    	return lhs.compare(rhs) <= 0;
+    }
+    
+    template <class Char_t, class T, class Alloc>
+    inline bool operator<=(const Char_t* lhs, const basic_string<Char_t, T, Alloc>& rhs)
+    {
+    	return rhs.compare(lhs) >= 0;
+    }
 
 
     typedef basic_string<char, Char_Traits<char>, Allocator<char>> string;
@@ -579,9 +659,12 @@ namespace Utils
     	
     	result_type operator()(const argument_type& arg) const
     	{
-    		return detail::a_hash_func<result_type>::hash(arg.c_str(), arg.length()*sizeof (argument_type::char_type));
+    		return detail::a_hash_func<result_type>::hash(arg.c_str(), arg.length()*sizeof (typename argument_type::value_type));
     	}
     };
+    
+    
+    
 
 }
 #endif

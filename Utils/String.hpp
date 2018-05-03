@@ -22,7 +22,7 @@ namespace Utils
 		
 		Char_t buf[128];
 		size_type len = 0;
-		while (_begin != _end && len < sizeof(buf) / sizeof(Char_t))
+		while (_begin != _end && len < sizeof(buf))
 		{
 			buf[len++] = *_begin;
 			++_begin;
@@ -76,6 +76,7 @@ namespace Utils
 		#else
 			str._M_data(_S_construct(size_type(), Char_t(), get_allocator()));
 		#endif
+		
 	}
 
 	__STRTEMP__ basic_string<Char_t, T, Alloc>::basic_string(const basic_string& str, size_t pos, size_t len, const Alloc& alloc)
