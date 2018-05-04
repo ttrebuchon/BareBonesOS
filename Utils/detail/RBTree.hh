@@ -152,6 +152,7 @@ namespace Utils { namespace detail
 		template <class N>
 		N iterator_increment(N node)
 		{
+			auto sNode = node;
 			if (node->right)
 			{
 				node = static_cast<N>(node->right);
@@ -171,7 +172,12 @@ namespace Utils { namespace detail
 				if (node->right != parent)
 				{
 					node = parent;
+					assert(node == parent);
 				}
+			}
+			if (node == sNode)
+			{
+				node = nullptr;
 			}
 			return node;
 		}
