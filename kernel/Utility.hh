@@ -3,6 +3,8 @@
 
 #include <Common.h>
 
+#ifdef __cplusplus
+
 namespace Kernel
 {
 	namespace detail
@@ -20,7 +22,7 @@ namespace Kernel
 	
 	
 }
-
+#endif // __cplusplus
 
 
 #define ASM_EXEC(X, ...) asm volatile (#X __VA_ARGS__)
