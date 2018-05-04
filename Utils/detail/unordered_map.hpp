@@ -1,6 +1,8 @@
 #ifndef INCLUDED_UNORDERED_MAP_HPP
 #define INCLUDED_UNORDERED_MAP_HPP
 
+#include "functexcept.hh"
+
 namespace Utils
 {
 	template <class Key, class T, class Hash, class KeyEqual, class Alloc>
@@ -53,25 +55,45 @@ namespace Utils
 	template <class Key, class T, class Hash, class KeyEqual, class Alloc>
 	auto unordered_map<Key, T, Hash, KeyEqual, Alloc>::at(const key_type& k) -> mapped_type&
 	{
-		return _table.get(k)->value.second;
+		auto kv = _table.get(k);
+		if (!kv)
+		{
+			__throw_out_of_range("key not present");
+		}
+		return kv->value.second;
 	}
 	
 	template <class Key, class T, class Hash, class KeyEqual, class Alloc>
 	auto unordered_map<Key, T, Hash, KeyEqual, Alloc>::at(key_type&& k) -> mapped_type&
 	{
-		return _table.get(forward<key_type&&>(k))->value.second;
+		auto kv = _table.get(forward<key_type&&>(k));
+		if (!kv)
+		{
+			__throw_out_of_range("key not present");
+		}
+		return kv->value.second;
 	}
 	
 	template <class Key, class T, class Hash, class KeyEqual, class Alloc>
 	auto unordered_map<Key, T, Hash, KeyEqual, Alloc>::at(const key_type& k) const -> const mapped_type&
 	{
-		return _table.get(k)->value.second;
+		auto kv = _table.get(k);
+		if (!kv)
+		{
+			__throw_out_of_range("key not present");
+		}
+		return kv->value.second;
 	}
 	
 	template <class Key, class T, class Hash, class KeyEqual, class Alloc>
 	auto unordered_map<Key, T, Hash, KeyEqual, Alloc>::at(key_type&& k) const -> const mapped_type&
 	{
-		return _table.get(forward<key_type&&>(k))->value.second;
+		auto kv = _table.get(forward<key_type&&>(k));
+		if (!kv)
+		{
+			__throw_out_of_range("key not present");
+		}
+		return kv->value.second;
 	}
 	
 	
