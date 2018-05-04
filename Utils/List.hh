@@ -177,6 +177,11 @@ namespace Utils
 		void emplace_back(Args&&...);
 
 		size_type size() const;
+		
+		
+		
+		List& operator=(List&&);
+		
 
 		iterator begin();
 		iterator end();

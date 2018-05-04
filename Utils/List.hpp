@@ -106,6 +106,30 @@ namespace Utils
 	{
 		return _size;
 	}
+	
+	template <class T, class A>
+	List<T, A>& List<T, A>::operator=(List&& l)
+	{
+		Node* ptr = head;
+		while (head != nullptr)
+		{
+			head = head->next;
+			nalloc.destroy(ptr);
+			nalloc.deallocate(ptr, 1);
+			ptr = head;
+		}
+		
+		head = l.head;
+		tail = l.tail;
+		alloc = l.alloc;
+		nalloc = l.nalloc;
+		_size = l._size;
+		
+		l.head = l.tail = nullptr;
+		l._size = 0;
+		
+		return *this;
+	}
 
 	template <class T, class A>
 	typename List<T, A>::iterator List<T, A>::begin()
