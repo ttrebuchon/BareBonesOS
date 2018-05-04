@@ -485,6 +485,7 @@ namespace Utils
 		hash_code code = hash(k);
 		size_t index = bucketIndex(code);
 		
+		assert(index < bucketCount);
 		auto ptr = buckets[index];
 		if (!ptr)
 		{
@@ -496,7 +497,7 @@ namespace Utils
 			{
 				return ptr;
 			}
-		};
+		}
 		
 		return nullptr;
 	}
@@ -623,6 +624,11 @@ namespace Utils
 		}
 	}
 	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy>
+	constexpr auto hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy>::hash_function() const noexcept -> hasher
+	{
+		return hash;
+	}
 	
 	
 	
