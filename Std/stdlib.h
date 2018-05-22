@@ -7,6 +7,8 @@ C_CODE
 
 long int strtol(const char* str, char** endptr, int base);
 
+int atoi(const char*);
+
 #ifdef __cplusplus
 [[ noreturn ]]
 #endif

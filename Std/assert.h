@@ -7,6 +7,8 @@ C_CODE
 
 void __assert2(const char* filename, int line, const char* function, const char* exp);
 
+
+
 #undef assert
 
 #ifdef NDEBUG
@@ -20,6 +22,8 @@ void __assert2(const char* filename, int line, const char* function, const char*
 	
 	
 #endif
+
+
 
 
 C_END
