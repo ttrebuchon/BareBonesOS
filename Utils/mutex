@@ -1,3 +1,4 @@
 #include "detail/mutex.hh"
+#include "detail/locks.hh"
 
 #include "detail/mutex.hpp"
