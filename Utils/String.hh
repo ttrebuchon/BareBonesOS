@@ -663,7 +663,15 @@ namespace Utils
     	}
     };
     
-    
+    string to_string(int);
+    string to_string(long);
+    string to_string(long long);
+    string to_string(unsigned);
+    string to_string(unsigned long);
+    string to_string(unsigned long long);
+    string to_string(float);
+    string to_string(double);
+    string to_string(long double);
     
 
 }

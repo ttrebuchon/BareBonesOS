@@ -79,6 +79,17 @@ namespace Utils
 	}
 	
 	template <class T, class Deleter>
+	void unique_ptr<T, Deleter>::swap(unique_ptr& other) noexcept
+	{
+		auto _obj = this->obj;
+		auto _del = this->del;
+		this->obj = other.obj;
+		this->del = other.del;
+		other.obj = _obj;
+		other.del = _del;
+	}
+	
+	template <class T, class Deleter>
 	auto unique_ptr<T, Deleter>::get() const noexcept -> pointer
 	{
 		return obj;

@@ -108,6 +108,41 @@ namespace Utils
 	}
 	
 	template <class T, class A>
+	auto List<T, A>::erase(iterator it) -> iterator
+	{
+		iterator new_it;
+		assert(it.n);
+		
+		new_it.n = it.n->next;
+		
+		if (it.n == head)
+		{
+			head = it.n->next;
+		}
+		if (it.n == tail)
+		{
+			tail = it.n->prev;
+		}
+		
+		if (it.n->next)
+		{
+			it.n->next->prev = it.n->prev;
+		}
+		if (it.n->prev)
+		{
+			it.n->prev->next = it.n->next;
+		}
+		
+		nalloc.destroy(it.n);
+		nalloc.deallocate(it.n, 1);
+		
+		--_size;
+		
+		return new_it;
+	}
+	
+	
+	template <class T, class A>
 	List<T, A>& List<T, A>::operator=(List&& l)
 	{
 		Node* ptr = head;
