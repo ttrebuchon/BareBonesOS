@@ -382,6 +382,15 @@ namespace Utils
 	
 	
 	
+	// add_pointer
+	template <class T>
+	struct add_pointer
+	{
+		typedef T* type;
+	};
+	
+	
+	
 	// is_base_of
 	namespace detail
 	{

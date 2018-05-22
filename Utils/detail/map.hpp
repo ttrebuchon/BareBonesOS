@@ -158,6 +158,20 @@ namespace Utils
 		}
 	}
 	
+	template <class Key, class T, class Comp, class Alloc>
+	auto map<Key, T, Comp, Alloc>::erase(const key_type& key) -> size_type
+	{
+		if (tree)
+		{
+			if (tree->erase(key))
+			{
+				return 1;
+			}
+		}
+		
+		return 0;
+	}
+	
 	
 	
 	
@@ -221,7 +235,7 @@ namespace Utils
 			#ifdef DEBUG_VERIFY
 			ASSERT(ret->size >= 1);
 			ASSERT(tree->verify());
-			ASSERTEQ(oldSize+1, tree->size());
+			ASSERT(oldSize+1 == tree->size());
 			ASSERT(oldSize + 1 == tree->size());
 			#endif
 			return ret->value.second;

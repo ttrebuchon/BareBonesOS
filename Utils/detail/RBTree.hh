@@ -1,6 +1,9 @@
 #ifndef INCLUDED_RBTREE_HH
 #define INCLUDED_RBTREE_HH
 
+#include <Common.h>
+#include <Utils/Allocator.hh>
+
 namespace Utils { namespace detail
 {
 	namespace rb_tree
@@ -67,7 +70,7 @@ namespace Utils { namespace detail
 		};
 		
 		
-		template <class T, class Comp, class Alloc = Allocator<T>>
+		template <class T, class Comp, class Alloc = Utils::allocator<T>>
 		class RBTree
 		{
 			protected:
@@ -107,6 +110,15 @@ namespace Utils { namespace detail
 			RBTree* clone(TreeAlloc) const;
 			void destroy(allocator_type&);
 			void clear();
+			
+			template <class Key>
+			_Node** findErase(const Key&, _Node** parent);
+			template <class Key>
+			bool erase(const Key&);
+			
+			template <class Key>
+			_Node* deleteNode(_Node* base, const Key& k);
+			bool recalcLeftmost() noexcept;
 			
 			size_t size() const;
 			

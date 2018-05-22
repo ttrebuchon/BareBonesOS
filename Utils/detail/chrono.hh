@@ -29,9 +29,12 @@ namespace Utils { namespace chrono
 		
 		public:
 		constexpr time_point();
-		constexpr explicit time_point(const duration&);
+		constexpr explicit time_point(const duration& d);
 		template <class D2>
-		constexpr time_point(const time_point<clock, D2>& t);
+		constexpr time_point(const time_point<clock, D2>& t) : counter(D2::period*t.ticks/duration::period)
+		{
+			// TODO /  uncertain
+		}
 		
 		constexpr duration time_since_epoch() const;
 	};

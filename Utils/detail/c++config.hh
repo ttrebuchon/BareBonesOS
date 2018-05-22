@@ -15,20 +15,27 @@
 
 #endif
 
-#ifndef _GLIBCXX_THROW_OR_ABORT
+#ifdef _THROW_OR_ABORT
+#undef __THROW_OR_ABORT
+
+#endif
+
+
 
 #ifdef __EXCEPTIONS
 
-#define _GLIBCXX_THROW_OR_ABORT(_EXC) (throw (_EXC))
+#ifdef throw
+#undef throw
+#endif
+
+#define __THROW_OR_ABORT(_EXC) throw  (_EXC)
 
 #else
 
     #ifndef TESTING
-    #define _GLIBCXX_THROW_OR_ABORT(_EXC) (KPANIC(""))
+    #define __THROW_OR_ABORT(_EXC) KPANIC("")
     #else
-    #define _GLIBCXX_THROW_OR_ABORT(_EXC) (__builtin_abort())
+    #define __THROW_OR_ABORT(_EXC) __builtin_abort()
     #endif
-
-#endif
 
 #endif

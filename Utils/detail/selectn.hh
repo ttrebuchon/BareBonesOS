@@ -93,6 +93,17 @@ namespace Utils
 			return detail::Select2nd(forward<T&>(t));
 		}
 	};
+	
+	struct SelectIdentity
+	{
+		template <class T>
+		__attribute__((__always_inline__))
+		constexpr T& operator()(T& t) const noexcept
+		{
+			return t;
+		}
+	};
+	
 }
 
 #endif

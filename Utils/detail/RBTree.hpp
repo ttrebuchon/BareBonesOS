@@ -2,6 +2,9 @@
 #define INCLUDED_RBTREE_HPP
 
 #include "RBTree.hh"
+#ifdef DEBUG_VERIFY
+#include <iostreM>
+#endif
 
 namespace Utils { namespace detail
 {
@@ -748,6 +751,268 @@ namespace rb_tree
 	}
 	
 	template <class T, class Comp, class Alloc>
+	template <class Key>
+	auto RBTree<T, Comp, Alloc>::findErase(const Key& k, _Node** parent) -> _Node**
+	{
+		if (root())
+		{
+			_Node* n = find(k);
+			if (n)
+			{
+				_Node** result = nullptr;
+				if (n == root())
+				{
+					result = &root();
+					if (parent)
+					{
+						*parent = (_Node*)(*result)->parent;
+					}
+				}
+				else
+				{
+					assert(n->parent);
+					if (parent)
+					{
+						*parent = (_Node*)n->parent;
+					}
+					if (n->parent->left == n)
+					{
+						result = &(_Node*&)*&n->parent->left;
+					}
+					else
+					{
+						result = &(_Node*&)*&n->parent->right;
+					}
+					assert(*result == n);
+				}
+				
+				return result;
+			}
+		}
+		
+		
+		if (parent)
+		{
+			*parent = nullptr;
+		}
+		return nullptr;
+	}
+	
+	template <class T, class Comp, class Alloc>
+	template <class Key>
+	bool RBTree<T, Comp, Alloc>::erase(const Key& k)
+	{
+		assert(NOT_IMPLEMENTED);
+		if (root())
+		{
+			auto oldSize = size();
+			root() = deleteNode(root(), k);
+			recalcLeftmost();
+			#ifdef DEBUG_VERIFY
+			assert(verify());
+			#endif
+			return (oldSize != size());
+		}
+		
+		return false;
+		
+		_Node* parent;
+		_Node** br = findErase(k, &parent);
+		if (!br)
+		{
+			return false;
+		}
+		
+		_Node* n = *br;
+		
+		if (!n->left && !n->right)
+		{
+			*br = nullptr;
+			if (leftmost == n)
+			{
+				leftmost = parent;
+			}
+		}
+		else if (!n->left)
+		{
+			*br = (_Node*)n->right;
+			n->right->parent = parent;
+			if (leftmost == n)
+			{
+				_Node* it = (_Node*)n->right;
+				_Node* tmp = nullptr;
+				if (it)
+				{
+					tmp = (_Node*)it->left;
+				}
+				while (tmp)
+				{
+					it = tmp;
+					tmp = (_Node*)tmp->left;
+				}
+				leftmost = it;
+			}
+		}
+		else if (!n->right)
+		{
+			*br = (_Node*)n->left;
+			n->left->parent = parent;
+		}
+		else
+		{
+			_Node* it = (_Node*)n->right;
+			_Node* tmp = nullptr;
+			tmp = (_Node*)it->left;
+			while (tmp)
+			{
+				it = tmp;
+				tmp = (_Node*)tmp->left;
+			}
+			
+			*br = it;
+			it->parent = parent;
+		}
+		
+		alloc.destroy(&n->value);
+		
+		assert(false);
+	}
+	
+	template <class T, class Comp, class Alloc>
+	template <class Key>
+	auto RBTree<T, Comp, Alloc>::deleteNode(_Node* base, const Key& k) -> _Node*
+	{
+		if (!base)
+		{
+			return base;
+		}
+		
+		bool choice = comp(k, base->value);
+		if (choice == comp(base->value, k))
+		{
+			if (!base->left)
+			{
+				_Node* tmp = (_Node*)base->right;
+				alloc.destroy(&base->value);
+				nalloc.destroy((NodeBase*)base);
+				nalloc.deallocate(base, 1);
+				return tmp;
+			}
+			else if (!base->right)
+			{
+				_Node* tmp = (_Node*)base->left;
+				alloc.destroy(&base->value);
+				nalloc.destroy((NodeBase*)base);
+				nalloc.deallocate(base, 1);
+				return tmp;
+			}
+			else
+			{
+				_Node* it = (_Node*)base->right;
+				_Node* tmp = (_Node*)it->left;
+				while (tmp)
+				{
+					it = tmp;
+					tmp = (_Node*)tmp->left;
+				}
+				
+				auto parent = base->parent;
+				int side = 0;
+				if (parent)
+				{
+					if (parent->left == base)
+					{
+						side = -1;
+					}
+					else
+					{
+						side = 1;
+					}
+				}
+				while (base->rotateRight()) ;
+				_Node* nBase = nullptr;
+				if (side > 0)
+				{
+					nBase = (_Node*)parent->right;
+				}
+				else if (nBase < 0)
+				{
+					nBase = (_Node*)parent->left;
+				}
+				
+				nBase = deleteNode(nBase, k);
+				
+				if (nBase)
+				{
+					nBase->rebalance();
+				}
+				
+				#ifdef DEBUG_VERIFY
+				if (nBase)
+				{
+				if (nBase->left)
+				{
+					assert(nBase->left->verify());
+				}
+				if (nBase->right)
+				{
+					assert(nBase->right->verify());
+				}
+				assert(nBase->verify());
+				}
+				#endif
+				
+				
+				return nBase;
+			}
+		}
+		else if (choice)
+		{
+			base->left = deleteNode((_Node*)base->left, k);
+		}
+		else
+		{
+			base->right = deleteNode((_Node*)base->right, k);
+		}
+		
+		base->size = 1;
+		if (base->left)
+		{
+			base->left->parent = base;
+			base->size += base->left->size;
+		}
+		if (base->right)
+		{
+			base->right->parent = base;
+			base->size += base->right->size;
+		}
+		
+		return base;
+	}
+	
+	template <class T, class Comp, class Alloc>
+	bool RBTree<T, Comp, Alloc>::recalcLeftmost() noexcept
+	{
+		auto it = root();
+		if (it)
+		{
+			auto tmp = (_Node*)it->left;
+			while (tmp)
+			{
+				it = tmp;
+				tmp = (_Node*)tmp->left;
+			}
+		}
+		if (it != leftmost)
+		{
+			leftmost = it;
+			return true;
+		}
+		
+		return false;
+	}
+	
+	template <class T, class Comp, class Alloc>
 	size_t RBTree<T, Comp, Alloc>::size() const
 	{
 		return root() != nullptr ? root()->size : 0;
@@ -761,8 +1026,19 @@ namespace rb_tree
 		{
 			bool val = root()->verify();
 			
+			if (!val)
+			{
+				std::cout << "Problem in nodes.\n";
+				return val;
+			}
 			
 			val &= (leftmost != nullptr);
+			
+			if (!val)
+			{
+				std::cout << "Leftmost should not be null\n";
+				return val;
+			}
 			
 			if (val)
 			{
@@ -771,6 +1047,16 @@ namespace rb_tree
 				while (val && parent != nullptr)
 				{
 					val &= (parent->left == ptr);
+					if (!val)
+					{
+						if (parent->right == ptr)
+						{
+							std::cout << "Node's parent should have it as left child.\n";
+							return false;
+						}
+						std::cout << "Node's parent does not have it as child.\n";
+						return false;
+					}
 					ptr = parent;
 					parent = parent->parent;
 				}

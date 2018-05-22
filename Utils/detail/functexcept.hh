@@ -28,14 +28,14 @@ namespace Utils
 		explicit logic_error(const string&);
 		explicit logic_error(const char*);
 		
-		logic_error(const logic_error&) throw();
+		logic_error(const logic_error&);
 		
-		virtual ~logic_error() throw();
+		virtual ~logic_error();
 		
 		
-		logic_error& operator=(const logic_error&) throw();
+		logic_error& operator=(const logic_error&);
 		
-		virtual const char* what() const throw();
+		virtual const char* what() const;
 		
 	};
 	
@@ -48,7 +48,7 @@ namespace Utils
 		explicit length_error(const string& s) : logic_error(s) {}
 		explicit length_error(const char* s) : logic_error(s) {}
 		
-		virtual ~length_error() throw() = default;
+		virtual ~length_error() = default;
 	};
 	
 	class out_of_range : public logic_error
@@ -59,7 +59,7 @@ namespace Utils
 		explicit out_of_range(const string& s) : logic_error(s) {}
 		explicit out_of_range(const char* s) : logic_error(s) {}
 		
-		virtual ~out_of_range() throw() = default;
+		virtual ~out_of_range() = default;
 	};
 	
 	

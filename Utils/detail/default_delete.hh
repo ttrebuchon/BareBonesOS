@@ -8,7 +8,10 @@ namespace Utils
 	{
 		constexpr default_delete() noexcept = default;
 		template <class U>
-		default_delete(const default_delete<U>&) noexcept;
+		default_delete(const default_delete<U>&) noexcept
+		{
+			
+		}
 		
 		__attribute__ ((__always_inline__)) void operator() (T* __ptr) const throw()
 		{
