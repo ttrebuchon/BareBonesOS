@@ -62,6 +62,12 @@ namespace Utils
 	}
 	
 	template <class T>
+	shared_ptr<T>::shared_ptr(shared_ptr&& r) noexcept : ctrl(r.ctrl)
+	{
+		r.ctrl = nullptr;
+	}
+	
+	template <class T>
 	template <class Y>
 	shared_ptr<T>::shared_ptr(shared_ptr<Y>&& r) noexcept : ctrl(r.ctrl)
 	{
@@ -207,17 +213,23 @@ namespace Utils
 		{
 			typedef void(*DelPtr)(T*);
 			
+			return shared_ptr<T>(new T(forward<Args&&>(args)...));
 			
-			void* raw = ::operator new ((sizeof(T) + sizeof(detail::shared_ptr_control::Destructor<T, DelPtr>) + sizeof(detail::shared_ptr_control))/sizeof(char));
+			/*void* raw = ::operator new ((sizeof(T) + sizeof(detail::shared_ptr_control::Destructor<T, DelPtr>) + sizeof(detail::shared_ptr_control))/sizeof(char));
 			shared_ptr<T> ptr(raw,
 				sizeof(T) + sizeof(detail::shared_ptr_control),
 				(DelPtr)[](T* tptr)
 				{
-					delete tptr;
+					if (tptr)
+					{
+						tptr->~T();
+						delete (void*)tptr;
+					}
+					//delete tptr;
 				}
 				);
 			new ((char*)raw +  (sizeof(detail::shared_ptr_control::Destructor<T, DelPtr>) + sizeof(detail::shared_ptr_control))/sizeof(char)) T(args...);
-			return ptr;
+			return ptr;*/
 		}
 	};
 	
@@ -230,6 +242,8 @@ namespace Utils
 			shared_ptr<T> ptr(raw, n*sizeof(T) + sizeof(detail::shared_ptr_control));
 			new (raw + sizeof(detail::shared_ptr_control)) T(args...);
 			return ptr;*/
+			
+			assert(NOT_IMPLEMENTED);
 		}
 	};
 	
@@ -238,7 +252,7 @@ namespace Utils
 	template <class T, class... Args>
 	inline shared_ptr<T> make_shared(Args&&... args)
 	{
-		return make_shared_t<T>::make(forward<Args>(args)...);
+		return make_shared_t<T>::make(forward<Args&&>(args)...);
 	}
 	
 }
