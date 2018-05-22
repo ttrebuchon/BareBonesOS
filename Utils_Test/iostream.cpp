@@ -19,7 +19,7 @@ class Foo : public Utils::basic_ios<char>
 	
 };
 
-class StdBuf : public Utils::streambuf, std::stringbuf
+class StdBuf : public Utils::streambuf, public std::stringbuf
 {
 	
 	protected:
@@ -32,7 +32,7 @@ class StdBuf : public Utils::streambuf, std::stringbuf
 	
 	virtual int sync()
 	{
-		assert(false);
+		//assert(false);
 		return std::stringbuf::sync();
 	}
 		
@@ -149,6 +149,14 @@ class StdBuf : public Utils::streambuf, std::stringbuf
 	}
 };
 
+
+
+
+
+
+
+
+
 class ArrBuf : public Utils::streambuf
 {
 	static constexpr size_t default_size = 2048;
@@ -161,6 +169,11 @@ class ArrBuf : public Utils::streambuf
 		reset();
 	}
 	
+	virtual ~ArrBuf()
+	{
+		delete[] array;
+	}
+	
 	std::string to_string() const
 	{
 		return std::string(array);
@@ -171,6 +184,64 @@ class ArrBuf : public Utils::streambuf
 		memset(array, 0, s);
 		setp(array, array + s);
 	}
+	
+	size_t array_size() const noexcept
+	{
+		return s;
+	}
+	
+	char* array_copy() const
+	{
+		auto p = new char[s];
+		memcpy(p, array, s);
+		return p;
+	}
+};
+
+
+
+
+
+
+class StdArrBuf : public std::streambuf
+{
+	static constexpr size_t default_size = 2048;
+	char* array;
+	size_t s;
+	public:
+	
+	StdArrBuf(const size_t s = default_size) : std::streambuf(), array(new char[s]), s(s)
+	{
+		reset();
+	}
+	
+	virtual ~StdArrBuf()
+	{
+		delete[] array;
+	}
+	
+	std::string to_string() const
+	{
+		return std::string(array);
+	}
+	
+	void reset()
+	{
+		memset(array, 0, s);
+		setp(array, array + s);
+	}
+	
+	size_t array_size() const noexcept
+	{
+		return s;
+	}
+	
+	char* array_copy() const
+	{
+		auto p = new char[s];
+		memcpy(p, array, s);
+		return p;
+	}
 };
 
 
@@ -178,6 +249,8 @@ class Bar : public Utils::basic_iostream<char>
 {
 	
 };
+
+void test_vs_std();
 
 TEST(IOSTREAM)
 {
@@ -365,6 +438,90 @@ TEST(IOSTREAM)
 	
 	std::cout << buf2->to_string() << std::endl;
 	assert(buf2->to_string() == "ABC");
+	
+	
+	delete buf2;
+	
+	test_vs_std();
 }
 
 //using namespace __gnu_cxx;
+
+
+
+
+
+
+
+
+
+
+
+
+template <class OS, class Buf, class Fn>
+static Buf* test_ios(Fn f)
+{
+	auto b = new Buf;
+	OS o(b);
+	
+	f(o);
+	
+	return b;
+}
+
+template <class Fn>
+static void __test_vs_ios(Fn f)
+{
+	auto sb = test_ios<std::ostream, StdArrBuf>(f);
+	
+	auto ub = test_ios<Utils::ostream, ArrBuf>(f);
+	
+	ASSERTEQ(sb->array_size(), ub->array_size());
+	
+	auto str1 = sb->to_string();
+	auto str2 = ub->to_string();
+	
+	ASSERTEQ(str1, str2);
+	
+	
+	auto sa = sb->array_copy();
+	auto ua = ub->array_copy();
+	
+	assert(memcmp(sa, ua, sb->array_size()) == 0);
+	
+	delete[] sa;
+	delete[] ua;
+	
+	delete sb;
+	delete ub;
+}
+
+
+
+
+
+void test_vs_std()
+{
+	{
+		auto fn = [](auto& os)
+		{
+			os << "Mark.";
+			os << "Mark2";
+			os.flush();
+		};
+		__test_vs_ios(fn);
+	}
+	
+	
+	{
+		auto fn = [](auto& os)
+		{
+			os << "Mark.";
+			os.flush();
+			os << "Mark2";
+			os << 41;
+			os.flush();
+		};
+		__test_vs_ios(fn);
+	}
+}
