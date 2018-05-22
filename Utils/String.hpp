@@ -34,7 +34,7 @@ namespace Utils
 		{
 			while (_begin != _end)
 			{
-				if (len = r->_M_capacity)
+				if (len == r->_M_capacity)
 				{
 					_Rep* another = _Rep::_S_create(len + 1, len, a);
 					_M_copy(another->_M_refdata(), r->_M_refdata(), len);
