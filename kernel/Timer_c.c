@@ -83,11 +83,11 @@ unsigned int sleep(unsigned int secs)
 
 int usleep(useconds_t microseconds)
 {
-	cli();
-	sleep_for = microseconds*current_freq/1000000;
+	//cli();
+	sleep_for = (microseconds*current_freq)/1000000;
 	while (sleep_for != 0)
 	{
-		sti();
+		//sti();
 		asm volatile ("NOP");
 		asm volatile ("NOP");
 		asm volatile ("NOP");
@@ -101,9 +101,9 @@ int usleep(useconds_t microseconds)
 		#ifndef __aarch64__
 		asm volatile ("PAUSE");
 		#endif
-		cli();
+		//cli();
 	}
-	sti();
+	//sti();
 	return 0;
 }
 
