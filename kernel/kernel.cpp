@@ -135,8 +135,8 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     ASSERT(b == 33554432);
 
 
-    Drivers::VGAStreamBuf vgaBuf;
-    Utils::ostream out(&vgaBuf);
+    Drivers::VGAStreamBuf* vgaBuf = new Drivers::VGAStreamBuf();
+    Utils::ostream out(vgaBuf);
 
     Kernel::Interrupts::register_interrupt_handler(0x4, &handler04);
 
@@ -290,16 +290,136 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     sleep(2);
     Drivers::VGA::Write("Done sleeping.\n");
 
+
+    int* some_ptr_nonv = new int(465);
+    volatile int* volatile some_ptr = some_ptr_nonv;
+    volatile int some_value = *some_ptr;
+    assert(some_value == 465);
+    
+    // Kernel::Memory::PageDirectory* testDir = nullptr;
+
+    // testDir = Kernel::Memory::PageDirectory::Current->clone(Kernel::Memory::kernel_dir);
+    
+
+    // assert(Kernel::Memory::kernel_dir->at(some_ptr_nonv));
+    // assert(Kernel::Memory::kernel_dir->at(some_ptr_nonv)->present());
+
+    // assert(testDir->at(some_ptr_nonv));
+    // assert(testDir->at(some_ptr_nonv)->present());
+
+    // Drivers::VGA::Write("TestDir Addr: ");
+    // Drivers::VGA::Write(testDir->getPhysicalAddress(some_ptr_nonv));
+    // Drivers::VGA::Write("\nKernelDir Addr: ");
+    // Drivers::VGA::Write(Kernel::Memory::kernel_dir->getPhysicalAddress(some_ptr_nonv));
+    // Drivers::VGA::Write("\n");
+
+    
+
+    // assert(testDir->table(some_ptr_nonv));
+    // assert(Kernel::Memory::kernel_dir->table(some_ptr_nonv));
+    // //assert(**testDir->table(&some_ptr_nonv));
+    // Drivers::VGA::Write((void*)(*testDir->table(some_ptr_nonv))->frame);
+    // Drivers::VGA::Write("\n");
+    // Drivers::VGA::Write((void*)(*Kernel::Memory::kernel_dir->table(some_ptr_nonv))->frame);
+    // Drivers::VGA::Write("\n");
+    // assert((*testDir->table(some_ptr_nonv))->frame == (*Kernel::Memory::kernel_dir->table(some_ptr_nonv))->frame);
+
+    // Drivers::VGA::Write("Checking physical addresses...\n");
+    // assert(testDir->getPhysicalAddress(some_ptr_nonv) == Kernel::Memory::kernel_dir->getPhysicalAddress(some_ptr_nonv));
+
+    // Drivers::VGA::Write("Switching...\n");
+
+    
+    // Drivers::VGA::Write("Switched.\n");
+    // assert(some_value == 465);
+    // assert(some_ptr);
+    // assert(*some_ptr == some_value);
+    // assert(false);
+
+    volatile char some_array[256];
+    for (int i = 0; i < 256; ++i)
+    {
+        some_array[i] = 0;
+    }
+
     if (Kernel::fork() != 0)
     {
         Drivers::VGA::Write("First process running!\n");
         assert(Kernel::taskLength() > 0);
+        // out << "TaskLength verified!\n";
+        // out.flush();
+        // Drivers::VGA::Write((void*)out.rdbuf());
+        // Drivers::VGA::Write("\n");
+        Drivers::VGA::Write((void*)some_ptr);
+        Drivers::VGA::Write("\n");
+        assert(some_value == 465);
+        assert(some_ptr);
+        assert(*some_ptr == some_value);
+        
         while(1);
     }
     else
     {
         //Drivers::VGA::Init();
         Drivers::VGA::Write("Second process running!\n");
+        assert(Kernel::taskLength() == 2);
+        usleep(500000);
+        // out << "TaskLength verified!\n";
+        // out.flush();
+        // Drivers::VGA::Write((void*)out.rdbuf());
+        // Drivers::VGA::Write("\n");
+        Drivers::VGA::Write((void*)some_ptr);
+        Drivers::VGA::Write("\n");
+        if (some_value != 465)
+        {
+            Drivers::VGA::Write("NOPE\n");
+            Drivers::VGA::Write(some_value);
+            Drivers::VGA::Write("\n");
+        }
+        else
+        {
+            Drivers::VGA::Write("YEP\n");
+        }
+        if (some_array[0] != 0)
+        {
+            // int i = 1;
+            // for (i = 1; i < 256; ++i)
+            // {
+            //     if (some_array[i] == 0)
+            //     {
+            //         Drivers::VGA::Write("Offset of ");
+            //         Drivers::VGA::Write(i);
+            //         Drivers::VGA::Write("\n");
+            //         break;
+            //     }
+            // }
+            // for (; i < 256; ++i)
+            // {
+            //     if (some_array[i] != 0)
+            //     {
+            //         Drivers::VGA::Write(i);
+            //         Drivers::VGA::Write("\n");
+            //     }
+            //     assert(some_array[i] == 0);
+            // }
+            for (int i = 0; i < 256; ++i)
+            {
+                if (some_array[i] != 0)
+                {
+                    Drivers::VGA::Write(i);
+                    Drivers::VGA::Write("\n");
+                }
+            }
+        }
+        // assert(some_array[0] == 0);
+        // assert(some_array[255] == 0);
+        assert(some_value == 465);
+        assert(some_ptr);
+        assert(*some_ptr == some_value);
+        sleep(1);
+        out << "Stream Test";
+        sleep(2);
+        out.flush();
         while (1);
     }
 
