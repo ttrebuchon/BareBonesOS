@@ -77,6 +77,8 @@ Kernel::Memory::GDTEntry gdt_table2[5];
 //In Task_c.c
 extern "C" uint32_t init_esp;
 
+char SomeString[6];
+
 
 void testPaging();
 
@@ -150,7 +152,21 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     out << "EBP: " << (void*)ebp << "\n";
     out.flush();
 
+    SomeString[0] = 'H';
+    SomeString[1] = 'e';
+    SomeString[2] = 'l';
+    SomeString[3] = 'l';
+    SomeString[4] = 'o';
+    SomeString[5] = '\0';
 
+    char* SomeString2 = new char[6];
+
+    SomeString2[0] = 'H';
+    SomeString2[1] = 'e';
+    SomeString2[2] = 'l';
+    SomeString2[3] = 'l';
+    SomeString2[4] = 'o';
+    SomeString2[5] = '\0';
 
 
     // try
@@ -286,9 +302,9 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
         }
     }
 
-    Drivers::VGA::Write("Testing sleeping (2s)...\n");
-    sleep(2);
-    Drivers::VGA::Write("Done sleeping.\n");
+    // Drivers::VGA::Write("Testing sleeping (2s)...\n");
+    // sleep(2);
+    // Drivers::VGA::Write("Done sleeping.\n");
 
 
     int* some_ptr_nonv = new int(465);
@@ -355,6 +371,22 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
         assert(some_value == 465);
         assert(some_ptr);
         assert(*some_ptr == some_value);
+
+        assert(SomeString[0] == 'H');
+        assert(SomeString[1] == 'e');
+        assert(SomeString[2] == 'l');
+        assert(SomeString[3] == 'l');
+        assert(SomeString[4] == 'o');
+        assert(SomeString[5] == '\0');
+
+        Drivers::VGA::Write("\n");
+
+        assert(SomeString2[0] == 'H');
+        assert(SomeString2[1] == 'e');
+        assert(SomeString2[2] == 'l');
+        assert(SomeString2[3] == 'l');
+        assert(SomeString2[4] == 'o');
+        assert(SomeString2[5] == '\0');
         
         while(1);
     }
@@ -362,8 +394,27 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     {
         //Drivers::VGA::Init();
         Drivers::VGA::Write("Second process running!\n");
+        while (true);
         assert(Kernel::taskLength() == 2);
         usleep(500000);
+
+        assert(SomeString[0] == 'H');
+        assert(SomeString[1] == 'e');
+        assert(SomeString[2] == 'l');
+        assert(SomeString[3] == 'l');
+        assert(SomeString[4] == 'o');
+        assert(SomeString[5] == '\0');
+
+        Drivers::VGA::Write((void*)SomeString2);
+        Drivers::VGA::Write("\n");
+
+        assert(SomeString2[0] == 'H');
+        assert(SomeString2[1] == 'e');
+        assert(SomeString2[2] == 'l');
+        assert(SomeString2[3] == 'l');
+        assert(SomeString2[4] == 'o');
+        assert(SomeString2[5] == '\0');
+
         // out << "TaskLength verified!\n";
         // out.flush();
         // Drivers::VGA::Write((void*)out.rdbuf());
@@ -402,14 +453,14 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
             //     }
             //     assert(some_array[i] == 0);
             // }
-            for (int i = 0; i < 256; ++i)
-            {
-                if (some_array[i] != 0)
-                {
-                    Drivers::VGA::Write(i);
-                    Drivers::VGA::Write("\n");
-                }
-            }
+            // for (int i = 0; i < 256; ++i)
+            // {
+            //     if (some_array[i] != 0)
+            //     {
+            //         Drivers::VGA::Write(i);
+            //         Drivers::VGA::Write("\n");
+            //     }
+            // }
         }
         // assert(some_array[0] == 0);
         // assert(some_array[255] == 0);
