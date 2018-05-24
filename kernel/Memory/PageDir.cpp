@@ -362,6 +362,21 @@ namespace Kernel { namespace Memory {
 		return (void*)(((addr_t)pg->frame())+(((addr_t)p) & 0xfff));
 	}
 
+	void* PageDirectory::getPhysicalAddress(const volatile void* const p) const noexcept
+	{
+		const auto pg = at(const_cast<const void*>(p));
+		if (!pg)
+		{
+			return nullptr;
+		}
+		if (!pg->present())
+		{
+			return nullptr;
+		}
+		
+		return (void*)(((addr_t)pg->frame())+(((addr_t)p) & 0xfff));
+	}
+
 	void PageDirectory::switch_to() noexcept
 	{
 		PageDirectory::Current = this;
@@ -387,6 +402,10 @@ namespace Kernel { namespace Memory {
 	bool PageDirectory::map(addr_t virt, addr_t phys, size_t len, bool writeable, bool kernel_only, bool overwrite) noexcept
 	{
 		bool success = true;
+		len += (virt % PAGE_SIZE);
+		virt -= (virt % PAGE_SIZE);
+		phys -= (phys % PAGE_SIZE);
+		
 		for (size_t i = 0; i < len && success; i += PAGE_SIZE)
 		{
 			auto pg = at(virt + i, true);
@@ -416,6 +435,16 @@ namespace Kernel { namespace Memory {
 			success &= pg->allocate(writeable, kernel_only);
 		}
 		return success;
+	}
+
+	bool PageDirectory::map(const void* virt, const void* phys, size_t len, bool writeable, bool kernel_only, bool overwrite) noexcept
+	{
+		return map((addr_t)virt, (addr_t)phys, len, writeable, kernel_only, overwrite);
+	}
+
+	bool PageDirectory::map(const void* virt, size_t len, bool writeable, bool kernel_only) noexcept
+	{
+		return map((addr_t)virt, len, writeable, kernel_only);
 	}
 	
 	PageDirectory::Page& PageDirectory::operator[](const void* const p) noexcept

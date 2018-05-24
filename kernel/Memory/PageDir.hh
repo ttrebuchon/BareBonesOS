@@ -282,8 +282,12 @@ namespace Kernel { namespace Memory {
 		const Table* table(const size_t) const noexcept;
 		const Table* table(const void* const) const noexcept;
 		void* getPhysicalAddress(const void* const) const noexcept;
+		void* getPhysicalAddress(const volatile void* const) const noexcept;
 		__attribute__((always_inline))
 		void* physical(const void* const p) const noexcept
+		{ return getPhysicalAddress(p); }
+		__attribute__((always_inline))
+		void* physical(const volatile void* const p) const noexcept
 		{ return getPhysicalAddress(p); }
 		void switch_to() noexcept;
 		bool flush() const noexcept;
