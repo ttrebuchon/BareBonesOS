@@ -12,6 +12,7 @@ namespace Kernel { namespace Memory
 	DumbHeap::~DumbHeap() noexcept
 	{
 		// TODO
+		assert(NOT_IMPLEMENTED);
 	}
 	
 	
@@ -31,7 +32,7 @@ namespace Kernel { namespace Memory
 			}
 			ASSERT(_placement % al == 0);
 		}
-		
+		assert(endAddr() > _placement);
 		ASSERT(endAddr() - _placement >= s);
 		void* ptr = (void*)_placement;
 		_placement += s;
