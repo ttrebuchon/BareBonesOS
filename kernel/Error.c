@@ -1,11 +1,12 @@
 #include "Error.h"
 #include <drivers/VGA.hh>
 #include <Utils/int_to_str.h>
+#include "Utility.hh"
 
 
 void __do_kernel_panic(const char* msg, const char* file, const int line, const char* function)
 {
-    asm volatile ("cli");
+    __DO_CLI__
     c_vga_write(file);
     c_vga_write("::");
     char line_str[256];
@@ -21,7 +22,12 @@ void __do_kernel_panic(const char* msg, const char* file, const int line, const 
     c_vga_write("::");
 
     c_vga_write(msg);
-
-    asm volatile("hlt");
+    #ifdef __ENV_AARCH64__
+    asm volatile ("hlt 0");
+    #elif defined(__ENV_x86__)
+    asm volatile ("hlt");
+    #else
+    #error Unknown "hlt" asm for architecture
+    #endif
     while (1) ;
 }

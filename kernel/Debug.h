@@ -37,6 +37,8 @@ inline void __ASSERT_TRUE() {}
 //Are testing
 #else
 
+#include "MetaInfo.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -47,8 +49,8 @@ extern "C" {
 
 #ifdef _TRACE
 
-#define TRACE(X) 
-#define TRACE_C(X) 
+#define TRACE(X) STACK(X)
+#define TRACE_C(X) STACK(X)
 
 #else
 

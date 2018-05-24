@@ -29,14 +29,14 @@ namespace Utils
 	
 	#if __cplusplus >= 201703L
 	#define VAR_DEF(X) \
-	inline constexpr memory_order MEM_ORD_APP(X) = memory_order::##X
+	inline constexpr memory_order MEM_ORD_APP(X) = memory_order:: X
 	
-	VAR_DEF(relaxed),
-	VAR_DEF(consume),
-	VAR_DEF(acquire),
-	VAR_DEF(release),
-	VAR_DEF(acq_rel),
-	VAR_DEF(seq_cst),
+	VAR_DEF(relaxed);
+	VAR_DEF(consume);
+	VAR_DEF(acquire);
+	VAR_DEF(release);
+	VAR_DEF(acq_rel);
+	VAR_DEF(seq_cst);
 		
 	#undef VAR_DEF
 	#endif

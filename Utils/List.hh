@@ -175,8 +175,14 @@ namespace Utils
 		void push_back(T&&);
 		template <class... Args>
 		void emplace_back(Args&&...);
-
 		size_type size() const;
+		void clear() noexcept;
+		iterator erase(iterator);
+		
+		
+		
+		List& operator=(List&&);
+		
 
 		iterator begin();
 		iterator end();

@@ -1,5 +1,6 @@
 #include "kheap.hh"
 #include "Paging.hh"
+#include "PhysicalMemory.hh"
 
 
 extern uint32_t end;
@@ -27,6 +28,7 @@ extern "C" {
         }
         else
         {
+        	Kernel::irq_guard lock;
             if (align != 0 && (kPlacement & 0xFFFFF000))
             {
                 kPlacement &= 0xFFFFF000;

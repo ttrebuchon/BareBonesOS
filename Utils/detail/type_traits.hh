@@ -2,6 +2,8 @@
 #define INCLUDED_TYPE_TRAITS_HH
 
 #include "type_traits_arithmetic.hh"
+#include "bits/decay.hh"
+#include <Utils/utility>
 
 #define _DEFINE_SPEC_BODY(_Value) : public integral_constant<bool, _Value> {};
 
@@ -310,6 +312,29 @@ namespace Utils
 	
 	
 	
+	// is_const
+	template <class T>
+	struct is_const : public integral_constant<bool, false>
+	{};
+	
+	template <class T>
+	struct is_const<const T> : public integral_constant<bool, true>
+	{};
+	
+	template <class T>
+	struct is_const<const T*> : public integral_constant<bool, true>
+	{};
+	
+	template <class T>
+	struct is_const<T* const> : public integral_constant<bool, true>
+	{};
+	
+	template <class T>
+	struct is_const<const T* const> : public integral_constant<bool, true>
+	{};
+	
+	
+	
 	// is_polymorphic
 	template <class T>
 	struct is_polymorphic : public integral_constant<bool, __is_polymorphic(T)>
@@ -322,6 +347,72 @@ namespace Utils
 	struct is_abstract : public integral_constant<bool, __is_abstract(T)>
 	{ };
 	
+	
+	
+	// remove_pointer
+	template <class T>
+	struct remove_pointer
+	{
+		typedef T type;
+	};
+	
+	template <class T>
+	struct remove_pointer<T*>
+	{
+		typedef T type;
+	};
+	
+	template <class T>
+	struct remove_pointer<T* const>
+	{
+		typedef T type;
+	};
+	
+	template <class T>
+	struct remove_pointer<T* volatile>
+	{
+		typedef T type;
+	};
+	
+	template <class T>
+	struct remove_pointer<T* const volatile>
+	{
+		typedef T type;
+	};
+	
+	
+	
+	// add_pointer
+	template <class T>
+	struct add_pointer
+	{
+		typedef T* type;
+	};
+	
+	
+	
+	// is_base_of
+	namespace detail
+	{
+		
+		template <class T, class Y>
+		struct is_base_of : __sfinae_t
+		{
+			private:
+			
+			static __one __test(const volatile T*);
+			
+			static __two __test(const volatile void*);
+			
+			public:
+			
+			constexpr static bool value = (sizeof(decltype(__test(Utils::declval<Y*>()))) == 1);
+		};
+	}
+	
+	template <class T, class Y>
+	struct is_base_of : public integral_constant<bool, detail::is_base_of<typename Utils::decay<T>::type, typename Utils::decay<Y>::type>::value>
+	{ };
 }
 
 #undef _DEFINE_SPEC

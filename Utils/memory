@@ -5,3 +5,4 @@
 #include "shared_ptr"
 #include "unique_ptr"
 #include "weak_ptr"
+#include "detail/bits/enable_shared_from_this.hh"

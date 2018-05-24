@@ -54,6 +54,7 @@ TEST(unordered_map)
 template <class K, class T, class F>
 void run_for(const int n, const int shuffles, F f)
 {
+	std::clog << std::endl << std::endl;
 	std::vector<K> positions(n);
 	for (int i = 0; i < n; ++i)
 	{

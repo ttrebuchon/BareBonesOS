@@ -112,6 +112,34 @@ namespace Utils
 	
 	
 	template <class Ret, class... Args>
+	function<Ret(Args...)>& function<Ret(Args...)>::operator=(const function& other)
+	{
+		_imp = other._imp->clone();
+		return *this;
+	}
+	
+	template <class Ret, class... Args>
+	function<Ret(Args...)>& function<Ret(Args...)>::operator=(function&& other)
+	{
+		_imp = Utils::move(other._imp);
+		return *this;
+	}
+	
+	template <class Ret, class... Args>
+	template <class Fn>
+	typename enable_if<is_same<decltype(declval<Fn>()(declval<Args>()...)), Ret>::value, function<Ret(Args...)>&>::type function<Ret(Args...)>::operator=(Fn&& other)
+	{
+		_imp = unique_ptr<Impl_t>(Impl_t::Make(forward<Fn&&>(other)));
+		return *this;
+	}
+	
+	template <class Ret, class... Args>
+	function<Ret(Args...)>::operator bool() const noexcept
+	{
+		return _imp != nullptr;
+	}
+	
+	template <class Ret, class... Args>
 	Ret function<Ret(Args...)>::operator()(Args... args) const
 	{
 		return _imp->invoke(forward<Args>(args)...);

@@ -1,0 +1,128 @@
+#ifndef INCLUDED_UNORDERED_SET_HH
+#define INCLUDED_UNORDERED_SET_HH
+
+#include <Common.h>
+#include <Utils/Compare.hh>
+#include <Utils/Allocator.hh>
+#include <Utils/Allocator_Traits.hh>
+#include "detail/hash_table.hh"
+#include "detail/hash_table.hpp"
+#include "detail/hash_table_set.hpp"
+#include "detail/selectn.hh"
+
+
+namespace Utils
+{
+	template <class T, class Hash = hash<T>, class KeyEqual = equal_to<const T>, class Alloc = Allocator<T>>
+	class unordered_set
+	{
+		public:
+		typedef T value_type;
+		typedef const T const_value_type;
+		typedef size_t size_type;
+		typedef Hash hasher;
+		typedef KeyEqual key_equal;
+		typedef Alloc allocator_type;
+		typedef value_type& reference;
+		typedef const value_type& const_reference;
+		typedef typename Allocator_Traits<allocator_type>::pointer pointer;
+		typedef typename Allocator_Traits<allocator_type>::const_pointer const_pointer;
+		
+		
+		protected:
+		
+		typedef hash_table<const_value_type, value_type, SelectIdentity, hasher, key_equal, allocator_type> Table;
+		
+		public:
+		typedef typename Table::iterator iterator;
+		typedef typename Table::const_iterator const_iterator;
+		
+		
+		protected:
+		
+		
+		Table _table;
+		public:
+		
+		unordered_set(size_type bucketCount, const hasher& hash, const key_equal& eq, const allocator_type& alloc) : _table(bucketCount, SelectIdentity(), hash, eq, alloc)
+		{}
+		
+		unordered_set(size_type bucketCount, const hasher& hash, const allocator_type& alloc) : unordered_set(bucketCount, hash, key_equal(), alloc)
+		{}
+		
+		unordered_set(size_type bucketCount, const allocator_type& alloc) : unordered_set(bucketCount, hasher(), alloc)
+		{}
+		
+		unordered_set() : unordered_set(allocator_type())
+		{
+			
+		}
+		
+		explicit unordered_set(const allocator_type& alloc) : unordered_set(10, alloc)
+		{}
+		
+		
+		
+		
+		void insert(const value_type& v)
+		{
+			_table.getCreate(v);
+		}
+		
+		size_type count(const value_type& v) const
+		{
+			return _table.get(v) != nullptr;
+		}
+		
+		size_type size() const noexcept
+		{
+			return _table.size();
+		}
+		
+		bool empty() const noexcept
+		{
+			return size() == 0;
+		}
+		
+		void clear()
+		{
+			_table.clear();
+		}
+		
+		
+		
+		
+		
+		iterator begin()
+		{
+			return _table.begin();
+		}
+		
+		iterator end()
+		{
+			return _table.end();
+		}
+		
+		const_iterator begin() const
+		{
+			return _table.begin();
+		}
+		
+		const_iterator end() const
+		{
+			return _table.end();
+		}
+		
+		const_iterator cbegin() const
+		{
+			return _table.begin();
+		}
+		
+		const_iterator cend() const
+		{
+			return _table.end();
+		}
+	};
+}
+
+#endif

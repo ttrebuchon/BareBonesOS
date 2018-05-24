@@ -30,6 +30,8 @@ namespace Utils
 		// Members
 		mutable detail::shared_ptr_control* ctrl;
 		
+		void assign(detail::shared_ptr_control*);
+		
 		
 		public:
 		constexpr weak_ptr() noexcept;
@@ -59,6 +61,9 @@ namespace Utils
 		
 		template <class>
 		friend class shared_ptr;
+		
+		template <class>
+		friend class enable_shared_from_this;
 	};
 	
 }

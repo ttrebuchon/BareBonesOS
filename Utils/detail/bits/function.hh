@@ -90,7 +90,7 @@ namespace Utils
 		function& operator=(const function&);
 		function& operator=(function&&);
 		template <class Fn>
-		function& operator=(Fn&&);
+		typename enable_if<is_same<decltype(declval<Fn>()(declval<Args>()...)), Ret>::value, function&>::type operator=(Fn&&);
 		template <class Fn>
 		function& operator=(reference_wrapper<Fn>) noexcept;
 		function& operator=(nullptr_t);

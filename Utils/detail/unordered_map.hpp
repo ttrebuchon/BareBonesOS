@@ -1,6 +1,8 @@
 #ifndef INCLUDED_UNORDERED_MAP_HPP
 #define INCLUDED_UNORDERED_MAP_HPP
 
+#include "functexcept.hh"
+
 namespace Utils
 {
 	template <class Key, class T, class Hash, class KeyEqual, class Alloc>
@@ -53,25 +55,45 @@ namespace Utils
 	template <class Key, class T, class Hash, class KeyEqual, class Alloc>
 	auto unordered_map<Key, T, Hash, KeyEqual, Alloc>::at(const key_type& k) -> mapped_type&
 	{
-		return _table.get(k)->value.second;
+		auto kv = _table.get(k);
+		if (!kv)
+		{
+			__throw_out_of_range("key not present");
+		}
+		return kv->value.second;
 	}
 	
 	template <class Key, class T, class Hash, class KeyEqual, class Alloc>
 	auto unordered_map<Key, T, Hash, KeyEqual, Alloc>::at(key_type&& k) -> mapped_type&
 	{
-		return _table.get(forward<key_type&&>(k))->value.second;
+		auto kv = _table.get(forward<key_type&&>(k));
+		if (!kv)
+		{
+			__throw_out_of_range("key not present");
+		}
+		return kv->value.second;
 	}
 	
 	template <class Key, class T, class Hash, class KeyEqual, class Alloc>
 	auto unordered_map<Key, T, Hash, KeyEqual, Alloc>::at(const key_type& k) const -> const mapped_type&
 	{
-		return _table.get(k)->value.second;
+		auto kv = _table.get(k);
+		if (!kv)
+		{
+			__throw_out_of_range("key not present");
+		}
+		return kv->value.second;
 	}
 	
 	template <class Key, class T, class Hash, class KeyEqual, class Alloc>
 	auto unordered_map<Key, T, Hash, KeyEqual, Alloc>::at(key_type&& k) const -> const mapped_type&
 	{
-		return _table.get(forward<key_type&&>(k))->value.second;
+		auto kv = _table.get(forward<key_type&&>(k));
+		if (!kv)
+		{
+			__throw_out_of_range("key not present");
+		}
+		return kv->value.second;
 	}
 	
 	
@@ -165,13 +187,54 @@ namespace Utils
 	template <class Key, class T, class Hash, class KeyEqual, class Alloc>
 	T& unordered_map<Key, T, Hash, KeyEqual, Alloc>::operator[](const key_type& k)
 	{
-		return _table.getCreate(forward<const key_type&>(k))->value.second;
+		return _table.getCreate(value_type(k, mapped_type()))->value.second;
+		auto p = _table.get(k);
+		if (p)
+		{
+			return p->value.second;
+		}
+		else
+		{
+			
+			return _table.insertValue(value_type(k, mapped_type()))->value.second;
+		}
+		//return _table.getCreate(forward<const key_type&>(k))->value.second;
 	}
 	
 	template <class Key, class T, class Hash, class KeyEqual, class Alloc>
-	T& unordered_map<Key, T, Hash, KeyEqual, Alloc>::operator[](key_type&& k)
+	T& unordered_map<Key, T, Hash, KeyEqual, Alloc>::operator[](key_type&& _k)
 	{
-		return _table.getCreate(forward<key_type&&>(k))->value.second;
+		key_type k(_k);
+		key_type k2 = k;
+		auto p = _table.get(k);
+		if (p)
+		{
+			return p->value.second;
+		}
+		else
+		{
+			auto osize = _table.size();
+			value_type vt(k, mapped_type());
+			assert(vt.first == k2);
+			return _table.insertValue(move(vt))->value.second;
+			auto n = _table.getCreate(move(vt));
+			//auto n = _table.insertValue(move(vt));
+			assert(n->value.first == k2);
+			assert(k == k2);
+			assert(_table.size() == osize+1);
+			assert(n);
+			assert(n->value.first == k);
+			if (hasher()(k) != 0)
+			{
+				assert(n->code != 0);
+			}
+			assert(n->code == hasher()(n->value.first));
+			assert(n->code == hasher()(k));
+			assert(_table.get(k) != nullptr);
+			assert(_table.get(k) == n);
+			return n->value.second;
+		}
+		//return _table.getCreate(forward<key_type&&>(k))->value.second;
 	}
 	
 	template <class Key, class T, class Hash, class KeyEqual, class Alloc>

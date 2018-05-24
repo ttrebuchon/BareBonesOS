@@ -63,10 +63,13 @@ namespace Utils
 		}
 		
 		constexpr pair(const pair&) = default;
-		pair(pair&&) = default;
+		pair(pair&& p) : first(move(p.first)), second(move(p.second))
+		{
+			
+		}
 		
 		template <class Arg1, class Arg2>
-		pair(Arg1&& a1, Arg2&& a2) : first(forward<Arg1>(a1)), second(forward<Arg2>(a2))
+		pair(Arg1&& a1, Arg2&& a2) : first(forward<Arg1&&>(a1)), second(forward<Arg2&&>(a2))
 		{}
 		
 		template <class U, class V>
@@ -74,7 +77,7 @@ namespace Utils
 		{ }
 		
 		template <class U, class V>
-		pair(pair<U, V>&& p) : first(move(p.first)), second(move(p.second))
+		pair(pair<U, V>&& p) : first(forward<U&&>(move(p.first))), second(forward<V&&>(move(p.second)))
 		{ }
 		
 		pair(const T1& f, const T2& s) : first(f), second(s)
@@ -84,7 +87,33 @@ namespace Utils
 		
 		template <class... Args1, class... Args2>
 		pair(piecewise_construct_t, tuple<Args1...> a, tuple<Args2...> b) : first(__constr<T1>(move(a))), second(__constr<T2>(move(b)))
-		{ }
+		{
+			
+		}
+		
+		pair& operator=(const pair&);
+		template <class U, class V>
+		pair& operator=(const pair<U, V>&);
+		pair& operator=(pair&&);
+		template <class U, class V>
+		pair& operator=(pair<U, V>&&);
+		
+	};
+	
+	
+	template <class T>
+	struct equal_to;
+	
+	template <class T1, class T2>
+	struct equal_to<pair<T1, T2>>
+	{
+		equal_to<T1> left;
+		equal_to<T2> right;
+		
+		bool operator()(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs)
+		{
+			return left(lhs.first, rhs.first) && right(lhs.second, rhs.second);
+		}
 	};
 }
 

@@ -1,6 +1,7 @@
 #include "MetaInfo.h"
 #include "MetaInfo.hh"
 #include "utils/int_to_str.h"
+#include <Std/string.h>
 
 #define PRINT_COUNT 256
 
@@ -82,6 +83,14 @@ void __stack_info_func(const char* file, const int line, const char* func, const
 		printers[i].printer->print(intArr);
 		printers[i].printer->print("::");
 		printers[i].printer->print(func);
+		if (msg)
+		{
+			if (::strlen(msg) > 0)
+			{
+				printers[i].printer->print("::");
+				printers[i].printer->print(msg);
+			}
+		}
 		printers[i].printer->print("\n");
 	}
 }

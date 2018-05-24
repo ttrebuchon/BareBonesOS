@@ -30,10 +30,10 @@ namespace Utils
 	logic_error::logic_error(const char* s) : _msg(new string(s))
 	{}
 	
-	logic_error::logic_error(const logic_error& e) throw() : _msg(e._msg ? new string(*e._msg) : nullptr)
+	logic_error::logic_error(const logic_error& e) : _msg(e._msg ? new string(*e._msg) : nullptr)
 	{}
 	
-	logic_error::~logic_error() throw()
+	logic_error::~logic_error()
 	{
 		if (_msg)
 		{
@@ -41,7 +41,7 @@ namespace Utils
 		}
 	}
 	
-	const char* logic_error::what() const throw()
+	const char* logic_error::what() const
 	{
 		return _msg->c_str();
 	}
@@ -51,12 +51,12 @@ namespace Utils
 	
 	void __throw_length_error(const char* s __attribute__((unused)))
 	{
-		_GLIBCXX_THROW_OR_ABORT(length_error(_(s)));
+		__THROW_OR_ABORT(length_error(_(s)));
 	}
 	
 	void __throw_out_of_range(const char* s __attribute__((unused)))
 	{
-		_GLIBCXX_THROW_OR_ABORT(out_of_range(_(s)));
+		__THROW_OR_ABORT(out_of_range(_(s)));
 	}
 	
 }

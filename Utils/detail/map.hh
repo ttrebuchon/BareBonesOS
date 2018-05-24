@@ -271,6 +271,9 @@ namespace Utils
 		const mapped_type& at(const key_type&) const;
 		const mapped_type& at(key_type&&) const;
 		size_type count(const key_type&) const noexcept;
+		iterator erase(const_iterator pos);
+		size_type erase(const key_type&);
+		iterator erase(const_iterator first, const_iterator last);
 		void clear();
 		
 		
