@@ -19,7 +19,7 @@ class SystemResource;
 class Task
 {
 	public:
-	static Task* current_task;
+	static Task* volatile current_task;
 	
 	int id;
 	addr_t esp, ebp;

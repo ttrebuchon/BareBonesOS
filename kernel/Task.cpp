@@ -16,7 +16,7 @@ namespace Kernel {
 
 static void add_to_queue(Task*);
 
-Task* Task::current_task = nullptr;
+Task* volatile Task::current_task = nullptr;
 uint32_t next_pid = 1;
 Utils::List<Task*>* tasks = nullptr;
 Utils::List<Task*>::iterator task_iterator;
@@ -92,24 +92,26 @@ void init_tasking()
 	//move_stack((void*)0xE0000000, 0x2000);
 	Drivers::VGA::Write("Stack moved.\n");
 	
+	Task* new_task = new Task;
 	
-	Task::current_task = new Task;
 	
-	Task::current_task->id = next_pid++;
-	Task::current_task->ebp = Task::current_task->esp = 0;
-	Task::current_task->instr_ptr = 0;
-	Task::current_task->page_dir = Memory::PageDirectory::Current;
+	new_task->id = next_pid++;
+	new_task->ebp = Task::current_task->esp = 0;
+	new_task->instr_ptr = 0;
+	new_task->page_dir = Memory::PageDirectory::Current;
 
 	tasks = new Utils::List<Task*>();
-	tasks->push_back(Task::current_task);
+	tasks->push_back(new_task);
 	task_iterator = tasks->begin();
+	Task::current_task = new_task;
 	
 	asm volatile ("sti");
 }
 
 static Task* volatile prev_caller = nullptr;
 
-int __fork()
+extern "C"
+int fork()
 {
 	if (!Task::current_task) return -1;
 	asm volatile ("cli");
@@ -117,66 +119,83 @@ int __fork()
 	assert(Memory::PageDirectory::Current != Memory::kernel_dir);
 	
 	Task* caller = Task::current_task;
-	prev_caller = caller;
 	Memory::PageDirectory* new_dir = Memory::PageDirectory::Current->clone(Memory::kernel_dir);
 	
 	
 	
-	Task* volatile newT = new Task;
+	Task* newT = new Task;
 	newT->id = next_pid++;
 	newT->page_dir = new_dir;
+	newT->esp = newT->ebp = 0;
+	newT->instr_ptr = 0;
 
 	tasks->push_back((Task*)newT);
+
+	addr_t esp;
+	addr_t ebp;
 	
-	volatile addr_t eip = read_eip();
-	
-	if (Task::current_task == prev_caller)
+	addr_t eip = read_eip();
+	asm volatile("mov %%esp, %0" : "=m"(esp));
+	asm volatile("mov %%ebp, %0" : "=m"(ebp));
+	if (Task::current_task == caller)
 	{
-		prev_caller = nullptr;
-		addr_t esp; asm volatile("mov %%esp, %0" : "=r"(esp));
-		addr_t ebp; asm volatile("mov %%ebp, %0" : "=r"(ebp));
+		// addr_t esp; asm volatile("mov %%esp, %0" : "=r"(esp));
+		// addr_t ebp; asm volatile("mov %%ebp, %0" : "=r"(ebp));
+		//asm volatile("mov %%esp, %0" : "=r"(esp));
+		//asm volatile("mov %%ebp, %0" : "=r"(ebp));
+		// assert(Task::current_task->id == 1);
 		newT->esp = esp;
 		newT->ebp = ebp;
 		newT->instr_ptr = eip;
+		// TRACE("ORIGINAL EXITING");
 		asm volatile ("sti");
-
 		return newT->id;
 	}
 	else
 	{
-		volatile int y = 8;
-		y = 0;
-		return y;
-	}
-}
-
-int fork()
-{
-	Task* volatile caller = Task::current_task;
-	volatile int x = 0;
-	x = __fork();
-	if (x == 0 || Task::current_task != caller)
-	{
 		return 0;
 	}
-	return x;
+	
+	
+	// asm volatile ("cli");
+	// TRACE("CREATED EXITING");
+	// return 0;
 }
+
+// extern "C"
+// int fork()
+// {
+// 	// Task* volatile caller = Task::current_task;
+// 	// volatile int x = 0;
+// 	// x = __fork();
+// 	// if (x == 0)
+// 	// {
+// 	// 	assert(Task::current_task != caller);
+// 	// 	return 0;
+// 	// }
+// 	// assert(Task::current_task == caller);
+// 	// return x;
+// 	return __fork();
+// }
 
 extern "C" void task_switch()
 {
 	if (!Task::current_task) return;
+	if (tasks->size() == 1)
+	{
+		return;
+	}
 
 	addr_t esp, ebp, eip, dir_phys;
 	asm volatile ("mov %%esp, %0" : "=r"(esp));
 	asm volatile ("mov %%ebp, %0" : "=r"(ebp));
 
-	dir_phys = reinterpret_cast<addr_t>(Memory::PageDirectory::Current->thisPhysical());
+	
 
 	eip = read_eip();
 	if (eip == 0x12345) return;
 
-	asm volatile ("mov %%esp, %0" : "=r"(esp));
-	asm volatile ("mov %%ebp, %0" : "=r"(ebp));
+	
 
 	Task::current_task->instr_ptr = eip;
 	Task::current_task->ebp = ebp;
@@ -187,17 +206,17 @@ extern "C" void task_switch()
 	{
 		task_iterator = tasks->begin();
 	}
-	if (task_iterator == tasks->end())
-	{
-		return;
-	}
 	Task::current_task = *task_iterator;
 
+	eip = Task::current_task->instr_ptr;
 	esp = Task::current_task->esp;
 	ebp = Task::current_task->ebp;
 
 	Memory::PageDirectory::Current = Task::current_task->page_dir;
 	dir_phys = reinterpret_cast<addr_t>(Memory::PageDirectory::Current->thisPhysical());
+
+
+
 
 	asm volatile("\
 	cli; \
