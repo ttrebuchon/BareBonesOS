@@ -120,8 +120,8 @@ C_END
 #endif
 
 #if !defined(TESTING) && !defined(FREE_TESTING)
-	#define __DO_CLI__ __CLI__
-	#define __DO_STI__ __STI__
+	#define __DO_CLI__ __CLI__;
+	#define __DO_STI__ __STI__;
 #else
 	#define __DO_CLI__
 	#define __DO_STI__ 
