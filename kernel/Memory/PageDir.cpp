@@ -311,6 +311,7 @@ namespace Kernel { namespace Memory {
 	PageDirectory::Table* PageDirectory::table(const void* const p, bool create) noexcept
 	{
 		const size_t n = GetTableIndex(p);
+		assert(n < 1024);
 		if (!tables[n])
 		{
 			if (!create)
@@ -455,7 +456,18 @@ namespace Kernel { namespace Memory {
 			if (lnkTbl)
 			{
 				**dest->table(i, true) = **lnkTbl;
+				
+
+				auto dest_table = dest->table(i);
+
+				for (int j = 0; j < 1024; ++j)
+				{
+					dest_table->pages[j].page = lnkTbl->pages[j].page;
+					assert(dest->table(i)->pages[j].page == linkWith->table(i)->pages[j].page);
+				}
+
 				assert(dest->dir->tables[i].frame == linkWith->dir->tables[i].frame);
+				assert(dest->table(i)->pages[0].page == linkWith->table(i)->pages[0].page);
 			}
 			else
 			{
@@ -704,7 +716,7 @@ namespace Kernel { namespace Memory {
 	
 	bool PageDirectory::Page::present() const noexcept
 	{
-		return page->present;
+		return page->present == 1;
 	}
 	
 	void PageDirectory::Page::present(bool b) noexcept
