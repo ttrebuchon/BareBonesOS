@@ -89,6 +89,19 @@ namespace Utils
 			_table.clear();
 		}
 		
+		iterator erase(const_iterator);
+		iterator erase(const_iterator first, const_iterator last);
+		size_type erase(const value_type& v)
+		{
+			auto n = _table.get(v);
+			if (n)
+			{
+				return _table.deleteNode(n) ? 1 : 0;
+			}
+			
+			return 0;
+		}
+		
 		
 		
 		

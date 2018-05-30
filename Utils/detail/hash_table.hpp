@@ -504,6 +504,31 @@ namespace Utils
 		return node;*/
 	}
 	
+	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy, template <class...> class Resolution>
+	bool hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy, Resolution>::deleteNode(_VNode* n)
+	{
+		assert(n);
+		auto index = bucketIndex(n->code);
+		auto n_prev = buckets[index];
+		
+		
+		
+		while (next(n_prev) != n)
+		{
+			n_prev = next(n_prev);
+			if (!next(n_prev))
+			{
+				return false;
+			}
+		}
+		
+		auto n_next = next(n);
+		next(n_prev) = n_next;
+		--elemCount;
+		this->deallocate_node(nalloc, n);
+		return true;
+	}
+	
 	
 	
 	
