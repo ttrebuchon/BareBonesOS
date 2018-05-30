@@ -9,6 +9,7 @@
 *.pp
 *.asm.out.s
 *.optimized
+*.asm_out
 
 #Compiled Resource Files
 initrd.img
