@@ -49,7 +49,7 @@ extern "C" {
 	
 }
 	
-	#ifndef FREE_TESTING
+	
 	// Write directly to the file, ignoring
 	// buffer even if present
 	static int directWrite(File* p, const void* zBuf, int size, sqlite3_int64 offset)
@@ -495,6 +495,6 @@ extern "C" {
 		return &vfs;
 	}
 	
-	#endif
+	
 }
 }
