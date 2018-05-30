@@ -1,4 +1,6 @@
+rwildcard=$(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2) $(filter $(subst *,%,$2),$d))
 
+GET_SRC_R = $(call rwildcard,../$1/,*.$2)
 
 GET_SRC = $(wildcard ../$1/*.cpp ../$1/*.c)
 
@@ -14,6 +16,9 @@ SRC += ../kernel/Interrupts/Interrupts_cpp.cpp
 SRC += ../boot/MultiBoot.cpp
 SRC += $(call GET_SRC,kernel/Memory/Managers)
 SRC += ../kernel/Scheduling/context.cpp
+SRC += $(call GET_SRC_R,Utils,cpp)
+SRC += ../kernel/Registers.cpp
+SRC += ../kernel/scheduling/thread.cpp
 
 ASM_SRC = ../kernel/Utility_asm.asm
 ASM_OBJS = $(ASM_SRC:.asm=.o)
@@ -32,6 +37,12 @@ TESTS = $(TESTS_SRC:.cpp=.o) $(TESTS_SRC_C:.c=.o)
 
 
 
+SHARED_LIB = SharedLib_Test
+SHARED_LIB_NAME = Shared
+SHARED_LIB_TARGET = $(SHARED_LIB)/lib$(SHARED_LIB_NAME).so
+SHARED_LIB_SRC = $(wildcard $(SHARED_LIB)/*.cpp)
+SHARED_LIB_OBJS = $(SHARED_LIB_SRC:.cpp=.o)
+
 
 
 
@@ -42,23 +53,29 @@ BOTH_FLAGS += -DTESTING
 BOTH_FLAGS += -DSTACK_INFO_V
 BOTH_FLAGS += -I../Libraries
 BOTH_FLAGS += -I../../CppUtilities
-BOTH_FLAGS += -Wfatal-errors
-BOTH_FLAGS += -fmax-errors=5
+BOTH_FLAGS += #-Wfatal-errors
+BOTH_FLAGS += #-fmax-errors=5
+BOTH_FLAGS += -fmax-errors=1
 BOTH_FLAGS += #-DINCLUDED_DEBUG_H_ENABLED
 BOTH_FLAGS += #-D"kassert(x)"="assert(x)"
 BOTH_FLAGS += -DDEBUG #-DDEBUG_VERIFY
 BOTH_FLAGS += #-DTRACK_ALLOC
+BOTH_FLAGS += -DDEBUG_TRACK_QUERY
 BOTH_FLAGS += -D__USE_STD_NEW__
 BOTH_FLAGS += -DIGNORE_PORT_IO
+BOTH_FLAGS += -D_TRACE
+BOTH_FLAGS += -fPIC
+BOTH_FLAGS += -pie
+BOTH_FLAGS += -D"throw(...)"=""
 
 BOTH_FLAGS += $(SQLITE_FLAGS)
 
 SQLITE_FLAGS += -DSQLITE_THREADSAFE=0
 SQLITE_FLAGS += -DSQLITE_OMIT_LOAD_EXTENSION
-SQLITE_FLAGS += -DSQLITE_OS_OTHER=1
+SQLITE_FLAGS += #-DSQLITE_OS_OTHER=1
 SQLITE_FLAGS += -DSQLITE_TEMP_STORE=3
 
-BASE_CXXFLAGS += -std=c++14 -I.. #-ffreestanding -DDEBUG 
+BASE_CXXFLAGS += -std=c++17 -I.. #-ffreestanding -DDEBUG 
 #BASE_CXXFLAGS += -DINCLUDED_NEW_HH
 BASE_CXXFLAGS += $(BOTH_FLAGS)
 
@@ -91,14 +108,13 @@ ASM_OUT_SUFFIX = .asm.out.s
 
 
 OTHER_OUT = $(PREPROC_OUT)
-OPTIM_OUT = $(OBJS:.o=.cpp.227t.optimized) $(TESTS:.o=.cpp.227t.optimized) $(TESTSLIB:.o=.cpp.227t.optimized)
 
 
 CXX_F = $(word 1,$(CXX))
 CC_F = $(word 1,$(CC))
 
 
-all: .fake $(OTHER_OUT) Test.out
+all: .fake $(OTHER_OUT) Test.out $(SHARED_LIB_TARGET)
 
 clean: 
 	-@rm -f $(OTHER_OUT)
@@ -121,8 +137,6 @@ clean:
 	@echo '$$TESTSLIB = ' $(call LASTPARTS,$(TESTSLIB))
 	@echo '  '
 	@echo '$$DEPS = ' $(call LASTPARTS,$(DEPS))
-	@echo '  '
-	@echo '$$OPTIM_OUT = ' $(call LASTPARTS,$(OPTIM_OUT))
 	@echo '  '
 	@echo '$$CXXFLAGS = ' $(CXXFLAGS)
 	@echo ' '
@@ -176,9 +190,13 @@ TestUtils/MemTracker.o: TestUtils/MemTracker.cpp TestUtils/MemTracker.hh Makefil
 Main.o: Main.cpp Makefile
 	@echo ' '
 	@echo $(CXX_F) $(call LASTPART,$<) ' > ' $(call LASTPART,$@)
-	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
 	@echo ' '
 
 
 $(PREPROC_OUT): $(PREPROC_GET)
 	$(CXX) $(CXXFLAGS) -o $@ -E $^
+
+
+$(SHARED_LIB_TARGET): $(SHARED_LIB_OBJS)
+	$(CXX) $(CXXFLAGS) -shared -o $@ $<

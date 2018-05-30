@@ -329,6 +329,66 @@ static void do_tests(const int n, const std::vector<int>& positions, F f)
 	}
 	
 	
+	
+	/*std::clog << "--------------\n" << std::endl;
+	{
+		map<int, long> m;
+		const map<int, long>& mc = m;
+		
+		for (int i = 0; i < n; ++i)
+		{
+			m[positions.at(i)] = i;
+		}
+		
+		ASSERTEQ(m.size(), n);
+		
+		map<int, long> m2 = m;
+		const map<int, long>& mc2 = m2;
+		
+		for (int i = 0; i < n; ++i)
+		{
+			ASSERTEQ(mc.count(positions.at(i)), 1);
+			ASSERTEQ(m.count(positions.at(i)), 1);
+			ASSERTEQ(mc.at(positions.at(i)), i);
+			ASSERTEQ(m.erase(positions.at(i)), 1);
+			
+			ASSERTEQ(mc.count(positions.at(i)), 0);
+			ASSERTEQ(m.count(positions.at(i)), 0);
+		}
+		
+		ASSERTEQ(m.size(), 0);
+		ASSERTEQ(mc.size(), 0);
+		
+		
+		
+		for (int i = 0; i < n; ++i)
+		{
+			ASSERTEQ(mc2.count(positions.at(i)), 1);
+			ASSERTEQ(m2.count(positions.at(i)), 1);
+			ASSERTEQ(mc2.at(positions.at(i)), i);
+		}
+		
+		for (int i = 0; i < n; ++i)
+		{
+			m2[positions.at(i)] = 100 - i;
+		}
+		
+		for (int i = 0; i < n; ++i)
+		{
+			ASSERTEQ(mc2.count(positions.at(i)), 1);
+			ASSERTEQ(m2.count(positions.at(i)), 1);
+			ASSERTEQ(mc2.at(positions.at(i)), 100 - i);
+		}
+		
+		
+		
+		for (auto it = m2.begin(); it != m2.end(); ++it)
+		{
+			
+		}
+	}*/
+	
+	
 	{
 		map<int, long> m;
 		for (int i = 0; i < n; ++i)

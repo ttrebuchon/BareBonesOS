@@ -3,8 +3,15 @@
 #include <kernel/MetaInfo.hh>
 #include <boot/multiboot.h>
 
+#define MAC(X) TEST(X)
+#define CMAC(X) CTEST(X)
 
-TEST(List);
+#include "Tests.inc"
+
+#undef MAC
+#undef CMAC
+
+/*TEST(List);
 CTEST(Bitset);
 TEST(Bitset);
 TEST(IDE);
@@ -24,7 +31,24 @@ TEST(list_vector);
 CTEST(FileDescriptors);
 TEST(queue);
 TEST(PhysicalMemory);
-TEST(context);
+TEST(context);*/
+TEST(mutex);
+
+
+#ifdef __EXCEPTIONS
+#include <Utils/exception>
+#endif
+
+
+
+//#define SQLITE_DB "SomeDB.sqlite"
+
+#ifndef SQLITE_DB
+#define SQLITE_DB ":memory:"
+#endif
+
+
+const char* sqlite_out_db = SQLITE_DB;
 
 
 
@@ -78,8 +102,22 @@ int main()
 	auto mi_pr = new MetaInfo::ClassPrinter<MI_Printer, void>(pr, &MI_Printer::write);
 	MetaInfo::registerPrinter(mi_pr);
 	
+	#ifdef __EXCEPTIONS
+	try
+	{
+	#endif
 	
-	RUN(context);
+	#define MAC(X) RUN(X)
+	#define CMAC(X) RUNC(X)
+	
+	RUN_NO_TRACK_ALLOC(mutex);
+	#include "Tests.inc"
+	
+	#undef MAC
+	#undef CMAC
+	
+	
+	/*RUN(context);
 	RUN(IOSTREAM);
 	//RUN(map);
 	RUN(List);
@@ -102,6 +140,25 @@ int main()
 	RUNC(FileDescriptors);
 	RUN(queue);
 	RUN(PhysicalMemory);
+	RUN(reflect);*/
+	
+	#ifdef __EXCEPTIONS
+	}
+	catch (std::exception& ex)
+	{
+		std::cerr << ex.what() << std::endl;
+		throw;
+	}
+	catch (Utils::exception& ex)
+	{
+		std::cerr << ex.what() << std::endl;
+		throw;
+	}
+	catch (...)
+	{
+		throw;
+	}
+	#endif
 	
 	std::cerr << "\n\n\nAll Done!\n" << std::flush;
 }
