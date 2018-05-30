@@ -1,0 +1,12 @@
+#include "Type.hh"
+#include "Properties.hh"
+#include "Primitive.hh"
+#include "TypeSystem.hh"
+#include "ModelBuilder.hh"
+#include "TypeModel.hh"
+#include "Linker.hh"
+#include "BaseType.hh"
+
+#include "Properties.hpp"
+#include "ModelBuilder.hpp"
+#include "TypeModel.hpp"
