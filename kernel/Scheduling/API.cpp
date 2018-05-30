@@ -3,11 +3,11 @@
 extern "C" {
 	
 	
-	int sched_yield()
-	{
-		// TODO
-		assert(false);
-	}
+	// int sched_yield()
+	// {
+	// 	// TODO
+	// 	assert(false);
+	// }
 	
 	
 }

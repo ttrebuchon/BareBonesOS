@@ -1,6 +1,7 @@
 #ifndef INCLUDED_PAGING_H
 #define INCLUDED_PAGING_H
 
+#include <Common.h>
 #include <kernel/c_cpp.h>
 #include <stdint.h>
 #include <kernel/Registers.h>

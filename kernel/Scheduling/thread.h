@@ -3,6 +3,7 @@
 
 #include <Common.h>
 #include "context.h"
+#include "API.h"
 
 #ifdef __cplusplus
 

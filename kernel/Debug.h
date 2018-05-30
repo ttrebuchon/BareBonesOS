@@ -19,13 +19,19 @@ inline void __ASSERT_TRUE() {}
 
 #ifdef _TRACE
 
-#define TRACE(X) do { ::Drivers::VGA::Write(__FILE__"::"); ::Drivers::VGA::Write((uint32_t)__LINE__); ::Drivers::VGA::Write("::"); ::Drivers::VGA::Write(__func__); ::Drivers::VGA::Write("::"); ::Drivers::VGA::Write(X); ::Drivers::VGA::Write("\n"); } while (false)
-#define TRACE_C(X) c_vga_write(X)
+    #ifdef __cplusplus
+
+        #define TRACE(X) do { ::Drivers::VGA::Write(__FILE__"::"); ::Drivers::VGA::Write((uint32_t)__LINE__); ::Drivers::VGA::Write("::"); ::Drivers::VGA::Write(__func__); ::Drivers::VGA::Write("::"); ::Drivers::VGA::Write(X); ::Drivers::VGA::Write("\n"); } while (false)
+
+    #else
+
+        #define TRACE(X) c_vga_write(X)
+
+    #endif
 
 #else
 
 #define TRACE(X) 
-#define TRACE_C(X) 
 
 #endif
 
@@ -50,12 +56,10 @@ extern "C" {
 #ifdef _TRACE
 
 #define TRACE(X) STACK(X)
-#define TRACE_C(X) STACK(X)
 
 #else
 
 #define TRACE(X) 
-#define TRACE_C(X) 
 
 #endif
 

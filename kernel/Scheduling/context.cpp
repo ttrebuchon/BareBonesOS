@@ -1,12 +1,17 @@
 #include "context.h"
 #include <kernel/Utility.hh>
 #include <Utils/math>
+#include <kernel/Registers.h>
 
-
+extern "C" void thread_entry_asm();
 
 namespace Kernel
 {
 extern "C" {
+
+	extern "C" void __save_x86_registers(registers_t, registers_t*);
+	extern "C" void save_x86_registers(registers_t*);
+
 	
 	void __save_context_store(volatile context_t*, void*, void*, void*);
 	
@@ -25,18 +30,23 @@ extern "C" {
 		
 		registers_t regs = const_cast<const context_t*>(c)->registers;
 		//register_copy(&c->registers, &regs); //= c->registers;
+
+		__sync_synchronize();
 		
 		if (destr)
 		{
 			destr(c);
 		}
 		
+		register_t rx0 = regs.*register_pointers::r0;// regs.x0;
+		register_t rx1 = regs.*register_pointers::r1;// regs.x1;
+
+		__sync_synchronize();
 		
 		#ifdef __ENV_AARCH64__
 		
 		
-		register_t rx0 = regs.*register_pointers::r0;// regs.x0;
-		register_t rx1 = regs.*register_pointers::r1;// regs.x1;
+		
 		
 		asm volatile("\
 		mov SP, %0; \
@@ -49,13 +59,13 @@ extern "C" {
 		
 		#elif defined(__ENV_x86__)
 		
-		asm volatile(" \
-		mov %0, %%esp; \
-		mov %1, %%ebp; \
-		mov %2, %%ecx; \
-		mov %4, %%ebx; \
-		mov %3, %%eax; \
-		jmp *(%%ecx);  \
+		asm volatile(" \n\
+		mov %0, %%esp; \n\
+		mov %1, %%ebp; \n\
+		mov %2, %%ecx; \n\
+		mov %4, %%ebx; \n\
+		mov %3, %%eax; \n\
+		jmp *%%ecx; \n\
 		NOP" : : "r"(esp), "r"(ebp), "r"(eip), "r"(rx0), "r"(rx1));
 
 		
@@ -194,6 +204,8 @@ extern "C" {
 		ASM_READ_EBP(c->ip);
 		c->stack.fp = ((void**)c->ip)[0];
 		c->ip = ((void**)c->ip)[1];
+		save_x86_registers(const_cast<registers_t*>(&c->registers));
+
 
 		
 		#else
@@ -202,9 +214,12 @@ extern "C" {
 		
 		#endif
 		
+		c->registers.*register_pointers::r0 = 1;
+		
 		// Need to call some function
-		// in this function in order for 		// generated asm to store frame and
-		//link registers to the stack
+		// in this function in order for
+		// generated asm to store frame and
+		// link registers to the stack
 		save_context_dummy();
 		return 0;
 	}
@@ -213,6 +228,12 @@ extern "C" {
 	void __save_context_store(volatile context_t* c, void* ip, void* fp, void* sp)
 	{
 		c->ip = ip;
+	}
+
+	void __save_x86_registers(registers_t regs, registers_t* ptr)
+	{
+		assert(ptr != nullptr);
+		*ptr = regs;
 	}
 }
 }

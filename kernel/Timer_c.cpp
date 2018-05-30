@@ -7,22 +7,31 @@
 
 #define DEFAULT_FREQ 1193180
 
+extern "C" {
+
 volatile uint32_t sleep_for = 0;
 static volatile uint32_t current_freq = DEFAULT_FREQ;
 volatile uint32_t ticks = 0;
 
 void task_switch();
 extern void __sleep();
+void scheduler_hook();
 
 static void timer_callback(Registers_t regs)
 {
+	//TRACE("Timer_Callback()!");
+	//TRACE((unsigned long long)ticks);
 	++ticks;
 	sleep_for > 0 ? --sleep_for : 0;
 	if (ticks % 100 == 0)
 	{
-		task_switch();
+		//task_switch();
 	}
-	
+	else if (ticks % 10 == 0)
+	{
+		scheduler_hook();
+	}
+	//TRACE("Timer_Callback() Exit!");
 }
 
 
@@ -32,6 +41,8 @@ void init_timer(uint32_t freq)
 	register_interrupt_handler(IRQ0, &timer_callback);
 	
 	uint32_t div = DEFAULT_FREQ / freq;
+
+	assert(div > 0);
 	
 	port_byte_out(0x43, 0x36);
 	
@@ -70,12 +81,12 @@ unsigned int sleep(unsigned int secs)
 		asm volatile ("PAUSE");
 		#endif
 		//cli();
-		if (++cycles == 100000)
-		{
-			cycles = 0;
-			assert(sleep_for < last);
-			last = sleep_for;
-		}
+		// if (++cycles == 10000000)
+		// {
+		// 	cycles = 0;
+		// 	assert(sleep_for < last);
+		// 	last = sleep_for;
+		// }
 	}
 	//sti();
 	return 0;
@@ -107,3 +118,4 @@ int usleep(useconds_t microseconds)
 	return 0;
 }
 
+}

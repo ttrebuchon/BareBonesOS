@@ -29,6 +29,7 @@ ASM_SRC_ASM = $(call GET_SRC,kernel,asm) $(call GET_SRC,drivers,asm)
 HDD2 = Dummy.img
 HDD2_GEN = Tools/Dummy_Img/Main.out
 HDD2_SRC = $(wildcard Tools/Dummy_Img/*.cpp)
+ASM_OUT_SUFFIX = .asm_out
 
 C_OBJS = $(C_SRC:.c=.o)
 _CPP_OBJS = $(CPP_SRC:.cpp=.o)
@@ -125,10 +126,11 @@ myos.bin: $(BOOT_OBJS) $(CRTBEGIN_OBJ) $(CPP_OBJS) $(C_OBJS) $(ASM_OBJS) $(CRTEN
 
 %.o: %.cpp
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
+	$(CXX) $(CXX_FLAGS) -o $(@:.o=$(ASM_OUT_SUFFIX)) -S $<
 
 kernel/Task.o: kernel/Task.cpp
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
-	$(CXX) $(CXX_FLAGS) -S $< -o kernel/Task.asm.out
+	$(CXX) $(CXX_FLAGS) -S $< -o $(@:.o=$(ASM_OUT_SUFFIX))
 
 %.o: %.cc
 	$(CXX) $(CXX_FLAGS) -c $< -o $@

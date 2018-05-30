@@ -1,15 +1,16 @@
 #ifndef INCLUDED_REGISTERS_H
 #define INCLUDED_REGISTERS_H
 
+#include <kernel/c_cpp.h>
 #include <stdint.h>
-#include <Common.h>
+#include <Types.h>
 #include <Env.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct
+typedef struct __Registers
 {
     uint32_t ds;
     uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax;

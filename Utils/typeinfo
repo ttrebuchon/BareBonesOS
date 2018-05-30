@@ -1,7 +1,11 @@
 #ifndef INCLUDED_TYPEINFO
 #define INCLUDED_TYPEINFO
 
+#ifdef TESTING
 #include <typeinfo>
+#else
+#include <Libraries/libcxxrt/typeinfo.h>
+#endif
 
 namespace Utils
 {

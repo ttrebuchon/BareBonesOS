@@ -1,3 +1,6 @@
+#ifdef __cpp_rtti
+
+
 #include "TypeSystem.hh"
 
 namespace Utils { namespace experimental {
@@ -24,3 +27,5 @@ namespace reflect
 }
 }
 }
+
+#endif

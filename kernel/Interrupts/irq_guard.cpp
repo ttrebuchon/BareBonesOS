@@ -5,9 +5,10 @@ namespace Kernel { namespace Interrupts
 {
 	
 	
-	irq_guard::irq_guard() noexcept : guarded(true)
+	irq_guard::irq_guard() noexcept : guarded(false)
 	{
 		cli();
+		guarded = true;
 	}
 	
 	irq_guard::irq_guard(irq_guard&& o) noexcept : guarded(o.guarded)
@@ -21,6 +22,7 @@ namespace Kernel { namespace Interrupts
 		{
 			guarded = false;
 			sti();
+			
 		}
 	}
 }

@@ -84,6 +84,7 @@ namespace Drivers
         {
             PutChar(cstr[i]);
         }
+        
     }
 
     void VGA::Write(const unsigned char* cstr)

@@ -28,6 +28,8 @@
 #include <Utils/iostream>
 #include <boot/MultiBoot.hh>
 
+#include <kernel/Scheduling/context.h>
+#include <kernel/Scheduling/thread.h>
 
 #if !defined(__cplusplus)
 #include <stdbool.h>
@@ -106,12 +108,13 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     
     Drivers::VGA::Init();
     Drivers::VGA::Write("GDT Written\n");
-    Kernel::Interrupts::sti();
+    
     Drivers::VGA::Write("Initializing IDT...\n");
     Kernel::Interrupts::init_idt();
     Drivers::VGA::Write("IDT Initialized.\n");
     Drivers::VGA::Write("Initializing timer...\n");
     init_timer(500);
+    //init_timer(5000);
     Drivers::VGA::Write("Timer initialized.\n");
     ASSERT(init_esp != 0);
     ASSERT(mboot_ptr != 0);
@@ -124,6 +127,8 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     // ASSERT(false);
     Kernel::init_tasking();
     Drivers::VGA::Write("Tasking initialized.\n");
+    Kernel::init_kernel_threads();
+    Drivers::VGA::Write("Threads initialized.\n");
 
     Drivers::VGA::Write("Hello, kernel world!\nThis is a test.\n");
 
@@ -137,13 +142,29 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     ASSERT(b == 33554432);
 
 
+
+
+
+    // Ensure interrupts are enabled, they were left off during initialization
+    while (Kernel::Interrupts::block_interrupt_counter() > 0)
+    {
+        Kernel::Interrupts::sti();
+    }
+    asm volatile ("sti");
+
+
+
+
+
+
+
+
     Drivers::VGAStreamBuf* vgaBuf = new Drivers::VGAStreamBuf();
     Utils::ostream out(vgaBuf);
 
     Kernel::Interrupts::register_interrupt_handler(0x4, &handler04);
 
     asm volatile ("int $0x4");
-
 
     out << "GDT Table Address: " << (void*)&Kernel::Memory::gdt_table << "\n";
     out << "Initial ESP: " << (void*)init_esp << "\n";
@@ -301,7 +322,7 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
             }
         }
     }
-
+    
     // Drivers::VGA::Write("Testing sleeping (2s)...\n");
     // sleep(2);
     // Drivers::VGA::Write("Done sleeping.\n");
@@ -358,126 +379,171 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
         some_array[i] = 0;
     }
 
-    if (Kernel::fork() != 0)
-    {
-        Drivers::VGA::Write("First process running!\n");
-        assert(Kernel::taskLength() > 0);
-        // out << "TaskLength verified!\n";
-        // out.flush();
-        // Drivers::VGA::Write((void*)out.rdbuf());
-        // Drivers::VGA::Write("\n");
-        Drivers::VGA::Write((void*)some_ptr);
-        Drivers::VGA::Write("\n");
-        assert(some_value == 465);
-        assert(some_ptr);
-        assert(*some_ptr == some_value);
+    // if (Kernel::fork() != 0)
+    // {
+    //     Drivers::VGA::Write("First process running!\n");
+    //     assert(Kernel::taskLength() > 0);
+    //     // out << "TaskLength verified!\n";
+    //     // out.flush();
+    //     // Drivers::VGA::Write((void*)out.rdbuf());
+    //     // Drivers::VGA::Write("\n");
+    //     Drivers::VGA::Write((void*)some_ptr);
+    //     Drivers::VGA::Write("\n");
+    //     assert(some_value == 465);
+    //     assert(some_ptr);
+    //     assert(*some_ptr == some_value);
 
-        assert(SomeString[0] == 'H');
-        assert(SomeString[1] == 'e');
-        assert(SomeString[2] == 'l');
-        assert(SomeString[3] == 'l');
-        assert(SomeString[4] == 'o');
-        assert(SomeString[5] == '\0');
+    //     assert(SomeString[0] == 'H');
+    //     assert(SomeString[1] == 'e');
+    //     assert(SomeString[2] == 'l');
+    //     assert(SomeString[3] == 'l');
+    //     assert(SomeString[4] == 'o');
+    //     assert(SomeString[5] == '\0');
 
-        Drivers::VGA::Write("\n");
+    //     Drivers::VGA::Write("\n");
 
-        assert(SomeString2[0] == 'H');
-        assert(SomeString2[1] == 'e');
-        assert(SomeString2[2] == 'l');
-        assert(SomeString2[3] == 'l');
-        assert(SomeString2[4] == 'o');
-        assert(SomeString2[5] == '\0');
+    //     assert(SomeString2[0] == 'H');
+    //     assert(SomeString2[1] == 'e');
+    //     assert(SomeString2[2] == 'l');
+    //     assert(SomeString2[3] == 'l');
+    //     assert(SomeString2[4] == 'o');
+    //     assert(SomeString2[5] == '\0');
         
-        while(1);
-    }
-    else
-    {
-        //Drivers::VGA::Init();
-        Drivers::VGA::Write("Second process running!\n");
-        while (true);
-        assert(Kernel::taskLength() == 2);
-        usleep(500000);
+    //     while(1);
+    // }
+    // else
+    // {
+    //     //Drivers::VGA::Init();
+    //     Drivers::VGA::Write("Second process running!\n");
+    //     while (true);
+    //     assert(Kernel::taskLength() == 2);
+    //     usleep(500000);
 
-        assert(SomeString[0] == 'H');
-        assert(SomeString[1] == 'e');
-        assert(SomeString[2] == 'l');
-        assert(SomeString[3] == 'l');
-        assert(SomeString[4] == 'o');
-        assert(SomeString[5] == '\0');
+    //     assert(SomeString[0] == 'H');
+    //     assert(SomeString[1] == 'e');
+    //     assert(SomeString[2] == 'l');
+    //     assert(SomeString[3] == 'l');
+    //     assert(SomeString[4] == 'o');
+    //     assert(SomeString[5] == '\0');
 
-        Drivers::VGA::Write((void*)SomeString2);
-        Drivers::VGA::Write("\n");
+    //     Drivers::VGA::Write((void*)SomeString2);
+    //     Drivers::VGA::Write("\n");
 
-        assert(SomeString2[0] == 'H');
-        assert(SomeString2[1] == 'e');
-        assert(SomeString2[2] == 'l');
-        assert(SomeString2[3] == 'l');
-        assert(SomeString2[4] == 'o');
-        assert(SomeString2[5] == '\0');
+    //     assert(SomeString2[0] == 'H');
+    //     assert(SomeString2[1] == 'e');
+    //     assert(SomeString2[2] == 'l');
+    //     assert(SomeString2[3] == 'l');
+    //     assert(SomeString2[4] == 'o');
+    //     assert(SomeString2[5] == '\0');
 
-        // out << "TaskLength verified!\n";
-        // out.flush();
-        // Drivers::VGA::Write((void*)out.rdbuf());
-        // Drivers::VGA::Write("\n");
-        Drivers::VGA::Write((void*)some_ptr);
-        Drivers::VGA::Write("\n");
-        if (some_value != 465)
-        {
-            Drivers::VGA::Write("NOPE\n");
-            Drivers::VGA::Write(some_value);
-            Drivers::VGA::Write("\n");
-        }
-        else
-        {
-            Drivers::VGA::Write("YEP\n");
-        }
-        if (some_array[0] != 0)
-        {
-            // int i = 1;
-            // for (i = 1; i < 256; ++i)
-            // {
-            //     if (some_array[i] == 0)
-            //     {
-            //         Drivers::VGA::Write("Offset of ");
-            //         Drivers::VGA::Write(i);
-            //         Drivers::VGA::Write("\n");
-            //         break;
-            //     }
-            // }
-            // for (; i < 256; ++i)
-            // {
-            //     if (some_array[i] != 0)
-            //     {
-            //         Drivers::VGA::Write(i);
-            //         Drivers::VGA::Write("\n");
-            //     }
-            //     assert(some_array[i] == 0);
-            // }
-            // for (int i = 0; i < 256; ++i)
-            // {
-            //     if (some_array[i] != 0)
-            //     {
-            //         Drivers::VGA::Write(i);
-            //         Drivers::VGA::Write("\n");
-            //     }
-            // }
-        }
-        // assert(some_array[0] == 0);
-        // assert(some_array[255] == 0);
-        assert(some_value == 465);
-        assert(some_ptr);
-        assert(*some_ptr == some_value);
-        sleep(1);
-        out << "Stream Test";
-        sleep(2);
-        out.flush();
-        while (1);
-    }
+    //     // out << "TaskLength verified!\n";
+    //     // out.flush();
+    //     // Drivers::VGA::Write((void*)out.rdbuf());
+    //     // Drivers::VGA::Write("\n");
+    //     Drivers::VGA::Write((void*)some_ptr);
+    //     Drivers::VGA::Write("\n");
+    //     if (some_value != 465)
+    //     {
+    //         Drivers::VGA::Write("NOPE\n");
+    //         Drivers::VGA::Write(some_value);
+    //         Drivers::VGA::Write("\n");
+    //     }
+    //     else
+    //     {
+    //         Drivers::VGA::Write("YEP\n");
+    //     }
+    //     if (some_array[0] != 0)
+    //     {
+    //         // int i = 1;
+    //         // for (i = 1; i < 256; ++i)
+    //         // {
+    //         //     if (some_array[i] == 0)
+    //         //     {
+    //         //         Drivers::VGA::Write("Offset of ");
+    //         //         Drivers::VGA::Write(i);
+    //         //         Drivers::VGA::Write("\n");
+    //         //         break;
+    //         //     }
+    //         // }
+    //         // for (; i < 256; ++i)
+    //         // {
+    //         //     if (some_array[i] != 0)
+    //         //     {
+    //         //         Drivers::VGA::Write(i);
+    //         //         Drivers::VGA::Write("\n");
+    //         //     }
+    //         //     assert(some_array[i] == 0);
+    //         // }
+    //         // for (int i = 0; i < 256; ++i)
+    //         // {
+    //         //     if (some_array[i] != 0)
+    //         //     {
+    //         //         Drivers::VGA::Write(i);
+    //         //         Drivers::VGA::Write("\n");
+    //         //     }
+    //         // }
+    //     }
+    //     // assert(some_array[0] == 0);
+    //     // assert(some_array[255] == 0);
+    //     assert(some_value == 465);
+    //     assert(some_ptr);
+    //     assert(*some_ptr == some_value);
+    //     sleep(1);
+    //     out << "Stream Test";
+    //     sleep(2);
+    //     out.flush();
+    //     while (1);
+    // }
 
     Drivers::VGA::Write("Tasks length: ");
     Drivers::VGA::Write(Kernel::taskLength());
     Drivers::VGA::Write("\n");
 
+    Drivers::VGA::Write("CLI Count: ");
+    Drivers::VGA::Write(Kernel::Interrupts::block_interrupt_counter());
+    Drivers::VGA::Write("\n");
+
+    assert(Kernel::Interrupts::block_interrupt_counter() == 0);
+
+
+    asm volatile ("sti");
+    
+    pthread_t tid;
+    Kernel::thread_create(&tid, (void(*)(void*))([](void* p) -> void
+    {
+        {
+            Kernel::Interrupts::irq_guard lock;
+            Drivers::VGA::Write("Thread 2 executing!\n");
+        }
+        assert(Kernel::Interrupts::block_interrupt_counter() == 0);
+        while (true);
+    }), (void*)nullptr);
+    Drivers::VGA::Write("Thread created, yielding now...\n");
+    //assert(sched_yield() != -1);
+
+    Drivers::VGA::Write("Main thread back!\n");
+
+    Drivers::VGA::Write("CLI Count: ");
+    Drivers::VGA::Write(Kernel::Interrupts::block_interrupt_counter());
+    Drivers::VGA::Write("\n");
+
+    assert(Kernel::Interrupts::block_interrupt_counter() == 0);
+
+
+    sleep(5);
+
+    Drivers::VGA::Write("Main() done sleeping!\n");
+
+    while (true);
+
+
+    Kernel::context_t* context = new Kernel::context_t;
+    if (!Kernel::save_context(context))
+    {
+        Drivers::VGA::Write("Path 1 Executing...\n");
+        Kernel::load_context(context);
+    }
+    Drivers::VGA::Write("Path 2 Executing...\n");
     
 
 

@@ -66,19 +66,19 @@ namespace Kernel { namespace Memory
 
 		uint32_t mem_end = 0xF0000000;
 		
-		TRACE_C("Initializing frame collection...\n");
+		TRACE("Initializing frame collection...\n");
 		init_frame_collection(mem_end/0x1000);
-		TRACE_C("Frame collection initialized.\n");
+		TRACE("Frame collection initialized.\n");
 		
 		
 		PhysicalMemory::Use<Basic_Physical>();
 		
 		
 		#ifdef DEBUG_IDENTITY_DIR
-		TRACE_C("Allocating identity_dir...\n");
+		TRACE("Allocating identity_dir...\n");
 		addr_t iphys;
 		identity_dir = create_empty_page_dir(&iphys);
-		TRACE_C("identity_dir allocated.\n");
+		TRACE("identity_dir allocated.\n");
 		
 		ASSERT(iphys == (uint32_t)&identity_dir->tables);
 		Drivers::VGA::Write("Identity_Dir Physical Address: ");
@@ -95,28 +95,28 @@ namespace Kernel { namespace Memory
 			
 		}
 		
-		TRACE_C("identity_dir initialization complete.\n");
+		TRACE("identity_dir initialization complete.\n");
 		#endif
 		
 		
 		kernel_dir = new PageDirectory();
-		TRACE_C("kernel_dir allocated.\n");
+		TRACE("kernel_dir allocated.\n");
 
-		TRACE_C("Getting kheap pages...\n");
+		TRACE("Getting kheap pages...\n");
 		unsigned int i = 0;
 		for (i = KHEAP_START; i < KHEAP_START+KHEAP_INITIAL_SIZE; i += 0x1000)
 		{
 			ASSERT(kernel_dir->at(i, true) != nullptr);
 			// kernel_dir->getPage(i, 1);
 		}
-		TRACE_C("Pages created.\n");
+		TRACE("Pages created.\n");
 
 		
 		
-		// TRACE_C("Allocating kernel_dir...\n");
+		// TRACE("Allocating kernel_dir...\n");
 		// addr_t phys;
 		// kernel_dir = (struct PageDir*)kmalloc(sizeof(struct PageDir), 1, &phys);
-		// TRACE_C("kernel_dir allocated.\n");
+		// TRACE("kernel_dir allocated.\n");
 		// kmemset(kernel_dir, 0, sizeof(struct PageDir));
 		// for (int i = 0; i < sizeof(PageDir); ++i)
 		// {
@@ -126,13 +126,13 @@ namespace Kernel { namespace Memory
 		
 		// //kernel_dir->physicalAddress = (uint32_t)kernel_dir->physicalTables;
 		
-		// TRACE_C("Getting kheap pages...\n");
+		// TRACE("Getting kheap pages...\n");
 		// unsigned int i = 0;
 		// for (i = KHEAP_START; i < KHEAP_START+KHEAP_INITIAL_SIZE; i += 0x1000)
 		// {
 		// 	kernel_dir->getPage(i, 1);
 		// }
-		// TRACE_C("Pages created.\n");
+		// TRACE("Pages created.\n");
 		
 		// KHeap* kheap_tmp = (KHeap*)kmalloc(sizeof(KHeap), true, 0);
 		// kmemset(kheap_tmp, 0, sizeof(KHeap));
@@ -140,7 +140,7 @@ namespace Kernel { namespace Memory
 		kmemset(dheap_tmp, 0, sizeof(DumbHeap));
 		
 		
-		TRACE_C("Allocating frames...\n");
+		TRACE("Allocating frames...\n");
 		i = 0;
 		while (i < kPlacement + 0x1000)
 		{
@@ -148,7 +148,7 @@ namespace Kernel { namespace Memory
 			// kernel_dir->getPage(i, 1)->alloc_frame(0, 0);
 			i += 0x1000;
 		}
-		TRACE_C("Frames Allocated.\n");
+		TRACE("Frames Allocated.\n");
 
 		
 
@@ -157,7 +157,7 @@ namespace Kernel { namespace Memory
 			
 		}
 		
-		TRACE_C("Allocating kheap frames...\n");
+		TRACE("Allocating kheap frames...\n");
 		for (i = KHEAP_START; i < KHEAP_START + KHEAP_INITIAL_SIZE; i += 0x1000)
 		{
 			auto pg = kernel_dir->at(i, true);
@@ -169,14 +169,14 @@ namespace Kernel { namespace Memory
 			// kernel_dir->getPage(i, 1)->alloc_frame(0, 0);
 			//alloc_frame(get_page(i, 1, kernel_dir), 0, 0);
 		}
-		TRACE_C("kheap frames allocated.\n");
+		TRACE("kheap frames allocated.\n");
 		
 		Kernel::Interrupts::register_interrupt_handler(14, page_fault);
-		TRACE_C("Page fault handler registered\n");
+		TRACE("Page fault handler registered\n");
 		
 		addr_t sanity_checker = (addr_t)&mem_end;
 		ASSERT(kernel_dir->dir == kernel_dir->dir_phys);
-		TRACE_C("Switching page directories...");
+		TRACE("Switching page directories...");
 		PageDirectory::Current = 0x0;
 		#ifdef DEBUG_IDENTITY_DIR
 		//switch_page_dir(identity_dir);
@@ -187,7 +187,7 @@ namespace Kernel { namespace Memory
 		//switch_page_dir(kernel_dir);
 		ASSERT(kernel_dir == PageDirectory::Current);
 		#endif
-		TRACE_C("Page directory switched\n");
+		TRACE("Page directory switched\n");
 
 		ASSERT(sanity_checker == (addr_t)&mem_end);
 		ASSERT(mem_end == 0xF0000000);
@@ -204,19 +204,19 @@ namespace Kernel { namespace Memory
 		
 		//new (kheap_tmp) KHeap(KHEAP_START, KHEAP_START + KHEAP_INITIAL_SIZE, KHEAP_MAX_ADDR, 0, 0);
 		// kheap = kheap_tmp;
-		TRACE_C("Kernel Heap created.\n");
+		TRACE("Kernel Heap created.\n");
 		
 		// auto tmp_dir = kernel_dir->clone(kernel_dir);
-		// TRACE_C("Kernel page directory cloned.\n");
+		// TRACE("Kernel page directory cloned.\n");
 		//kmalloc(16384, 1, nullptr);
 		
 		#ifndef DEBUG_IDENTITY_DIR
 		// tmp_dir->switch_to();
-		// TRACE_C("Switched page directory to clone.");
+		// TRACE("Switched page directory to clone.");
 		#else
 		ASSERT(virtual_to_physical(current_dir, identity_dir) != 0x0);
 		switch_page_dir(identity_dir);
-		TRACE_C("Switched to identity directory\n");
+		TRACE("Switched to identity directory\n");
 		#endif
 		
 		//asm volatile("sti");
@@ -225,8 +225,8 @@ namespace Kernel { namespace Memory
 
 	void switch_page_dir(void* tables_phys)
 	{
+		Kernel::Interrupts::irq_guard lock;
 		TRACE("CHANGING PAGE DIRECTORY\n");
-		asm volatile ("cli");
 		addr_t phys = (addr_t)tables_phys;
 		// if (PageDirectory::Current == 0)
 		// {
@@ -244,8 +244,8 @@ namespace Kernel { namespace Memory
 		uint32_t cr0;
 		asm volatile ("mov %%cr0, %0" : "=r"(cr0));
 		cr0 |= 0x80000000;
+		__sync_synchronize();
 		asm volatile ("mov %0, %%cr0":: "r"(cr0));
-		asm volatile ("sti");
 	}
 
 	

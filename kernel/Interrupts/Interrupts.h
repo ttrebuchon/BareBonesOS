@@ -15,6 +15,8 @@ void cli();
 void sti();
 void register_interrupt_handler(uint8_t n, isr_t handler);
 
+int block_interrupt_counter();
+
 
 
 #ifdef __cplusplus

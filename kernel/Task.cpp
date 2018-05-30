@@ -83,6 +83,7 @@ static addr_t tmp_esp = 0;
 void init_tasking()
 {
 	asm volatile ("cli");
+	Kernel::Interrupts::irq_guard lock;
 	Memory::kernel_dir->clone(Memory::kernel_dir)->switch_to();
 	assert(Memory::PageDirectory::Current != Memory::kernel_dir);
 	asm volatile("MOV %%esp, %0" : "=r"(tmp_esp));
@@ -105,7 +106,6 @@ void init_tasking()
 	task_iterator = tasks->begin();
 	Task::current_task = new_task;
 	
-	asm volatile ("sti");
 }
 
 static Task* volatile prev_caller = nullptr;

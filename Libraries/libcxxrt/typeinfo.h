@@ -103,6 +103,8 @@ namespace std
 		{
 			return false;
 		}
+
+		size_t hash_code() const noexcept;
 	};
 }
 
