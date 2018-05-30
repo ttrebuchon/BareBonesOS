@@ -20,7 +20,7 @@
 	#define __P_ARCH__ 32
 	#define __ENV_x86__ 1
 	#define __ENV__ x86
-
+	
 #endif
 
 

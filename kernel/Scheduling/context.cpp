@@ -53,9 +53,7 @@ extern "C" {
 		mov %1, %%ebp;\
 		mov %2, %%ecx;\
 		mov %%eax, 0; "
-		#ifndef TESTING
-		"sti; "
-		#endif
+		
 		"jmp *(%%ecx); \
 		NOP" : : "r"(esp), "r"(ebp), "r"(eip));
 
@@ -104,16 +102,25 @@ extern "C" {
 	int save_context(volatile context_t* c)
 	{
 		
-		#if __ENV__ == aarch64
+		//#if __ENV__ == aarch64
+		#ifdef __ENV_AARCH64__
 		ASM_READ_ESP(c->stack.sp);
 		c->stack.sp = (void*)((addr_t)c->stack.sp + 32);
 		asm volatile("NOP");
 		ASM_READ_EBP(c->ip);
 		c->stack.fp = ((void**)c->ip)[0];
 		c->ip = ((void**)c->ip)[1];
+
 		#elif __ENV__ == x86
 		
-		#error TODO
+		//#error TODO
+
+		ASM_READ_ESP(c->stack.sp);
+		asm volatile ("NOP");
+		ASM_READ_EBP(c->ip);
+		c->stack.fp = ((void**)c->ip)[0];
+		c->ip = ((void**)c->ip)[1];
+
 		
 		#else
 		
