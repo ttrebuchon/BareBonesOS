@@ -13,23 +13,25 @@ namespace Utils
 		const std::type_info* ptr;
 		
 		__attribute__((__always_inline__))
-		const std::type_info& info() const noexcept
+		constexpr const std::type_info& info() const noexcept
 		{
 			return *ptr;
 		}
 		
 		public:
-		type_index(const std::type_info& i) : ptr(&i)
+		constexpr type_index(const std::type_info& i) : ptr(&i)
 		{}
 		
-		bool operator==(const type_index& i) const noexcept
+		constexpr bool operator==(const type_index& i) const noexcept
 		{
-			return info().operator==(i.info());
+			return ptr == i.ptr;
+			//return info().operator==(i.info());
 		}
 		
-		bool operator!=(const type_index& i) const noexcept
+		constexpr bool operator!=(const type_index& i) const noexcept
 		{
-			return *ptr != *i.ptr;
+			return !(operator==(i));
+			//return *ptr != *i.ptr;
 		}
 		
 		bool operator<(const type_index& i) const noexcept

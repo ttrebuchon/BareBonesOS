@@ -1,0 +1,28 @@
+#ifndef INCLUDED_EXPERIMENTAL_REFLECT_HELPERS
+#define INCLUDED_EXPERIMENTAL_REFLECT_HELPERS
+
+
+namespace Utils { namespace experimental {
+namespace reflect {
+namespace detail
+{
+	
+	
+	template <class>
+	struct field_decomp;
+		
+	template <class T, class F>
+	struct field_decomp<F T::*>
+	{
+		typedef T obj;
+		typedef F value;
+	};
+	
+	
+}
+}
+}
+}
+
+
+#endif

@@ -67,7 +67,8 @@ void QA::MultiBoot_Init()
 	map->len = (uint64_t)(void*)phys_start;
 	map->type = 0;
 	
-	auto map2 = &map[1];
+	//auto map2 = &map[1];
+	auto map2 = (multiboot_mmap_t*)((addr_t)map + map[0].size + sizeof(map[0].size));
 	map2->size = sizeof(multiboot_mmap_t);
 	map2->base_addr = (uint64_t)(void*)phys_start;
 	map2->len = len;

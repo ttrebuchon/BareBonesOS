@@ -1,0 +1,261 @@
+#ifndef INCLUDED_EXPERIMENTAL_COLLECTION_TRAITS_HH
+#define INCLUDED_EXPERIMENTAL_COLLECTION_TRAITS_HH
+
+#include <Common.h>
+#include <Utils/utility>
+#include <Utils/vector>
+#include <Utils/unordered_map>
+#include <Utils/unordered_set>
+
+namespace Utils { namespace experimental
+{
+	namespace detail
+	{
+	template <class C>
+	struct container_traits_base
+	{
+		typedef typename Utils::decay<C>::type container_type;
+		
+		typedef typename container_type::value_type value_type;
+		typedef typename container_type::allocator_type allocator_type;
+		typedef typename container_type::size_type size_type;
+		
+	};
+	}
+	
+	
+	
+	
+	template <class C>
+	struct container_traits : public detail::container_traits_base<C>
+	{
+		private:
+		typedef detail::container_traits_base<C> base_type;
+		
+		public:
+		using typename base_type::container_type;
+		using typename base_type::value_type;
+		using typename base_type::allocator_type;
+		using typename base_type::size_type;
+		
+		__attribute__((__always_inline__))
+		static size_type size(const container_type&);
+		
+		__attribute__((__always_inline__))
+		static void insert(container_type&, const value_type&);
+		
+		__attribute__((__always_inline__))
+		static void insert(container_type&, value_type&&);
+		
+		template <class... Args>
+		__attribute__((__always_inline__))
+		static void emplace(container_type&, Args...);
+		
+		template <class... Args>
+		__attribute__((__always_inline__))
+		static void insert(container_type& c, Args... args)
+		{
+			emplace(c, forward<Args>(args)...);
+		}
+	};
+	
+	
+	
+	
+	
+	template <class... H>
+	struct container_traits<vector<H...>> : public detail::container_traits_base<vector<H...>>
+	{
+		private:
+		typedef detail::container_traits_base<vector<H...>> base_type;
+		
+		public:
+		using typename base_type::container_type;
+		using typename base_type::value_type;
+		using typename base_type::allocator_type;
+		using typename base_type::size_type;
+		
+		__attribute__((__always_inline__))
+		static size_type size(const container_type& c)
+		{
+			return c.size();
+		}
+		
+		__attribute__((__always_inline__))
+		static void insert(container_type& c, const value_type& v)
+		{
+			c.push_back(v);
+		}
+		
+		__attribute__((__always_inline__))
+		static void insert(container_type& c, value_type&& v)
+		{
+			c.push_back(forward<value_type&&>(v));
+		}
+		
+		template <class... Args>
+		__attribute__((__always_inline__))
+		static void emplace(container_type& c, Args... args)
+		{
+			c.emplace_back(forward<Args>(args)...);
+		}
+		
+		template <class... Args>
+		__attribute__((__always_inline__))
+		static void insert(container_type& c, Args... args)
+		{
+			emplace(c, forward<Args>(args)...);
+		}
+	};
+	
+	
+	
+	
+	template <class... H>
+	struct container_traits<list<H...>> : public detail::container_traits_base<list<H...>>
+	{
+		private:
+		typedef detail::container_traits_base<list<H...>> base_type;
+		
+		public:
+		using typename base_type::container_type;
+		using typename base_type::value_type;
+		using typename base_type::allocator_type;
+		using typename base_type::size_type;
+		
+		__attribute__((__always_inline__))
+		static size_type size(const container_type& c)
+		{
+			return c.size();
+		}
+		
+		__attribute__((__always_inline__))
+		static void insert(container_type& c, const value_type& v)
+		{
+			c.push_back(v);
+		}
+		
+		__attribute__((__always_inline__))
+		static void insert(container_type& c, value_type&& v)
+		{
+			c.push_back(forward<value_type&&>(v));
+		}
+		
+		template <class... Args>
+		__attribute__((__always_inline__))
+		static void emplace(container_type& c, Args... args)
+		{
+			c.emplace_back(forward<Args>(args)...);
+		}
+		
+		template <class... Args>
+		__attribute__((__always_inline__))
+		static void insert(container_type& c, Args... args)
+		{
+			emplace(c, forward<Args>(args)...);
+		}
+	};
+	
+	
+	
+	
+	
+	
+	
+	template <class... H>
+	struct container_traits<unordered_map<H...>> : public detail::container_traits_base<unordered_map<H...>>
+	{
+		private:
+		typedef detail::container_traits_base<unordered_map<H...>> base_type;
+		
+		public:
+		using typename base_type::container_type;
+		using typename base_type::value_type;
+		using typename base_type::allocator_type;
+		using typename base_type::size_type;
+		typedef typename container_type::key_type key_type;
+		typedef typename container_type::mapped_type mapped_type;
+		
+		__attribute__((__always_inline__))
+		static size_type size(const container_type& c)
+		{
+			return c.size();
+		}
+		
+		__attribute__((__always_inline__))
+		static void insert(container_type& c, const value_type& v)
+		{
+			c.insert(v);
+		}
+		
+		__attribute__((__always_inline__))
+		static void insert(container_type& c, value_type&& v)
+		{
+			c.insert(forward<value_type&&>(v));
+		}
+		
+		template <class... Args>
+		__attribute__((__always_inline__))
+		static void emplace(container_type& c, Args... args)
+		{
+			c.emplace(forward<Args>(args)...);
+		}
+		
+		template <class... Args>
+		__attribute__((__always_inline__))
+		static void insert(container_type& c, Args... args)
+		{
+			emplace(c, forward<Args>(args)...);
+		}
+	};
+	
+	
+	template <class... H>
+	struct container_traits<unordered_set<H...>> : public detail::container_traits_base<unordered_set<H...>>
+	{
+		private:
+		typedef detail::container_traits_base<unordered_set<H...>> base_type;
+		
+		public:
+		using typename base_type::container_type;
+		using typename base_type::value_type;
+		using typename base_type::allocator_type;
+		using typename base_type::size_type;
+		typedef typename container_type::key_type key_type;
+		
+		__attribute__((__always_inline__))
+		static size_type size(const container_type& c)
+		{
+			return c.size();
+		}
+		
+		__attribute__((__always_inline__))
+		static void insert(container_type& c, const value_type& v)
+		{
+			c.insert(v);
+		}
+		
+		__attribute__((__always_inline__))
+		static void insert(container_type& c, value_type&& v)
+		{
+			c.insert(forward<value_type&&>(v));
+		}
+		
+		template <class... Args>
+		__attribute__((__always_inline__))
+		static void emplace(container_type& c, Args... args)
+		{
+			c.emplace(forward<Args>(args)...);
+		}
+		
+		template <class... Args>
+		__attribute__((__always_inline__))
+		static void insert(container_type& c, Args... args)
+		{
+			emplace(c, forward<Args>(args)...);
+		}
+	};
+}
+}
+
+#endif

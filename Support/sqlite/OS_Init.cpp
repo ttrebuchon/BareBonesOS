@@ -1,6 +1,7 @@
 #include "VFS.hh"
 #include <sqlite3/sqlite3.h>
 
+#ifndef TESTING
 
 extern "C" {
 	
@@ -14,3 +15,5 @@ extern "C" {
 		//sqlite3_vfs_unregister(Support::SQLite::VFS());
 	}
 }
+
+#endif

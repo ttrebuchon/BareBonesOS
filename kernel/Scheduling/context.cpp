@@ -8,24 +8,23 @@ namespace Kernel
 {
 extern "C" {
 	
-	void __save_context_store(context_t*, void*, void*, void*);
+	void __save_context_store(volatile context_t*, void*, void*, void*);
 	
 	__attribute__((__noreturn__))
-	void load_context(context_t* c)
+	void load_context(volatile context_t* c)
 	{
 		load_destroy_context(c, nullptr);
 	}
 	
 	__attribute__((__noreturn__))
-	void load_destroy_context(context_t* c, void(*destr)(context_t*))
+	void load_destroy_context(volatile context_t* c, void(*destr)(volatile context_t*))
 	{
-		__DO_CLI__;
-		#ifndef TESTING
-		//asm volatile("cli");
-		#endif
 		void* ebp = c->stack.fp;
 		void* esp = c->stack.sp;
 		void* eip = c->ip;
+		
+		registers_t regs = const_cast<const context_t*>(c)->registers;
+		//register_copy(&c->registers, &regs); //= c->registers;
 		
 		if (destr)
 		{
@@ -35,27 +34,29 @@ extern "C" {
 		
 		#ifdef __ENV_AARCH64__
 		
+		
+		register_t rx0 = regs.*register_pointers::r0;// regs.x0;
+		register_t rx1 = regs.*register_pointers::r1;// regs.x1;
+		
 		asm volatile("\
 		mov SP, %0; \
 		mov FP, %1; \
-		mov x1, %2; \
-		mov w0, #1; " 
-		#ifndef TESTING
-		"sti; "
-		#endif
-		"br x1; \
-		NOP" : : "r"(esp), "r"(ebp), "r"(eip));
+		mov x2, %2; \
+		mov x1, %4; \
+		mov x0, %3; \
+		br x2; \
+		NOP" : : "r"(esp), "r"(ebp), "r"(eip), "r"(rx0), "r"(rx1));
 		
 		#elif defined(__ENV_x86__)
 		
-		asm volatile("\
+		asm volatile(" \
 		mov %0, %%esp; \
-		mov %1, %%ebp;\
-		mov %2, %%ecx;\
-		mov %%eax, 0; "
-		
-		"jmp *(%%ecx); \
-		NOP" : : "r"(esp), "r"(ebp), "r"(eip));
+		mov %1, %%ebp; \
+		mov %2, %%ecx; \
+		mov %4, %%ebx; \
+		mov %3, %%eax; \
+		jmp *(%%ecx);  \
+		NOP" : : "r"(esp), "r"(ebp), "r"(eip), "r"(rx0), "r"(rx1));
 
 		
 		
@@ -86,11 +87,10 @@ extern "C" {
 		bl __save_context_store; \
 		ret");*/
 	
-	void some_func(context_t* c, void* someP)
+	void some_func(volatile context_t* c, void* someP)
 	{
-		ASM_MOV(%0, %%ESP, : "=r"(c->ip));
 		ASM_READ_ESP(c->ip);
-		assert(c->ip == c->stack.sp - sizeof(addr_t)*6);
+		assert(c->ip == ((char*)c->stack.sp - sizeof(addr_t)*6));
 		{
 			void** g;
 			ASM_READ_EBP(g);
@@ -98,20 +98,94 @@ extern "C" {
 		}
 	}
 	
-	//__attribute__((__returns_twice__))
+	__attribute__((__returns_twice__))
 	int save_context(volatile context_t* c)
 	{
 		
-		//#if __ENV__ == aarch64
 		#ifdef __ENV_AARCH64__
+		
+		
+		/*asm volatile(
+		"\
+		mov %0, x0 ; \
+		mov %1, x1 ; \
+		mov %2, x2 ; \
+		mov %3, x3 ; \
+		mov %4, x4 ; \
+		mov %5, x5 ; \
+		mov %6, x6 ; \
+		mov %7, x7 ; \
+		mov %8, x8 ; \
+		mov %9, x9 ; \
+		mov %10, x10 ; \
+		mov %11, x11 ; \
+		mov %12, x12 ; \
+		mov %13, x13 ; \
+		mov %14, x14 ; \
+		mov %15, x15 ; \
+		mov %16, x16 ; \
+		mov %17, x17 ; \
+		mov %18, x18 ; \
+		mov %19, x19 ; \
+		mov %20, x20 ; \
+		mov %21, x21 ; \
+		mov %22, x22 ; \
+		mov %23, x23 ; \
+		mov %24, x24 ; \
+		mov %25, x25 ; \
+		mov %26, x26 ; \
+		mov %27, x27 ; \
+		mov %28, x28 ; \
+		mov %29, x29"
+		:
+		"&=r"(c->registers.x0), 
+		"=r"(c->registers.x1), 
+		"=r"(c->registers.x2), 
+		"=r"(c->registers.x3), 
+		"=r"(c->registers.x4), 
+		"=r"(c->registers.x5), 
+		"=r"(c->registers.x6), 
+		"=r"(c->registers.x7), 
+		"=r"(c->registers.x8), 
+		"=r"(c->registers.x9), 
+		"=r"(c->registers.x10), 
+		"=r"(c->registers.x11), 
+		"=r"(c->registers.x12), 
+		"=r"(c->registers.x13), 
+		"=r"(c->registers.x14), 
+		"=r"(c->registers.x15), 
+		"=r"(c->registers.x16), 
+		"=r"(c->registers.x17), 
+		"=r"(c->registers.x18), 
+		"=r"(c->registers.x19), 
+		"=r"(c->registers.x20), 
+		"=r"(c->registers.x21), 
+		"=r"(c->registers.x22), 
+		"=r"(c->registers.x23), 
+		"=r"(c->registers.x24), 
+		"=r"(c->registers.x25), 
+		"=r"(c->registers.x26), 
+		"=r"(c->registers.x27), 
+		"=r"(c->registers.x28), 
+		"=r"(c->registers.x29));*/
+		
+		
+		
 		ASM_READ_ESP(c->stack.sp);
 		c->stack.sp = (void*)((addr_t)c->stack.sp + 32);
 		asm volatile("NOP");
 		ASM_READ_EBP(c->ip);
 		c->stack.fp = ((void**)c->ip)[0];
 		c->ip = ((void**)c->ip)[1];
-
-		#elif __ENV__ == x86
+		//c->registers.x0 = 1;
+		c->registers.*register_pointers::r0 = 1;
+		//*const_cast<registers_t*>(&c->registers) = reg;
+		
+		
+		
+		
+		
+		#elif defined(__ENV_x86__)
 		
 		//#error TODO
 
@@ -136,7 +210,7 @@ extern "C" {
 	}
 		
 	
-	void __save_context_store(context_t* c, void* ip, void* fp, void* sp)
+	void __save_context_store(volatile context_t* c, void* ip, void* fp, void* sp)
 	{
 		c->ip = ip;
 	}

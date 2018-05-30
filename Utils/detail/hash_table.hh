@@ -111,7 +111,12 @@ namespace Utils
 				return ptr;
 			}
 			
-			
+			void deallocate_node(node_allocator_type& alloc, node_type* n)
+			{
+				assert(n);
+				alloc.destroy(n);
+				alloc.deallocate(n, 1);
+			}
 		};
 		
 		/*template <class T, class Code, class Alloc>
@@ -294,6 +299,24 @@ namespace Utils
 		_VNode* getCreate(T&&, bool* created = nullptr);
 		bool insertNode(_VNode*);
 		_VNode* insertValue(T&& t);
+		bool deleteNode(_VNode*);
+		__attribute__((__always_inline__))
+		bool erase(_VNode* n)
+		{
+			return deleteNode(n);
+		}
+		bool erase(const Key& k)
+		{
+			auto n = get(k);
+			if (n)
+			{
+				return deleteNode(n);
+			}
+			else
+			{
+				return false;
+			}
+		}
 		inline size_type size() const
 		{
 			return elemCount;
