@@ -10,14 +10,9 @@ namespace Kernel
 extern "C" {
 
 	extern "C" void __save_x86_registers(registers_t, registers_t*);
-	extern "C" void save_x86_registers(registers_t*);
-	extern "C" int save_x86_context(context_t*, registers_t*);
 	extern "C" int __save_x86_context(context_t*, void* esp, void* ebp, void* eip);
-
 	extern "C" int restore_x86_context(const registers_t, void* esp);
 
-	
-	void __save_context_store(context_t*, void*, void*, void*);
 	
 	__attribute__((__noreturn__))
 	void load_context(context_t* c)
@@ -67,15 +62,6 @@ extern "C" {
 		c->registers.edx = (register_t)c->ip;
 		restore_x86_context(c->registers, c->stack.sp);
 		__builtin_unreachable();
-		
-		// asm volatile(" \n\
-		// mov %0, %%esp; \n\
-		// mov %1, %%ebp; \n\
-		// mov %2, %%ecx; \n\
-		// mov %4, %%ebx; \n\
-		// mov %3, %%eax; \n\
-		// jmp *%%ecx; \n\
-		// NOP" : : "r"(esp), "r"(ebp), "r"(eip), "r"(rx0), "r"(rx1));
 
 		
 		
@@ -93,18 +79,6 @@ extern "C" {
 	{
 		volatile int x = 4;
 	}
-	
-	/*asm(" \
-	.global save_context, function; \
-	save_context: \
-		mov x1, lr; \
-		mov x2, fp; \
-		mov x3, sp; \
-		sub sp, sp, 32; \
-		stp x3, x2, [sp, #0]; \
-		str x1, [sp, #16]; \
-		bl __save_context_store; \
-		ret");*/
 	
 	void some_func(context_t* c, void* someP)
 	{
@@ -216,26 +190,6 @@ extern "C" {
 	}
 
 	#endif
-
-	extern "C"
-	int __save_context_x86_forward(context_t* c)
-	{
-		return save_x86_context(c, &c->registers);
-		//#error TODO
-
-		ASM_READ_ESP(c->stack.sp);
-		asm volatile ("NOP");
-		ASM_READ_EBP(c->ip);
-		c->stack.fp = ((void**)c->ip)[0];
-		c->ip = ((void**)c->ip)[1];
-		save_x86_registers(const_cast<registers_t*>(&c->registers));
-	}
-		
-	
-	void __save_context_store(context_t* c, void* ip, void* fp, void* sp)
-	{
-		c->ip = ip;
-	}
 
 	void __save_x86_registers(registers_t regs, registers_t* ptr)
 	{

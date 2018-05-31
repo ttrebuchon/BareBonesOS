@@ -506,20 +506,19 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     assert(Kernel::Interrupts::block_interrupt_counter() == 0);
 
 
-    asm volatile ("sti");
     
+    int thread2_marker = 0;
     pthread_t tid;
-    Kernel::thread_create(&tid, (void(*)(void*))([](void* p) -> void
+    Kernel::thread_create(&tid, [&thread2_marker]() -> void
     {
         {
             Kernel::Interrupts::irq_guard lock;
             Drivers::VGA::Write("Thread 2 executing!\n");
         }
         assert(Kernel::Interrupts::block_interrupt_counter() == 0);
-        while (true);
-    }), (void*)nullptr);
+        thread2_marker++;
+    });
     Drivers::VGA::Write("Thread created, yielding now...\n");
-    //assert(sched_yield() != -1);
 
     Drivers::VGA::Write("Main thread back!\n");
 
@@ -530,9 +529,11 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     assert(Kernel::Interrupts::block_interrupt_counter() == 0);
 
 
-    sleep(5);
+    sleep(1);
 
     Drivers::VGA::Write("Main() done sleeping!\n");
+
+    assert(thread2_marker == 1);
 
     while (true);
 

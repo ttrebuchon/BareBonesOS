@@ -19,19 +19,17 @@ void scheduler_hook();
 
 static void timer_callback(Registers_t regs)
 {
-	//TRACE("Timer_Callback()!");
-	//TRACE((unsigned long long)ticks);
 	++ticks;
 	sleep_for > 0 ? --sleep_for : 0;
 	if (ticks % 100 == 0)
 	{
-		//task_switch();
+		task_switch();
 	}
 	else if (ticks % 10 == 0)
 	{
 		scheduler_hook();
 	}
-	//TRACE("Timer_Callback() Exit!");
+	
 }
 
 

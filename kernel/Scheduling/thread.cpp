@@ -126,7 +126,7 @@ extern "C" {
 		
 	}
 
-	#elif true // defined(__ENV_x86__)
+	#elif defined(__ENV_x86__)
 
 	extern "C" void thread_entry_asm();
 
@@ -190,8 +190,6 @@ extern "C" {
 
 		*(void**)stack = (void*)&thread_entry_func;
 
-		TRACE("*(void**)stack: ");
-		TRACE(*(void**)stack);
 		assert(*(void**)stack == (void*)thread_entry_func);
 		assert((void*)(*((addr_t*)stack)) == &thread_entry_func);
 		
@@ -200,20 +198,12 @@ extern "C" {
 		context->registers.esp = (register_t)stack;
 		context->registers.ebp = (register_t)stack;
 
-		TRACE("ESP: ");
-		TRACE((void*)context->stack.sp);
-		TRACE("thread_entry_func: ");
-		TRACE((void*)thread_entry_func);
-
 		assert((addr_t)context->stack.sp % 16 == 0);
 		
 		context->ip = (void*)&thread_entry_func;
 		assert(context->ip != nullptr);
 		
 		 context->registers.*register_pointers::r0 = 3;
-		// context->registers.*register_pointers::r1 = (addr_t)(void*)__thr;
-		// context->registers.x0 = (addr_t)(void*)__thr;
-		// context->registers.x1 = (addr_t)(void*)__thr;
 		
 		
 		register_thread_current(__thr);
@@ -224,10 +214,8 @@ extern "C" {
 
 	void thread_entry_func()
 	{
-		TRACE("Made it here");
 		__thread_t* thread = get_current_thread();
 		assert(thread);
-		TRACE("About to enter thread...");
 		
 
 		// Have to re-enable interrupts here, as we might have been switched as the result of
@@ -384,48 +372,27 @@ extern "C" int sched_yield()
 	
 	auto next = *thread_it;
 
-	// Drivers::VGA::Write("Switching from  ");
-	// Drivers::VGA::Write((void*)old);
-	// Drivers::VGA::Write(" to ");
-	// Drivers::VGA::Write((void*)next);
-	// Drivers::VGA::Write("\n");
-
 	if (next == old)
 	{
-		// Drivers::VGA::Write("Nevermind, same context\n");
 		return -1;
 	}
 	
-	// TRACE("SAVING");
 
 	old->context->registers.eax = 0xF0F0F0F0;
 
 	int save_result = save_context(old->context);
 
-	// TRACE("SAVED.");
-	
-	// __sync_synchronize();
-	some_label:
+
 	if (save_result != 0)
 	{
-		//while (true);
-		//TRACE("Context restored!");
 		return 0;
 	}
 
 	main_already_saved = 1;
 
-	// Drivers::VGA::Write("some_label: ");
-	// Drivers::VGA::Write((void*)&&some_label);
-	// Drivers::VGA::Write("\n");
+
 
 	assert(old->context->registers.eax != 0);
-
-	// Drivers::VGA::Write("Loading new context...\n");
-
-	// TRACE((void*)next->context->stack.sp);
-	// TRACE((void*)next->context->registers.ebp);
-	// TRACE((void*)next->context->ip);
 
 	load_destroy_context(next->context, nullptr);
 }

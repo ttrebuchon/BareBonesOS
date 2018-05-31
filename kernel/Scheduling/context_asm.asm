@@ -1,27 +1,8 @@
 [EXTERN __save_x86_registers]
-[GLOBAL save_x86_registers]
-
-save_x86_registers:
-    push ebp
-    ; Offset = 4
-    mov ebp, esp
-    mov eax, [ebp + 8]
-    push eax
-    ; Offset = 8
-    pushad
-    ; Offset = 8 + ?
-    call __save_x86_registers
-    popad
-    ; Offset = 8
-    pop eax
-    ; Offset = 4
-    pop ebp
-    ; Offset = 0
-    ret
-
-
-[GLOBAL save_x86_context]
 [EXTERN __save_x86_context]
+[GLOBAL save_x86_context]
+[GLOBAL restore_x86_context]
+[GLOBAL save_context]
 
 save_x86_context:
     push ebp
@@ -79,7 +60,7 @@ save_x86_context:
 
 
 
-[GLOBAL restore_x86_context]
+
 restore_x86_context:
     pop eax             ; Remove the return address from the stack
     popad               ; Restore the registers
@@ -87,62 +68,10 @@ restore_x86_context:
     jmp edx
 
 
-; [EXTERN __save_context_x86_forward]
-; [GLOBAL save_context]
-; save_context:
-;     push ebp
-;     ; Offset = 4
-;     mov ebp, esp
-
-;     mov eax, [ebp + 8]
-;     mov edx, eax
-;     add edx, 20
-;     push edx
-;     ; Offset = 8
-;     push eax
-;     ; Offset = 12
-;     call save_x86_context
-;     pop edx
-;     ; Offset = 8
-;     pop edx
-;     ; Offset = 4
-
-;     cmp eax, 0
-;     jne save_context_restored_dwid
-
-;     pop ebp
-;     ; Offset = 0
-;     ret
-
-
-
-; save_context_restored_dwid:
-;     hlt
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-[EXTERN __save_context_x86_forward]
-[GLOBAL save_context]
 save_context:
     push ebp
     ; Offset = 4
