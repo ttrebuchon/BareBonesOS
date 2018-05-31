@@ -19,15 +19,18 @@ typedef struct
 }
 context_t;
 
-__attribute__((__returns_twice__))
-int save_context(volatile context_t*);
+//__attribute__((__returns_twice__))
+int save_context(context_t*);
 
 
 __attribute__((__noreturn__))
-void load_destroy_context(volatile context_t*, void(*destr)(volatile context_t*));
+void load_destroy_context(context_t*, void(*destr)(context_t*));
 
 __attribute__((__noreturn__))
-void load_context(volatile context_t*);
+void load_destroy_context2(context_t*, void(*destr)(context_t*));
+
+__attribute__((__noreturn__))
+void load_context(context_t*);
 
 C_END
 END_NS

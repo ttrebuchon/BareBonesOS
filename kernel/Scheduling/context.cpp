@@ -11,19 +11,26 @@ extern "C" {
 
 	extern "C" void __save_x86_registers(registers_t, registers_t*);
 	extern "C" void save_x86_registers(registers_t*);
+	extern "C" int save_x86_context(context_t*, registers_t*);
+	extern "C" int __save_x86_context(context_t*, void* esp, void* ebp, void* eip);
+
+	extern "C" int restore_x86_context(const registers_t, void* esp);
 
 	
-	void __save_context_store(volatile context_t*, void*, void*, void*);
+	void __save_context_store(context_t*, void*, void*, void*);
 	
 	__attribute__((__noreturn__))
-	void load_context(volatile context_t* c)
+	void load_context(context_t* c)
 	{
 		load_destroy_context(c, nullptr);
 	}
 	
 	__attribute__((__noreturn__))
-	void load_destroy_context(volatile context_t* c, void(*destr)(volatile context_t*))
+	void load_destroy_context(context_t* c, void(*destr)(context_t*))
 	{
+		
+		
+		#ifdef __ENV_AARCH64__
 		void* ebp = c->stack.fp;
 		void* esp = c->stack.sp;
 		void* eip = c->ip;
@@ -43,9 +50,6 @@ extern "C" {
 
 		__sync_synchronize();
 		
-		#ifdef __ENV_AARCH64__
-		
-		
 		
 		
 		asm volatile("\
@@ -58,15 +62,20 @@ extern "C" {
 		NOP" : : "r"(esp), "r"(ebp), "r"(eip), "r"(rx0), "r"(rx1));
 		
 		#elif defined(__ENV_x86__)
+
+		assert(!destr);
+		c->registers.edx = (register_t)c->ip;
+		restore_x86_context(c->registers, c->stack.sp);
+		__builtin_unreachable();
 		
-		asm volatile(" \n\
-		mov %0, %%esp; \n\
-		mov %1, %%ebp; \n\
-		mov %2, %%ecx; \n\
-		mov %4, %%ebx; \n\
-		mov %3, %%eax; \n\
-		jmp *%%ecx; \n\
-		NOP" : : "r"(esp), "r"(ebp), "r"(eip), "r"(rx0), "r"(rx1));
+		// asm volatile(" \n\
+		// mov %0, %%esp; \n\
+		// mov %1, %%ebp; \n\
+		// mov %2, %%ecx; \n\
+		// mov %4, %%ebx; \n\
+		// mov %3, %%eax; \n\
+		// jmp *%%ecx; \n\
+		// NOP" : : "r"(esp), "r"(ebp), "r"(eip), "r"(rx0), "r"(rx1));
 
 		
 		
@@ -97,7 +106,7 @@ extern "C" {
 		bl __save_context_store; \
 		ret");*/
 	
-	void some_func(volatile context_t* c, void* someP)
+	void some_func(context_t* c, void* someP)
 	{
 		ASM_READ_ESP(c->ip);
 		assert(c->ip == ((char*)c->stack.sp - sizeof(addr_t)*6));
@@ -107,12 +116,14 @@ extern "C" {
 			assert(g[0] == c->stack.fp);
 		}
 	}
+
+	#ifdef __ENV_AARCH64__
 	
-	__attribute__((__returns_twice__))
-	int save_context(volatile context_t* c)
+	//__attribute__((__returns_twice__))
+	int save_context(context_t* c)
 	{
 		
-		#ifdef __ENV_AARCH64__
+		
 		
 		
 		/*asm volatile(
@@ -192,27 +203,7 @@ extern "C" {
 		//*const_cast<registers_t*>(&c->registers) = reg;
 		
 		
-		
-		
-		
-		#elif defined(__ENV_x86__)
-		
-		//#error TODO
-
-		ASM_READ_ESP(c->stack.sp);
-		asm volatile ("NOP");
-		ASM_READ_EBP(c->ip);
-		c->stack.fp = ((void**)c->ip)[0];
-		c->ip = ((void**)c->ip)[1];
-		save_x86_registers(const_cast<registers_t*>(&c->registers));
-
-
-		
-		#else
-		
-		#error Unknown architecture
-		
-		#endif
+	
 		
 		c->registers.*register_pointers::r0 = 1;
 		
@@ -223,9 +214,25 @@ extern "C" {
 		save_context_dummy();
 		return 0;
 	}
+
+	#endif
+
+	extern "C"
+	int __save_context_x86_forward(context_t* c)
+	{
+		return save_x86_context(c, &c->registers);
+		//#error TODO
+
+		ASM_READ_ESP(c->stack.sp);
+		asm volatile ("NOP");
+		ASM_READ_EBP(c->ip);
+		c->stack.fp = ((void**)c->ip)[0];
+		c->ip = ((void**)c->ip)[1];
+		save_x86_registers(const_cast<registers_t*>(&c->registers));
+	}
 		
 	
-	void __save_context_store(volatile context_t* c, void* ip, void* fp, void* sp)
+	void __save_context_store(context_t* c, void* ip, void* fp, void* sp)
 	{
 		c->ip = ip;
 	}
@@ -234,6 +241,15 @@ extern "C" {
 	{
 		assert(ptr != nullptr);
 		*ptr = regs;
+	}
+
+	int __save_x86_context(context_t* context, void* esp, void* ebp, void* eip)
+	{
+		context->ip = eip;
+		context->stack.fp = ebp;
+		context->stack.sp = esp;
+		context->registers.ebp = (register_t)ebp;
+		return 0;
 	}
 }
 }
