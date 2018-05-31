@@ -18,7 +18,12 @@ namespace Utils {
 			imp = new Internal;
 			auto np = new num_put<char>();
 			imp->addFacet(np);
+			auto ctype_char = new Utils::ctype<char>();
+			imp->addFacet(ctype_char);
+
+			// Add all facets/perform all initialization before reaching here
 			imp->rcount = 100;
+
 			
 		}
 		
@@ -92,4 +97,16 @@ namespace Utils {
 		
 		return *this;
 	}
+
+
+
+
+
+
+
+
+
+
+	template <>
+	typename locale::id ctype<char>::id;
 }

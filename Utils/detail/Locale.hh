@@ -257,6 +257,80 @@ namespace Utils
 		}
 		return false;
 	}
+
+
+
+
+
+	class ctype_base
+	{
+
+	};
+
+
+
+
+	template <class CharT>
+	class ctype : public ctype_base, public locale::facet
+	{
+		public:
+		typedef CharT char_type;
+
+		static locale::id id;
+
+		protected:
+
+		virtual char_type do_toupper(char_type) const;
+		virtual const char_type* do_toupper(char_type*, const char_type*) const;
+
+		public:
+
+		char_type toupper(char_type) const;
+		const char_type* toupper(char_type*, const char_type*) const;
+
+		char_type tolower(char_type) const;
+		const char_type* tolower(char_type*, const char_type*) const;
+
+		char_type widen(char) const;
+		const char_type* widen(const char*, const char*) const;
+
+		char_type narrow(char) const;
+		const char_type* narrow(const char*, const char*) const;
+
+	};
+
+
+
+
+
+	template <>
+	class ctype<char> : public ctype_base, public locale::facet
+	{
+		public:
+		typedef char char_type;
+
+		static locale::id id;
+
+		protected:
+
+		virtual char_type do_toupper(char_type) const { assert(NOT_IMPLEMENTED); }
+		virtual const char_type* do_toupper(char_type*, const char_type*) const { assert(NOT_IMPLEMENTED); }
+
+		public:
+
+		char_type toupper(char_type) const;
+		const char_type* toupper(char_type*, const char_type*) const;
+
+		char_type tolower(char_type) const;
+		const char_type* tolower(char_type*, const char_type*) const;
+
+		char_type widen(char c) const { return c; }
+		const char_type* widen(const char*, const char*) const;
+
+		char_type narrow(char c) const { return c; }
+		const char_type* narrow(const char*, const char*) const;
+
+	};
 }
 
 #endif

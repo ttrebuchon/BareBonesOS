@@ -1,6 +1,8 @@
 #ifndef INCLUDED_OSTREAM_HPP
 #define INCLUDED_OSTREAM_HPP
 
+#include "ostream.hh"
+
 namespace Utils {
 	
 	template <class T, class Traits>
@@ -45,6 +47,13 @@ namespace Utils {
 	}
 	
 	
+
+	template <class T, class Traits>
+	basic_ostream<T, Traits>& basic_ostream<T, Traits>::operator<<(basic_ostream& (*pf)(basic_ostream&))
+	{
+		return pf(*this);
+	}
+
 	
 	template <class T, class Traits>
 	basic_ostream<T, Traits>& basic_ostream<T, Traits>::operator<<(bool n)
@@ -216,6 +225,22 @@ namespace Utils {
 	
 	
 	
+	
+	template <class T, class Traits>
+	basic_ostream<T, Traits>& basic_ostream<T, Traits>::put(char_type c)
+	{
+		sentry __cerb(*this);
+
+		if (__cerb)
+		{
+			ios_base::iostate __err = this->rdstate();
+			if (this->rdbuf()->sputc(c) != c)
+			{
+				this->setstate(this->rdstate() | ios_base::badbit);
+			}
+		}
+		return *this;
+	}
 	
 	template <class T, class Traits>
 	auto basic_ostream<T, Traits>::write(const char_type* data, streamsize n) -> basic_ostream&

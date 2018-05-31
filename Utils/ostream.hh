@@ -104,7 +104,31 @@ namespace Utils {
 	{
 		return (os << (const char*)cstr);
 	}
+
+
+	template <class T, class Traits>
+	inline basic_ostream<T, Traits>& flush(basic_ostream<T, Traits>& os)
+	{
+		return os.flush();
+	}
+
+
+	template <class T, class Traits>
+	inline basic_ostream<T, Traits>& endl(basic_ostream<T, Traits>& os)
+	{
+		return flush(os.put(os.widen('\n')));
+	}
 }
+
+#ifndef TESTING
+
+	namespace std
+	{
+		using Utils::flush;
+		using Utils::endl;
+	}
+
+#endif
 
 #endif
 

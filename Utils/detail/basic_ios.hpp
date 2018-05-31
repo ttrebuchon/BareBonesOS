@@ -1,6 +1,8 @@
 #ifndef INCLUDED_BASIC_IOS_HPP
 #define INCLUDED_BASIC_IOS_HPP
 
+#include "basic_ios.hh"
+
 namespace Utils {
 	
 	
@@ -51,6 +53,25 @@ namespace Utils {
 		auto old = _streambuf;
 		_streambuf = sb;
 		return old;
+	}
+
+	template <class T, class Traits>
+	locale basic_ios<T, Traits>::imbue(const locale& c)
+	{
+		assert(NOT_IMPLEMENTED);
+	}
+
+	template <class T, class Traits>
+	char basic_ios<T, Traits>::narrow(char_type c, char dfault) const
+	{
+		assert(NOT_IMPLEMENTED);
+	}
+
+	template <class T, class Traits>
+	typename basic_ios<T, Traits>::char_type basic_ios<T, Traits>::widen(char c) const
+	{
+		return use_facet<ctype<char_type>>(getloc()).widen(c);
+		assert(NOT_IMPLEMENTED);
 	}
 }
 
