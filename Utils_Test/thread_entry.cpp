@@ -241,6 +241,213 @@ long start_thread(Fn fn, Args... args)
 }*/
 
 
+namespace Kernel
+{
+	extern "C" void scheduler_hook();
+}
+
+const int timer = ITIMER_VIRTUAL;
+const int sig = SIGUSR1;
+
+sigset_t signal_toggle_set;
+timer_t signal_timer;
+struct itimerspec signal_timer_spec;
+
+/*::stack_t sigstack
+{
+	.ss_sp = nullptr,
+	.ss_flags = SS_DISABLE,
+	.ss_size = ((4*SIGSTKSZ > 100*8192) ? 4*SIGSTKSZ : 100*8192),
+};*/
+
+::stack_t sigstack;
+
+void block_signal()
+{
+	sigprocmask(SIG_BLOCK, &signal_toggle_set, nullptr);
+}
+
+void resume_signal()
+{
+	sigprocmask(SIG_UNBLOCK, &signal_toggle_set, nullptr);
+}
+
+static int cyvt = 0;
+
+void thread_switch_hook()
+{
+	//std::clog << "Switching! " << cyvt++ << std::endl;
+	block_signal();
+	sched_yield();
+	resume_signal();
+}
+
+void thread_switch_inter(int val)
+{
+	block_signal();
+	//thread_switch_hook();
+	Kernel::scheduler_hook();
+	resume_signal();
+}
+
+void thread_switch_timer(union sigval)
+{
+	block_signal();
+	//thread_switch_hook();
+	Kernel::scheduler_hook();
+	assert(sigstack.ss_flags & SS_ONSTACK);
+	resume_signal();
+}
+
+
+void setup_signaling()
+{
+	sigemptyset(&signal_toggle_set);
+	sigaddset(&signal_toggle_set, sig);
+	
+	block_signal();
+	
+	
+	if (sigaltstack(nullptr, &sigstack) != 0)
+	{
+		auto e = errno;
+		std::cout << strerror(e) << std::endl;
+		assert(false);
+	}
+	
+	sigstack.ss_flags &= SS_DISABLE;
+	
+	if (sigaltstack(&sigstack, nullptr) != 0)
+	{
+		auto e = errno;
+		std::cout << strerror(e) << std::endl;
+		assert(false);
+	}
+	
+	
+	struct sigevent event;
+	
+	event.sigev_notify = SIGEV_SIGNAL;
+	event.sigev_notify_function = thread_switch_timer;
+	event.sigev_signo = sig;
+	
+	if (timer_create(CLOCK_PROCESS_CPUTIME_ID, &event, &signal_timer) != 0)
+	{
+		auto e = errno;
+		std::cout << strerror(e) << std::endl;
+		assert(false);
+	}
+	
+	signal_timer_spec.it_interval.tv_sec = 0;
+	signal_timer_spec.it_interval.tv_nsec = 1000000;
+	
+	signal_timer_spec.it_value.tv_sec = 0;
+	signal_timer_spec.it_value.tv_nsec = 1000000;
+	
+	
+	if (timer_settime(signal_timer, 0, &signal_timer_spec, nullptr) != 0)
+	{
+		auto e = errno;
+		std::cout << strerror(e) << std::endl;
+		assert(false);
+	}
+	
+	
+	
+	struct sigaction oldAct, newAct;
+	newAct.sa_handler = &thread_switch_inter;
+	
+	auto oldHndl = signal(sig, &thread_switch_inter);
+	assert(oldHndl != SIG_ERR);
+	
+	
+	if (sigaction(sig, &newAct, &oldAct) != 0)
+	{
+		auto e = errno;
+		std::cout << strerror(e) << std::endl;
+		assert(false);
+	}
+	
+	oldHndl = signal(sig, &thread_switch_inter);
+	assert(oldHndl != SIG_ERR);
+	
+	
+	
+	/*struct itimerval newInterval, oldInterval;
+	
+	
+	if (getitimer(timer, &newInterval) != 0)
+	{
+		auto e = errno;
+		std::cout << strerror(e) << std::endl;
+		assert(false);
+	}
+	
+	
+	newInterval.it_interval.tv_sec = 0;
+	newInterval.it_interval.tv_usec = 1000;
+	assert((long)newInterval.it_interval.tv_usec == 1000);
+	newInterval.it_value.tv_usec = 1001;
+	newInterval.it_value.tv_sec = 0;
+	
+	if (setitimer(timer, &newInterval, &oldInterval) != 0)
+	{
+		auto e = errno;
+		std::cout << strerror(e) << std::endl;
+		assert(false);
+	}*/
+	
+	
+	resume_signal();
+	
+	std::cout << "Setup complete." << std::endl;
+}
+
+
+
+void disable_signaling()
+{
+	
+	block_signal();
+	
+	
+	if (timer_delete(signal_timer) != 0)
+	{
+		auto e = errno;
+		std::cout << strerror(e) << std::endl;
+		assert(false);
+	}
+	
+	/*constexpr int timer = ITIMER_VIRTUAL;
+	constexpr int sig = SIGVTALRM;
+	struct itimerval newInterval, oldInterval;
+	
+	
+	if (getitimer(timer, &newInterval) != 0)
+	{
+		auto e = errno;
+		std::cout << strerror(e) << std::endl;
+		assert(false);
+	}
+	
+	
+	newInterval.it_interval.tv_sec = 0;
+	newInterval.it_interval.tv_usec = 0;
+	newInterval.it_value.tv_usec = 0;
+	newInterval.it_value.tv_sec = 0;
+	
+	if (setitimer(timer, &newInterval, &oldInterval) != 0)
+	{
+		auto e = errno;
+		std::cout << strerror(e) << std::endl;
+		assert(false);
+	}*/
+	
+	resume_signal();
+}
+
+
+
 
 extern "C"
 void* __emutls_get_address(struct __emutls_object*);
@@ -251,7 +458,9 @@ TEST(thread_entry)
 {
 	Kernel::init_kernel_threads();
 	assert(sched_yield() == -1);
+	setup_signaling();
 	test_threads();
+	disable_signaling();
 	return;
 	
 	/*init_threads();
@@ -305,6 +514,8 @@ TEST(thread_entry)
 	
 }
 
+//#define YIELD sched_yield()
+#define YIELD
 
 static int test_thread_counter = 0;
 
@@ -324,7 +535,7 @@ class test_invokable
 	void operator()()
 	{
 		std::cout << "Thread " << *tid << ": " << (*ptr)++ << std::endl;
-		sched_yield();
+		YIELD;
 		std::cout << "Thread " << *tid << " (2): " << (*ptr)++ << std::endl;
 	}
 };
@@ -353,6 +564,8 @@ void test_threads()
 {
 	std::cout << std::string(20, '\n') << __func__ << "\n" << std::endl;
 	
+	constexpr int Multiplier = 10;
+	
 	
 	for (int i = 0; i < 20; ++i)
 	{
@@ -366,16 +579,16 @@ void test_threads()
 	
 	while (Kernel::thread_count() > 1)
 	{
-		std::cout << "\n\nMain yielding...\n\n" << std::endl;
-		sched_yield();
+		//std::cout << "\n\nMain yielding...\n\n" << std::endl;
+		YIELD;
 	}
 	
-	for (int j = 0; j < 20; ++j)
+	for (int j = 0; j < 20*Multiplier; ++j)
 	{
 		pthread_t id;
 		Kernel::thread_create(&id, [j]() -> void
 		{
-			for (int i = 0; i < 10; ++i)
+			for (int i = 0; i < 10*Multiplier; ++i)
 			{
 				pthread_t* id2 = new pthread_t;
 				Kernel::thread_create(id2, [i, id2]() -> void
@@ -385,11 +598,12 @@ void test_threads()
 					for (int k = 0; k < ((m % (i+1)) + 2); ++k)
 					{
 						m += k;
-						sched_yield();
+						YIELD;
 						
 						pthread_t* id4 = new pthread_t;
 						test_invokable inv(&test_thread_counter, id4);
 						Kernel::thread_create(id4, inv);
+						
 						
 					}
 					std::cout << *id2 << ": " << i << " -> " << m << "\n";
@@ -398,13 +612,15 @@ void test_threads()
 				
 				if ((i+1) % ((j % 10)+1) == 0)
 				{
-					sched_yield();
+					YIELD;
 				}
 			}
 		});
 	}
 	
 	int max_count = 0;
+	
+	std::cout << "Letting all threads run!\n" << std::endl;
 	
 	while (Kernel::thread_count() > 1)
 	{
@@ -413,8 +629,8 @@ void test_threads()
 			max_count = Kernel::thread_count();
 		}
 		
-		std::cout << "\n\nMain yielding...\n\n" << std::endl;
-		sched_yield();
+		//std::cout << "\n\nMain yielding...\n\n" << std::endl;
+		YIELD;
 	}
 	
 	std::cout << "Most seen at once: " << max_count << std::endl;
