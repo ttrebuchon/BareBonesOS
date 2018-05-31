@@ -13,7 +13,8 @@ namespace Drivers
 	
 	int VGAStreamBuf::sync()
 	{
-		VGA::Write(buffer);
+
+		VGA::Write(buffer, pptr() - pbase());
 		setp(buffer, buffer + Width*Height);
 		return 0;
 	}
