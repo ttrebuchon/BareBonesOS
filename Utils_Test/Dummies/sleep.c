@@ -1,7 +1,7 @@
 #include <Common.h>
 
 
-unsigned int sleep(unsigned int secs)
+/*unsigned int sleep(unsigned int secs)
 {
 	return 0;
 }
@@ -9,4 +9,4 @@ unsigned int sleep(unsigned int secs)
 int usleep(useconds_t microseconds)
 {
 	return 0;
-}
+}*/

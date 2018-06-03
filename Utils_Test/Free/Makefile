@@ -71,7 +71,7 @@ FREE_TESTS = SQLite_Free.o
 BOTH_FLAGS += -DFREE_TESTING
 BOTH_FLAGS += -ffreestanding
 BOTH_FLAGS += -nostdlib -D__NOSTDLIB__
-#BOTH_FLAGS += -D__USE_STD_NEW__
+BOTH_FLAGS += -D__USE_STD_NEW__
 #BOTH_FLAGS += -D__USING_CXXRT__
 BOTH_FLAGS += -DSTACK_INFO_V
 BOTH_FLAGS += -DDEBUG
@@ -94,6 +94,7 @@ BOTH_FLAGS += #-I../../Std
 BOTH_FLAGS += -L../../Libraries/libcxxrt
 BOTH_FLAGS += -L../../Libraries/sqlite3
 BOTH_FLAGS += -I../../Std
+BOTH_FLAGS += -D_U="0x01"
 
 BOTH_FLAGS += $(SQLITE_FLAGS)
 
@@ -107,7 +108,7 @@ CXXFLAGS += -std=c++14
 CXXFLAGS += -MMD
 CXXFLAGS += -I..
 #CXXFLAGS += -fno-rtti
-#CXXFLAGS += -fno-exceptions
+CXXFLAGS += -fno-exceptions
 CXXFLAGS += $(BOTH_FLAGS)
 #CXXFLAGS += -DINCLUDED_NEW_HH
 
@@ -123,6 +124,8 @@ FREEFLAGS += -I../..
 
 
 DEPS = $(FREE_OBJS:.o=.d) $(FREE_TESTS:.o=.d) $(OBJS:.o=.d)
+
+ASM_OUT_SUFFIX = .asm.out.s
 
 
 CXX_F = $(word 1,$(CXX))
@@ -160,7 +163,8 @@ FreeTests.out: $(FREE_OBJS) $(FREE_TESTS)
 %.o: %.cpp ../ForceRebuild.cpp
 	@echo ' '
 	@echo $(CXX_F) $(call LASTPART,$<) ' > ' $(call LASTPART,$@)
-	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+	@#$(CXX) $(BASE_CXXFLAGS) -o $(@:.o=$(ASM_OUT_SUFFIX)) -S $<
 	@echo ' '
 	
 %.o: %.cc ../ForceRebuild.cpp
@@ -179,6 +183,7 @@ SQLite_Free.o: SQLite_Free.cpp ../ForceRebuild.cpp Makefile
 	@echo ' '
 	@echo $(CXX_F) $(call LASTPART,$<) ' > ' $(call LASTPART,$@)
 	@$(CXX) $(CXXFLAGS) -o $@ -c $<
+	@$(CXX) $(CXXFLAGS) -o $(@:.o=$(ASM_OUT_SUFFIX)) -S $<
 	@echo ' '
 
 

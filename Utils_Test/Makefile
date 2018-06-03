@@ -109,7 +109,7 @@ ASM_OUT_SUFFIX = .asm.out.s
 
 
 OTHER_OUT = $(PREPROC_OUT)
-TARGET = Kernel.test
+TARGET = Test.out
 
 CXX_F = $(word 1,$(CXX))
 CC_F = $(word 1,$(CC))
