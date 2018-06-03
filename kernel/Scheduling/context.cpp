@@ -190,6 +190,8 @@ extern "C" {
 	}
 
 	#endif
+	
+	#ifdef __ENV_x86__
 
 	void __save_x86_registers(registers_t regs, registers_t* ptr)
 	{
@@ -205,5 +207,7 @@ extern "C" {
 		context->registers.ebp = (register_t)ebp;
 		return 0;
 	}
+	
+	#endif
 }
 }
