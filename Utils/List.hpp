@@ -102,9 +102,24 @@ namespace Utils
 	}
 	
 	template <class T, class A>
-	typename List<T, A>::size_type List<T, A>::size() const
+	typename List<T, A>::size_type List<T, A>::size() const noexcept
 	{
 		return _size;
+	}
+	
+	template <class T, class A>
+	void List<T, A>::clear()
+	{
+		Node* ptr = head;
+		while (head != nullptr)
+		{
+			head = head->next;
+			nalloc.destroy(ptr);
+			nalloc.deallocate(ptr, 1);
+			ptr = head;
+		}
+		_size = 0;
+		tail = nullptr;
 	}
 	
 	template <class T, class A>

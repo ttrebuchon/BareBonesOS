@@ -7,7 +7,7 @@ GET_SRC = $(wildcard ../$1/*.cpp ../$1/*.c)
 LASTPART = $(shell basename $1)
 LASTPARTS = $(foreach x,$1,$(call LASTPART,$x))
 
-SRC = $(call GET_SRC,Utils) $(call GET_SRC,Utils/detail) ../kernel/Memory/memcpy.c ../kernel/MetaInfo.cpp ../drivers/IDE/DMA.cpp $(call GET_SRC,drivers/IDE) ../drivers/PCI.cpp $(wildcard Dummies/*.cpp Dummies/*.c) ../drivers/VGA_Stream.cpp ../drivers/VGA.cpp ../Libraries/sqlite3/sqlite3.c ../kernel/Error.c $(call GET_SRC,Support/sqlite) ../kernel/Interrupts/ISR.c ../kernel/Interrupts/IRQ_c.c
+SRC = $(call GET_SRC_R,Utils,c) ../kernel/Memory/memcpy.c ../kernel/MetaInfo.cpp $(call GET_SRC,drivers/IDE) ../drivers/PCI.cpp $(wildcard Dummies/*.cpp Dummies/*.c) ../drivers/VGA_Stream.cpp ../drivers/VGA.cpp ../Libraries/sqlite3/sqlite3.c ../kernel/Error.c $(call GET_SRC,Support/sqlite) ../kernel/Interrupts/ISR.c ../kernel/Interrupts/IRQ_c.c
 SRC += ../Std/stdlib.cpp
 #SRC += $(call GET_SRC,Support/unwinder)
 SRC += ../kernel/Memory/PhysicalMemory.cpp
@@ -19,6 +19,7 @@ SRC += ../kernel/Scheduling/context.cpp
 SRC += $(call GET_SRC_R,Utils,cpp)
 SRC += ../kernel/Registers.cpp
 SRC += ../kernel/scheduling/thread.cpp
+SRC += ../kernel/Timer_c.cpp
 
 ASM_SRC = ../kernel/Utility_asm.asm
 ASM_OBJS = $(ASM_SRC:.asm=.o)
@@ -108,13 +109,13 @@ ASM_OUT_SUFFIX = .asm.out.s
 
 
 OTHER_OUT = $(PREPROC_OUT)
-
+TARGET = Kernel.test
 
 CXX_F = $(word 1,$(CXX))
 CC_F = $(word 1,$(CC))
 
 
-all: .fake $(OTHER_OUT) Test.out $(SHARED_LIB_TARGET)
+all: $(OTHER_OUT) $(TARGET) $(SHARED_LIB_TARGET)
 
 clean: 
 	-@rm -f $(OTHER_OUT)
@@ -125,6 +126,12 @@ clean:
 	-@rm -f $(TESTSLIB_DEPS)
 	-@rm -f $(OPTIM_OUT)
 	-@rm -f $(OBJS:.o=$(ASM_OUT_SUFFIX))
+	-@rm -f $(TESTS:.o=$(ASM_OUT_SUFFIX))
+	-@rm -f $(TARGET)
+	@echo $(OBJS:.o=$(ASM_OUT_SUFFIX))
+	@echo ' '
+	@echo ' '
+	@echo $(OBJS) $(TESTS) $(TESTSLIB)
 	
 
 .fake: 
@@ -145,11 +152,13 @@ clean:
 	@echo ' '
 
 
-Test.out: $(OBJS) $(TESTS) $(TESTSLIB)
+$(TARGET): $(OBJS) $(TESTS) $(TESTSLIB)
 	@echo ' '
+	-@rm -f $(TARGET)
 	@echo $(CXX_F) $(call LASTPARTS,$^) ' > ' $(call LASTPART,$@)
 	@echo ' '
-	@$(CXX) $(CXXFLAGS) -o $@ $^ -lgcc -ldl
+	@$(CXX) $(CXXFLAGS) -o $@ $(OBJS) $(TESTS) $(TESTSLIB) -lgcc -ldl
+	@echo ' '
 	
 
 
@@ -158,7 +167,7 @@ Test.out: $(OBJS) $(TESTS) $(TESTSLIB)
 	@echo $(CXX_F) $(call LASTPART,$<) ' > ' $(call LASTPART,$@)
 	@$(CXX) $(CXXFLAGS) -o $@ -c $<
 	@echo $(CXX_F) $(call LASTPART,$<) ' > ' $(call LASTPART,$(@:.o=$(ASM_OUT_SUFFIX)))
-	@$(CXX) $(BASE_CXXFLAGS) -o $(@:.o=$(ASM_OUT_SUFFIX)) -S $<
+	@#$(CXX) $(BASE_CXXFLAGS) -o $(@:.o=$(ASM_OUT_SUFFIX)) -S $<
 	@echo ' '
 	
 
@@ -190,13 +199,15 @@ TestUtils/MemTracker.o: TestUtils/MemTracker.cpp TestUtils/MemTracker.hh Makefil
 Main.o: Main.cpp Makefile
 	@echo ' '
 	@echo $(CXX_F) $(call LASTPART,$<) ' > ' $(call LASTPART,$@)
-	$(CXX) $(CXXFLAGS) -o $@ -c $<
+	@$(CXX) $(CXXFLAGS) -o $@ -c $<
 	@echo ' '
 
 
 $(PREPROC_OUT): $(PREPROC_GET)
-	$(CXX) $(CXXFLAGS) -o $@ -E $^
+	@echo $(CXX_F) $(call LASTPART,$^) ' > ' $(call LASTPART,$@)
+	@$(CXX) $(CXXFLAGS) -o $@ -E $^
 
 
 $(SHARED_LIB_TARGET): $(SHARED_LIB_OBJS)
-	$(CXX) $(CXXFLAGS) -shared -o $@ $<
+	@echo $(CXX_F) $(call LASTPART,$<) ' > ' $(call LASTPART,$@)
+	@$(CXX) $(CXXFLAGS) -shared -o $@ $<
