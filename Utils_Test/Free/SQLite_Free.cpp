@@ -6,8 +6,12 @@
 //#include <iostream>
 #include <assert.h>
 #include <sqlite3/sqlite3.h>
+#include <sys/syscall.h>
+//#include <../CppUtilities/Deps/json/json.hpp>
 
 extern "C" {
+
+thread_local int xyz;
 
 /*void* malloc(unsigned long size)
 {
@@ -50,28 +54,51 @@ void abort()
 
 void foo();
 
+int ghk;
+
+void* __emutls_get_address(struct __emutls_object*)
+{
+	return &ghk;
+}
+
 
 int __main()
 {
 	//foo();
-	return 0;
-	try
+	//return 0;
+	/*try
 	{
 		throw 4;
 	}
 	catch (...)
 	{
 		
+	}*/
+	auto& jkl = xyz;
+	xyz = 4;
+	if (&ghk != &xyz)
+	{
+		*(int*)nullptr = 10;
 	}
+	return 0;
 	
-	asm volatile("svc 0x80");
+
 	void *p1, *p2;
 	static_assert(PAGE_SIZE == 4096);
 	sqlite3* db;
-	sqlite3_open("Test", &db);
+	sqlite3_open(":memory:", &db);
 	//std::cout << "Hello?" << std::endl;
 	return 0;
 }
+
+static unsigned cgv = SYS_getuid;
+
+static_assert(SYS_getuid == 174);
+
+
+
+
+
 
 }
 
@@ -83,6 +110,8 @@ void __start()
 {
 	__main();
 	//__builtin_exit(0);
+	/*asm volatile ("hlt 0");
+	*((int*)nullptr) = 10;*/
 	while (true);
 }
 }

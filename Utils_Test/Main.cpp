@@ -63,6 +63,7 @@ void checkMemoryTrack();
 	QA::out << "-----------------\n" << #X << " testing done.\n-----------------\n\n\n\n"; \
 	checkMemoryTrack(); \
 	QA::out << "----------------------------------\n\n\n\n\n" << std::endl; \
+	QA::CheckPIC(); \
 	} while (false)
 
 #define RUNC(X) do { \

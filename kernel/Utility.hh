@@ -79,6 +79,8 @@ namespace Kernel
 
 #define __IRET__ ERET
 
+#ifndef TESTING
+
 #define __CLI__ __do_aarch64_cli()
 #define __STI__ __do_aarch64_sti()
 
@@ -102,6 +104,7 @@ static inline void __do_aarch64_sti()
 }
 C_END
 
+#endif // !TESTING
 
 #else
 
@@ -113,8 +116,12 @@ C_END
 
 #define __IRET__ IRET
 
+#ifndef TESTING
+
 #define __CLI__ asm volatile("cli")
 #define __STI__ asm volatile("sti")
+
+#endif //!TESTING
 
 
 #endif
@@ -123,8 +130,23 @@ C_END
 	#define __DO_CLI__ __CLI__;
 	#define __DO_STI__ __STI__;
 #else
-	#define __DO_CLI__
-	#define __DO_STI__ 
+	
+	C_CODE
+	void __testing_signal_cli();
+	void __testing_signal_sti();
+	C_END
+	
+	#ifdef __cplusplus
+	
+	#define __DO_CLI__ ::__testing_signal_cli();
+	#define __DO_STI__ ::__testing_signal_sti();
+	
+	#else
+	
+	#define __DO_CLI__ __testing_signal_cli();
+	#define __DO_STI__ __testing_signal_sti();
+	
+	#endif //__cplusplus
 #endif
 
 

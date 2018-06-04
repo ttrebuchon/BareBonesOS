@@ -18,8 +18,9 @@ extern "C" {
 	
 	void sti()
 	{
-		if (/*cli_count.fetch_sub(1)*/--cli_count == 0)
+		if (/*cli_count.fetch_sub(1)*/--cli_count <= 0)
 		{
+			cli_count = 0;
 			__sync_synchronize();
 			__DO_STI__;
 		}

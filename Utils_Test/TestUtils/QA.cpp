@@ -6,13 +6,25 @@
 #include <sys/sysinfo.h>
 #include <sys/mman.h>
 #include <fcntl.h>
+#include "../Tests.hh"
 
+
+void QA::Init()
+{
+	Out_Init();
+	MultiBoot_Init();
+	Timer_Init();
+	SetTimerInterval_ns(50*1000*1000);
+}
 
 //static QA::_ostream _out;
 
 std::ostream QA::out(nullptr);
 void* QA::phys_start = nullptr;
 void* QA::phys_end = nullptr;
+const int QA::PIC_signal = SIGUSR1;
+timer_t QA::PIC_timer;
+struct itimerspec QA::PIC_config;
 
 
 static QUtils::Output::MultiBuf* mb = nullptr;
@@ -29,8 +41,9 @@ void QA::Out_Init()
 	mb->push(file->rdbuf());
 	mb->push(std::cout.rdbuf());
 	out.rdbuf(mb);
-	//std::clog.rdbuf(nullptr);
-	//std::cout.rdbuf(nullptr);
+	std::clog.rdbuf(mb);
+	std::cout.rdbuf(mb);
+	std::cerr.rdbuf(mb);
 	//out.rdbuf(std::cerr.rdbuf());
 	//std::cerr.rdbuf(nullptr);
 }
@@ -80,4 +93,177 @@ void QA::MultiBoot_Init()
 	mb->mmap_length = 2*sizeof(multiboot_mmap_t);
 	
 	boot::mboot = new boot::MultiBoot(mb);
+}
+
+extern "C" void timer_callback(Registers_t);
+extern "C" void task_switch()
+{
+	// Dummy function
+}
+
+static int time_counter = 0;
+
+static void timer_fwd(int)
+{
+	//signal(QA::PIC_signal, timer_fwd);
+	/*QA::CheckPIC();
+	if (time_counter++ % 100 == 0)
+	{
+		QA::out << "time_counter: " << time_counter << std::endl;
+	}
+	assert(time_counter < 1000);
+	assert(time_counter < 1000000);*/
+	timer_callback(Registers_t());
+	
+}
+
+static void timer_fwd(sigval_t)
+{
+	assert(false);
+	timer_callback(Registers_t());
+}
+
+void QA::Timer_Init()
+{
+	sigset_t signal_toggle_set;
+	sigemptyset(&signal_toggle_set);
+	sigaddset(&signal_toggle_set, PIC_signal);
+	
+	if (sigprocmask(SIG_UNBLOCK, &signal_toggle_set, nullptr) != 0)
+	{
+		auto e = errno;
+		out << strerror(e) << std::endl;
+		assert(false);
+	}
+	
+	::stack_t sigstack;
+	
+	if (sigaltstack(nullptr, &sigstack) != 0)
+	{
+		auto e = errno;
+		out << strerror(e) << std::endl;
+		assert(false);
+	}
+	
+	//sigstack.ss_flags &= SS_DISABLE;
+	//sigstack.ss_flags |= SS_AUTODISARM;
+	
+	if (sigaltstack(&sigstack, nullptr) != 0)
+	{
+		auto e = errno;
+		out << strerror(e) << std::endl;
+		assert(false);
+	}
+	
+	
+	struct sigevent event;
+	
+	event.sigev_notify = SIGEV_SIGNAL;
+	//event.sigev_notify_function = timer_fwd;
+	event.sigev_signo = PIC_signal;
+	
+	
+	
+	
+	if (timer_create(CLOCK_THREAD_CPUTIME_ID, &event, &PIC_timer) != 0)
+	{
+		auto e = errno;
+		out << strerror(e) << std::endl;
+		assert(false);
+	}
+	
+	PIC_config.it_interval.tv_sec = 0;
+	PIC_config.it_interval.tv_nsec = 1000*1000;
+	
+	
+	PIC_config.it_value.tv_sec = PIC_config.it_interval.tv_sec;
+	PIC_config.it_value.tv_nsec = PIC_config.it_interval.tv_nsec + 2;
+	
+	
+	if (timer_settime(PIC_timer, 0, &PIC_config, nullptr) != 0)
+	{
+		auto e = errno;
+		out << strerror(e) << std::endl;
+		assert(false);
+	}
+	
+	
+	
+	struct sigaction oldAct, newAct;
+	
+	sigaction(PIC_signal, nullptr, &newAct);
+	newAct.sa_handler = &timer_fwd;
+	newAct.sa_flags |= SA_NODEFER;
+	//newAct.sa_flags |= SA_ONSTACK;
+	sigemptyset(&newAct.sa_mask);
+	
+	
+	if (sigaction(PIC_signal, &newAct, &oldAct) != 0)
+	{
+		auto e = errno;
+		out << strerror(e) << std::endl;
+		assert(false);
+	}
+	
+}
+
+void QA::SetTimerInterval_ns(unsigned long long _nanoseconds)
+{
+	int seconds = _nanoseconds / (1000*1000*1000);
+	int nanoseconds = _nanoseconds % (1000*1000*1000);
+	
+	
+	PIC_config.it_interval.tv_sec = seconds;
+	PIC_config.it_interval.tv_nsec = nanoseconds;
+	
+	if (timer_settime(PIC_timer, 0, &PIC_config, nullptr) != 0)
+	{
+		auto e = errno;
+		out << strerror(e) << std::endl;
+		assert(false);
+	}
+}
+
+void QA::CheckPIC()
+{
+	/*sigset_t usr1set;
+	sigemptyset(&usr1set);
+	sigaddset(&usr1set, PIC_signal);
+	sigprocmask(SIG_BLOCK, &usr1set, nullptr);
+	
+	auto oldAct = signal(SIGUSR1, SIG_IGN);
+	
+	if (oldAct == SIG_ERR)
+	{
+		auto e = errno;
+		out << strerror(e) << std::endl;
+		assert(false);
+	}
+	
+	
+	
+		
+	if (sigprocmask(SIG_UNBLOCK, &usr1set, nullptr) != 0)
+	{
+		auto e = errno;
+		out << strerror(e) << std::endl;
+		assert(false);
+	}
+	
+	
+	
+	
+	
+	if (signal(SIGUSR1, oldAct) == SIG_ERR)
+	{
+		auto e = errno;
+		out << strerror(e) << std::endl;
+		assert(false);
+	}
+	
+	auto hndl = signal(PIC_signal, SIG_IGN);
+	assert(hndl == (decltype(hndl))&timer_fwd);
+	assert(signal(PIC_signal, hndl) == SIG_IGN);*/
+	
+	//ASSERTEQ(timer_getoverrun(PIC_timer), 0);
 }

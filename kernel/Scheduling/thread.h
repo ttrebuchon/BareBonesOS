@@ -9,6 +9,7 @@
 
 #include <Utils/type_traits>
 #include <Utils/tuple>
+#include <Support/MetaProgramming/numbers.hh>
 
 #endif
 
@@ -33,6 +34,8 @@ typedef struct
 	context_t* context;
 	pthread_t id;
 	thread_data_t* data;
+	int status;
+	size_t stack_size;
 } __thread_t;
 
 
@@ -53,6 +56,31 @@ C_END
 
 #ifdef __cplusplus
 
+namespace detail { namespace thread
+{
+	template <class Fn, class Tup, class Index>
+	struct args_applier;
+	
+	template <class Fn, class... Args, size_t... Index>
+	struct args_applier<Fn, Utils::tuple<Args...>, Support::Meta::number_sequence<size_t, Index...>>
+	{
+		static void call(Fn fn, const Utils::tuple<Args...>& args)
+		{
+			fn(Utils::get<Index>(args)...);
+		}
+	};
+	
+	template <class Fn>
+	struct args_applier<Fn, Utils::tuple<>, Support::Meta::number_sequence<size_t>>
+	{
+		static void call(Fn fn, const Utils::tuple<>& args)
+		{
+			fn();
+		}
+	};
+}
+}
+
 template <class Fn, class... Args>
 int thread_create(pthread_t* thread, Fn fn, Args... args)
 {
@@ -66,6 +94,11 @@ int thread_create(pthread_t* thread, Fn fn, Args... args)
 		{
 			
 		}
+		
+		void invoke()
+		{
+			detail::thread::args_applier<Fn, Utils::tuple<typename Utils::decay<Args>::type...>, typename Support::Meta::number_sequence_from_number<size_t, sizeof...(Args)>::type>::call(fn, args);
+		}
 	};
 	
 	auto args_pack = new Thread_Args(Utils::forward<Fn>(fn), Utils::forward<Args>(args)...);
@@ -73,7 +106,8 @@ int thread_create(pthread_t* thread, Fn fn, Args... args)
 	void(*unpacker)(void*) = [](void* _args)
 	{
 		Thread_Args* args = (Thread_Args*)_args;
-		args->fn();
+		args->invoke();
+		//args->fn();
 		delete args;
 	};
 	

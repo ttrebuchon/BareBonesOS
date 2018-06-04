@@ -802,7 +802,7 @@ namespace rb_tree
 	template <class Key>
 	bool RBTree<T, Comp, Alloc>::erase(const Key& k)
 	{
-		assert(NOT_IMPLEMENTED);
+		//assert(NOT_IMPLEMENTED);
 		if (root())
 		{
 			auto oldSize = size();
