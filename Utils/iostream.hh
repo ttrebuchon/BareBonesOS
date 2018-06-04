@@ -40,6 +40,14 @@ namespace Utils
 	typedef basic_iostream<char> iostream;
 	typedef basic_iostream<wchar_t> wiostream;
 	
+	extern ostream& cout;
 }
+
+#if !defined(TESTING) && !defined(Utils)
+	namespace std
+	{
+		using Utils::cout;
+	}
+#endif
 
 #endif
