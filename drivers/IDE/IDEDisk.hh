@@ -12,6 +12,10 @@ namespace Drivers { namespace IDE {
 	{
 		private:
 		Device* dev;
+		mutable unsigned char err;
+
+
+		unsigned char ATA_access(unsigned char direction, unsigned int lba, unsigned char secCount, unsigned short segment_selector, unsigned int seg_off);
 		
 		
 		public:
@@ -29,6 +33,7 @@ namespace Drivers { namespace IDE {
 		
 		// Methods
 		const char* model() const;
+		const char* getError();
 		
 	};
 	

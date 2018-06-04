@@ -17,7 +17,7 @@ namespace Drivers { namespace IDE {
 	uint32_t Device::BAR2;
 	uint32_t Device::BAR3;
 	uint32_t Device::BAR4;
-	
+
 	unsigned char Device::Read(const Channel channel, const Register reg)
 	{
 		unsigned char result = 0;
@@ -126,6 +126,11 @@ namespace Drivers { namespace IDE {
 		
 		return 0;
 	}
+
+	void Device::Select(const Channel channel, const Role role)
+	{
+		Device::Write(channel, Register::HDDevSel, (unsigned char)role);
+	}
 	
 	void Device::ReadBuffer(const Channel channel, const Register reg, uint32_t* buf, uint32_t dwordCount)
 	{
@@ -182,6 +187,7 @@ namespace Drivers { namespace IDE {
 
 		if (pciDev == PCI::NULL_DEVICE)
 		{
+			assert(false);
 			pciDev = PCI::GetDevice(PCIVendorID::ATA, PCIDeviceID::PIIX4, PCIType::Null);
 		}
 
@@ -485,15 +491,18 @@ namespace Drivers { namespace IDE {
 			if (cl == 0x14 && ch == 0xEB)
 			{
 				//TODO
+				assert(NOT_IMPLEMENTED);
 				type = Interface::ATAPI;
 			}
 			else if (cl == 0x69 && ch == 0x96)
 			{
 				//TODO
+				assert(NOT_IMPLEMENTED);
 				type = Interface::ATAPI;
 			}
 			else
 			{
+				assert(NOT_IMPLEMENTED);
 				return true;
 			}
 			

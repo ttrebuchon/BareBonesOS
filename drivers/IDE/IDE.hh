@@ -267,7 +267,7 @@ namespace Drivers { namespace IDE {
 			uint16_t altStatus;
 		};
 		uint16_t BMR;
-		
+
 		static unsigned char Read(const Channel channel, const Register reg);
 		
 		static void Write(const Channel, const Register, unsigned char data);
@@ -275,6 +275,8 @@ namespace Drivers { namespace IDE {
 		static void ReadBuffer(const Channel, const Register, uint32_t* buf, uint32_t dwordCount);
 		
 		static unsigned char Poll(const Channel, const bool advCheck = false);
+
+		static void Select(const Channel, const Role);
 		
 		static void Initialize(uint32_t BAR0, uint32_t BAR1, uint32_t BAR2, uint32_t BAR3, uint32_t BAR4);
 		static void Initialize();
@@ -289,7 +291,7 @@ namespace Drivers { namespace IDE {
 		bool init();
 		void delay() const;
 		void softReset();
-		
+
 	} __attribute__((packed));
 	
 	
