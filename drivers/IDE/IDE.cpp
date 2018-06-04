@@ -18,16 +18,20 @@ namespace Drivers { namespace IDE {
 	uint32_t Device::BAR3;
 	uint32_t Device::BAR4;
 
-	unsigned char Device::Read(const Channel channel, const Register reg)
+	static ChannelRegister_t& get_channel(const unsigned char channel)
+	{
+		assert(channel == ATA_PRIMARY || channel == ATA_SECONDARY);
+		return (channel == ATA_PRIMARY ? Device::Channels[0] : Device::Channels[1]);
+	}
+
+	unsigned char Device::Read(const unsigned char channel, const uint16_t reg)
 	{
 		unsigned char result = 0;
-		ChannelRegister_t& chan = (channel == Channel::Primary ? Channels[0] : Channels[1]);
-		
-		ASSERT(Channels[(unsigned char)channel].base + (unsigned char)reg == Channels[(unsigned char)channel].base + (uint16_t)reg);
+		ChannelRegister_t& chan = get_channel(channel);
 		
 		if (reg > 0x07 && reg < 0x0C)
 		{
-			Write(channel, Register::Control, 0x80 | chan.nIEN);
+			Write(channel, ATA_REG_CONTROL, 0x80 | chan.nIEN);
 		}
 		
 		if (reg < 0x08)
@@ -53,23 +57,21 @@ namespace Drivers { namespace IDE {
 		
 		if (reg > 0x07 && reg < 0x0C)
 		{
-			Write(channel, Register::Control, chan.nIEN);
+			Write(channel, ATA_REG_CONTROL, chan.nIEN);
 		}
 		
 		return result;
 	}
 	
 	
-	void Device::Write(const Channel channel, const Register reg, unsigned char data)
+	void Device::Write(const unsigned char channel, const uint16_t reg, unsigned char data)
 	{
-		ChannelRegister_t& chan = (channel == Channel::Primary ? Channels[0] : Channels[1]);
+		ChannelRegister_t& chan = get_channel(channel);
 		
 		if (reg > 0x07 && reg < 0x0C)
 		{
-			Write(channel, Register::Control, 0x80 | chan.nIEN);
+			Write(channel, ATA_REG_CONTROL, 0x80 | chan.nIEN);
 		}
-		
-		ASSERT(Channels[(unsigned char)channel].base + (uint16_t)reg - 0x00 == Channels[(unsigned char)channel].base + (unsigned short)reg - 0x00);
 
 		if (reg < 0x08)
 		{
@@ -90,35 +92,35 @@ namespace Drivers { namespace IDE {
 		
 		if (reg > 0x07 && reg < 0x0C)
 		{
-			Write(channel, Register::Control, chan.nIEN);
+			Write(channel, ATA_REG_CONTROL, chan.nIEN);
 		}
 	}
 	
 	
-	unsigned char Device::Poll(const Channel chan, const bool advCheck)
+	unsigned char Device::Poll(const unsigned char chan, const bool advCheck)
 	{
 		for (int i = 0; i < 4; ++i)
 		{
-			Read(chan, Register::AltStatus);
+			Read(chan, ATA_REG_ALT_STATUS);
 		}
 		
-		while (Read(chan, Register::Status) & ATAState::Busy) ;
+		while (Read(chan, ATA_REG_STATUS) & ATA_STATE_BUSY) ;
 		
 		if (advCheck)
 		{
-			unsigned char state = Read(chan, Register::Status);
+			unsigned char state = Read(chan, ATA_REG_STATUS);
 			
-			if (state & ATAState::Error)
+			if (state & ATA_STATE_ERROR)
 			{
 				return 2;
 			}
 			
-			if (state & ATAState::Fault)
+			if (state & ATA_STATE_FAULT)
 			{
 				return 1;
 			}
 			
-			if ((state & ATAState::RequestReady) == 0)
+			if ((state & ATA_STATE_REQUEST_READY) == 0)
 			{
 				return 3;
 			}
@@ -127,18 +129,18 @@ namespace Drivers { namespace IDE {
 		return 0;
 	}
 
-	void Device::Select(const Channel channel, const Role role)
+	void Device::Select(const unsigned char channel, const unsigned char role)
 	{
-		Device::Write(channel, Register::HDDevSel, (unsigned char)role);
+		Device::Write(channel, ATA_REG_DEVICE_SELECT, role);
 	}
 	
-	void Device::ReadBuffer(const Channel channel, const Register reg, uint32_t* buf, uint32_t dwordCount)
+	void Device::ReadBuffer(const unsigned char channel, const uint16_t reg, uint32_t* buf, uint32_t dwordCount)
 	{
-		ChannelRegister_t& chan = (channel == Channel::Primary ? Channels[0] : Channels[1]);
+		ChannelRegister_t& chan = get_channel(channel);
 		
 		if (reg > 0x07 && reg < 0x0C)
 		{
-			Write(channel, Register::Control, 0x80 | chan.nIEN);
+			Write(channel, ATA_REG_CONTROL, 0x80 | chan.nIEN);
 		}
 		uint16_t esOld = 0;
 		uint16_t ds = 0;
@@ -172,7 +174,7 @@ namespace Drivers { namespace IDE {
 		#endif
 		if (reg > 0x07 && reg < 0x0C)
 		{
-			Write(channel, Register::Control, chan.nIEN);
+			Write(channel, ATA_REG_CONTROL, chan.nIEN);
 		}
 	}
 
@@ -236,184 +238,20 @@ namespace Drivers { namespace IDE {
 		}
 
 		ASSERT(BAR0 == 0x1F0);
-
-
-		
-
-
-
-		/*
-		int j, k, count = 0;
-		Channels[(uchar)Channel::Primary].base = (BAR0 & 0xFFFFFFFC) + 0x1F0 * (!BAR0);
-		ASSERT(Channels[(uchar)Channel::Primary].base == 0x1F0);
-		Channels[(uchar)Channel::Primary].ctrl = (BAR1 & 0xFFFFFFFC) + 0x3F6 * (!BAR1);
-		Channels[(uchar)Channel::Secondary].base = (BAR2 & 0xFFFFFFFC) + 0x170 * (!BAR2);
-		
-		Channels[(uchar)Channel::Secondary].ctrl = (BAR3 & 0xFFFFFFFC) + 0x376 * (!BAR3);
-		
-		Channels[(uchar)Channel::Primary].bmide = (BAR4 & 0xFFFFFFFC);
-		
-		Channels[(uchar)Channel::Secondary].bmide = (BAR4 & 0xFFFFFFFC) + 0x08;
-		
-		
-		auto initialStatus1 = read(Channel::Primary, Register::Status);
-		auto initialStatus2 = read(Channel::Secondary, Register::Status);
-		
-		write(Channel::Primary, Register::Control, 2);
-		write(Channel::Secondary, Register::Control, 2);
-		Channel i = (Channel)0;
-		Channel iEnd = (Channel)2;
-		if (initialStatus1 == 0xFF)
-		{
-			Devices[0].reserved = 0;
-			Devices[1].reserved = 0;
-			i = (Channel)1;
-		}
-		if (initialStatus2 == 0xFF)
-		{
-			Devices[2].reserved = 0;
-			Devices[3].reserved = 0;
-			iEnd = (Channel)1;
-		}
-		if (initialStatus1 == 0xFF && initialStatus2 == 0xFF)
-		{
-			return;
-		}
-		Role currentRole = Role::Master;
-		for (j = 0; j < 2; ++j)
-		{
-			for (; i < iEnd; i = (Channel)(i+1))
-			{
-				count = ((int)i)*2 + j;
-				currentRole = (j == 0 ? Role::Master : Role::Slave);
-				unsigned char err = 0;
-				Interface type = Interface::ATA;
-				
-				Devices[count].reserved = 0;
-				
-
-
-				write(i, Register::HDDevSel, (uchar)currentRole);
-				write(i, Register::SecCount0, 0);
-				write(i, Register::LBA0, 0);
-				write(i, Register::LBA1, 0);
-				write(i, Register::LBA2, 0);
-				sleep(1);
-
-				//poll(i, false);
-
-				write(i, Register::Command, (uchar)ATACmd::Identify);
-				
-				//TODO: Sleep for ~1ms
-				sleep(1);
-				
-				if (read(i, Register::Status) == 0)
-				{
-					TRACE("ATA Bus is not present!\n");
-
-					// Drivers::VGA::Write("ATA Bus ");
-					// Drivers::VGA::Write((int)i);
-					// Drivers::VGA::Write(" is not present!\n");
-					continue;
-				}
-
-				while (true)
-				{
-					if (read(i, Register::LBA1) != 0)
-					{
-						err = 1;
-						break;
-					}
-					if (read(i, Register::LBA2) != 0)
-					{
-						err = 1;
-						break;
-					}
-
-					unsigned char status = read(i, Register::Status);
-					if ((status & ATAState::Error))
-					{
-						err = 1;
-						break;
-					}
-					
-					if (!((uchar)status & ATAState::Busy) && ((uchar)status & ATAState::RequestReady))
-					{
-						break;
-					}
-				}
-				
-				if (err != 0)
-				{
-					TRACE("ATA Error Encountered...\n");
-					unsigned char cl = read(i, Register::LBA1);
-					unsigned char ch = read(i, Register::LBA2);
-					
-					if (cl == 0x14 && ch == 0xEB)
-					{
-						//TODO
-						type = Interface::ATAPI;
-					}
-					else if (cl == 0x69 && ch == 0x96)
-					{
-						//TODO
-						type = Interface::ATAPI;
-					}
-					else
-					{
-						continue;
-					}
-
-					TRACE("Nvm, was just an ATAPI device.\n");
-					
-					write(i, Register::Command, (uchar)ATACmd::IdentifyPacket);
-					sleep(1);
-				}
-
-				readBuffer(i, Register::Data, (uint32_t*)buf, 128);
-				
-				Devices[count].reserved = 1;
-				Devices[count].type = type;
-				Devices[count].channel = (Channel)i;
-				Devices[count].drive = j;
-				Devices[count].signature = *((uint16_t*)(buf + (uint16_t)ATAIdentify::DeviceType));
-				Devices[count].capabilities = *((uint16_t*)(buf + (uint16_t)ATAIdentify::Capabilities));
-				Devices[count].commandSets = *((uint32_t*)(buf + (uint16_t)ATAIdentify::CommandSets));
-
-				
-				
-				if (Devices[count].commandSets & (1 << 26))
-				{
-					Devices[count].size = *((unsigned int*)buf + (uint16_t)ATAIdentify::MaxLBAExt);
-				}
-				else
-				{
-					Devices[count].size = *((unsigned int*)buf + (uint16_t)ATAIdentify::MaxLBA);
-				}
-
-				for (k = 0; k < 40; k += 2)
-				{
-					Devices[count].model[k] = buf[ATAIdentify::Model + k + 1];
-					Devices[count].model[k+1] = buf[ATAIdentify::Model + k];
-				}
-
-				Devices[count].model[40] = '\0';
-
-				++count;
-			}
-		}*/
 	}
 	
 	
-	Device::Device(Channel channel, Role role) : _device_initted(false), channel(channel), drive(role)
+	Device::Device(unsigned char channel, unsigned char role) : _device_initted(false), channel(channel), drive(role)
 	{
 		if (!Initialized)
 		{
 			Initialize();
 		}
 		
-		uint16_t base = (channel == Channel::Primary) ? BAR0 : BAR2;
-		uint16_t alt = (channel == Channel::Primary) ? BAR1 : BAR3;
+		assert(channel == ATA_PRIMARY || channel == ATA_SECONDARY);
+
+		uint16_t base = (channel == ATA_PRIMARY) ? BAR0 : BAR2;
+		uint16_t alt = (channel == ATA_PRIMARY) ? BAR1 : BAR3;
 		
 		
 		data = base;
@@ -446,12 +284,12 @@ namespace Drivers { namespace IDE {
 		delay();
 				
 		reserved = 0;
-		port_byte_out(select, (uchar)drive);
+		port_byte_out(select, drive);
 		port_byte_out(sectorCount, 0);
 		port_byte_out(lbaLow, 0);
 		port_byte_out(lbaMid, 0);
 		port_byte_out(lbaHigh, 0);
-		port_byte_out(command, (uchar)ATACmd::Identify);
+		port_byte_out(command, ATA_CMD_IDENTIFY);
 		if (!port_byte_in(status))
 		{
 			err = 1;
@@ -471,12 +309,12 @@ namespace Drivers { namespace IDE {
 		{
 			uchar stat = port_byte_in(status);
 			
-			if (stat & ATAState::Error)
+			if (stat & ATA_STATE_ERROR)
 			{
 				err = 1;
 				break;
 			}
-			else if (stat & ATAState::RequestReady)
+			else if (stat & ATA_STATE_REQUEST_READY)
 			{
 				break;
 			}
@@ -508,7 +346,7 @@ namespace Drivers { namespace IDE {
 			
 			TRACE("Nvm, was just an ATAPI device.\n");
 			
-			port_byte_out(command, (uchar)ATACmd::IdentifyPacket);
+			port_byte_out(command, ATA_CMD_IDENTIFY_PACKET);
 			delay();
 			
 			return true;
@@ -519,8 +357,8 @@ namespace Drivers { namespace IDE {
 
 		for (int k = 0; k < 40; k += 2)
 		{
-			model[k] = buf[ATAIdentify::Model + k + 1];
-			model[k+1] = buf[ATAIdentify::Model + k];
+			model[k] = buf[ATA_IDENTIFY_MODEL + k + 1];
+			model[k+1] = buf[ATA_IDENTIFY_MODEL + k];
 		}
 
 		auto pciDev = PCI::GetDevice(PCIVendorID::ATA, PCIDeviceID::ATA, PCIType::Null);

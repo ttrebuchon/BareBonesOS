@@ -602,7 +602,7 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     out << "Testing IDE Drivers..." << std::endl;
     
     Drivers::IDE::Device::Initialize();
-    Drivers::IDE::Device pm(Drivers::IDE::Channel::Primary, Drivers::IDE::Role::Master);
+    Drivers::IDE::Device pm(ATA_PRIMARY, ATA_MASTER);
     if (pm.reserved)
     {
         // out << "Model: ";
@@ -612,7 +612,7 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
         out.flush();
     }
     
-    Drivers::IDE::Device ps(Drivers::IDE::Channel::Primary, Drivers::IDE::Role::Slave);
+    Drivers::IDE::Device ps(ATA_PRIMARY, ATA_SLAVE);
     if (ps.reserved)
     {
         //out << "\nModel: ";
@@ -625,7 +625,7 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     }
 
 
-    Drivers::IDE::Device sm(Drivers::IDE::Channel::Secondary, Drivers::IDE::Role::Master);
+    Drivers::IDE::Device sm(ATA_SECONDARY, ATA_MASTER);
     if (sm.reserved)
     {
         //out << "Model: ";
@@ -636,7 +636,7 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     }
     
     
-    Drivers::IDE::Device ss(Drivers::IDE::Channel::Secondary, Drivers::IDE::Role::Slave);
+    Drivers::IDE::Device ss(ATA_SECONDARY, ATA_SLAVE);
     if (ss.reserved)
     {
         //out << "\nModel: ";
@@ -649,7 +649,7 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     }
 
     out << "Testing DMADrive..." << std::endl;
-    Drivers::IDE::DMADrive dmdrive(Drivers::IDE::Channel::Primary, Drivers::IDE::Role::Master);
+    Drivers::IDE::DMADrive dmdrive(ATA_PRIMARY, ATA_MASTER);
 
     auto sec1 = dmdrive.readSector(0, 512);
     out << "Returned." << std::endl;
@@ -668,7 +668,7 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
 
 
     // std::cout << "Testing PIO IDE Driver..." << std::endl;
-    // //Drivers::IDE::Device* pio_dev = new Drivers::IDE::Device(Drivers::IDE::Channel::Primary, Drivers::IDE::Role::Master);
+    // //Drivers::IDE::Device* pio_dev = new Drivers::IDE::Device(ATA_PRIMARY, ATA_MASTER);
     // {
     //     // pio_dev->init();
     //     // pio_dev->softReset();

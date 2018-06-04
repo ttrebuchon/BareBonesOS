@@ -46,42 +46,43 @@ namespace Drivers { namespace IDE {
 			head = (lba + 1 - sector) % (16 * 63) / (63);
 		}
 
-		while (Device::Read(dev->channel, Register::Status) & (unsigned char)ATAState::Busy) ;
+		while (Device::Read(dev->channel, ATA_REG_STATUS) & ATA_STATE_BUSY) ;
 
 		if (lba_mode == 0)
 		{
-			Device::Write(dev->channel, Register::HDDevSel, 0xA0 | (((unsigned char)dev->drive) << 4) | head);
+			
+			Device::Write(dev->channel, ATA_REG_DEVICE_SELECT, 0xA0 | (((unsigned char)dev->drive) << 4) | head);
 		}
 		else
 		{
-			Device::Write(dev->channel, Register::HDDevSel, 0xE0 | (((unsigned char)dev->drive) << 4) | head);
+			Device::Write(dev->channel, ATA_REG_DEVICE_SELECT, 0xE0 | (((unsigned char)dev->drive) << 4) | head);
 		}
 
 		if (lba_mode == 2)
 		{
-			Device::Write(dev->channel, Register::SecCount1, 0);
-			Device::Write(dev->channel, Register::LBA3, lba_io[3]);
-			Device::Write(dev->channel, Register::LBA4, lba_io[4]);
-			Device::Write(dev->channel, Register::LBA5, lba_io[5]);
+			Device::Write(dev->channel, ATA_REG_SECTOR_COUNT_1, 0);
+			Device::Write(dev->channel, ATA_REG_LBA_3, lba_io[3]);
+			Device::Write(dev->channel, ATA_REG_LBA_4, lba_io[4]);
+			Device::Write(dev->channel, ATA_REG_LBA_5, lba_io[5]);
 		}
 
-		Device::Write(dev->channel, Register::SecCount0, secCount);
-		Device::Write(dev->channel, Register::LBA0, lba_io[0]);
-		Device::Write(dev->channel, Register::LBA1, lba_io[1]);
-		Device::Write(dev->channel, Register::LBA2, lba_io[2]);
+		Device::Write(dev->channel, ATA_REG_SECTOR_COUNT_0, secCount);
+		Device::Write(dev->channel, ATA_REG_LBA_LOW, lba_io[0]);
+		Device::Write(dev->channel, ATA_REG_LBA_MID, lba_io[1]);
+		Device::Write(dev->channel, ATA_REG_LBA_HIGH, lba_io[2]);
 
-		ATACmd cmd;
+		unsigned char cmd;
 		
 
 		if (direction == 0)
 		{
 			if (lba_mode == 0 || lba_mode == 1)
 			{
-				cmd = ATACmd::ReadPIO;
+				cmd = ATA_CMD_READ_PIO;
 			}
 			else if (lba_mode == 2)
 			{
-				cmd = ATACmd::ReadPIOExt;
+				cmd = ATA_CMD_READ_PIO_EXT;
 			}
 			else
 			{
@@ -92,11 +93,11 @@ namespace Drivers { namespace IDE {
 		{
 			if (lba_mode == 0 || lba_mode == 1)
 			{
-				cmd = ATACmd::WritePIO;
+				cmd = ATA_CMD_WRITE_PIO;
 			}
 			else if (lba_mode == 2)
 			{
-				cmd = ATACmd::WritePIOExt;
+				cmd = ATA_CMD_WRITE_PIO_EXT;
 			}
 			else
 			{
@@ -104,9 +105,8 @@ namespace Drivers { namespace IDE {
 			}
 		}
 
-		unsigned char _cmd = (unsigned char)cmd;
 
-		Device::Write(dev->channel, Register::Command, _cmd);
+		Device::Write(dev->channel, ATA_REG_COMMAND, cmd);
 
 		if (direction == 0)
 		{
@@ -136,7 +136,7 @@ namespace Drivers { namespace IDE {
 				seg_off += words*2;
 			}
 
-			Device::Write(dev->channel, Register::Command, (unsigned char[]) {ATA_CMD_CACHE_FLUSH, ATA_CMD_CACHE_FLUSH, ATA_CMD_CACHE_FLUSH_EXT}[lba_mode]);
+			Device::Write(dev->channel, ATA_REG_COMMAND, (unsigned char[]) {ATA_CMD_CACHE_FLUSH, ATA_CMD_CACHE_FLUSH, ATA_CMD_CACHE_FLUSH_EXT}[lba_mode]);
 			Device::Poll(dev->channel, false);
 		}
 
@@ -145,7 +145,7 @@ namespace Drivers { namespace IDE {
 
 
 	
-	IDEDisk::IDEDisk(bool primary, bool master) : IDEDisk(new Device(primary ? Channel::Primary : Channel::Secondary, master ? Role::Master : Role::Slave)/*&Device::Devices[((int)!primary)*2 + (int)!master]*/)
+	IDEDisk::IDEDisk(bool primary, bool master) : IDEDisk(new Device(primary ? ATA_PRIMARY : ATA_SECONDARY, master ? ATA_MASTER : ATA_SLAVE)/*&Device::Devices[((int)!primary)*2 + (int)!master]*/)
 	{
 		
 	}
@@ -155,7 +155,7 @@ namespace Drivers { namespace IDE {
 		dev->init();
 		Device::Channels[(int)dev->channel].nIEN = 1;
 		Device::Select(dev->channel, dev->drive);
-		Device::Write(dev->channel, Register::Control, 2);
+		Device::Write(dev->channel, ATA_REG_CONTROL, 2);
 	}
 	
 	unsigned char* IDEDisk::readSector(const uint32_t lba) const
@@ -178,16 +178,16 @@ namespace Drivers { namespace IDE {
 
 
 
-		Device::Write(dev->channel, Register::Command, 0);
-		Device::Write(dev->channel, Register::Control, 0);
+		Device::Write(dev->channel, ATA_REG_COMMAND, 0);
+		Device::Write(dev->channel, ATA_REG_CONTROL, 0);
 
 		Device::Poll(dev->channel, false);
 		Device::Select(dev->channel, dev->drive);
-		Device::Write(dev->channel, Register::SecCount0, 1);
-		Device::Write(dev->channel, Register::LBA0, lba & 0xFF);
-		Device::Write(dev->channel, Register::LBA1, (lba & 0xFF00) >> 8);
-		Device::Write(dev->channel, Register::LBA2, (lba & 0xFF0000) >> 16);
-		Device::Write(dev->channel, Register::Command, ATA_CMD_READ_PIO);
+		Device::Write(dev->channel, ATA_REG_SECTOR_COUNT_0, 1);
+		Device::Write(dev->channel, ATA_REG_LBA_LOW, lba & 0xFF);
+		Device::Write(dev->channel, ATA_REG_LBA_MID, (lba & 0xFF00) >> 8);
+		Device::Write(dev->channel, ATA_REG_LBA_HIGH, (lba & 0xFF0000) >> 16);
+		Device::Write(dev->channel, ATA_REG_COMMAND, ATA_CMD_READ_PIO);
 
 		if (err = Device::Poll(dev->channel, true))
 		{
@@ -196,7 +196,7 @@ namespace Drivers { namespace IDE {
 			assert(NOT_IMPLEMENTED);
 		}
 
-		Device::ReadBuffer(dev->channel, Register::Data, reinterpret_cast<uint32_t*>(buf), 512 / sizeof(uint32_t));
+		Device::ReadBuffer(dev->channel, ATA_REG_DATA, reinterpret_cast<uint32_t*>(buf), 512 / sizeof(uint32_t));
 
 		return true;
 
@@ -256,32 +256,32 @@ namespace Drivers { namespace IDE {
 		}
 		else if (err == 2)
 		{
-			unsigned char st = Device::Read(dev->channel, Register::Error);
-			if (st & ATAError::BadSector)
+			unsigned char st = Device::Read(dev->channel, ATA_REG_ERROR);
+			if (st & ATA_ERROR_BAD_SECTOR)
 			{
 				return "Bad Sector";
 			}
-			else if (st & ATAError::UncorectableData)
+			else if (st & ATA_ERROR_UNCORRECTABLE_DATA)
 			{
 				return "Uncorrectable Data";
 			}
-			else if (st & ATAError::NoMedia || st & ATAError::NoMedia_2)
+			else if (st & ATA_ERROR_NO_MEDIA || st & ATA_ERROR_NO_MEDIA_2)
 			{
 				return "No Media";
 			}
-			else if (st & ATAError::IDNotFound)
+			else if (st & ATA_ERROR_ID_NOT_FOUND)
 			{
 				return "ID Not Found";
 			}
-			else if (st & ATAError::CmdAborted)
+			else if (st & ATA_ERROR_CMD_ABORTED)
 			{
 				return "Command Aborted";
 			}
-			else if (st & ATAError::Track0NotFound)
+			else if (st & ATA_ERROR_TRACK_0_NOT_FOUND)
 			{
 				return "No Media or Media Error";
 			}
-			else if (st & ATAError::NoAddr)
+			else if (st & ATA_ERROR_NO_ADDR)
 			{
 				return "No Address Mark Found";
 			}

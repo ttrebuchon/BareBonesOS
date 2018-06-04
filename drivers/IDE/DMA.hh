@@ -89,7 +89,7 @@ namespace Drivers { namespace IDE {
 		void direction(Direction);
 		
 		DMADrive(Device*);
-		DMADrive(const Channel, const Role);
+		DMADrive(const unsigned char channel, const unsigned char role);
 		
 		unsigned char* readSector(uint32_t lba, uint32_t len);
 		

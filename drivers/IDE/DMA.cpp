@@ -41,7 +41,7 @@ namespace Drivers { namespace IDE {
 		int_fired = true;
 	}
 	
-	DMADrive::DMADrive(const Channel chan, const Role role) : DMADrive(new Device(chan, role)/*&Device::Devices[2*(int)(chan == Channel::Secondary) + (int)(role == Role::Slave)]*/)
+	DMADrive::DMADrive(const unsigned char chan, const unsigned char role) : DMADrive(new Device(chan, role)/*&Device::Devices[2*(int)(chan == Channel::Secondary) + (int)(role == Role::Slave)]*/)
 	{}
 	
 	DMADrive::DMADrive(Device* dev) : Disk(), BMR(0), _dir(), _state(false), dev(dev), prdt(nullptr), prdt_phys(0x0)
@@ -49,7 +49,7 @@ namespace Drivers { namespace IDE {
 		Initialize();
 		prdt = PRDT<10>::Create(&prdt_phys);
 		current_drive = this;
-		port_byte_out(dev->command, (uchar)ATACmd::Identify);
+		port_byte_out(dev->command, ATA_CMD_IDENTIFY);
 		dev->delay();
 		for (int i = 0; i < 256; ++i) port_word_in(dev->data);
 		for (auto i = 0; i < PRDT_Size; ++i)
@@ -192,7 +192,7 @@ namespace Drivers { namespace IDE {
 		ASSERT(int_fired == false);
 		TRACE("int_fired = false\n");
 
-		port_byte_out(dev->command, (uchar)ATACmd::ReadDMA);
+		port_byte_out(dev->command, ATA_CMD_READ_DMA);
 		port_byte_out(dev->BMR + (uint16_t)Register::Command, 0x8 | 0x1);
 		
 		// unsigned long count = 0;
