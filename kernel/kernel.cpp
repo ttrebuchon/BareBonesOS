@@ -1,5 +1,6 @@
 #define private public
 #define protected public
+#include <kernel/Initialize.hh>
 #include <drivers/VGA.hh>
 #include <kernel/TSS.h>
 #include <kernel/Interrupts.h>
@@ -30,6 +31,8 @@
 
 #include <kernel/Scheduling/context.h>
 #include <kernel/Scheduling/thread.h>
+
+#include <Utils/iostream>
 
 #if !defined(__cplusplus)
 #include <stdbool.h>
@@ -129,6 +132,9 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     Drivers::VGA::Write("Tasking initialized.\n");
     Kernel::init_kernel_threads();
     Drivers::VGA::Write("Threads initialized.\n");
+
+
+    initialize_stdlib();
 
     Drivers::VGA::Write("Hello, kernel world!\nThis is a test.\n");
 
@@ -535,7 +541,6 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
 
     assert(thread2_marker == 1);
 
-    while (true);
 
 
     Kernel::context_t* context = new Kernel::context_t;
@@ -546,6 +551,8 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     }
     Drivers::VGA::Write("Path 2 Executing...\n");
     
+
+    out << "Multithreading and context tests completed." << std::endl;
 
 
     // Drivers::VGA::Write("Initializing ATA Devices...\n");
@@ -591,8 +598,9 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     // }
 
 
-    out << "Testing! " << 4 << "\n";
-    out.flush();
+
+    out << "Testing IDE Drivers..." << std::endl;
+    
     Drivers::IDE::Device::Initialize();
     Drivers::IDE::Device pm(Drivers::IDE::Channel::Primary, Drivers::IDE::Role::Master);
     if (pm.reserved)
@@ -600,7 +608,7 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
         // out << "Model: ";
         //out.flush();
         //Drivers::VGA::Write(pm.model);
-        out << "Model: " << pm.model << "\n";
+        out << "Primary-Master Model: " << pm.model << "\n";
         out.flush();
     }
     
@@ -612,7 +620,7 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
         // Drivers::VGA::Write(ps.model);
         //out << "\n";
         //out.flush();
-        out << "Model: " << ps.model << "\n";
+        out << "Primary-Slave Model: " << ps.model << "\n";
         out.flush();
     }
 
@@ -623,7 +631,7 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
         //out << "Model: ";
         //out.flush();
         // Drivers::VGA::Write(sm.model);
-        out << "Model: " << sm.model << "\n";
+        out << "Secondary-Master Model: " << sm.model << "\n";
         out.flush();
     }
     
@@ -636,34 +644,54 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
         Drivers::VGA::Write(ss.model);
         //out << "\n";
         //out.flush();
-        out << "Model: " << ss.model << "\n";
+        out << "Secondary-Slave Model: " << ss.model << "\n";
         out.flush();
     }
 
-    out << "Testing DMADrive...\n";
-    out.flush();
+    out << "Testing DMADrive..." << std::endl;
     Drivers::IDE::DMADrive dmdrive(Drivers::IDE::Channel::Primary, Drivers::IDE::Role::Master);
 
     auto sec1 = dmdrive.readSector(0, 512);
-    out << "Returned.\n";
-    out.flush();
+    out << "Returned." << std::endl;
     uint32_t sec1_1 = *(uint32_t*)sec1;
-    out << (void*)sec1_1 << "\n";
-    out << (void*)(uint32_t)sec1[511] << "\n";
+    out << (void*)sec1_1 << std::endl;
+    out << (void*)(uint32_t)sec1[511] << std::endl;
     for (int i = 0; i < 512; ++i)
     {
         if (sec1[i] != 1)
         {
-            out << (uint32_t)sec1[i] << "\n";
+            out << (uint32_t)sec1[i] << std::endl;
         }
     }
 
     free(sec1);
 
 
-    out << "Kernel main() is finished!!\n";
-    out.flush();
-    //Drivers::VGA::Write("Kernel main() is finished!!\n");
+    // std::cout << "Testing PIO IDE Driver..." << std::endl;
+    // //Drivers::IDE::Device* pio_dev = new Drivers::IDE::Device(Drivers::IDE::Channel::Primary, Drivers::IDE::Role::Master);
+    // {
+    //     // pio_dev->init();
+    //     // pio_dev->softReset();
+    //     // assert(pio_dev->reserved);
+    //     // assert(pio_dev->model[40] == '\0');
+    //     std::cout << "Using drive with model '" << pm.model << "'" << std::endl;
+    //     Drivers::IDE::IDEDisk pio_disk(&pm);
+    //     unsigned char buf[1024];
+    //     int count = pio_disk.read(0, 512, buf);
+    //     if (count <= 0)
+    //     {
+    //         const char* error_string = pio_disk.getError();
+    //         assert(error_string != nullptr);
+    //         std::cout << "PIO Error: \"" << error_string << "\"" << std::endl;
+    //     }
+
+    //     assert(count == 512);
+    // }
+    // //delete pio_dev;
+
+
+
+    std::cout << "Kernel main() is finished!!" << std::endl;
     return 0;
 }
 
