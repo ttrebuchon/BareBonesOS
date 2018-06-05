@@ -19,9 +19,9 @@
 #include <drivers/PCI.hh>
 #include <kernel/Task.hh>
 #include <boot/multiboot.h>
-#include <drivers/IDE/IDE.hh>
+#include <drivers/ATA/ATA.hh>
 #include <kernel/Memory/GDT.hh>
-#include <drivers/IDE/DMA.hh>
+#include <drivers/ATA/DMA.hh>
 #include <kernel/Filesystem/FileNode.hh>
 #include <kernel/Filesystem/DirectoryNode.hh>
 
@@ -556,36 +556,36 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
 
 
     // Drivers::VGA::Write("Initializing ATA Devices...\n");
-    // //Drivers::IDE::Device::Initialize(0x1F0, 0x3F6, 0x170, 0x376, 0x000);
-    // Drivers::IDE::Device::Initialize();
-    // ASSERT(Drivers::IDE::Device::Initialized());
+    // //Drivers::ATA::Device::Initialize(0x1F0, 0x3F6, 0x170, 0x376, 0x000);
+    // Drivers::ATA::Device::Initialize();
+    // ASSERT(Drivers::ATA::Device::Initialized());
     // Drivers::VGA::Write("ATA Initialized.\n");
     // Drivers::VGA::Write("Device 0 Present? ");
-    // Drivers::VGA::Write(Drivers::IDE::Device::Devices[0].reserved != 0);
+    // Drivers::VGA::Write(Drivers::ATA::Device::Devices[0].reserved != 0);
     // Drivers::VGA::Write("\n");
     
     // for (int i = 0; i < 4; ++i)
     // {
-    //     if (Drivers::IDE::Device::Devices[i].reserved != 0)
+    //     if (Drivers::ATA::Device::Devices[i].reserved != 0)
     //     {
     //         Drivers::VGA::Write("Drive: ");
     //         Drivers::VGA::Write(i);
     //         Drivers::VGA::Write("\n");
     //         Drivers::VGA::Write("Drive Size: ");
-    //         Drivers::VGA::Write(Drivers::IDE::Device::Devices[i].size);
+    //         Drivers::VGA::Write(Drivers::ATA::Device::Devices[i].size);
     //         Drivers::VGA::Write("\n");
     //         Drivers::VGA::Write("Model: '");
-    //         Drivers::VGA::Write(Drivers::IDE::Device::Devices[i].model);
+    //         Drivers::VGA::Write(Drivers::ATA::Device::Devices[i].model);
     //         Drivers::VGA::Write("'\n");
     //         Drivers::VGA::Write("Signature: ");
-    //         Drivers::VGA::Write((void*)(addr_t)Drivers::IDE::Device::Devices[i].signature);
+    //         Drivers::VGA::Write((void*)(addr_t)Drivers::ATA::Device::Devices[i].signature);
     //         Drivers::VGA::Write("\n");
 
     //         // for (int j = 0; j < 40; ++j)
     //         // {
-    //         //     if (Drivers::IDE::Device::Devices[i].model[j] != 0)
+    //         //     if (Drivers::ATA::Device::Devices[i].model[j] != 0)
     //         //     {
-    //         //         Drivers::VGA::Write((unsigned int)Drivers::IDE::Device::Devices[i].model[j]);
+    //         //         Drivers::VGA::Write((unsigned int)Drivers::ATA::Device::Devices[i].model[j]);
     //         //         Drivers::VGA::Write(", ");
     //         //     }
     //         //     else
@@ -599,10 +599,10 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
 
 
 
-    out << "Testing IDE Drivers..." << std::endl;
+    out << "Testing ATA Drivers..." << std::endl;
     
-    Drivers::IDE::Device::Initialize();
-    Drivers::IDE::Device pm(ATA_PRIMARY, ATA_MASTER);
+    Drivers::ATA::Device::Initialize();
+    Drivers::ATA::Device pm(ATA_PRIMARY, ATA_MASTER);
     if (pm.reserved)
     {
         // out << "Model: ";
@@ -612,7 +612,7 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
         out.flush();
     }
     
-    Drivers::IDE::Device ps(ATA_PRIMARY, ATA_SLAVE);
+    Drivers::ATA::Device ps(ATA_PRIMARY, ATA_SLAVE);
     if (ps.reserved)
     {
         //out << "\nModel: ";
@@ -625,7 +625,7 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     }
 
 
-    Drivers::IDE::Device sm(ATA_SECONDARY, ATA_MASTER);
+    Drivers::ATA::Device sm(ATA_SECONDARY, ATA_MASTER);
     if (sm.reserved)
     {
         //out << "Model: ";
@@ -636,7 +636,7 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     }
     
     
-    Drivers::IDE::Device ss(ATA_SECONDARY, ATA_SLAVE);
+    Drivers::ATA::Device ss(ATA_SECONDARY, ATA_SLAVE);
     if (ss.reserved)
     {
         //out << "\nModel: ";
@@ -649,7 +649,7 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     }
 
     out << "Testing DMADrive..." << std::endl;
-    Drivers::IDE::DMADrive dmdrive(ATA_PRIMARY, ATA_MASTER);
+    Drivers::ATA::DMADrive dmdrive(ATA_PRIMARY, ATA_MASTER);
 
     auto sec1 = dmdrive.readSector(0, 512);
     out << "Returned." << std::endl;
@@ -667,27 +667,27 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     free(sec1);
 
 
-    // std::cout << "Testing PIO IDE Driver..." << std::endl;
-    // //Drivers::IDE::Device* pio_dev = new Drivers::IDE::Device(ATA_PRIMARY, ATA_MASTER);
-    // {
-    //     // pio_dev->init();
-    //     // pio_dev->softReset();
-    //     // assert(pio_dev->reserved);
-    //     // assert(pio_dev->model[40] == '\0');
-    //     std::cout << "Using drive with model '" << pm.model << "'" << std::endl;
-    //     Drivers::IDE::IDEDisk pio_disk(&pm);
-    //     unsigned char buf[1024];
-    //     int count = pio_disk.read(0, 512, buf);
-    //     if (count <= 0)
-    //     {
-    //         const char* error_string = pio_disk.getError();
-    //         assert(error_string != nullptr);
-    //         std::cout << "PIO Error: \"" << error_string << "\"" << std::endl;
-    //     }
+    std::cout << "Testing PIO ATA Driver..." << std::endl;
+    //Drivers::ATA::Device* pio_dev = new Drivers::ATA::Device(ATA_PRIMARY, ATA_MASTER);
+    {
+        // pio_dev->init();
+        // pio_dev->softReset();
+        // assert(pio_dev->reserved);
+        // assert(pio_dev->model[40] == '\0');
+        std::cout << "Using drive with model '" << pm.model << "'" << std::endl;
+        Drivers::ATA::ATADisk pio_disk(&pm);
+        unsigned char buf[1024];
+        int count = pio_disk.read(0, 512, buf);
+        if (count <= 0)
+        {
+            const char* error_string = pio_disk.getError();
+            assert(error_string != nullptr);
+            std::cout << "PIO Error: \"" << error_string << "\"" << std::endl;
+        }
 
-    //     assert(count == 512);
-    // }
-    // //delete pio_dev;
+        assert(count == 512);
+    }
+    //delete pio_dev;
 
 
 

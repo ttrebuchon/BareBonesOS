@@ -3,11 +3,11 @@
 
 #include <Common.h>
 #include "PRDT.hh"
-#include "IDEDisk.hh"
-#include "IDE.hh"
+#include "ATADisk.hh"
+#include "ATA.hh"
 #include <kernel/Registers.h>
 
-namespace Drivers { namespace IDE {
+namespace Drivers { namespace ATA {
 	
 	
 	class DMADrive : public Disk

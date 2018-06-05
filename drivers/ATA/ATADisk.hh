@@ -1,14 +1,14 @@
-#ifndef INCLUDED_IDEDISK_HH
-#define INCLUDED_IDEDISK_HH
+#ifndef INCLUDED_ATADisk_HH
+#define INCLUDED_ATADisk_HH
 
 #include <Common.h>
 #include <drivers/Disk/Disk.hh>
-#include "IDE.hh"
+#include "ATA.hh"
 
-namespace Drivers { namespace IDE {
+namespace Drivers { namespace ATA {
 	
 	
-	class IDEDisk : public Disk
+	class ATADisk : public Disk
 	{
 		private:
 		Device* dev;
@@ -19,8 +19,8 @@ namespace Drivers { namespace IDE {
 		
 		
 		public:
-		IDEDisk(Device*);
-		IDEDisk(bool primary, bool master);
+		ATADisk(Device*);
+		ATADisk(bool primary, bool master);
 		
 		unsigned char* readSector(const uint32_t lba) const;
 		bool readSector(const uint32_t lba, unsigned char* buf) const;

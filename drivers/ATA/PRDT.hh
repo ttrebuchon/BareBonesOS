@@ -4,7 +4,7 @@
 #include <Common.h>
 #include <kernel/Memory.h>
 
-namespace Drivers { namespace IDE {
+namespace Drivers { namespace ATA {
 	
 	class PRD
 	{

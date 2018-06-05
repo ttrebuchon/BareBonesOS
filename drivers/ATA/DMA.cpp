@@ -3,7 +3,7 @@
 #include <kernel/Interrupts.h>
 #include <drivers/VGA.hh>
 
-namespace Drivers { namespace IDE {
+namespace Drivers { namespace ATA {
 
 	bool DMADrive::_initted = false;
 	static bool int_fired = false;

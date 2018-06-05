@@ -1,11 +1,11 @@
-#include "IDEDisk.hh"
+#include "ATADisk.hh"
 #include <kernel/Memory.h>
 #include <kernel/Memory/PageDir.hh>
 
 
-namespace Drivers { namespace IDE {
+namespace Drivers { namespace ATA {
 
-	unsigned char IDEDisk::ATA_access(unsigned char direction, unsigned int lba, unsigned char secCount, unsigned short segment_selector, unsigned int seg_off)
+	unsigned char ATADisk::ATA_access(unsigned char direction, unsigned int lba, unsigned char secCount, unsigned short segment_selector, unsigned int seg_off)
 	{
 		unsigned char lba_mode;
 		unsigned char lba_io[6];
@@ -145,12 +145,12 @@ namespace Drivers { namespace IDE {
 
 
 	
-	IDEDisk::IDEDisk(bool primary, bool master) : IDEDisk(new Device(primary ? ATA_PRIMARY : ATA_SECONDARY, master ? ATA_MASTER : ATA_SLAVE)/*&Device::Devices[((int)!primary)*2 + (int)!master]*/)
+	ATADisk::ATADisk(bool primary, bool master) : ATADisk(new Device(primary ? ATA_PRIMARY : ATA_SECONDARY, master ? ATA_MASTER : ATA_SLAVE)/*&Device::Devices[((int)!primary)*2 + (int)!master]*/)
 	{
 		
 	}
 	
-	IDEDisk::IDEDisk(Device* dev) : dev(dev), err(0)
+	ATADisk::ATADisk(Device* dev) : dev(dev), err(0)
 	{
 		dev->init();
 		Device::Channels[(int)dev->channel].nIEN = 1;
@@ -158,7 +158,7 @@ namespace Drivers { namespace IDE {
 		Device::Write(dev->channel, ATA_REG_CONTROL, 2);
 	}
 	
-	unsigned char* IDEDisk::readSector(const uint32_t lba) const
+	unsigned char* ATADisk::readSector(const uint32_t lba) const
 	{
 		auto buf = reinterpret_cast<unsigned char*>(kmalloc(dev->sector_size, 0, 0x0));
 		if (!readSector(lba, buf))
@@ -170,10 +170,10 @@ namespace Drivers { namespace IDE {
 		
 	}
 	
-	bool IDEDisk::readSector(const uint32_t lba, unsigned char* buf) const
+	bool ATADisk::readSector(const uint32_t lba, unsigned char* buf) const
 	{
 		static_assert(sizeof(void*) == sizeof(unsigned int));
-		return (const_cast<IDEDisk*>(this)->ATA_access(0, lba, 1, 0x10, (addr_t)Kernel::Memory::PageDirectory::Current->physical(buf))) == 0;
+		return (const_cast<ATADisk*>(this)->ATA_access(0, lba, 1, 0x10, (addr_t)Kernel::Memory::PageDirectory::Current->physical(buf))) == 0;
 
 
 
@@ -207,7 +207,7 @@ namespace Drivers { namespace IDE {
 	}
 	
 	
-	int IDEDisk::read(size_t start, size_t len, unsigned char* buf) const
+	int ATADisk::read(size_t start, size_t len, unsigned char* buf) const
 	{
 		assert(start % 512 == 0);
 		uint32_t sectorStart = start / 512;
@@ -230,7 +230,7 @@ namespace Drivers { namespace IDE {
 		return readCount;
 	}
 	
-	int IDEDisk::write(size_t start, size_t len, const unsigned char* buf)
+	int ATADisk::write(size_t start, size_t len, const unsigned char* buf)
 	{
 		//return dev->ATA_access(true, start, len/512, 1, (addr_t)buf);
 		
@@ -238,12 +238,12 @@ namespace Drivers { namespace IDE {
 		ASSERT(false);
 	}
 	
-	size_t IDEDisk::capacity() const
+	size_t ATADisk::capacity() const
 	{
 		return dev->size*512;
 	}
 
-	const char* IDEDisk::getError()
+	const char* ATADisk::getError()
 	{
 		if (err == 0)
 		{

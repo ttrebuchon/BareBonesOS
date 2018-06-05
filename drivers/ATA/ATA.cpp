@@ -1,4 +1,4 @@
-#include "IDE.hh"
+#include "ATA.hh"
 #include <drivers/PortIO.h>
 #include <drivers/PCI.hh>
 #include <kernel/Debug.h>
@@ -6,7 +6,7 @@
 
 // https://wiki.osdev.org/IDE
 
-namespace Drivers { namespace IDE {
+namespace Drivers { namespace ATA {
 	
 	ChannelRegister_t Device::Channels[2];
 	//Device Device::Devices[4];

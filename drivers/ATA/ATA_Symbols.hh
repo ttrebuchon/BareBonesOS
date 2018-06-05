@@ -3,7 +3,7 @@
 
 #include <Common.h>
 
-namespace Drivers { namespace IDE {
+namespace Drivers { namespace ATA {
 	
 	#define ATA_STATE_BUSY 0x80
 	#define ATA_STATE_READY 0x40

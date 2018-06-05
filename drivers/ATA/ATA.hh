@@ -2,9 +2,9 @@
 #define INCLUDED_ATA_HH
 
 #include <Common.h>
-#include "IDE_Symbols.hh"
+#include "ATA_Symbols.hh"
 
-namespace Drivers { namespace IDE {
+namespace Drivers { namespace ATA {
 	
 	struct ChannelRegister_t
 	{

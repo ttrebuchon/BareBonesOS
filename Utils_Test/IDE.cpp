@@ -1,5 +1,5 @@
 #include "Tests.hh"
-#include <drivers/IDE/IDEDisk.hh>
+#include <drivers/IDE/ATADisk.hh>
 #include <drivers/IDE/DMA.hh>
 #include <drivers/PCI.hh>
 #include <Utils/EnumOperators.hh>
