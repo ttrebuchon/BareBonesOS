@@ -421,16 +421,18 @@ void ktest_disks()
 
     assert(nonZero);
 
-    uint32_t* buf2 = reinterpret_cast<uint32_t*>(buf);
+    
 
-    for (int i = 0; i < 512 / sizeof(uint32_t); ++i)
+    if (dev->role == IDE_SLAVE)
     {
-        if (buf2[i] != 0)
+        uint32_t* buf2 = reinterpret_cast<uint32_t*>(buf);
+        for (int i = 0; i < 512 / sizeof(uint32_t); ++i)
         {
-            std::cout << "LBA[" << (void*)(i * sizeof(uint32_t)) << "]: " << (void*)buf2[i] << std::endl;
+            assert(buf2[i] == 0xDEADBABA);
         }
-        
     }
+
+    
 
     // // Drivers::VGA::Write("Initializing ATA Devices...\n");
     // // //Drivers::ATA::Device::Initialize(0x1F0, 0x3F6, 0x170, 0x376, 0x000);
