@@ -4,6 +4,7 @@
 #include <drivers/PortIO.h>
 #include <drivers/VGA.hh>
 #include <kernel/Debug.h>
+#include <kernel/Scheduling/API.h>
 
 #define DEFAULT_FREQ 1193180
 
@@ -54,6 +55,7 @@ void init_timer(uint32_t freq)
 
 unsigned int sleep(unsigned int secs)
 {
+	assert(sleep_for == 0);
 	uint32_t last;
 	int cycles = 0;
 	//cli();
@@ -61,6 +63,12 @@ unsigned int sleep(unsigned int secs)
 	last = sleep_for;
 	while (sleep_for != 0)
 	{
+		assert(Kernel::Interrupts::block_interrupt_counter() == 0);
+		//asm volatile("hlt");
+		if (sched_yield() == -1)
+		{
+			asm volatile ("hlt");
+		}
 		//sti();
 		asm volatile ("NOP");
 		asm volatile ("NOP");
