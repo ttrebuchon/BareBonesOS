@@ -3,6 +3,11 @@
 
 
 
+#if defined(__VS_CODE__)
+	#define __attribute__(X)
+#endif
+
+
 #if defined(__amd64__) || defined (__amd64) || defined(_x86_64__) || defined(_x86_64)
 	
 	#define __P_ARCH__ 64
@@ -20,6 +25,12 @@
 	#define __P_ARCH__ 32
 	#define __ENV_x86__ 1
 	#define __ENV__ x86
+
+#elif defined(__VS_CODE__)
+
+	#define __P_ARCH__ 64
+	#define __ENV_INTELLISENSE__ 1
+	#define __ENV__ INTELLISENSE
 	
 #endif
 
