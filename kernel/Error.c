@@ -26,6 +26,8 @@ void __do_kernel_panic(const char* msg, const char* file, const int line, const 
     asm volatile ("hlt 0");
     #elif defined(__ENV_x86__)
     asm volatile ("hlt");
+    #elif defined(__VS_CODE__)
+
     #else
     #error Unknown "hlt" asm for architecture
     #endif
