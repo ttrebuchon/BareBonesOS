@@ -1,3 +1,4 @@
+#ifdef TESTING
 #include "Tests.hh"
 #include <drivers/IDE/ATADisk.hh>
 #include <drivers/IDE/DMA.hh>
@@ -29,3 +30,4 @@ TEST(IDE)
 	
 	assert(dr.read(0, 1024, nullptr) == -1);
 }
+#endif

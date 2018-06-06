@@ -1,3 +1,4 @@
+#ifdef TESTING
 #include <Utils/vector>
 #include "Tests.hh"
 #include <vector>
@@ -79,3 +80,4 @@ TEST(vector)
 	}
 	
 }
+#endif

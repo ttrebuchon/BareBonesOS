@@ -1,3 +1,4 @@
+#ifdef TESTING
 #include "Tests.hh"
 #include <kernel/scheduling/context.h>
 #include <kernel/Utility.hh>
@@ -715,3 +716,4 @@ void test_threads()
 	assert(Kernel::thread_count() == 1);
 	
 }
+#endif

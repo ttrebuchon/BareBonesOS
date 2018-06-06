@@ -1,3 +1,4 @@
+#ifdef TESTING
 #include "Tests.hh"
 #include <iostream>
 #include <kernel/MetaInfo.hh>
@@ -194,3 +195,4 @@ void checkMemoryTrack()
 	QA::out << std::flush;
 	#endif
 }
+#endif

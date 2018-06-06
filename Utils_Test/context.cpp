@@ -1,3 +1,4 @@
+#ifdef TESTING
 #include "Tests.hh"
 #include <kernel/Scheduling/context.h>
 #include <kernel/Utility.hh>
@@ -112,3 +113,4 @@ void bar()
 	
 	//assert(bar_i != foo_i);
 }
+#endif

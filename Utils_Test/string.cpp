@@ -1,3 +1,4 @@
+#ifdef TESTING
 #include <cassert>
 #include "Tests.hh"
 #include <Utils/string>
@@ -71,3 +72,4 @@ TEST(String)
 	
 	static_assert(std::is_same<typename Utils::iterator_traits<int*>::iterator_category, Utils::random_access_iterator_tag>::value);
 }
+#endif

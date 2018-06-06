@@ -1,3 +1,4 @@
+#ifdef TESTING
 #include <Utils/vector>
 #include <Utils/list>
 #include "Tests.hh"
@@ -136,3 +137,4 @@ static void do_tests(const int n, F f)
 		ASSERTEQ(m2.size(), n);
 	}
 }
+#endif

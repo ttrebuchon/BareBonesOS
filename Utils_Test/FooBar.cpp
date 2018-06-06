@@ -1,3 +1,4 @@
+#ifdef TESTING
 #include "Tests.hh"
 
 const std::string _prefix = "\n!!!!! ";
@@ -89,3 +90,4 @@ bool Bar_t::IsPrintingEnabled()
 {
 	return __printing;
 }
+#endif

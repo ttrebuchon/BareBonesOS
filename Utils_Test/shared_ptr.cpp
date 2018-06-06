@@ -1,3 +1,4 @@
+#ifdef TESTING
 #include <new>
 #define private public
 #include <Utils/weak_ptr>
@@ -353,3 +354,4 @@ TEST(shared_ptr)
 		ASSERTEQ(ptr->x, 1);
 	}
 }
+#endif

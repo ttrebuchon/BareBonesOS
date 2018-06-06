@@ -1,3 +1,4 @@
+#ifdef TESTING
 #include <Utils/mutex>
 #include <mutex>
 #include "Tests.hh"
@@ -142,3 +143,4 @@ static void do_tests(const int n, const LF locker, const F f)
 		m.unlock();
 	}
 }
+#endif

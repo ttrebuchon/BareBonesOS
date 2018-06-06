@@ -1,3 +1,4 @@
+#ifdef TESTING
 #include "Tests.hh"
 
 #include <kernel/Utility.hh>
@@ -44,3 +45,4 @@ int foo(auto b)
 	}
 	return f.n;*/
 }
+#endif

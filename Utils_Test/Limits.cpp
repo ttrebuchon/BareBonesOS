@@ -1,3 +1,4 @@
+#ifdef TESTING
 #include "Tests.hh"
 #include <Utils/limits>
 #include <Utils/type_traits>
@@ -174,3 +175,4 @@ TEST(Limits)
 		static_assert(is_enum<T2>::value);
 	}
 }
+#endif

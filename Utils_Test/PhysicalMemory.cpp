@@ -1,3 +1,4 @@
+#ifdef TESTING
 #include "Tests.hh"
 #include <kernel/Memory/PhysicalMemory.hh>
 #include <kernel/Memory/Managers/Basic_Physical.hh>
@@ -27,3 +28,4 @@ TEST(PhysicalMemory)
 	assert(alen == 4096);
 	assert(a == aOld);
 }
+#endif

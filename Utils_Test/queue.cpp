@@ -1,3 +1,4 @@
+#ifdef TESTING
 #include "Tests.hh"
 #include <Utils/queue>
 #include <algorithm>
@@ -72,3 +73,4 @@ void test_heap()
 		}
 	}
 }
+#endif

@@ -1,3 +1,4 @@
+#ifdef TESTING
 #include <Utils/tuple>
 #include "Tests.hh"
 #include <tuple>
@@ -81,3 +82,4 @@ TEST(tuple)
 	assert(Foo_t::count == 0);
 	Foo_t::callers.clear();
 }
+#endif

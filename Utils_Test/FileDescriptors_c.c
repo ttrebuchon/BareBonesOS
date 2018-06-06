@@ -1,3 +1,4 @@
+#ifdef TESTING
 #include <kernel/Filesystem/Descriptors.h>
 #include "Tests.hh"
 
@@ -7,3 +8,4 @@ CTEST(FileDescriptors)
 {
 	//struct FileDescriptors* fds = get_file_descriptors();
 }
+#endif

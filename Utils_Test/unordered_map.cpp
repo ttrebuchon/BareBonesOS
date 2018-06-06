@@ -1,3 +1,4 @@
+#ifdef TESTING
 #include "Tests.hh"
 #include <Utils/unordered_map>
 //#include "Tests.hh"
@@ -591,3 +592,4 @@ void misc_test(size_t n)
 		ASSERTEQ(m.at((Key)0), 0);
 	}
 }
+#endif

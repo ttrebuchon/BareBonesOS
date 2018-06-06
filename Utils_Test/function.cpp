@@ -1,3 +1,4 @@
+#ifdef TESTING
 #include <Utils/functional>
 #include "Tests.hh"
 #include <functional>
@@ -136,3 +137,4 @@ void do_tests(const int n, F fn)
 	
 	std::clog << "--------------\n" << std::endl;
 }
+#endif
