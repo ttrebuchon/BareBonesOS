@@ -1,9 +1,8 @@
-#ifndef INCLUDED_ATA_HH
-#define INCLUDED_ATA_HH
+#ifndef INCLUDED_ATAPI_HH
+#define INCLUDED_ATAPI_HH
 
 #include <Common.h>
 #include "ATA_Symbols.hh"
-#include <drivers/IDE/IDE_Symbols.h>
 #include <drivers/IDE/IDE.hh>
 
 namespace Drivers { namespace ATA {
@@ -115,24 +114,56 @@ namespace Drivers { namespace ATA {
 	
 	
 
-	class ATADevice : public IDE::IDEDevice
+	class ATAPIDevice : public IDE::IDEDevice
 	{
 		public:
 
-		protected:
+		private:
 
 
-		unsigned char access(const bool write, uint32_t LBA, unsigned char sector_count, unsigned short segment_selector, uint32_t segment_offset);
-		unsigned char access(const bool write, uint32_t LBA, unsigned char sector_count, uint8_t* buf);
+
+		// uint16_t data;
+		// uint16_t error;
+		// uint16_t sectorCount;
+		// union {
+		// 	uint16_t sectorNum;
+		// 	uint16_t lbaLow;
+		// };
+		
+		// union {
+		// 	uint16_t cylinderLow;
+		// 	uint16_t lbaMid;
+		// };
+		
+		// union {
+		// 	uint16_t cylinderHigh;
+		// 	uint16_t lbaHigh;
+		// };
+		
+		// union {
+		// 	uint16_t select;
+		// 	uint16_t head;
+		// };
+		
+		// union {
+		// 	uint16_t command;
+		// 	uint16_t status;
+		// };
+		
+		// union {
+		// 	uint16_t control;
+		// 	uint16_t altStatus;
+		// };
+		// uint16_t BMR;
+
+
+		
 
 		public:
-		ATADevice(IDE::ChannelRegister_t*, unsigned char role);
+		ATAPIDevice(IDE::ChannelRegister_t*, unsigned char role);
 
-		int read_sector(uint32_t LBA, uint8_t* buffer);
-		bool supports_lba() const noexcept
-		{
-			return (features & 0x200) != 0;
-		}
+
+
 	};
 
 

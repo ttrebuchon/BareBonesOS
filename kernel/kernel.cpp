@@ -1,7 +1,5 @@
-#define private public
-#define protected public
-#include <kernel/Initialize.hh>
 #include <drivers/VGA.hh>
+#include <Kernel/Initialize.hh>
 #include <kernel/TSS.h>
 #include <kernel/Interrupts.h>
 #include <kernel/Interrupts/IDT.h>
@@ -15,7 +13,7 @@
 #include <kernel/Filesystem/initrd.hh>
 #include <kernel/Filesystem/Node.hh>
 #include <kernel/Filesystem/initrd/DirectoryNode.hh>
-#include <drivers/Disk/AHCI.hh>
+#include <drivers/AHCI/AHCI.hh>
 #include <drivers/PCI.hh>
 #include <kernel/Task.hh>
 #include <boot/multiboot.h>
@@ -46,9 +44,9 @@
 #endif
 
 
-#if !defined(__i386__)
-#error "Wrong compiler...."
-#endif
+// #if !defined(__i386__)
+// #error "Wrong compiler...."
+// #endif
 
 // static inline uint8_t vga_entry_color(enum vga_color fg, enum vga_color bg)
 // {
@@ -82,16 +80,21 @@ Kernel::Memory::GDTEntry gdt_table2[5];
 //In Task_c.c
 extern "C" uint32_t init_esp;
 
-char SomeString[6];
 
 
-void testPaging();
+
+void ktest_gdt();
+void ktest_pci();
+void ktest_threading();
+void ktest_disks();
+
 
 #if defined(__cplusplus)
 extern "C"
 #endif
 int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
 {
+    int testx;
 	init_esp = initial_stack;
     // TaskStateSegment_x86_t myTSS;
     // Kernel::TSS _myTSS{0};
@@ -136,27 +139,12 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
 
     initialize_stdlib();
 
-    Drivers::VGA::Write("Hello, kernel world!\nThis is a test.\n");
-
-    Kernel::Memory::GDTEntry gdt;
-    gdt.limit(65500);
-    auto lim = gdt.limit();
-    ASSERT(lim == 65500);
-
-    gdt.base(33554432);
-    auto b = gdt.base();
-    ASSERT(b == 33554432);
-
-
-
-
-
     // Ensure interrupts are enabled, they were left off during initialization
     while (Kernel::Interrupts::block_interrupt_counter() > 0)
     {
         Kernel::Interrupts::sti();
     }
-    asm volatile ("sti");
+    ASM_CODE("sti");
 
 
 
@@ -170,30 +158,13 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
 
     Kernel::Interrupts::register_interrupt_handler(0x4, &handler04);
 
-    asm volatile ("int $0x4");
+    ASM_CODE("int $0x4");
 
-    out << "GDT Table Address: " << (void*)&Kernel::Memory::gdt_table << "\n";
-    out << "Initial ESP: " << (void*)init_esp << "\n";
+    std::cout << "GDT Table Address: " << (void*)&Kernel::Memory::gdt_table << "\n";
+    std::cout << "Initial ESP: " << (void*)init_esp << "\n";
     addr_t ebp;
-    asm volatile("mov %%esp, %0" : "=r"(ebp));
-    out << "EBP: " << (void*)ebp << "\n";
-    out.flush();
-
-    SomeString[0] = 'H';
-    SomeString[1] = 'e';
-    SomeString[2] = 'l';
-    SomeString[3] = 'l';
-    SomeString[4] = 'o';
-    SomeString[5] = '\0';
-
-    char* SomeString2 = new char[6];
-
-    SomeString2[0] = 'H';
-    SomeString2[1] = 'e';
-    SomeString2[2] = 'l';
-    SomeString2[3] = 'l';
-    SomeString2[4] = 'o';
-    SomeString2[5] = '\0';
+    ASM_CODE("mov %%esp, %0" : "=r"(ebp));
+    std::cout << "EBP: " << (void*)ebp << std::endl;
 
 
     // try
@@ -203,21 +174,21 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     // catch (...)
     // {
     //     assert(false);
-    //     out << "CAUGHT!\n";
+    //     std::cout << "CAUGHT!\n";
     //     out.flush();
     // }
     // assert(false);
     
-    {
-        ASSERT(Kernel::Memory::kheap != 0x0);
-        auto y = new int;
-        auto z = new int;
-        delete y;
-        delete z;
+    // {
+    //     ASSERT(Kernel::Memory::kheap != 0x0);
+    //     auto y = new int;
+    //     auto z = new int;
+    //     delete y;
+    //     delete z;
         
-        auto x = new int[40];
-        delete[] x;
-    }
+    //     auto x = new int[40];
+    //     delete[] x;
+    // }
 
     auto someMem = kmalloc(400, 0, 0x0);
     *(int*)someMem = 1;
@@ -233,6 +204,31 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     Drivers::VGA::Write(fs->name);
     Drivers::VGA::Write("\n");
 
+    ktest_pci();
+    ktest_threading();
+    ktest_disks();
+
+
+
+    std::cout << "Kernel main() is finished!!" << std::endl;
+    return 0;
+}
+
+
+void ktest_gdt()
+{
+    Kernel::Memory::GDTEntry gdt;
+    gdt.limit(65500);
+    auto lim = gdt.limit();
+    ASSERT(lim == 65500);
+
+    gdt.base(33554432);
+    auto b = gdt.base();
+    ASSERT(b == 33554432);
+}
+
+void ktest_pci()
+{
     Drivers::PCI::Initialize();
 
     for (int i = 0; i < 256; ++i)
@@ -328,183 +324,10 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
             }
         }
     }
-    
-    // Drivers::VGA::Write("Testing sleeping (2s)...\n");
-    // sleep(2);
-    // Drivers::VGA::Write("Done sleeping.\n");
+}
 
-
-    int* some_ptr_nonv = new int(465);
-    volatile int* volatile some_ptr = some_ptr_nonv;
-    volatile int some_value = *some_ptr;
-    assert(some_value == 465);
-    
-    // Kernel::Memory::PageDirectory* testDir = nullptr;
-
-    // testDir = Kernel::Memory::PageDirectory::Current->clone(Kernel::Memory::kernel_dir);
-    
-
-    // assert(Kernel::Memory::kernel_dir->at(some_ptr_nonv));
-    // assert(Kernel::Memory::kernel_dir->at(some_ptr_nonv)->present());
-
-    // assert(testDir->at(some_ptr_nonv));
-    // assert(testDir->at(some_ptr_nonv)->present());
-
-    // Drivers::VGA::Write("TestDir Addr: ");
-    // Drivers::VGA::Write(testDir->getPhysicalAddress(some_ptr_nonv));
-    // Drivers::VGA::Write("\nKernelDir Addr: ");
-    // Drivers::VGA::Write(Kernel::Memory::kernel_dir->getPhysicalAddress(some_ptr_nonv));
-    // Drivers::VGA::Write("\n");
-
-    
-
-    // assert(testDir->table(some_ptr_nonv));
-    // assert(Kernel::Memory::kernel_dir->table(some_ptr_nonv));
-    // //assert(**testDir->table(&some_ptr_nonv));
-    // Drivers::VGA::Write((void*)(*testDir->table(some_ptr_nonv))->frame);
-    // Drivers::VGA::Write("\n");
-    // Drivers::VGA::Write((void*)(*Kernel::Memory::kernel_dir->table(some_ptr_nonv))->frame);
-    // Drivers::VGA::Write("\n");
-    // assert((*testDir->table(some_ptr_nonv))->frame == (*Kernel::Memory::kernel_dir->table(some_ptr_nonv))->frame);
-
-    // Drivers::VGA::Write("Checking physical addresses...\n");
-    // assert(testDir->getPhysicalAddress(some_ptr_nonv) == Kernel::Memory::kernel_dir->getPhysicalAddress(some_ptr_nonv));
-
-    // Drivers::VGA::Write("Switching...\n");
-
-    
-    // Drivers::VGA::Write("Switched.\n");
-    // assert(some_value == 465);
-    // assert(some_ptr);
-    // assert(*some_ptr == some_value);
-    // assert(false);
-
-    volatile char some_array[256];
-    for (int i = 0; i < 256; ++i)
-    {
-        some_array[i] = 0;
-    }
-
-    // if (Kernel::fork() != 0)
-    // {
-    //     Drivers::VGA::Write("First process running!\n");
-    //     assert(Kernel::taskLength() > 0);
-    //     // out << "TaskLength verified!\n";
-    //     // out.flush();
-    //     // Drivers::VGA::Write((void*)out.rdbuf());
-    //     // Drivers::VGA::Write("\n");
-    //     Drivers::VGA::Write((void*)some_ptr);
-    //     Drivers::VGA::Write("\n");
-    //     assert(some_value == 465);
-    //     assert(some_ptr);
-    //     assert(*some_ptr == some_value);
-
-    //     assert(SomeString[0] == 'H');
-    //     assert(SomeString[1] == 'e');
-    //     assert(SomeString[2] == 'l');
-    //     assert(SomeString[3] == 'l');
-    //     assert(SomeString[4] == 'o');
-    //     assert(SomeString[5] == '\0');
-
-    //     Drivers::VGA::Write("\n");
-
-    //     assert(SomeString2[0] == 'H');
-    //     assert(SomeString2[1] == 'e');
-    //     assert(SomeString2[2] == 'l');
-    //     assert(SomeString2[3] == 'l');
-    //     assert(SomeString2[4] == 'o');
-    //     assert(SomeString2[5] == '\0');
-        
-    //     while(1);
-    // }
-    // else
-    // {
-    //     //Drivers::VGA::Init();
-    //     Drivers::VGA::Write("Second process running!\n");
-    //     while (true);
-    //     assert(Kernel::taskLength() == 2);
-    //     usleep(500000);
-
-    //     assert(SomeString[0] == 'H');
-    //     assert(SomeString[1] == 'e');
-    //     assert(SomeString[2] == 'l');
-    //     assert(SomeString[3] == 'l');
-    //     assert(SomeString[4] == 'o');
-    //     assert(SomeString[5] == '\0');
-
-    //     Drivers::VGA::Write((void*)SomeString2);
-    //     Drivers::VGA::Write("\n");
-
-    //     assert(SomeString2[0] == 'H');
-    //     assert(SomeString2[1] == 'e');
-    //     assert(SomeString2[2] == 'l');
-    //     assert(SomeString2[3] == 'l');
-    //     assert(SomeString2[4] == 'o');
-    //     assert(SomeString2[5] == '\0');
-
-    //     // out << "TaskLength verified!\n";
-    //     // out.flush();
-    //     // Drivers::VGA::Write((void*)out.rdbuf());
-    //     // Drivers::VGA::Write("\n");
-    //     Drivers::VGA::Write((void*)some_ptr);
-    //     Drivers::VGA::Write("\n");
-    //     if (some_value != 465)
-    //     {
-    //         Drivers::VGA::Write("NOPE\n");
-    //         Drivers::VGA::Write(some_value);
-    //         Drivers::VGA::Write("\n");
-    //     }
-    //     else
-    //     {
-    //         Drivers::VGA::Write("YEP\n");
-    //     }
-    //     if (some_array[0] != 0)
-    //     {
-    //         // int i = 1;
-    //         // for (i = 1; i < 256; ++i)
-    //         // {
-    //         //     if (some_array[i] == 0)
-    //         //     {
-    //         //         Drivers::VGA::Write("Offset of ");
-    //         //         Drivers::VGA::Write(i);
-    //         //         Drivers::VGA::Write("\n");
-    //         //         break;
-    //         //     }
-    //         // }
-    //         // for (; i < 256; ++i)
-    //         // {
-    //         //     if (some_array[i] != 0)
-    //         //     {
-    //         //         Drivers::VGA::Write(i);
-    //         //         Drivers::VGA::Write("\n");
-    //         //     }
-    //         //     assert(some_array[i] == 0);
-    //         // }
-    //         // for (int i = 0; i < 256; ++i)
-    //         // {
-    //         //     if (some_array[i] != 0)
-    //         //     {
-    //         //         Drivers::VGA::Write(i);
-    //         //         Drivers::VGA::Write("\n");
-    //         //     }
-    //         // }
-    //     }
-    //     // assert(some_array[0] == 0);
-    //     // assert(some_array[255] == 0);
-    //     assert(some_value == 465);
-    //     assert(some_ptr);
-    //     assert(*some_ptr == some_value);
-    //     sleep(1);
-    //     out << "Stream Test";
-    //     sleep(2);
-    //     out.flush();
-    //     while (1);
-    // }
-
-    Drivers::VGA::Write("Tasks length: ");
-    Drivers::VGA::Write(Kernel::taskLength());
-    Drivers::VGA::Write("\n");
-
+void ktest_threading()
+{
     Drivers::VGA::Write("CLI Count: ");
     Drivers::VGA::Write(Kernel::Interrupts::block_interrupt_counter());
     Drivers::VGA::Write("\n");
@@ -524,6 +347,7 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
         assert(Kernel::Interrupts::block_interrupt_counter() == 0);
         thread2_marker++;
     });
+
     Drivers::VGA::Write("Thread created, yielding now...\n");
 
     Drivers::VGA::Write("Main thread back!\n");
@@ -552,261 +376,192 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
     Drivers::VGA::Write("Path 2 Executing...\n");
     
 
-    out << "Multithreading and context tests completed." << std::endl;
+    std::cout << "Multithreading and context tests completed." << std::endl;
+}
 
+void ktest_disks()
+{
 
-    // Drivers::VGA::Write("Initializing ATA Devices...\n");
-    // //Drivers::ATA::Device::Initialize(0x1F0, 0x3F6, 0x170, 0x376, 0x000);
-    // Drivers::ATA::Device::Initialize();
-    // ASSERT(Drivers::ATA::Device::Initialized());
-    // Drivers::VGA::Write("ATA Initialized.\n");
-    // Drivers::VGA::Write("Device 0 Present? ");
-    // Drivers::VGA::Write(Drivers::ATA::Device::Devices[0].reserved != 0);
-    // Drivers::VGA::Write("\n");
+    Drivers::IDE::IDEDevice* _dev = Drivers::IDE::IDEDevice::Get(IDE_PRIMARY, IDE_SLAVE);
+    assert(_dev);
+    assert(_dev->get_type() == Drivers::IDE::Interface::ATA);
+
+    std::cout << "Device Model: \"" << _dev->get_model() << "\"" << std::endl;
+
+    Drivers::ATA::ATADevice* dev = (Drivers::ATA::ATADevice*)_dev;
+    assert(dev->supports_lba());
+
+    uint8_t buf[512];
+
+    for (int i = 0; i < 512; ++i)
+    {
+        buf[i] = 0;
+    }
+
+    bool nonZero = false;
+
+    for (int i = 0; i < 512; ++i)
+    {
+        nonZero = (nonZero || (buf[i] != 0));
+    }
+
+    assert(!nonZero);
+
+    int result = dev->read_sector(0, buf);
+    assert(result == 0);
+
+    std::cout << "[510]: " << (void*)buf[510] << "\n[511]: " << (void*)buf[511] << std::endl;
+
+    nonZero = false;
+
+    for (int i = 0; i < 512; ++i)
+    {
+        nonZero = (nonZero || (buf[i] != 0));
+    }
+
+    assert(nonZero);
+
+    uint32_t* buf2 = reinterpret_cast<uint32_t*>(buf);
+
+    for (int i = 0; i < 512 / sizeof(uint32_t); ++i)
+    {
+        if (buf2[i] != 0)
+        {
+            std::cout << "LBA[" << (void*)(i * sizeof(uint32_t)) << "]: " << (void*)buf2[i] << std::endl;
+        }
+        
+    }
+
+    // // Drivers::VGA::Write("Initializing ATA Devices...\n");
+    // // //Drivers::ATA::Device::Initialize(0x1F0, 0x3F6, 0x170, 0x376, 0x000);
+    // // Drivers::ATA::Device::Initialize();
+    // // ASSERT(Drivers::ATA::Device::Initialized());
+    // // Drivers::VGA::Write("ATA Initialized.\n");
+    // // Drivers::VGA::Write("Device 0 Present? ");
+    // // Drivers::VGA::Write(Drivers::ATA::Device::Devices[0].reserved != 0);
+    // // Drivers::VGA::Write("\n");
     
-    // for (int i = 0; i < 4; ++i)
-    // {
-    //     if (Drivers::ATA::Device::Devices[i].reserved != 0)
-    //     {
-    //         Drivers::VGA::Write("Drive: ");
-    //         Drivers::VGA::Write(i);
-    //         Drivers::VGA::Write("\n");
-    //         Drivers::VGA::Write("Drive Size: ");
-    //         Drivers::VGA::Write(Drivers::ATA::Device::Devices[i].size);
-    //         Drivers::VGA::Write("\n");
-    //         Drivers::VGA::Write("Model: '");
-    //         Drivers::VGA::Write(Drivers::ATA::Device::Devices[i].model);
-    //         Drivers::VGA::Write("'\n");
-    //         Drivers::VGA::Write("Signature: ");
-    //         Drivers::VGA::Write((void*)(addr_t)Drivers::ATA::Device::Devices[i].signature);
-    //         Drivers::VGA::Write("\n");
+    // // for (int i = 0; i < 4; ++i)
+    // // {
+    // //     if (Drivers::ATA::Device::Devices[i].reserved != 0)
+    // //     {
+    // //         Drivers::VGA::Write("Drive: ");
+    // //         Drivers::VGA::Write(i);
+    // //         Drivers::VGA::Write("\n");
+    // //         Drivers::VGA::Write("Drive Size: ");
+    // //         Drivers::VGA::Write(Drivers::ATA::Device::Devices[i].size);
+    // //         Drivers::VGA::Write("\n");
+    // //         Drivers::VGA::Write("Model: '");
+    // //         Drivers::VGA::Write(Drivers::ATA::Device::Devices[i].model);
+    // //         Drivers::VGA::Write("'\n");
+    // //         Drivers::VGA::Write("Signature: ");
+    // //         Drivers::VGA::Write((void*)(addr_t)Drivers::ATA::Device::Devices[i].signature);
+    // //         Drivers::VGA::Write("\n");
 
-    //         // for (int j = 0; j < 40; ++j)
-    //         // {
-    //         //     if (Drivers::ATA::Device::Devices[i].model[j] != 0)
-    //         //     {
-    //         //         Drivers::VGA::Write((unsigned int)Drivers::ATA::Device::Devices[i].model[j]);
-    //         //         Drivers::VGA::Write(", ");
-    //         //     }
-    //         //     else
-    //         //     {
-    //         //         break;
-    //         //     }
-    //         // }
-    //         // Drivers::VGA::Write("\n");
+    // //         // for (int j = 0; j < 40; ++j)
+    // //         // {
+    // //         //     if (Drivers::ATA::Device::Devices[i].model[j] != 0)
+    // //         //     {
+    // //         //         Drivers::VGA::Write((unsigned int)Drivers::ATA::Device::Devices[i].model[j]);
+    // //         //         Drivers::VGA::Write(", ");
+    // //         //     }
+    // //         //     else
+    // //         //     {
+    // //         //         break;
+    // //         //     }
+    // //         // }
+    // //         // Drivers::VGA::Write("\n");
+    // //     }
+    // // }
+
+    // // std::cout << "Testing SATA PCI scan..." << std::endl;
+    // // Drivers::AHCI::AHCIDrive::foo();
+
+
+
+    // std::cout << "Testing ATA Drivers..." << std::endl;
+    
+    // Drivers::ATA::Device::Initialize();
+    // Drivers::ATA::Device pm(ATA_PRIMARY, ATA_MASTER);
+    // if (pm.reserved)
+    // {
+    //     // std::cout << "Model: ";
+    //     //out.flush();
+    //     //Drivers::VGA::Write(pm.model);
+    //     std::cout << "Primary-Master Model: " << pm.model << std::endl;
+    // }
+    
+    // Drivers::ATA::Device ps(ATA_PRIMARY, ATA_SLAVE);
+    // if (ps.reserved)
+    // {
+    //     //out << "\nModel: ";
+    //     //out.flush();
+    //     // Drivers::VGA::Write(ps.model);
+    //     //out << "\n";
+    //     //out.flush();
+    //     std::cout << "Primary-Slave Model: " << ps.model << std::endl;
+    // }
+
+
+    // Drivers::ATA::Device sm(ATA_SECONDARY, ATA_MASTER);
+    // if (sm.reserved)
+    // {
+    //     //out << "Model: ";
+    //     //out.flush();
+    //     // Drivers::VGA::Write(sm.model);
+    //     std::cout << "Secondary-Master Model: " << sm.model << std::endl;
+    // }
+    
+    
+    // Drivers::ATA::Device ss(ATA_SECONDARY, ATA_SLAVE);
+    // if (ss.reserved)
+    // {
+    //     //out << "\nModel: ";
+    //     //out.flush();
+    //     Drivers::VGA::Write(ss.model);
+    //     //out << "\n";
+    //     //out.flush();
+    //     std::cout << "Secondary-Slave Model: " << ss.model << std::endl;
+    // }
+
+    // std::cout << "Testing DMADrive..." << std::endl;
+    // Drivers::ATA::DMADrive dmdrive(ATA_SECONDARY, ATA_MASTER);
+
+    // auto sec1 = dmdrive.readSector(1, 512);
+    // std::cout << "Returned." << std::endl;
+    // uint32_t sec1_1 = *(uint32_t*)sec1;
+    // std::cout << (void*)sec1_1 << std::endl;
+    // std::cout << (void*)(uint32_t)sec1[511] << std::endl;
+    // for (int i = 0; i < 512; ++i)
+    // {
+    //     if (sec1[i] != 1)
+    //     {
+    //         std::cout << (uint32_t)sec1[i] << std::endl;
     //     }
     // }
 
+    // free(sec1);
 
 
-    out << "Testing ATA Drivers..." << std::endl;
-    
-    Drivers::ATA::Device::Initialize();
-    Drivers::ATA::Device pm(ATA_PRIMARY, ATA_MASTER);
-    if (pm.reserved)
-    {
-        // out << "Model: ";
-        //out.flush();
-        //Drivers::VGA::Write(pm.model);
-        out << "Primary-Master Model: " << pm.model << "\n";
-        out.flush();
-    }
-    
-    Drivers::ATA::Device ps(ATA_PRIMARY, ATA_SLAVE);
-    if (ps.reserved)
-    {
-        //out << "\nModel: ";
-        //out.flush();
-        // Drivers::VGA::Write(ps.model);
-        //out << "\n";
-        //out.flush();
-        out << "Primary-Slave Model: " << ps.model << "\n";
-        out.flush();
-    }
-
-
-    Drivers::ATA::Device sm(ATA_SECONDARY, ATA_MASTER);
-    if (sm.reserved)
-    {
-        //out << "Model: ";
-        //out.flush();
-        // Drivers::VGA::Write(sm.model);
-        out << "Secondary-Master Model: " << sm.model << "\n";
-        out.flush();
-    }
-    
-    
-    Drivers::ATA::Device ss(ATA_SECONDARY, ATA_SLAVE);
-    if (ss.reserved)
-    {
-        //out << "\nModel: ";
-        //out.flush();
-        Drivers::VGA::Write(ss.model);
-        //out << "\n";
-        //out.flush();
-        out << "Secondary-Slave Model: " << ss.model << "\n";
-        out.flush();
-    }
-
-    out << "Testing DMADrive..." << std::endl;
-    Drivers::ATA::DMADrive dmdrive(ATA_PRIMARY, ATA_MASTER);
-
-    auto sec1 = dmdrive.readSector(0, 512);
-    out << "Returned." << std::endl;
-    uint32_t sec1_1 = *(uint32_t*)sec1;
-    out << (void*)sec1_1 << std::endl;
-    out << (void*)(uint32_t)sec1[511] << std::endl;
-    for (int i = 0; i < 512; ++i)
-    {
-        if (sec1[i] != 1)
-        {
-            out << (uint32_t)sec1[i] << std::endl;
-        }
-    }
-
-    free(sec1);
-
-
-    std::cout << "Testing PIO ATA Driver..." << std::endl;
-    //Drivers::ATA::Device* pio_dev = new Drivers::ATA::Device(ATA_PRIMARY, ATA_MASTER);
-    {
-        // pio_dev->init();
-        // pio_dev->softReset();
-        // assert(pio_dev->reserved);
-        // assert(pio_dev->model[40] == '\0');
-        std::cout << "Using drive with model '" << pm.model << "'" << std::endl;
-        Drivers::ATA::ATADisk pio_disk(&pm);
-        unsigned char buf[1024];
-        int count = pio_disk.read(0, 512, buf);
-        if (count <= 0)
-        {
-            const char* error_string = pio_disk.getError();
-            assert(error_string != nullptr);
-            std::cout << "PIO Error: \"" << error_string << "\"" << std::endl;
-        }
-
-        assert(count == 512);
-    }
-    //delete pio_dev;
-
-
-
-    std::cout << "Kernel main() is finished!!" << std::endl;
-    return 0;
-}
-
-void testPaging()
-{
-    asm volatile ("cli");
-    Drivers::VGA::Write("KPlacement: ");
-    Drivers::VGA::Write((void*)kPlacement);
-    Drivers::VGA::Write("\n");
-    // ASSERT(false);
-    using namespace Kernel;
-    using namespace Memory;
-
-    const addr_t ADDR   = 0xF0000000;
-    const addr_t ADDR2  = 0xF0200000;
-
-    const size_t len = 0x1000;
-
-    auto current_dir = PageDirectory::Current;
-
-    current_dir->switch_to();
-    TRACE("SWITCHED.\n");
-
-    ASSERT(current_dir->map((ADDR - 0x0000), ADDR, len, true, false, false));
-    unsigned char* a1 = (unsigned char*)ADDR;
-    current_dir->at((void*)ADDR)->flush();
-    // current_dir->flush((void*)ADDR);
-
-    ASSERT(current_dir);
-    //ASSERT(current_dir->map((ADDR2 - 0x0000), ADDR, len, true, false, false));
-    unsigned char* a2 = (unsigned char*)ADDR2;
-
-    // current_dir->flush((void*)ADDR2);
-    current_dir->at((void*)ADDR2)->flush();
-
-
-    // auto phys = virtual_to_physical(current_dir, (const void*)ADDR);
-    auto phys = current_dir->physical((void*)ADDR);
-    ASSERT(phys != 0);
-    Drivers::VGA::Write(phys);
-    Drivers::VGA::Write("\n");
-
-    // for (volatile int i = 0; i < 100; ++i)
+    // std::cout << "Testing PIO ATA Driver..." << std::endl;
+    // //Drivers::ATA::Device* pio_dev = new Drivers::ATA::Device(ATA_PRIMARY, ATA_MASTER);
     // {
-    //     ASSERT(current_dir->flush());
+    //     // pio_dev->init();
+    //     // pio_dev->softReset();
+    //     // assert(pio_dev->reserved);
+    //     // assert(pio_dev->model[40] == '\0');
+    //     std::cout << "Using drive with model '" << pm.model << "'" << std::endl;
+    //     Drivers::ATA::ATADisk pio_disk(&pm);
+    //     unsigned char buf[1024];
+    //     int count = pio_disk.read(0, 512, buf);
+    //     if (count <= 0)
+    //     {
+    //         const char* error_string = pio_disk.getError();
+    //         assert(error_string != nullptr);
+    //         std::cout << "PIO Error: \"" << error_string << "\"" << std::endl;
+    //     }
+
+    //     assert(count == 512);
     // }
-    
-    //static_assert(alignof(PageDirectory::_Table) == 1024*4);
-    TRACE(alignof(PageDirectory::_Table));
-    TRACE("\n\n");
-    
-    auto p = current_dir->at((void*)ADDR);
-    addr_t p_addr = (addr_t)(void*)p;
-    addr_t p_phys = (addr_t)current_dir->physical(&**p);
-    ASSERT(sizeof(**p) == sizeof(PageDirectory::_Page));
-    
-    Drivers::VGA::Write("P_Virtual: ");
-    Drivers::VGA::Write((void*)&**p);
-    Drivers::VGA::Write("\n");
-
-    Drivers::VGA::Write("P_Physical: ");
-    Drivers::VGA::Write((void*)p_phys);
-    Drivers::VGA::Write("\n");
-    addr_t dir_phys = (addr_t)current_dir->physical(current_dir);
-    auto pTable = current_dir->table(p_addr/(1024*0x1000));
-    ASSERT(pTable);
-    void* pTable_phys = current_dir->physical(&**pTable);
-    size_t tIndex = p_addr >> 22;
-    addr_t tmp = (((addr_t)current_dir->thisPhysical()) + tIndex*4);
-    ASSERT(&**pTable == *reinterpret_cast<void**>(&tmp));
-    Drivers::VGA::Write("Table_Physical: ");
-    Drivers::VGA::Write((void*)pTable_phys);
-    Drivers::VGA::Write("\n");
-    Drivers::VGA::Write("Dir_Physical: ");
-    Drivers::VGA::Write((void*)dir_phys);
-    Drivers::VGA::Write("\n");
-    Drivers::VGA::Write("Dir_Virtual: ");
-    Drivers::VGA::Write((void*)current_dir);
-    Drivers::VGA::Write("\n");
-    Drivers::VGA::Write("Stored Dir_Physical: ");
-    Drivers::VGA::Write((void*)current_dir->thisPhysical());
-    Drivers::VGA::Write("\n");
-    ASSERT(p);
-    Drivers::VGA::Write((void*)((addr_t)p->frame()));
-    ASSERT((ADDR & 0xfffff000) == ADDR);
-    Drivers::VGA::Write("\n");
-    
-
-    for (int i = 0; i < len; ++i)
-    {
-        a1[i] = (i % 256);
-    }
-    ASSERT((**current_dir->at((void*)ADDR)).accessed);
-
-    // auto p = current_dir->getPage(ADDR, false);
-    p = current_dir->at((void*)ADDR);
-    ASSERT(p);
-    Drivers::VGA::Write((void*)((addr_t)p->frame() << 12));
-    ASSERT((ADDR & 0xfffff000) == ADDR);
-    Drivers::VGA::Write("\n");
-    
-    current_dir->flush();
-
-    for (int i = 0; i < len; ++i)
-    {
-        a1[i] = (i % 256);
-    }
-    ASSERT(current_dir->map((ADDR2 - 0x0000), ADDR, len, true, false, false));
-    current_dir->at((void*)ADDR2)->flush();
-    ASSERT(current_dir->physical(a1) == current_dir->physical(a2));
-    for (int i = 0; i < len; ++i)
-    {
-        TRACE((uint32_t)i);
-        TRACE("\n");
-        ASSERT(a2[i] == (i % 256));
-    }
-    asm volatile ("sti");
+    // //delete pio_dev;
 }

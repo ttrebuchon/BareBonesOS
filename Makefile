@@ -99,7 +99,7 @@ CXX_FLAGS  += $(BOTH_FLAGS)
 ASM_FLAGS	= 
 
 all: .fake $(HDD2) myos.iso
-	#@echo $(CPP_DEPS)
+	@echo $(CPP_DEPS)
 
 .fake:
 	@echo '   '
@@ -126,11 +126,11 @@ myos.bin: $(BOOT_OBJS) $(CRTBEGIN_OBJ) $(CPP_OBJS) $(C_OBJS) $(ASM_OBJS) $(CRTEN
 
 %.o: %.cpp
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
-	$(CXX) $(CXX_FLAGS) -o $(@:.o=$(ASM_OUT_SUFFIX)) -S $<
+	@#$(CXX) $(CXX_FLAGS) -o $(@:.o=$(ASM_OUT_SUFFIX)) -S $<
 
 kernel/Task.o: kernel/Task.cpp
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
-	$(CXX) $(CXX_FLAGS) -S $< -o $(@:.o=$(ASM_OUT_SUFFIX))
+	@#$(CXX) $(CXX_FLAGS) -S $< -o $(@:.o=$(ASM_OUT_SUFFIX))
 
 %.o: %.cc
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
@@ -145,5 +145,5 @@ $(HDD2): $(HDD2_GEN)
 	./$(HDD2_GEN) $(HDD2)
 
 $(HDD2_GEN): $(HDD2_SRC)
-	$(CXX) -o $(HDD2_GEN) $^
+	g++ -std=c++14 -o $(HDD2_GEN) $^
 	

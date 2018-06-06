@@ -2,8 +2,11 @@
 #define INCLUDED_PCI_HH
 
 #include <Common.h>
+#include <Utils/map>
 
 namespace Drivers {
+
+	#define PCI_MULTI_FUNCTION_HEADER 0x80
 	
 	enum class PCIPort
 	{
@@ -64,6 +67,38 @@ namespace Drivers {
 		CapabilityPtr = 0x34,
 		BridgeControl = 0x3E,
 	};
+
+
+
+
+	enum class PCIClass
+	{
+		Unclassified						= 0x00,
+		MassStorage							= 0x01,
+		NetworkController					= 0x02,
+		DisplayController					= 0x03,
+		MultimediaController				= 0x04,
+		MemoryController					= 0x05,
+		Bridge								= 0x06,
+		SimpleCommunicationController		= 0x07,
+		BaseSystemPeripheral				= 0x08,
+		InputDeviceController				= 0x09,
+		DockingStation						= 0x0A,
+		Processor							= 0x0B,
+		SerialBusController					= 0x0C,
+		WirelessController					= 0x0D,
+		IntelligentController				= 0x0E,
+		SatelliteCommunicationsController	= 0x0F,
+		EncryptionController				= 0x10,
+		SignalProcessingController			= 0x11,
+		ProcessingAccelerator				= 0x12,
+		NonEssentialInstrumentation			= 0x13,
+		Reserved1							= 0x14,
+		CoProcessor							= 0x40,
+		Reserved2							= 0x41,
+		VendorSpecific						= 0xFF,
+	};
+	
 	
 	enum class PCIHeaderType
 	{
@@ -74,12 +109,21 @@ namespace Drivers {
 	
 	enum class PCIType
 	{
-		Bridge = 0x0604,
+		SCSI = 0x0100,
+		IDE = 0x0101,
+		Floppy = 0x0102,
+		RAID = 0x0104,
+		ATA = 0x0105,
 		SATA = 0x0106,
+		Bridge = 0x0604,
+
+
 		None = 0xFFFF,
 		Null = -1,
 	};
 	
+	
+
 	
 	
 	
@@ -153,6 +197,8 @@ namespace Drivers {
 	{
 		private:
 		static bool _initted;
+
+		static Utils::map<uint8_t, Utils::map<uint8_t, Utils::map<uint8_t, PCIDevice_t>>> devices;
 		
 		public:
 		static const PCIDevice_t NULL_DEVICE;
@@ -168,6 +214,11 @@ namespace Drivers {
 		static PCIDevice_t ScanBus(uint16_t vendorID, uint16_t deviceID, uint32_t bus, PCIType deviceType);
 		static PCIDevice_t GetDevice(uint16_t vendorID, uint16_t deviceID, PCIType deviceType);
 		static PCIDevice_t GetDevice(PCIVendorID vendorID, PCIDeviceID deviceID, PCIType deviceType);
+
+		static PCIDevice_t ScanFunctionByClass(PCIType deviceType, uint32_t bus, uint32_t device, uint32_t func);
+		static PCIDevice_t ScanDeviceByClass(PCIType deviceType, uint32_t bus, uint32_t device);
+		static PCIDevice_t ScanBusByClass(PCIType deviceType, uint32_t bus);
+		static PCIDevice_t ScanByClass(PCIType deviceType);
 	};
 	
 }

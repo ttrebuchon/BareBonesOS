@@ -30,7 +30,7 @@ int main(int argc, const char* argv[])
 	size_t i = 0;
 	while (i < fsize)
 	{
-		*reinterpret_cast<uint32_t*>(buffer) = 0xDEADBABA;
+		*reinterpret_cast<uint32_t*>(buffer + i) = 0xDEADBABA;
 		i += 4;
 	}
 	

@@ -73,11 +73,7 @@ namespace Drivers { namespace ATA {
 	#define ATA_REG_ALT_STATUS 0x0C
 	#define ATA_REG_DEVICE_ADDR 0x0D
 
-	enum class Interface : unsigned char
-	{
-		ATA = 0x0,
-		ATAPI = 0x1,
-	};
+	
 }
 }
 
