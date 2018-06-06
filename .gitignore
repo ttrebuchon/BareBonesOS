@@ -8,6 +8,7 @@
 *.obj
 *.pp
 *.asm.out.s
+*.asm_out
 *.optimized
 *.asm_out
 
@@ -52,3 +53,7 @@ Barebones.code-workspace
 
 #Non-Committed Libraries
 Libraries/sqlite3**
+
+#Logs
+bochsout.txt
+serial_out*.txt
