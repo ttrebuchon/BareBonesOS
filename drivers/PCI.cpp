@@ -7,6 +7,7 @@ namespace Drivers {
 	const PCIDevice_t PCI::NULL_DEVICE;
 	static uint32_t pci_sizes[60];
 	bool PCI::_initted = false;
+	Utils::map<uint8_t, Utils::map<uint8_t, Utils::map<uint8_t, PCIDevice_t>>> PCI::devices;
 
 	void PCI::Initialize()
 	{
@@ -73,10 +74,11 @@ namespace Drivers {
 		uint8_t function = 0;
 		uint16_t vendorID;
 
-		//vendorID = CheckVendor(bus, 
+		PCIDevice_t tmp_dev;
+		tmp_dev.data.busNo = bus;
+		tmp_dev.data.deviceNo = device;
 
-		//TODO
-		return false;
+		return ((PCIVendorID)tmp_dev.read(PCIRegister::VendorID) != PCIVendorID::None);
 	}
 
 	PCIDevice_t PCI::ScanFunction(uint16_t vendorID, uint16_t deviceID, uint32_t bus, uint32_t device, uint32_t function, PCIType deviceType)
@@ -85,6 +87,12 @@ namespace Drivers {
 		{
 			Initialize();
 		}
+
+		// if (devices[bus][device].count(function))
+		// {
+		// 	return devices[bus][device][function];
+		// }
+
 		PCIDevice_t dev;
 		dev.data.busNo = bus;
 		dev.data.deviceNo = device;
@@ -92,7 +100,15 @@ namespace Drivers {
 
 		if (dev.type() == PCIType::Bridge)
 		{
-			PCI::ScanBus(vendorID, deviceID, dev.secondaryBus(), deviceType);
+			auto tmp = PCI::ScanBus(vendorID, deviceID, dev.secondaryBus(), deviceType);
+			if (tmp != NULL_DEVICE)
+			{
+				assert(NOT_IMPLEMENTED);
+				// I think I'm supposed to return this?
+				// It's been too long since I worked on this code,
+				// but I don't think I was supposed to call this
+				// and discard the result
+			}
 		}
 
 		if (deviceType == PCIType::Null || deviceType == dev.type())
@@ -211,6 +227,116 @@ namespace Drivers {
 		return GetDevice((uint16_t)vendorID, (uint16_t)deviceID, deviceType);
 	}
 
+	PCIDevice_t PCI::ScanFunctionByClass(PCIType deviceType, uint32_t bus, uint32_t device, uint32_t func)
+	{
+		if (!_initted)
+		{
+			Initialize();
+		}
+		
+		PCIDevice_t dev;
+		dev.data.busNo = bus;
+		dev.data.deviceNo = device;
+		dev.data.functionNo = func;
+
+
+		if (dev.type() == PCIType::Bridge)
+		{
+			PCIDevice_t otherBus = PCI::ScanBusByClass(deviceType, dev.secondaryBus());
+			if (otherBus != NULL_DEVICE)
+			{
+				return otherBus;
+			}
+		}
+
+		if (deviceType == dev.type())
+		{
+			uint32_t devID = dev.read(PCIRegister::DeviceID);
+			uint32_t vendID = dev.read(PCIRegister::VendorID);
+			assert((PCIVendorID)vendID != PCIVendorID::None);
+			return dev;
+		}
+		else
+		{
+			return NULL_DEVICE;
+		}
+	}
+
+	PCIDevice_t PCI::ScanDeviceByClass(PCIType deviceType, uint32_t bus, uint32_t device)
+	{
+		if (!_initted)
+		{
+			Initialize();
+		}
+
+		PCIDevice_t dev;
+		dev.data.busNo = bus;
+		dev.data.deviceNo = device;
+		dev.data.functionNo = 0;
+
+		if ((PCIVendorID)dev.read(PCIRegister::VendorID) == PCIVendorID::None)
+		{
+			return NULL_DEVICE;
+		}
+
+		PCIDevice_t t = PCI::ScanFunctionByClass(deviceType, bus, device, 0);
+		if (t.data != 0)
+		{
+			assert(t != NULL_DEVICE);
+			return t;
+		}
+		assert(t == NULL_DEVICE);
+
+		auto headerType = dev.read(PCIRegister::HeaderType);
+
+		if (dev.reachedEnd())
+		{
+			return NULL_DEVICE;
+		}
+
+		for (int func = 1; func < 32; ++func)
+		{
+			dev.data.functionNo = func;
+
+			t = PCI::ScanFunctionByClass(deviceType, bus, device, func);
+			if (t.data != 0)
+			{
+				assert(t != NULL_DEVICE);
+				return t;
+			}
+			assert(t == NULL_DEVICE);
+		}
+
+		return NULL_DEVICE;
+	}
+
+	PCIDevice_t PCI::ScanBusByClass(PCIType deviceType, uint32_t bus)
+	{
+		if (!_initted)
+		{
+			Initialize();
+		}
+
+		for (int device = 0; device < 32; ++device)
+		{
+			if (CheckDevice(bus, device))
+			{
+				auto tmp = ScanDeviceByClass(deviceType, bus, device);
+				if (tmp != NULL_DEVICE)
+				{
+					return tmp;
+				}
+			}
+		}
+
+		return NULL_DEVICE;
+	}
+
+	PCIDevice_t PCI::ScanByClass(PCIType deviceType)
+	{
+		return ScanBusByClass(deviceType, 0);
+	}
+
 
 
 
@@ -253,7 +379,7 @@ namespace Drivers {
 
 	bool PCIDevice_t::reachedEnd()
 	{
-		return read(PCIRegister::HeaderType) == 0;
+		return (read(PCIRegister::HeaderType) & 0x80) == 0;
 	}
 
 	uint32_t PCIDevice_t::secondaryBus()

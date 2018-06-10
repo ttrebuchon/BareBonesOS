@@ -103,8 +103,17 @@ _start:
 	3) Jump to the hlt instruction if it ever wakes up due to a
 	   non-maskable interrupt occurring or due to system management mode.
 	*/
-	cli
-1:	hlt
+1:	cli
+	nop
+	nop
+2:	hlt
+	nop
+	nop
+	pause
+	nop
+	mov $0x0, %eax
+	monitor
+
 	jmp 1b
 
 /*

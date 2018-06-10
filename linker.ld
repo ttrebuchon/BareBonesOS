@@ -38,6 +38,19 @@ SECTIONS
 		*(.bss)
 	}
 
+	.symtab BLOCK(4K) : ALIGN(4K)
+	{
+
+		*(.symtab*)
+		*(.dynsym*)
+		
+
+		
+	}
+
+	knl_symtab_start = ADDR(.symtab);
+	knl_symtab_end = SIZEOF(.symtab);
+
 	/* The compiler may produce other sections, by default it will put them in
 	   a segment with the same name. Simply add stuff here as needed. */
 	

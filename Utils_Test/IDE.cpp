@@ -1,5 +1,6 @@
+#ifdef TESTING
 #include "Tests.hh"
-#include <drivers/IDE/IDEDisk.hh>
+#include <drivers/IDE/ATADisk.hh>
 #include <drivers/IDE/DMA.hh>
 #include <drivers/PCI.hh>
 #include <Utils/EnumOperators.hh>
@@ -29,3 +30,4 @@ TEST(IDE)
 	
 	assert(dr.read(0, 1024, nullptr) == -1);
 }
+#endif

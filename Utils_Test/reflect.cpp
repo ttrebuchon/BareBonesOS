@@ -1,3 +1,4 @@
+#ifdef TESTING
 #include "Tests.hh"
 #define _TEST_SRC
 #include <Utils/experimental/reflect>
@@ -1500,4 +1501,5 @@ void second_test()
 
 static_assert(Support::SQLite::has_model<test_class>::value);
 
+#endif
 #endif

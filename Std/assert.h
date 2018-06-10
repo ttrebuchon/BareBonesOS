@@ -17,7 +17,7 @@ void __assert2(const char* filename, int line, const char* function, const char*
 	
 #else
 	
-	#define assert(exp) do { (exp) ? ((void)0) : __assert2(__FILE__, __LINE__, __func__, #exp); } while (0)
+	#define assert(exp) do { (exp) ? ((void)0) : __assert2(__FILE__, __LINE__, __func__, "assertion failed: \""#exp"\""); } while (0)
 	
 	
 	

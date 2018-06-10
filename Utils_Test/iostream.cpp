@@ -1,3 +1,4 @@
+#ifdef TESTING
 #include <cassert>
 #include "Tests.hh"
 #include <Utils/detail/basic_ios.hh>
@@ -525,3 +526,4 @@ void test_vs_std()
 		__test_vs_ios(fn);
 	}
 }
+#endif

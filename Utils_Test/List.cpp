@@ -1,3 +1,4 @@
+#ifdef TESTING
 #include "Tests.hh"
 #include <Utils/List.hh>
 #include <type_traits>
@@ -87,3 +88,4 @@ TEST(List)
 	
 	cerr << "Done." << std::endl;
 }
+#endif

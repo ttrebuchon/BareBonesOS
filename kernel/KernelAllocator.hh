@@ -5,7 +5,7 @@
 #include "utils/BoolTypes.hh"
 #include "utils/ptrdiff.hh"
 
-EXTERN_C void* kmalloc(uint32_t size, int align, uint32_t* phys);
+EXTERN_C void* kmalloc(uint32_t size, int align, addr_t* phys);
 
 namespace Kernel
 {

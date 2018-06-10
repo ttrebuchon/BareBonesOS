@@ -80,6 +80,8 @@ typedef struct
 		register_t ELR_EL1, ELR_EL2, EPR_EL3;
 		uint32_t SPSR_EL1, SPSR_EL2, SPSR_EL3;
 		register_t pc;
+	#elif defined(__VS_CODE__)
+
 	#else
 		
 		#error Unknown architecture
@@ -114,6 +116,8 @@ C_END
 		
 		constexpr static register_ptr r0 = &registers_t::x0;
 		constexpr static register_ptr r1 = &registers_t::x1;
+
+	#elif defined(__VS_CODE__)
 		
 	#else
 	

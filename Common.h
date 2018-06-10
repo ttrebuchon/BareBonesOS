@@ -9,11 +9,16 @@
 #include <float.h>
 #include <iso646.h>
 #include <limits.h>
-#include <stdalign.h>
+#ifdef TESTING
+    #include <stdalign.h>
+#endif
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdnoreturn.h>
+#ifdef TESTING
+    #include <stdnoreturn.h>
+#endif
+
 typedef unsigned char uchar;
 
 #include "Env.h"
@@ -129,5 +134,6 @@ typedef unsigned long size_t;
 #include <kernel/MetaInfo.h>
 #include <kernel/Debug.h>
 #include <kernel/Interrupts.h>
+#include <kernel/Utility.hh>
 
 #endif //INCLUDED...

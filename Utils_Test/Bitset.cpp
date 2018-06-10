@@ -1,3 +1,4 @@
+#ifdef TESTING
 #include "Tests.hh"
 #include <Utils/Bitset.hh>
 #include <cassert>
@@ -223,3 +224,4 @@ static void test_type_standard()
 		ASSERTEQ(s[i], (i % 2 == 0));
 	}
 }
+#endif

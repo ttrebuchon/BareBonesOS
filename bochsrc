@@ -1,6 +1,16 @@
-floppya: 1_44=myos.iso, status=inserted
+#floppya: 1_44=myos.iso, status=inserted
 #ata0-master: type=disk, path="dummy.img", mode=flat, cylinders=8322, heads=16, spt=63
-#ata1-master: type=cdrom, path=".'myos.iso", status=inserted
-boot: floppy
+ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
+ata0-master: type=disk, path="myos.iso", status=inserted
+ata0-slave: type=disk, path="dummy.img", status=inserted, mode=flat
+boot: disk
+ display_library: x, options="gui_debug"
 
-cpuid: x86_64=1
+#cpuid: x86_64=1
+log: bochsout.txt
+mouse: enabled=0
+clock: sync=realtime
+#cpu: ips=1000000
+magic_break: enabled=1
+
+com1: enabled=1, mode=file, dev=serial_out1.txt

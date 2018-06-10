@@ -52,6 +52,11 @@ namespace boot
 		const mmap_type* mmap_next(const mmap_type*) const noexcept;
 		
 		bool hasFlag(const int16_t index) const noexcept;
+
+		const multiboot* raw() const noexcept
+		{
+			return ptr;
+		}
 	};
 	
 	

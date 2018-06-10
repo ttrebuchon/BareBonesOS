@@ -1,3 +1,4 @@
+#ifdef TESTING
 #include "Tests.hh"
 #include <sqlite3/sqlite3.h>
 
@@ -16,3 +17,4 @@ TEST(SQLite)
 	
 	sqlite3_close(db);
 }
+#endif

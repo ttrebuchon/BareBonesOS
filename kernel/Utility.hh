@@ -1,7 +1,7 @@
 #ifndef INCLUDED_KERNEL_UTILITY_HH
 #define INCLUDED_KERNEL_UTILITY_HH
 
-#include <Common.h>
+#include <Env.h>
 
 #ifdef __cplusplus
 
@@ -23,6 +23,16 @@ namespace Kernel
 	
 }
 #endif // __cplusplus
+
+#if !defined(__VS_CODE__)
+
+	#define ASM_CODE(...) asm volatile(__VA_ARGS__)
+
+#else
+
+	#define ASM_CODE(...)
+
+#endif
 
 
 #define ASM_EXEC(X, ...) asm volatile (#X __VA_ARGS__)

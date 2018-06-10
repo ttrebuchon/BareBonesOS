@@ -1,3 +1,4 @@
+#ifdef TESTING
 #include "Tests.hh"
 #include <kernel/scheduling/context.h>
 #include <kernel/Utility.hh>
@@ -636,3 +637,4 @@ void test_threads()
 	std::cout << "Most seen at once: " << max_count << std::endl;
 	
 }
+#endif

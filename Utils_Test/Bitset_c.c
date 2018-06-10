@@ -1,3 +1,4 @@
+#ifdef TESTING
 #include "Tests.hh"
 //#include <Utils/Bitset.hh>
 
@@ -9,3 +10,4 @@ CTEST(Bitset)
 	*/
 	
 }
+#endif

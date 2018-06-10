@@ -1,3 +1,4 @@
+#ifdef TESTING
 #include "Tests.hh"
 #include <Utils/map>
 //#include "Tests.hh"
@@ -409,3 +410,4 @@ static void do_tests(const int n, const std::vector<int>& positions, F f)
 		ASSERT(m.begin() == m.end());
 	}
 }
+#endif
