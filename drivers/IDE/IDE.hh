@@ -101,6 +101,8 @@ namespace Drivers { namespace IDE
 		ChannelRegister_t* const channel;
 		const unsigned char role;
 
+		virtual ~IDEDevice() = default;
+
 
         Interface get_type() const noexcept
         {

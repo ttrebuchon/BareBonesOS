@@ -29,6 +29,7 @@ ASM_SRC_ASM = $(call GET_SRC,kernel,asm) $(call GET_SRC,drivers,asm)
 HDD2 = Dummy.img
 HDD2_GEN = Tools/Dummy_Img/Main.out
 HDD2_SRC = $(wildcard Tools/Dummy_Img/*.cpp)
+HDD2_IN = Tools/Dummy_Img/libDynamic.so
 ASM_OUT_SUFFIX = .asm_out
 
 C_OBJS = $(C_SRC:.c=.o)
@@ -141,8 +142,8 @@ kernel/Task.o: kernel/Task.cpp
 -include $(CPP_DEPS)
 -include $(C_DEPS)
 
-$(HDD2): $(HDD2_GEN)
-	./$(HDD2_GEN) $(HDD2)
+$(HDD2): $(HDD2_GEN) $(HDD2_IN)
+	./$(HDD2_GEN) $(HDD2) $(HDD2_IN)
 
 $(HDD2_GEN): $(HDD2_SRC)
 	g++ -std=c++14 -o $(HDD2_GEN) $^

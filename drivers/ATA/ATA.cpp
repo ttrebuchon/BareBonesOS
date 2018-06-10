@@ -4,6 +4,8 @@
 #include <kernel/Debug.h>
 #include <drivers/IDE/IDE_Symbols.h>
 #include <drivers/COM.h>
+#include <Utils/int_to_str.h>
+#include <Std/stdlib.h>
 
 
 // https://wiki.osdev.org/IDE
@@ -27,6 +29,7 @@ namespace Drivers { namespace ATA
 
 	unsigned char ATADevice::access(const bool write, uint32_t LBA, unsigned char sector_count, unsigned short segment_selector, uint32_t segment_offset)
 	{
+		assert(false);
 		unsigned char LBA_mode;
 		unsigned char LBA_io[6];
 		unsigned int words = 256;
@@ -187,10 +190,11 @@ namespace Drivers { namespace ATA
 		channel->select(this->role);
 		channel->poll(false);
 
+		memset(LBA_io, 0, 6);
 
 		if (LBA >= 0x10000000)
 		{
-			LBA_mode = 2;
+			LBA_mode = 2;			// LBA48
 			LBA_io[0] = (LBA & 0x000000FF);
 			LBA_io[1] = (LBA & 0x0000FF00) >> 8;
 			LBA_io[2] = (LBA & 0x00FF0000) >> 16;
@@ -200,16 +204,16 @@ namespace Drivers { namespace ATA
 		}
 		else if (features & 0x200)
 		{
-			LBA_mode = 1;
+			LBA_mode = 1;			// LBA28
 			LBA_io[0] = (LBA & 0x000000FF);
 			LBA_io[1] = (LBA & 0x0000FF00) >> 8;
 			LBA_io[2] = (LBA & 0x00FF0000) >> 16;
 			LBA_io[3] = LBA_io[4] = LBA_io[5] = 0;
-			head = (LBA & 0x0F000000) >> 24;
+			head = (LBA & 0xF000000) >> 24;
 		}
 		else
 		{
-			LBA_mode = 0;
+			LBA_mode = 0;			// CHS
 			sect = (LBA % 63);
 			cyl = (LBA + 1 - sect) / (16 * 63);
 			LBA_io[0] = sect;
@@ -218,6 +222,7 @@ namespace Drivers { namespace ATA
 			LBA_io[3] = LBA_io[4] = LBA_io[5] = 0;
 			head = (LBA + 1 - sect) % (16 * 63) / (63);
 		}
+		assert(LBA_mode == 1);
 
 		while (channel->read(IDE_REG_STATUS) & IDE_STATE_BUSY) ;
 
@@ -290,10 +295,32 @@ namespace Drivers { namespace ATA
 			{
 				if ((err = channel->poll(true)))
 				{
-					return err;
+					// char debugChar = ('0' + err);
+					// COM_write(COM1_PORT, debugChar);
+
+					COM_write_string(COM1_PORT, "ATA Error while reading sector. Error: ");
+					COM_write(COM1_PORT, '0' + err); // <- Error numbers should only be single digits so I'm being lazy
+					COM_write_line(COM1_PORT, nullptr);
+					COM_write_string(COM1_PORT, "LBA: ");
+					char LBA_buf[256];
+					c_int_to_str(LBA, LBA_buf, 256);
+					COM_write_line(COM1_PORT, LBA_buf);
+
+					if (err & ATA_ERROR_CMD_ABORTED)
+					{
+						soft_reset();
+
+						channel->write(IDE_REG_STATUS, 2);
+						assert(channel->read(IDE_REG_ERROR) == 0);
+						return access(write, LBA, sector_count, buf);
+					}
+					else
+					{
+						return err;
+					}
+					
 				}
-				char debugChar = ('0' + err);
-				COM_write(COM1_PORT, debugChar);
+				
 
 				for (int j = 0; j < 256; ++j)
 				{
@@ -331,6 +358,22 @@ namespace Drivers { namespace ATA
 	int ATADevice::read_sector(uint32_t LBA, uint8_t* buf)
 	{
 		return this->access(false, LBA, 1, buf);
+	}
+
+	int ATADevice::read(uint32_t LBA, uint8_t* buffer, int sector_count)
+	{
+		return this->access(false, LBA, sector_count, buffer);
+	}
+
+	void ATADevice::soft_reset()
+	{
+		channel->select(role);
+		channel->write(IDE_REG_CONTROL, 0x4);
+		for (int i = 0; i < 4; ++i)
+		{
+			channel->read(IDE_REG_ALT_STATUS);
+		}
+		channel->write(IDE_REG_CONTROL, 0x0);
 	}
 	
 }

@@ -553,10 +553,6 @@ extern "C" int sched_yield()
 	++thread_it;
 	if (thread_it == runlist.end())
 	{
-		if (runlist.size() > 1)
-		{
-			assert(false);
-		}
 		if (runlist.size() > __thread_map.size())
 		{
 			assert(threads_to_reap.size() > 0);

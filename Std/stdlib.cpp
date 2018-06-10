@@ -1,5 +1,6 @@
 #include "stdlib.h"
 #include "string.h"
+#include <Utils/int_to_str.h>
 
 C_CODE
 
@@ -133,5 +134,6 @@ void exit(int code)
 	KPANIC("exit()");
 }
 #endif
+
 
 C_END

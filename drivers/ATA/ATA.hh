@@ -128,11 +128,13 @@ namespace Drivers { namespace ATA {
 		public:
 		ATADevice(IDE::ChannelRegister_t*, unsigned char role);
 
-		int read_sector(uint32_t LBA, uint8_t* buffer);
+		int read_sector(uint32_t sector_index, uint8_t* buffer);
+		int read(uint32_t sector_index, uint8_t* buffer, int sector_count);
 		bool supports_lba() const noexcept
 		{
 			return (features & 0x200) != 0;
 		}
+		void soft_reset();
 	};
 
 

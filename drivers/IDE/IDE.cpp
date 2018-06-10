@@ -149,6 +149,8 @@ namespace Drivers { namespace IDE
 
             if (state & IDE_STATE_ERROR)
             {
+                unsigned char err = read(IDE_REG_ERROR);
+                return err;
                 return 2;   // Read the error register?
             }
 

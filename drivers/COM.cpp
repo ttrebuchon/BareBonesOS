@@ -27,4 +27,25 @@ extern "C"
 
         port_byte_out(port + COM_REG_DATA, c);
     }
+
+    void COM_write_string(uint16_t port, const char* str)
+    {
+        assert(str);
+
+        for (const char* it = str; *it != 0; ++it)
+        {
+            COM_write(port, *it);
+        }
+    }
+
+    void COM_write_line(uint16_t port, const char* str)
+    {
+        if (str)
+        {
+            COM_write_string(port, str);
+        }
+        
+
+        COM_write(port, '\n');
+    }
 }

@@ -50,6 +50,9 @@ int COM_is_transmit_empty(uint16_t port);
 void COM_write(uint16_t port, char c);
 void COM_init(uint16_t port);
 
+void COM_write_string(uint16_t port, const char*);
+void COM_write_line(uint16_t port, const char*);
+
 C_END
 
 #endif
