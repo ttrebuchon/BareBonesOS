@@ -49,10 +49,10 @@ typedef struct multiboot_header
 
 typedef struct
 {
-    uint32_t num;
-    uint32_t size;
+    uint32_t table_size;
+    uint32_t str_size;
     uint32_t addr;
-    uint32_t shndx;
+    uint32_t reserved;
     
 } multiboot_aout_symbol_table_t;
 

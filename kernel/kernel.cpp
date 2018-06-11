@@ -578,7 +578,7 @@ void ktest_ELF()
 {
 	std::cout << "Entry Count: " << boot::mboot->raw()->u.elf_sec.num << std::endl;
 	std::cout << "Entry Size: " << boot::mboot->raw()->u.elf_sec.size << std::endl;
-	assert(false);	// TODO
+	//assert(false);	// TODO
 
 	Drivers::IDE::IDEDevice* _dev = Drivers::IDE::IDEDevice::Get(IDE_PRIMARY, IDE_SLAVE);
 	assert(_dev);
@@ -617,8 +617,13 @@ void ktest_ELF()
 
 	uint8_t* libbuf = diskbuf + sizeof(uint64_t);
 
+	memset(libbuf, 0, end_addr - 512 - sizeof(uint64_t));
+
 	res = dev->read(1, diskbuf, sector_count);
 	assert(res == 0);
+
+	assert(end_addr - 512 - lib_size - sizeof(uint64_t) > 0);
+	memset(libbuf + lib_size, 0, end_addr - 512 - lib_size - sizeof(uint64_t));
 	
 
 	Kernel::ELF32Object obj(libbuf);
@@ -789,7 +794,7 @@ void ktest_ELF()
 			}
 			else
 			{
-				std::cout << i << ": Not correct table table [";
+				std::cout << i << ": Not correct table [";
 				if (stbl->table_name())
 				{
 					std::cout << stbl->table_name();
@@ -809,9 +814,10 @@ void ktest_ELF()
 		auto reloc = rela_PLT->reloc(i);
 		assert(reloc);
 		assert(reloc->info_symbol() > 0);
+		std::cout << "Index " << i << ": '" << std::flush;
 		auto sym = reloc->symbol();
 		assert(sym);
-		std::cout << "Index " << i << ": '";
+		
 		if (sym->name())
 		{
 			std::cout << sym->name();
@@ -876,6 +882,40 @@ void ktest_ELF()
 
 	assert(got_plt->flags & ELF_SEC_ATTR_ALLOC);
 
+	// for (int i = 0; i < got_plt->size; ++i)
+	// {
+	// 	auto ptr = libbuf + i + got_plt->address;
+	// 	auto ptr2 = libbuf + i + got_plt->offset;
+	// 	assert(ptr != ptr2);
+
+	// 	const Kernel::ELF32SectionHeader_t* last_sec_header = nullptr;
+
+	// 	for (int i = 1; i < obj.section_header_count(); ++i)
+	// 	{
+	// 		if (last_sec_header == nullptr)
+	// 		{
+	// 			last_sec_header = obj.section_header(i);
+	// 			continue;
+	// 		}
+
+	// 		if (obj.section_header(i)->offset + obj.section_header(i)->size > last_sec_header->offset + last_sec_header->size)
+	// 		{
+	// 			last_sec_header = obj.section_header(i);
+	// 		}
+	// 	}
+
+	// 	auto last_sec = obj.section_header_count() - 1;
+
+	// 	assert(got_plt->size + got_plt->address > last_sec_header->offset + last_sec_header->size);
+
+	// 	if (*ptr != 0)
+	// 	{
+	// 		std::cout << (void*)(addr_t)*ptr << std::endl;
+	// 		std::cout << (void*)(addr_t)(i + got_plt->address) << std::endl;
+	// 		assert(false);
+	// 	}
+	// }
+
 	//memcpy((void*)((addr_t)libbuf + got_plt->address), (void*)((addr_t)libbuf + got_plt->offset), got_plt->size);
 
 
@@ -894,18 +934,62 @@ void ktest_ELF()
 	std::cout << "Offset-ed target_loc: " << *(void**)((addr_t)foo_reloc->target_loc() - got_plt->address + got_plt->offset) << std::endl;
 	std::cout << "^Address (Relative to file): " << (void*)((addr_t)foo_reloc->target_loc() - got_plt->address + got_plt->offset - (addr_t)libbuf) << std::endl;
 
-
-	//*(void**)foo_reloc->target_loc() = (void*)foo_reloc->reloc_value();
-
-	for (int i = 1; i < obj.relocation_table_count(); ++i)
+	for (int i = 0; i < obj.relocation_table_count(); ++i)
 	{
 		auto rtbl = obj.relocation_table(i);
 		assert(rtbl);
-		for (int j = 1; j < rtbl->count(); ++j)
+		if (rtbl->info() != 0)
+		{
+			std::cout << "Target Table: " << obj.section_name(rtbl->info()) << std::endl;
+		}
+		for (int j = 0; j < rtbl->count(); ++j)
+		{
+			auto reloc = rtbl->reloc(j);
+			assert(reloc);
+			auto s = reloc->symbol();
+
+			if (reloc->reloc_value() == nullptr)
+			{
+				continue;
+			}
+
+			if (s)
+			{
+				if (s->name())
+				{
+					std::cout << s->name() << " - " << std::flush << (void**)((addr_t)reloc->target_loc() - (addr_t)libbuf) << 
+								"   Value at target_loc: " << *(void**)(void*)((addr_t)reloc->target_loc()) << std::endl;
+					std::cout << "Value: " << (void*)((addr_t)reloc->reloc_value()) << std::endl;
+					std::cout << "Symval: " << (void*)(reloc->symbol()->value()) << std::endl;
+					std::cout << "*(" << (void*)((addr_t)reloc->target_loc() - (addr_t)libbuf) << ") = " << (void*)((addr_t)reloc->reloc_value() - (addr_t)libbuf) << std::endl;
+				}
+				else
+				{
+					std::cout << "Symbol has no name." << std::endl;
+				}
+			}
+			else
+			{
+				std::cout << "reloc has no symbol." << std::endl;
+			}
+		}
+	}
+
+	//*(void**)foo_reloc->target_loc() = (void*)foo_reloc->reloc_value();
+
+	for (int i = 0; i < obj.relocation_table_count(); ++i)
+	{
+		auto rtbl = obj.relocation_table(i);
+		assert(rtbl);
+		for (int j = 0; j < rtbl->count(); ++j)
 		{
 			auto rloc = rtbl->reloc(j);
 			assert(rloc);
-			*(void**)rloc->target_loc() = (void*)rloc->reloc_value();
+			if (rloc->reloc_value() != nullptr)
+			{
+				*(void**)rloc->target_loc() = (void*)rloc->reloc_value();
+			}
+			
 		}
 	}
 
@@ -951,6 +1035,22 @@ void ktest_ELF()
 	std::cout << "new_sym binding: " << new_sym->binding() << std::endl;
 
 	auto get_poly = (void*(*)())obj.symbol("get_poly")->value();
+
+	std::cout << "Value at 'new' jump: " << *(void**)0x12dd + obj.symbol("get_poly")->value() << std::endl;
+	std::cout << "Value at 'new' jump (Relative): " << (void*)((addr_t)*(void**)0x12dd + obj.symbol("get_poly")->value() - (addr_t)libbuf) << std::endl;
+
+	std::cout << "EBX at jump to 'new@plt': F + " << (void*)(((addr_t)(void*)get_poly - (addr_t)libbuf) + (0x439 - 0x42f) + 0x12c3) << std::endl;
+	std::cout << "Immediate jump to address at: F + " << (void*)(((addr_t)(void*)get_poly - (addr_t)libbuf) + (0x439 - 0x42f) + 0x12c3 + 0x10) << std::endl;
+	std::cout << "^^Address Value: " << (void*)(((addr_t)*(void**)(((addr_t)(void*)get_poly - (addr_t)libbuf) + (0x439 - 0x42f) + 0x12c3 + 0x10 + (addr_t)libbuf)) - 0) << std::endl;
+	std::cout << "^^(Address-0x1000) Value: " << (void*)(((addr_t)*(void**)(((addr_t)(void*)get_poly - (addr_t)libbuf) + (0x439 - 0x42f) + 0x12c3 - 0x1000 + 0x10 + (addr_t)libbuf)) - 0) << std::endl;
+	assert(got_plt->address - got_plt->offset == 0x1000);
+	std::cout << (void*)(libbuf + 0x3a6) << std::endl;
+	std::cout << (void*)(libbuf + 0x42f) << std::endl;
+
+	
+
+	sleep(3);
+
 	assert(get_poly);
 	std::cout << "Here comes the clusterfuck." << std::endl;
 	auto get_poly_res = get_poly();

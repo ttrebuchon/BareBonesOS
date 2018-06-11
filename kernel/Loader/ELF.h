@@ -281,11 +281,12 @@ struct ELF64RelAdd_t : public ELF64Rel_t
 #endif
 
 
-#define ELF_RELOC_386_NONE	0x0
-#define ELF_RELOC_386_32	0x1		// Symbol + Offset
-#define ELF_RELOC_386_PC32	0x2		// Symbol + Offset - Section_Offset
+#define ELF_RELOC_386_NONE			0x0
+#define ELF_RELOC_386_32			0x1		// Symbol + Offset
+#define ELF_RELOC_386_PC32			0x2		// Symbol + Offset - Section_Offset
+#define ELF_RELOC_386_GLOB_DAT		0x6		// ??
 
-#define ELF_RELOC_SO_386_32	0x7		// Symbol + Offset
+#define ELF_RELOC_386_JUMP_SLOT		0x7		// Symbol + Offset
 
 
 
@@ -354,6 +355,7 @@ class ELFObject
 	typedef ELFSymbolTable<header_type> symbol_table_type;
 	typedef ELFSymbol<header_type> symbol_type;
 	typedef ELFRelocationTable<header_type> relocation_table_type;
+	typedef ELFReloc<header_type> relocation_type;
 
 	protected:
 	header_type* __header;
@@ -679,14 +681,15 @@ class ELFSymbolTable
 	const char* __symbol_string_table;
 	size_t __symbol_count;
 	symbol_type** __symbols;
+	int __index;
 
 
 	void __build_symbols();
 
 	public:
-	ELFSymbolTable(ELFObject<header_type>* parent, const section_header_type* section) 
+	ELFSymbolTable(ELFObject<header_type>* parent, const section_header_type* section, int index) 
 			:	__object(parent), __section(section),
-				__symbol_string_table(nullptr)
+				__symbol_string_table(nullptr), __index(index)
 	{
 		assert(parent);
 		assert(section);
@@ -745,6 +748,11 @@ class ELFSymbolTable
 	}
 
 	const symbol_type* symbol(const char* name) const noexcept;
+
+	int index() const noexcept
+	{
+		return __index;
+	}
 
 	friend symbol_type;
 
@@ -826,7 +834,7 @@ class ELFSymbol
 				else
 				{
 					// DEBUG
-					assert(NOT_IMPLEMENTED);
+					//assert(NOT_IMPLEMENTED);
 					return 0;
 					
 				}
@@ -893,12 +901,13 @@ class ELFRelocationTable
 	ELFObject<header_type>* __object;
 	const section_header_type* __section;
 	relocation_type** __relocs;
+	int __index;
 
 	void __build_relocs();
 
 	public:
 
-	ELFRelocationTable(ELFObject<header_type>* parent, const section_header_type* section) : __object(parent), __section(section), __relocs(nullptr)
+	ELFRelocationTable(ELFObject<header_type>* parent, const section_header_type* section, int index) : __object(parent), __section(section), __relocs(nullptr), __index(index)
 	{
 		assert(parent);
 		assert(section);
@@ -952,7 +961,6 @@ class ELFRelocationTable
 
 	const raw_relocation_type* raw_reloc(int index) const noexcept
 	{
-		assert(index > 0);
 		assert(index < count());
 		if (is_addend())
 		{
@@ -966,7 +974,6 @@ class ELFRelocationTable
 
 	const raw_relocation_addend_type* raw_addend_reloc(int index) const noexcept
 	{
-		assert(index > 0);
 		assert(index < count());
 		if (is_addend())
 		{
@@ -980,10 +987,9 @@ class ELFRelocationTable
 
 	const relocation_type* reloc(int index) const noexcept
 	{
-		assert(index > 0);
 		assert(index < count());
 
-		return __relocs[index-1];
+		return __relocs[index];
 	}
 
 	const relocation_type* addend_reloc(int index) const noexcept
@@ -996,6 +1002,11 @@ class ELFRelocationTable
 		{
 			return nullptr;
 		}
+	}
+
+	int index() const noexcept
+	{
+		return __index;
 	}
 
 	auto info() const noexcept
@@ -1057,8 +1068,11 @@ class ELFReloc
 	{
 		if (info_symbol() > 0)
 		{
-			auto hdr = __object->section_header(__section->link());
+			auto l = __section->link();
+			assert(l > 0);
+			auto hdr = __object->section_header(l);
 			assert(hdr);
+			assert(hdr->type == ELF_SEC_SYMTABLE || hdr->type == ELF_SEC_DYN_SYMTABLE);
 			auto sym_table = __object->symbol_table(hdr);
 			assert(sym_table);
 
@@ -1069,8 +1083,17 @@ class ELFReloc
 
 	const void* target_loc() const noexcept
 	{
-		auto target = __object->section_header(__section->info());
-		assert(target);
+		if (__section->info() != 0)
+		{
+			auto target = __object->section_header(__section->info());
+			assert(target);
+			// return (void*)((addr_t)__object->get() + __reloc->offset + target->offset - target->address);
+			return (void*)((addr_t)__object->get() + __reloc->offset);
+		}
+		assert(__reloc->offset > 0);
+		// assert(__section->info() > 0);
+		// auto target = __object->section_header(__section->info());
+		// assert(target);
 
 		void* ref = (void*)((addr_t)__object->get() + __reloc->offset);
 		
@@ -1093,6 +1116,10 @@ class ELFReloc
 
 			symval = (void*)sym->value();
 		}
+		else
+		{
+			assert(NOT_IMPLEMENTED);
+		}
 
 		switch (info_type())
 		{
@@ -1100,13 +1127,39 @@ class ELFReloc
 				assert(NOT_IMPLEMENTED);
 				break;
 			case ELF_RELOC_386_32:
-			case ELF_RELOC_SO_386_32:
 				return (const void*)(*ref + (addr_t)symval);
 
 			case ELF_RELOC_386_PC32:
+				//assert(NOT_IMPLEMENTED);
 				return (const void*)(*ref + (addr_t)symval - /* --> */ (addr_t)ref /* <-- ????? I'm not sure about this at all. There's a chance the documentation made a mistake*/);
+
+			case ELF_RELOC_386_JUMP_SLOT:
+				assert(__section->info() != 0);
+				{
+					auto target = __object->section_header(__section->info());
+					assert(target);
+					if (symval == 0)
+					{
+						symval = (void*)__object->get();
+						return (const void*)(*(word_type*)((addr_t)__object->get() + target->offset + __reloc->offset - target->address) + (addr_t)symval);
+					}
+					else
+					{
+						return (const void*)(*ref + (addr_t)symval);
+					}
+					
+				}
+				//assert(NOT_IMPLEMENTED);
+				// return (const void*)(*ref + (addr_t)symval - /* --> */ (addr_t)ref /* <-- ????? I'm not sure about this at all. There's a chance the documentation made a mistake*/);
+
+			case ELF_RELOC_386_GLOB_DAT:
+				// TODO
+				return (const void*)(*ref + (addr_t)symval);
+				return nullptr;
 			
 			default:
+				TRACE(info_type());
+				return nullptr;
 				assert(NOT_IMPLEMENTED);
 		}
 	}

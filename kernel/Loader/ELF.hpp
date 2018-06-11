@@ -27,7 +27,7 @@ namespace Kernel
 		{
 			if (section_header_table[i].type == ELF_SEC_SYMTABLE || section_header_table[i].type == ELF_SEC_DYN_SYMTABLE)
 			{
-				__symbol_tables[j++] = new symbol_table_type(this, &section_header_table[i]);
+				__symbol_tables[j++] = new symbol_table_type(this, &section_header_table[i], i);
 			}
 		}
 
@@ -36,7 +36,7 @@ namespace Kernel
 		{
 			if (section_header_table[i].type == ELF_SEC_RELOC_NADDEND || section_header_table[i].type == ELF_SEC_RELOC_ADDEND)
 			{
-				__relocation_tables[j++] = new relocation_table_type(this, &section_header_table[i]);
+				__relocation_tables[j++] = new relocation_table_type(this, &section_header_table[i], i);
 			}
 		}
 	}
@@ -70,7 +70,7 @@ namespace Kernel
 
 		for (int i = 0; i < symbol_table_count(); ++i)
 		{
-			if (symbol_table(i)->get() == sec)
+			if (&section_header_table()[symbol_table(i)->index()] == sec)
 			{
 				return symbol_table(i);
 			}
@@ -172,16 +172,16 @@ namespace Kernel
 
 		if (is_addend())
 		{
-			for (int i = 1; i < count(); ++i)
+			for (int i = 0; i < count(); ++i)
 			{
-				__relocs[i-1] = new relocation_type(__object, this, &(reinterpret_cast<const raw_relocation_addend_type*>(((addr_t)__object->get()) + __section->offset)[i]));
+				__relocs[i] = new relocation_type(__object, this, &(reinterpret_cast<const raw_relocation_addend_type*>(((addr_t)__object->get()) + __section->offset)[i]));
 			}
 		}
 		else
 		{
-			for (int i = 1; i < count(); ++i)
+			for (int i = 0; i < count(); ++i)
 			{
-				__relocs[i-1] = new relocation_type(__object, this, &(reinterpret_cast<const raw_relocation_type*>(((addr_t)__object->get()) + __section->offset)[i]));
+				__relocs[i] = new relocation_type(__object, this, &(reinterpret_cast<const raw_relocation_type*>(((addr_t)__object->get()) + __section->offset)[i]));
 			}
 		}
 	}
