@@ -2,7 +2,7 @@
 
 namespace Utils
 {
-	mutex::mutex() : _lcount(0)
+	/*mutex::mutex() : _lcount(0)
 	{
 		
 	}
@@ -30,5 +30,5 @@ namespace Utils
 	void mutex::unlock()
 	{
 		_lcount.exchange(0);
-	}
+	}*/
 }

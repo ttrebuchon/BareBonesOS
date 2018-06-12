@@ -4,6 +4,9 @@
 #include <Common.h>
 #include "atomic.hpp"
 #include "bits/lock_tags.hh"
+#include <Support/threading/mutex.hh>
+
+
 
 namespace Utils
 {
@@ -20,18 +23,30 @@ namespace Utils
 	class mutex
 	{
 		protected:
-		atomic<int> _lcount;
+		Support::threading::spin_mutex __mutex;
 		
 		public:
-		mutex();
+		mutex() : __mutex() {}
 		mutex(const mutex&) = delete;
 		
 		mutex& operator=(const mutex&) = delete;
 		
+		__attribute__((__always_inline__))
+		void lock()
+		{
+			__mutex.lock();
+		}
 		
-		void lock();
-		bool try_lock();
-		void unlock();
+		__attribute__((__always_inline__))
+		bool try_lock()
+		{
+			return __mutex.try_lock();
+		}
+		__attribute__((__always_inline__))
+		void unlock()
+		{
+			__mutex.unlock();
+		}
 	};
 	
 	

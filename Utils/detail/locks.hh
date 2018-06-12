@@ -40,6 +40,16 @@ namespace Utils
 	
 	
 	
+	namespace chrono
+	{
+		template <class, class>
+		class duration;
+		
+		template <class, class>
+		class time_point;
+	}
+	
+	
 	template <class Mutex>
 	class shared_lock
 	{
