@@ -17,7 +17,10 @@ void task_switch();
 extern void __sleep();
 void scheduler_hook();
 
-static void timer_callback(Registers_t regs)
+#ifndef TESTING
+static
+#endif
+void timer_callback(Registers_t regs)
 {
 	++ticks;
 	sleep_for > 0 ? --sleep_for : 0;
