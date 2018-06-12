@@ -47,3 +47,8 @@ void insl(uint16_t port, void* addr, uint32_t cnt)
 {
     asm volatile ("cld; rep insl" : "=D" (addr), "=c" (cnt) : "d" (port), "0" (addr), "1" (cnt) : "memory", "cc");
 }
+
+void insm(unsigned short port, void* addr, uint32_t bytes)
+{
+	asm volatile("rep insb" : "+D"(addr), "+c"(bytes) : "d"(port) : "memory");
+}

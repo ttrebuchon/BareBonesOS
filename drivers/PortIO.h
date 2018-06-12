@@ -21,6 +21,8 @@ uint32_t port_long_in(const unsigned short port);
 
 void insl(uint16_t port, void* addr, uint32_t cnt);
 
+void insm(unsigned short port, void* addr, uint32_t bytes);
+
 #ifdef __cplusplus
 }
 #endif
