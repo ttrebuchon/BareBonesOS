@@ -20,3 +20,6 @@ MAC(queue);
 MAC(PhysicalMemory);
 MAC(reflect);
 MAC(thread_entry);
+MAC(SMP);
+MAC(concurrent_circular_list);
+MAC(FAT32);
