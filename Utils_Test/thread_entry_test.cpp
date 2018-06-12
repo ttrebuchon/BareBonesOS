@@ -8,6 +8,7 @@
 #include <kernel/scheduling/thread.h>
 #include <unistd.h>
 #include <Utils/vector>
+#include <kernel/Scheduling/scheduler.h>
 
 
 using Utils::list;

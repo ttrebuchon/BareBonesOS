@@ -30,7 +30,7 @@ template <class T, class F>
 void run_for(const int n, F f)
 {
 	
-	auto stdLock = [](auto&... muts) -> auto
+	auto stdLock = [](auto&... muts) -> void
 	{
 		std::lock(muts...);
 	};
