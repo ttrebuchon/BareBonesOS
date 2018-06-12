@@ -20,6 +20,11 @@ SRC += $(call GET_SRC_R,Utils,cpp)
 SRC += ../kernel/Registers.cpp
 SRC += ../kernel/scheduling/thread.cpp
 SRC += ../kernel/Timer_c.cpp
+SRC += $(call GET_SRC_R,Support/threading,cpp)
+SRC += ../drivers/CPUID.cpp
+SRC += ../drivers/APIC.cpp
+SRC += ../drivers/ACPI/RSDT.cpp
+SRC += $(call GET_SRC_R,kernel/Filesystem/FAT32,cpp)
 
 ASM_SRC = ../kernel/Utility_asm.asm
 ASM_OBJS = $(ASM_SRC:.asm=.o)
@@ -68,6 +73,7 @@ BOTH_FLAGS += -D_TRACE
 BOTH_FLAGS += -fPIC
 BOTH_FLAGS += -pie
 BOTH_FLAGS += -D"throw(...)"=""
+#BOTH_FLAGS += -fgnu-tm
 
 BOTH_FLAGS += $(SQLITE_FLAGS)
 
