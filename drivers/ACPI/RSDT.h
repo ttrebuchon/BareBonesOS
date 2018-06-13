@@ -89,6 +89,7 @@ typedef struct
 __attribute__((__packed__))
 XSDT;
 
+
 int acpi_sdt_header_validate(const ACPISDTHeader*);
 
 
@@ -112,7 +113,7 @@ class RSDT_Wrapper
 		
 	}
 	
-	virtual const void* findSDT(const char* sig, int start = 0) const = 0;
+	virtual const void* findSDT(const char* sig, int start = 0, int* index = nullptr) const = 0;
 	
 	
 	
@@ -125,12 +126,43 @@ class RSDT_Wrapper
 	
 	
 	template <class SDT>
-	const SDT* find(int start = 0) const
+	const SDT* find(int start = 0, int* index = nullptr) const
 	{
-		return (const SDT*)findSDT(SDT::Signature, start);
+		return (const SDT*)findSDT(SDT::Signature, start, index);
 	}
 	
+	template <class SDT>
+	const SDT** find_all(int* count_ptr, int start = 0) const
+	{
+		int count = 0;
+		int last_index = -1;
+		while (find<SDT>(last_index+1, &last_index))
+		{
+			++count;
+		}
+		
+		const SDT** arr = nullptr;
+		if (count > 0)
+		{
+			arr = new const SDT*[count];
+		}
+		
+		last_index = -1;
+		for (int i = 0; i < count; ++i)
+		{
+			arr[i] = find<SDT>(last_index+1, &last_index);
+		}
+		
+		if (count_ptr)
+		{
+			*count_ptr = count;
+		}
+		return arr;
+	}
 };
+
+
+
 
 template <class T>
 class RSDT_SDT_Wrapper : public RSDT_Wrapper
@@ -142,17 +174,24 @@ class RSDT_SDT_Wrapper : public RSDT_Wrapper
 	
 	
 	protected:
-	const void* findSDT(const char* sig, int start = 0) const override
+	const void* findSDT(const char* sig, int start = 0, int* index = nullptr) const override
 	{
 		for (int i = start; i < entry_count; ++i)
 		{
 			const ACPISDTHeader* head = (const ACPISDTHeader*)(addr_t)ptr->sdt_pointers[i];
 			if (strncmp(head->signature, sig, 4) == 0)
 			{
+				if (index)
+				{
+					*index = i;
+				}
 				return head;
 			}
 		}
-		
+		if (index)
+		{
+			*index = -1;
+		}
 		return nullptr;
 	}
 	

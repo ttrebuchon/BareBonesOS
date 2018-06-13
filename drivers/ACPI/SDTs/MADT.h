@@ -5,19 +5,28 @@
 #include <drivers/ACPI/GenericAddress.h>
 #include <drivers/ACPI/RSDT.h>
 
+#ifdef __cplusplus
+	#include <Utils/type_traits>
+#endif
+
 START_NS(Drivers)
 START_NS(ACPI)
 
 
+C_CODE
 
-struct MADTEntryBase
+typedef struct _MADTEntryBase
 {
 	uint8_t type;
 	uint8_t record_length;
-};
+} MADTEntryBase;
 
 const MADTEntryBase* MADT_next_entry(const MADTEntryBase*);
 
+
+C_END
+
+#ifdef __cplusplus
 
 struct MADT : public ACPISDTHeader
 {
@@ -106,7 +115,7 @@ struct MADT : public ACPISDTHeader
 		static_assert(Utils::is_base_of<MADTEntryBase, TEntry>::value);
 		constexpr static uint8_t type = TEntry::type_id;
 		count = 0;
-		const MADTEntryBase* it = &this->entries;
+		const MADTEntryBase* it = this->entries;
 		const void* end_addr = (const void*)(((addr_t)(const ACPISDTHeader*)this) + this->length);
 		
 		const MADTEntryBase* fwd_it = it;
@@ -160,7 +169,7 @@ struct Processor_Local_APIC_t : public MADTEntryBase
 	
 	uint8_t processor_ID;
 	uint8_t APIC_ID;
-	uint32_t flags;
+	uint32_t flags; // 1 = Processor Enabled
 	
 	
 } __attribute__((__packed__));
@@ -214,7 +223,7 @@ struct LocalAPICAddressOverride : public MADTEntryBase
 } __attribute__((__packed__));
 
 
-
+#endif
 
 
 
