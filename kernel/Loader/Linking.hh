@@ -8,6 +8,8 @@
 namespace Kernel
 {
 
+	struct LinkerCallbackArg_t;
+
 	class ELFSymbols
 	{
 		public:
@@ -37,11 +39,13 @@ namespace Kernel
 
 
 		void link_object(object_type*);
+		void* resolve_symbol(LinkerCallbackArg_t*, addr_t index);
 		
 	};
 
 
 	extern "C" ELFSymbols* ELF_kernel_symbols;
+	void init_kernel_symbols();
 }
 
 

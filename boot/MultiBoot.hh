@@ -57,6 +57,21 @@ namespace boot
 		{
 			return ptr;
 		}
+
+		bool has_symbols() const noexcept
+		{
+			return hasFlag(4) || hasFlag(5);
+		}
+
+		bool has_ELF_symbols() const noexcept
+		{
+			return hasFlag(5);
+		}
+
+		bool has_aout_symbols() const noexcept
+		{
+			return hasFlag(4);
+		}
 	};
 	
 	

@@ -313,6 +313,7 @@ namespace detail
 		typedef ELF32SectionHeader_t	section_type;
 		typedef ELF32Symbol_t			symbol_type;
 		typedef uint32_t				word_type;
+		typedef int32_t					sword_type;
 		typedef ELF32Rel_t				relocation_type;
 		typedef ELF32RelAdd_t			relocation_add_type;
 		constexpr static bool is_32 = true;
@@ -325,6 +326,7 @@ namespace detail
 		typedef ELF64SectionHeader_t section_type;
 
 		typedef uint64_t				word_type;
+		typedef int64_t					sword_type;
 		typedef ELF64Rel_t				relocation_type;
 		typedef ELF64RelAdd_t			relocation_add_type;
 		constexpr static bool is_32 = false;
@@ -342,7 +344,6 @@ class ELFRelocationTable;
 template <class>
 class ELFReloc;
 
-
 template <class HeaderType>
 class ELFObject
 {
@@ -351,21 +352,25 @@ class ELFObject
 	typedef decltype(((header_type*)nullptr)->entry_position) address_type;
 	typedef typename detail::elf_entry_type_chooser<header_type>::program_type program_header_type;
 	typedef typename detail::elf_entry_type_chooser<header_type>::section_type section_header_type;
-	//typedef typename detail::elf_entry_type_chooser<header_type>::symbol_type symbol_type;
+	typedef typename detail::elf_entry_type_chooser<header_type>::symbol_type raw_symbol_type;
 	typedef ELFSymbolTable<header_type> symbol_table_type;
 	typedef ELFSymbol<header_type> symbol_type;
 	typedef ELFRelocationTable<header_type> relocation_table_type;
 	typedef ELFReloc<header_type> relocation_type;
 
 	protected:
-	header_type* __header;
+	void* __base_address;
 	program_header_type* __program_table;
+	size_t __program_header_count;
 	symbol_table_type** __symbol_tables;
 	size_t __symbol_table_count;
 	relocation_table_type** __relocation_tables;
 	size_t __relocation_table_count;
 
-	
+	size_t __section_header_count;
+	size_t __section_header_offset;
+	int __section_header_names_index;
+	uint16_t __kind;
 
 
 	void __build_tables();
@@ -373,66 +378,31 @@ class ELFObject
 
 	public:
 
-	ELFObject(void* header) :	__header(nullptr), __program_table(nullptr), __symbol_tables(nullptr), 
-								__symbol_table_count(0), __relocation_tables(nullptr),
-								__relocation_table_count(0)
+	ELFObject(void* base_addr, size_t program_header_offset, size_t program_header_count,
+				size_t section_header_offset, size_t section_header_count, uint16_t kind, int section_names_index) :
+														__base_address(base_addr), __program_table(nullptr), 
+														__program_header_count(program_header_count),
+														__symbol_tables(nullptr), __symbol_table_count(0), __relocation_tables(nullptr),
+														__relocation_table_count(0), __section_header_count(section_header_count),
+														__section_header_offset(section_header_offset), __section_header_names_index(section_names_index),
+														__kind(kind)
 	{
-		assert(header);
-		assert(ELF_verify_magic(header));
+		// assert(ELF_verify_magic(header));
 
-		int is_32;
-		int little_end;
-		int x86;
-		int kind;
-		int ver;
 		
-		int res = ELF_parse_info(header, &is_32, &little_end, &x86, &ver, &kind);
-		assert(res == 1);
-		if (detail::elf_entry_type_chooser<header_type>::is_32)
-		{
-			assert(is_32 == 1);
-		}
-		else
-		{
-			assert(is_32 == 0);
-		}
-
-		// TODO: little_end
 
 
-		assert(x86 == 1);
-
-		assert(kind != ELF_KIND_UNKNOWN);
-
-		if (kind == ELF_KIND_EXEC)
-		{
-			assert(NOT_IMPLEMENTED);
-		}
-		else if (kind == ELF_KIND_CORE)
-		{
-			assert(NOT_IMPLEMENTED);
-		}
-		else if (kind == ELF_KIND_SHARED)
-		{
-			// TODO: All good for now(?)
-			//assert(NOT_IMPLEMENTED);
-		}
-		else if (kind == ELF_KIND_RELOC)
-		{
-			// TODO: All good for now
-		}
-
-		assert(ver == 1);
-
-
-		__header = reinterpret_cast<header_type*>(header);
-
-		__program_table =
-				reinterpret_cast<program_header_type*>(
-					reinterpret_cast<unsigned char*>(__header) + __header->program_header_offset
-				);
 		
-		assert(sizeof(program_header_type) == __header->program_header_entry_size);
+		if (program_header_offset)
+		{
+			__program_table =
+					reinterpret_cast<program_header_type*>(
+						reinterpret_cast<unsigned char*>(__base_address) + program_header_offset
+			);
+		}
+		
+		
+		// assert(sizeof(program_header_type) == __header->program_header_entry_size);
 
 
 
@@ -440,10 +410,14 @@ class ELFObject
 		__build_tables();
 	}
 
+	void* base_address() const noexcept
+	{
+		return __base_address;
+	}
 
 	size_t program_header_count() const noexcept
 	{
-		return __header->program_header_count;
+		return __program_header_count;
 	}
 
 	const program_header_type* program_header_table() const noexcept
@@ -453,29 +427,32 @@ class ELFObject
 
 	size_t section_header_count() const noexcept
 	{
-		return __header->section_header_count;
+		return __section_header_count - 1;
 	}
 
 	size_t section_header_entry_size() const noexcept
 	{
-		return __header->section_header_entry_size;
+		return sizeof(section_header_type);
+		//return __header->section_header_entry_size;
 	}
 
 	const section_header_type* section_header_table() const noexcept
 	{
-		return (const section_header_type*)((addr_t)__header + __header->section_header_offset);
+		return (const section_header_type*)((addr_t)__base_address + __section_header_offset);
 	}
 
 	size_t section_names_index() const noexcept
 	{
-		return __header->section_header_strings_index;
+		assert(__section_header_names_index > 0);
+		return __section_header_names_index - 1;
+		// return __header->section_header_strings_index;
 	}
 
 	const section_header_type* section_header(const int index) const noexcept
 	{
-		assert(index > 0);
-		assert(index < __header->section_header_count);
-		return &section_header_table()[index];
+		assert(index >= 0);
+		assert(index < section_header_count());
+		return &section_header_table()[index+1];
 	}
 
 	const char* section_name(int index) const noexcept
@@ -493,12 +470,12 @@ class ELFObject
 			}
 		}
 
-		return nullptr;
+		return "";
 	}
 
 	const char* section_name_table() const noexcept
 	{
-		return (const char*)__header + section_header(section_names_index())->offset;
+		return (const char*)base_address() + section_header(section_names_index())->offset;
 	}
 
 	// const symbol_type* symbol_table(int index) const noexcept
@@ -562,7 +539,7 @@ class ELFObject
 	const section_header_type* section_header(const char* name, int startIndex = 1) const noexcept
 	{
 		auto index = section_header_index(name, startIndex);
-		if (index > 0)
+		if (index >= 0)
 		{
 			return section_header(index);
 		}
@@ -572,13 +549,13 @@ class ELFObject
 		}
 	}
 
-	size_t section_header_index(const char* name, int startIndex = 1) const noexcept
+	int section_header_index(const char* name, int startIndex = 0) const noexcept
 	{
 		assert(name);
 
-		if (unlikely(startIndex < 1))
+		if (unlikely(startIndex < 0))
 		{
-			startIndex = 1;
+			startIndex = 0;
 		}
 
 		for (int i = startIndex; i < this->section_header_count(); ++i)
@@ -593,7 +570,7 @@ class ELFObject
 			}
 		}
 
-		return 0;
+		return -1;
 	}
 
 	size_t symbol_table_count() const noexcept
@@ -611,10 +588,10 @@ class ELFObject
 	const symbol_table_type* symbol_table(const char* name) const noexcept;
 	const symbol_table_type* symbol_table(const section_header_type* sec) const noexcept;
 
-	const header_type* get() const noexcept
-	{
-		return __header;
-	}
+	// const object_type* get() const noexcept
+	// {
+	// 	return object_source;
+	// }
 
 	size_t relocation_table_count() const noexcept
 	{
@@ -632,16 +609,317 @@ class ELFObject
 
 	uint16_t kind() const noexcept
 	{
-		return __header->kind;
+		return __kind;
 	}
 
 
 	const symbol_type* symbol(const char* name) const noexcept;
+	const relocation_type* reloc(const char* name, int skip = 0) const noexcept;
 
 
 
 	friend symbol_table_type;
 };
+
+// template <class HeaderType>
+// class ELFObject
+// {
+// 	public:
+// 	typedef HeaderType header_type;
+// 	typedef decltype(((header_type*)nullptr)->entry_position) address_type;
+// 	typedef typename detail::elf_entry_type_chooser<header_type>::program_type program_header_type;
+// 	typedef typename detail::elf_entry_type_chooser<header_type>::section_type section_header_type;
+// 	//typedef typename detail::elf_entry_type_chooser<header_type>::symbol_type symbol_type;
+// 	typedef ELFSymbolTable<header_type> symbol_table_type;
+// 	typedef ELFSymbol<header_type> symbol_type;
+// 	typedef ELFRelocationTable<header_type> relocation_table_type;
+// 	typedef ELFReloc<header_type> relocation_type;
+
+// 	protected:
+// 	header_type* __header;
+// 	program_header_type* __program_table;
+// 	symbol_table_type** __symbol_tables;
+// 	size_t __symbol_table_count;
+// 	relocation_table_type** __relocation_tables;
+// 	size_t __relocation_table_count;
+
+	
+
+
+// 	void __build_tables();
+
+
+// 	public:
+
+// 	ELFObject(void* header) :	__header(nullptr), __program_table(nullptr), __symbol_tables(nullptr), 
+// 								__symbol_table_count(0), __relocation_tables(nullptr),
+// 								__relocation_table_count(0)
+// 	{
+// 		assert(header);
+// 		assert(ELF_verify_magic(header));
+
+// 		int is_32;
+// 		int little_end;
+// 		int x86;
+// 		int kind;
+// 		int ver;
+		
+// 		int res = ELF_parse_info(header, &is_32, &little_end, &x86, &ver, &kind);
+// 		assert(res == 1);
+// 		if (detail::elf_entry_type_chooser<header_type>::is_32)
+// 		{
+// 			assert(is_32 == 1);
+// 		}
+// 		else
+// 		{
+// 			assert(is_32 == 0);
+// 		}
+
+// 		// TODO: little_end
+
+
+// 		assert(x86 == 1);
+
+// 		assert(kind != ELF_KIND_UNKNOWN);
+
+// 		if (kind == ELF_KIND_EXEC)
+// 		{
+// 			assert(NOT_IMPLEMENTED);
+// 		}
+// 		else if (kind == ELF_KIND_CORE)
+// 		{
+// 			assert(NOT_IMPLEMENTED);
+// 		}
+// 		else if (kind == ELF_KIND_SHARED)
+// 		{
+// 			// TODO: All good for now(?)
+// 			//assert(NOT_IMPLEMENTED);
+// 		}
+// 		else if (kind == ELF_KIND_RELOC)
+// 		{
+// 			// TODO: All good for now
+// 		}
+
+// 		assert(ver == 1);
+
+
+// 		__header = reinterpret_cast<header_type*>(header);
+
+// 		__program_table =
+// 				reinterpret_cast<program_header_type*>(
+// 					reinterpret_cast<unsigned char*>(__header) + __header->program_header_offset
+// 				);
+		
+// 		assert(sizeof(program_header_type) == __header->program_header_entry_size);
+
+
+
+// 		// Class is initialized enough to call section_header_table() at this time
+// 		__build_tables();
+// 	}
+
+
+// 	size_t program_header_count() const noexcept
+// 	{
+// 		return __header->program_header_count;
+// 	}
+
+// 	const program_header_type* program_header_table() const noexcept
+// 	{
+// 		return __program_table;
+// 	}
+
+// 	size_t section_header_count() const noexcept
+// 	{
+// 		return __header->section_header_count;
+// 	}
+
+// 	size_t section_header_entry_size() const noexcept
+// 	{
+// 		return __header->section_header_entry_size;
+// 	}
+
+// 	const section_header_type* section_header_table() const noexcept
+// 	{
+// 		return (const section_header_type*)((addr_t)__header + __header->section_header_offset);
+// 	}
+
+// 	size_t section_names_index() const noexcept
+// 	{
+// 		return __header->section_header_strings_index;
+// 	}
+
+// 	const section_header_type* section_header(const int index) const noexcept
+// 	{
+// 		assert(index > 0);
+// 		assert(index < __header->section_header_count);
+// 		return &section_header_table()[index];
+// 	}
+
+// 	const char* section_name(int index) const noexcept
+// 	{
+// 		const char* string_table = this->section_name_table();
+// 		if (string_table)
+// 		{
+// 			auto section = section_header(index);
+// 			if (section)
+// 			{
+// 				if (section->name_string_index != 0)
+// 				{
+// 					return string_table + section->name_string_index;
+// 				}
+// 			}
+// 		}
+
+// 		return nullptr;
+// 	}
+
+// 	const char* section_name_table() const noexcept
+// 	{
+// 		return (const char*)__header + section_header(section_names_index())->offset;
+// 	}
+
+// 	// const symbol_type* symbol_table(int index) const noexcept
+// 	// {
+// 	//     auto sheader = section_header(index);
+// 	//     if (sheader)
+// 	//     {
+// 	//         if (sheader->type == ELF_SEC_SYM)
+// 	//         {
+// 	//             return (const symbol_type*)((addr_t)__header + sheader->offset);
+// 	//         }
+// 	//     }
+
+// 	//     return nullptr;
+// 	// }
+
+// 	// const symbol_type* symbol(int table_index, int index) const noexcept
+// 	// {
+// 	// 	auto header = section_header(table_index);
+// 	// 	if (header && header->type == ELF_SEC_SYMTABLE)
+// 	// 	{
+// 	// 		if (index < (header->size / header->entry_size))
+// 	// 		{
+// 	// 			addr_t symbol_address = (addr_t)__header + header->offset;
+// 	// 			auto sym = &((const symbol_type*)symbol_address)[index];
+// 	// 			if (sym->shndx == 0x00)
+// 	// 			{
+// 	// 				// TODO
+// 	// 				return nullptr;
+// 	// 				assert(NOT_IMPLEMENTED);
+// 	// 			}
+				
+// 	// 			return sym;
+// 	// 		}
+
+// 	// 	}
+		
+		
+
+// 	// 	return nullptr;
+// 	// }
+
+// 	template <class T>
+// 	const char* name_lookup(const T* t) const noexcept
+// 	{
+// 		assert(t);
+
+// 		const char* string_table = this->section_name_table();
+// 		if (string_table)
+// 		{
+// 			if (t->name_string_index != 0)
+// 			{
+// 				return string_table + t->name_string_index;
+// 			}
+// 		}
+
+// 		return nullptr;
+// 	}
+
+
+// 	const section_header_type* section_header(const char* name, int startIndex = 1) const noexcept
+// 	{
+// 		auto index = section_header_index(name, startIndex);
+// 		if (index > 0)
+// 		{
+// 			return section_header(index);
+// 		}
+// 		else
+// 		{
+// 			return nullptr;
+// 		}
+// 	}
+
+// 	size_t section_header_index(const char* name, int startIndex = 1) const noexcept
+// 	{
+// 		assert(name);
+
+// 		if (unlikely(startIndex < 1))
+// 		{
+// 			startIndex = 1;
+// 		}
+
+// 		for (int i = startIndex; i < this->section_header_count(); ++i)
+// 		{
+// 			auto sec_name = section_name(i);
+// 			if (sec_name)
+// 			{
+// 				if (strcmp(sec_name, name) == 0)
+// 				{
+// 					return i;
+// 				}
+// 			}
+// 		}
+
+// 		return 0;
+// 	}
+
+// 	size_t symbol_table_count() const noexcept
+// 	{
+// 		return __symbol_table_count;
+// 	}
+
+// 	const symbol_table_type* symbol_table(int index) const noexcept
+// 	{
+// 		assert(index < __symbol_table_count);
+// 		assert(index >= 0);
+// 		return __symbol_tables[index];
+// 	}
+
+// 	const symbol_table_type* symbol_table(const char* name) const noexcept;
+// 	const symbol_table_type* symbol_table(const section_header_type* sec) const noexcept;
+
+// 	const header_type* get() const noexcept
+// 	{
+// 		return __header;
+// 	}
+
+// 	size_t relocation_table_count() const noexcept
+// 	{
+// 		return __relocation_table_count;
+// 	}
+
+// 	const relocation_table_type* relocation_table(int index) const noexcept
+// 	{
+// 		assert(index < __relocation_table_count);
+// 		assert(index >= 0);
+// 		return __relocation_tables[index];
+// 	}
+
+// 	const relocation_table_type* relocation_table(const char* name) const noexcept;
+
+// 	uint16_t kind() const noexcept
+// 	{
+// 		return __header->kind;
+// 	}
+
+
+// 	const symbol_type* symbol(const char* name) const noexcept;
+
+
+
+// 	friend symbol_table_type;
+// };
 
 typedef ELFObject<ELF32Header_t> ELF32Object;
 typedef ELFObject<ELF64Header_t> ELF64Object;
@@ -697,10 +975,10 @@ class ELFSymbolTable
 		assert(__section->entry_size > 0);
 		assert(sizeof(raw_symbol_type) == __section->entry_size);
 
-		auto str_tab = parent->section_header(__section->link);
+		auto str_tab = parent->section_header(__section->link - 1);
 		if (str_tab)
 		{
-			__symbol_string_table = reinterpret_cast<const char*>(parent->__header) + str_tab->offset;
+			__symbol_string_table = reinterpret_cast<const char*>(parent->base_address()) + str_tab->offset;
 		}
 
 		__build_symbols();
@@ -723,23 +1001,23 @@ class ELFSymbolTable
 
 	size_t symbol_count() const noexcept
 	{
-		return __section->size / __section->entry_size;
+		return (__section->size / __section->entry_size) - 1;
 	}
 
 
 	const raw_symbol_type* raw_symbol(int index) const noexcept
 	{
 		assert(index < symbol_count());
-		assert(index > 0);
-		return &(reinterpret_cast<const raw_symbol_type*>(((addr_t)__object->__header) + __section->offset)[index]);
+		assert(index >= 0);
+		return &(reinterpret_cast<const raw_symbol_type*>(((addr_t)__object->base_address()) + __section->offset)[index+1]);
 	}
 
 	const symbol_type* symbol(int index) const noexcept
 	{
 		assert(index < symbol_count());
-		assert(index > 0);
+		assert(index >= 0);
 		assert(__symbols);
-		return __symbols[index - 1];
+		return __symbols[index];
 	}
 
 	const section_header_type* get() const noexcept
@@ -751,7 +1029,7 @@ class ELFSymbolTable
 
 	int index() const noexcept
 	{
-		return __index;
+		return __index - 1;
 	}
 
 	friend symbol_type;
@@ -809,7 +1087,8 @@ class ELFSymbol
 
 	uint16_t shndx() const noexcept
 	{
-		return __symbol->shndx;
+		assert(__symbol->shndx > 0);
+		return __symbol->shndx - 1;
 	}
 
 	addr_t value() const noexcept
@@ -817,7 +1096,8 @@ class ELFSymbol
 		if (__symbol->shndx == 0x00)
 		{
 			// External symbol
-			auto s = __object->section_header(__table->__section->link);
+			assert(__table->__section->link > 0);
+			auto s = __object->section_header(__table->__section->link - 1);
 			assert(s);
 			const char* name = this->name();
 			assert(name);
@@ -850,7 +1130,7 @@ class ELFSymbol
 		}
 		else
 		{
-			auto target = __object->section_header(__symbol->shndx);
+			auto target = __object->section_header(__symbol->shndx - 1);
 			assert(target);
 
 			switch (__object->kind())
@@ -859,11 +1139,11 @@ class ELFSymbol
 					assert(NOT_IMPLEMENTED);
 				
 				case ELF_KIND_RELOC:
-					return (addr_t)__object->get() + target->offset + __symbol->value;
+					return (addr_t)__object->base_address() + target->offset + __symbol->value;
 				
 				case ELF_KIND_SHARED:
 				case ELF_KIND_EXEC:
-					return (addr_t)__object->get() + __symbol->value;
+					return (addr_t)__object->base_address() + __symbol->value;
 
 				case ELF_KIND_CORE:
 					assert(NOT_IMPLEMENTED);
@@ -938,7 +1218,8 @@ class ELFRelocationTable
 
 	word_type link() const noexcept
 	{
-		return __section->link;
+		assert(__section->link > 0);
+		return __section->link - 1;
 	}
 
 	__attribute__((__always_inline__))
@@ -1009,9 +1290,14 @@ class ELFRelocationTable
 		return __index;
 	}
 
+	bool has_info() const noexcept
+	{
+		return __section->info != 0;
+	}
+
 	auto info() const noexcept
 	{
-		return __section->info;
+		return __section->info - 1;
 	}
 };
 
@@ -1024,6 +1310,7 @@ class ELFReloc
 	typedef typename detail::elf_entry_type_chooser<header_type>::relocation_type raw_relocation_type;
 	typedef typename detail::elf_entry_type_chooser<header_type>::relocation_add_type raw_relocation_addend_type;
 	typedef typename detail::elf_entry_type_chooser<header_type>::word_type word_type;
+	typedef typename detail::elf_entry_type_chooser<header_type>::sword_type sword_type;
 	typedef ELFSymbolTable<header_type> symbol_table_type;
 	typedef ELFSymbol<header_type> symbol_type;
 
@@ -1046,12 +1333,12 @@ class ELFReloc
 		return __section->is_addend();
 	}
 
-	word_type info_symbol() const noexcept
+	sword_type info_symbol() const noexcept
 	{
 		// The bitshifting process for 64-bit may be different, need to check that before using this for ELF64
 		static_assert(detail::elf_entry_type_chooser<header_type>::is_32);
 		
-		return __reloc->info >> 8;
+		return ((sword_type)(__reloc->info >> 8)) - 1;
 	}
 
 	word_type info_type() const noexcept
@@ -1059,17 +1346,17 @@ class ELFReloc
 		// The bitshifting process for 64-bit may be different, need to check that before using this for ELF64
 		static_assert(detail::elf_entry_type_chooser<header_type>::is_32);
 
-
+	
 		return __reloc->info & 0xFF; 
 	}
 
 	
 	const symbol_type* symbol() const noexcept
 	{
-		if (info_symbol() > 0)
+		if (info_symbol() >= 0)
 		{
 			auto l = __section->link();
-			assert(l > 0);
+			assert(l >= 0);
 			auto hdr = __object->section_header(l);
 			assert(hdr);
 			assert(hdr->type == ELF_SEC_SYMTABLE || hdr->type == ELF_SEC_DYN_SYMTABLE);
@@ -1083,19 +1370,19 @@ class ELFReloc
 
 	const void* target_loc() const noexcept
 	{
-		if (__section->info() != 0)
+		if (__section->has_info() != 0)
 		{
 			auto target = __object->section_header(__section->info());
 			assert(target);
 			// return (void*)((addr_t)__object->get() + __reloc->offset + target->offset - target->address);
-			return (void*)((addr_t)__object->get() + __reloc->offset);
+			return (void*)((addr_t)__object->base_address() + __reloc->offset);
 		}
 		assert(__reloc->offset > 0);
 		// assert(__section->info() > 0);
 		// auto target = __object->section_header(__section->info());
 		// assert(target);
 
-		void* ref = (void*)((addr_t)__object->get() + __reloc->offset);
+		void* ref = (void*)((addr_t)__object->base_address() + __reloc->offset);
 		
 		return ref;
 	}
@@ -1134,14 +1421,14 @@ class ELFReloc
 				return (const void*)(*ref + (addr_t)symval - /* --> */ (addr_t)ref /* <-- ????? I'm not sure about this at all. There's a chance the documentation made a mistake*/);
 
 			case ELF_RELOC_386_JUMP_SLOT:
-				assert(__section->info() != 0);
+				assert(__section->has_info());
 				{
 					auto target = __object->section_header(__section->info());
 					assert(target);
 					if (symval == 0)
 					{
-						symval = (void*)__object->get();
-						return (const void*)(*(word_type*)((addr_t)__object->get() + target->offset + __reloc->offset - target->address) + (addr_t)symval);
+						symval = (void*)__object->base_address();
+						return (const void*)(*(word_type*)((addr_t)__object->base_address() + target->offset + __reloc->offset - target->address) + (addr_t)symval);
 					}
 					else
 					{

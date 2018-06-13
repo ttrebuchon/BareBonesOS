@@ -2,6 +2,7 @@
 #define INCLUDED_ELF_HPP
 
 #include "ELF.h"
+#include <Std/string.h>
 
 namespace Kernel
 {
@@ -10,7 +11,7 @@ namespace Kernel
 	{
 		auto section_header_table = this->section_header_table();
 		assert(section_header_table);
-		for (int i = 1; i < __header->section_header_count; ++i)
+		for (int i = 1; i < __section_header_count; ++i)
 		{
 			if (section_header_table[i].type == ELF_SEC_SYMTABLE || section_header_table[i].type == ELF_SEC_DYN_SYMTABLE)
 			{
@@ -22,23 +23,27 @@ namespace Kernel
 			}
 		}
 		
+		int j = 0;
 		this->__symbol_tables = new symbol_table_type*[__symbol_table_count];
-		for (int i = 1, j = 0; i < __header->section_header_count && j < __symbol_table_count; ++i)
+		for (int i = 1; i < __section_header_count && j < __symbol_table_count; ++i)
 		{
 			if (section_header_table[i].type == ELF_SEC_SYMTABLE || section_header_table[i].type == ELF_SEC_DYN_SYMTABLE)
 			{
 				__symbol_tables[j++] = new symbol_table_type(this, &section_header_table[i], i);
 			}
 		}
+		assert(j == __symbol_table_count);
 
 		this->__relocation_tables = new relocation_table_type*[__relocation_table_count];
-		for (int i = 1, j = 0; i < __header->section_header_count && j < __relocation_table_count; ++i)
+		j = 0;
+		for (int i = 1; i < __section_header_count && j < __relocation_table_count; ++i)
 		{
 			if (section_header_table[i].type == ELF_SEC_RELOC_NADDEND || section_header_table[i].type == ELF_SEC_RELOC_ADDEND)
 			{
 				__relocation_tables[j++] = new relocation_table_type(this, &section_header_table[i], i);
 			}
 		}
+		assert(j == __relocation_table_count);
 	}
 
 
@@ -70,7 +75,7 @@ namespace Kernel
 
 		for (int i = 0; i < symbol_table_count(); ++i)
 		{
-			if (&section_header_table()[symbol_table(i)->index()] == sec)
+			if (&section_header_table()[symbol_table(i)->index() + 1] == sec)
 			{
 				return symbol_table(i);
 			}
@@ -119,6 +124,36 @@ namespace Kernel
 		return nullptr;
 	}
 
+	template <class HeaderType>
+	const typename ELFObject<HeaderType>::relocation_type* ELFObject<HeaderType>::reloc(const char* name, int skip) const noexcept
+	{
+		assert(name);
+
+		for (int i = 0; i < this->relocation_table_count(); ++i)
+		{
+			auto tbl = this->relocation_table(i);
+			assert(tbl);
+			for (int j = 0; j < tbl->count(); ++j)
+			{
+				auto r = tbl->reloc(j);
+				assert(r);
+				auto sym = r->symbol();
+				if (sym)
+				{
+					auto sname = sym->name();
+					if (sname)
+					{
+						if (strcmp(sname, name) == 0)
+						{
+							return r;
+						}
+					}
+				}
+			}
+		}
+		return nullptr;
+	}
+
 
 
 
@@ -129,12 +164,12 @@ namespace Kernel
 	template <class HeaderType>
 	void ELFSymbolTable<HeaderType>::__build_symbols()
 	{
-		assert(symbol_count() > 1);
-		__symbols = new symbol_type*[symbol_count() - 1];
+		assert(symbol_count() >= 1);
+		__symbols = new symbol_type*[symbol_count()];
 
-		for (int i = 1; i < symbol_count(); ++i)
+		for (int i = 0; i < symbol_count(); ++i)
 		{
-			__symbols[i-1] = new symbol_type(__object, this, raw_symbol(i));
+			__symbols[i] = new symbol_type(__object, this, raw_symbol(i));
 		}
 	}
 
@@ -144,7 +179,7 @@ namespace Kernel
 	{
 		assert(name);
 
-		for (int i = 1; i < this->symbol_count(); ++i)
+		for (int i = 0; i < this->symbol_count(); ++i)
 		{
 			auto sym = this->symbol(i);
 			assert(sym);
@@ -174,14 +209,14 @@ namespace Kernel
 		{
 			for (int i = 0; i < count(); ++i)
 			{
-				__relocs[i] = new relocation_type(__object, this, &(reinterpret_cast<const raw_relocation_addend_type*>(((addr_t)__object->get()) + __section->offset)[i]));
+				__relocs[i] = new relocation_type(__object, this, &(reinterpret_cast<const raw_relocation_addend_type*>(((addr_t)__object->base_address()) + __section->offset)[i]));
 			}
 		}
 		else
 		{
 			for (int i = 0; i < count(); ++i)
 			{
-				__relocs[i] = new relocation_type(__object, this, &(reinterpret_cast<const raw_relocation_type*>(((addr_t)__object->get()) + __section->offset)[i]));
+				__relocs[i] = new relocation_type(__object, this, &(reinterpret_cast<const raw_relocation_type*>(((addr_t)__object->base_address()) + __section->offset)[i]));
 			}
 		}
 	}

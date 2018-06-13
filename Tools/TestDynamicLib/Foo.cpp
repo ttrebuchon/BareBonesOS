@@ -40,3 +40,13 @@ Foo_Class* get_poly()
 {
     return new Bar_Class;
 }
+
+extern "C" unsigned char* test_new()
+{
+	auto arr = new unsigned char[4];
+	arr[0] = 0xDE;
+	arr[1] = 0xAD;
+	arr[2] = 0xBA;
+	arr[3] = 0xBA;
+	return arr;
+}

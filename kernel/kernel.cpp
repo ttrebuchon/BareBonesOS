@@ -23,6 +23,7 @@
 #include <kernel/Filesystem/FileNode.hh>
 #include <kernel/Filesystem/DirectoryNode.hh>
 #include <kernel/Loader/ELF.h>
+#include <kernel/Loader/Linking.hh>
 
 #include <drivers/VGA_Stream.hh>
 #include <Utils/iostream>
@@ -105,6 +106,32 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
 	Kernel::Interrupts::cli();
 
 	Drivers::VGA::Init();
+
+	addr_t kplace_diff = 0;
+	if (mboot_ptr->flags & 0x5)
+	{
+		// Prevent overwriting the ELF symbol table
+		void* furthest_data = 0x0;
+		for (int i = 1; i < mboot_ptr->u.elf_sec.num; ++i)
+		{
+			Kernel::ELF32SectionHeader_t* header = &((Kernel::ELF32SectionHeader_t*)mboot_ptr->u.elf_sec.addr)[i];
+			auto addr = (void*)(header->address + header->size);
+			if (addr > furthest_data)
+			{
+				furthest_data = addr;
+			}
+		}
+		kplace_diff = (addr_t)furthest_data - kPlacement;
+		if (kPlacement < (addr_t)furthest_data)
+		{
+			kPlacement = (addr_t)furthest_data + 1;
+		}
+		assert((addr_t)furthest_data < KHEAP_START);
+	}
+	assert(mboot_ptr->flags & 0x5);
+
+	
+	
 	
 	
 	boot::mboot = new boot::MultiBoot(mboot_ptr);
@@ -149,7 +176,7 @@ int main(struct multiboot* mboot_ptr, uint32_t initial_stack)
 	ASM_CODE("sti");
 
 
-
+	Kernel::init_kernel_symbols();
 
 
 
@@ -574,11 +601,13 @@ void ktest_disks()
 	delete _dev;
 }
 
+
+
+
+
 void ktest_ELF()
 {
-	std::cout << "Entry Count: " << boot::mboot->raw()->u.elf_sec.num << std::endl;
-	std::cout << "Entry Size: " << boot::mboot->raw()->u.elf_sec.size << std::endl;
-	//assert(false);	// TODO
+	addr_t furthest_address = 0x0;
 
 	Drivers::IDE::IDEDevice* _dev = Drivers::IDE::IDEDevice::Get(IDE_PRIMARY, IDE_SLAVE);
 	assert(_dev);
@@ -624,17 +653,70 @@ void ktest_ELF()
 
 	assert(end_addr - 512 - lib_size - sizeof(uint64_t) > 0);
 	memset(libbuf + lib_size, 0, end_addr - 512 - lib_size - sizeof(uint64_t));
+
+
+	Kernel::ELF32Header_t* head = reinterpret_cast<Kernel::ELF32Header_t*>(libbuf);
+
+	size_t needed_size = end_addr - 512 - sizeof(uint64_t);
+	{
+		const Kernel::ELF32SectionHeader_t* sections = (const Kernel::ELF32SectionHeader_t*)(head->section_header_offset + libbuf);
+		for (int i = 1; i < head->section_header_count; ++i)
+		{
+			assert(((addr_t)sections + sections[i].address + sections[i].size) >= (addr_t)diskbuf);
+			addr_t end = ((addr_t)sections + sections[i].address + sections[i].size) - (addr_t)diskbuf;
+			if (end > needed_size)
+			{
+				needed_size = end;
+			}
+
+
+		}
+	}
+	std::cout << "Allocated Size: " << (void*)(end_addr - 512 - sizeof(uint64_t)) << std::endl;
+	std::cout << "Required Size: " << (void*)needed_size << std::endl;
+
+	if (needed_size > end_addr - 512)
+	{
+		auto tmp = new uint8_t[needed_size];
+		
+		std::cout << "Allocated new buf" << std::endl;
+
+		addr_t buffer_end = (addr_t)diskbuf + end_addr - 512;
+		addr_t lib_start = (addr_t)libbuf;
+		assert(buffer_end > lib_start);
+		addr_t size_to_copy = buffer_end - lib_start;
+
+		memset(tmp, 0, needed_size);
+		memcpy(tmp, libbuf, size_to_copy);
+
+		std::cout << "Copied." << std::endl;
+
+		for (size_t i = 0; i < size_to_copy; ++i)
+		{
+			assert(tmp[i] == libbuf[i]);
+		}
+
+		std::cout << "Verified." << std::endl;
+
+		delete[] diskbuf;
+		libbuf = tmp;
+		diskbuf = nullptr;
+
+		std::cout << "Freed." << std::endl;
+	}
 	
 
-	Kernel::ELF32Object obj(libbuf);
+	
+	auto obj = new Kernel::ELF32Object(libbuf, head->program_header_offset, head->program_header_count, head->section_header_offset, head->section_header_count, head->kind, head->section_header_strings_index);
+	
 
-	std::cout << "Program Header Entries: " << obj.program_header_count() << std::endl;
+	std::cout << "Program Header Entries: " << obj->program_header_count() << std::endl;
 
-	std::cout << "Section Entries: " << obj.section_header_count() << std::endl;
-	std::cout << "Section Entry Size: " << obj.section_header_entry_size() << std::endl;
+	std::cout << "Section Entries: " << obj->section_header_count() << std::endl;
+	std::cout << "Section Entry Size: " << obj->section_header_entry_size() << std::endl;
 
 	std::cout << "ELF File Kind: ";
-	switch (obj.kind())
+	switch (head->kind)
 	{
 		case ELF_KIND_UNKNOWN:
 			std::cout << "Unknown" << std::endl;
@@ -658,31 +740,31 @@ void ktest_ELF()
 	}
 	std::cout << std::endl;
 
+	assert(obj->section_header_count() > 0);
 
-
-	for (int i = 1; i < obj.section_header_count(); ++i)
+	for (int i = 1; i < obj->section_header_count(); ++i)
 	{
-		auto header = obj.section_header(i);
+		auto header = obj->section_header(i);
 		assert(header);
 
-		std::cout << "Header " << i << " Name: '" << obj.section_name(i) << "' Type: '" << header->type << std::endl;
+		std::cout << "Header " << i << " Name: '" << std::flush << obj->section_name(i) << "' Type: '" << header->type << std::endl;
 	}
 
 
-	auto dynsym = obj.section_header(".dynsym");
+	auto dynsym = obj->section_header(".dynsym");
 	assert(dynsym);
 
-	std::cout << "Symbol Table Count: " << obj.symbol_table_count() << std::endl;
-	assert(obj.symbol_table_count() > 0);
-	assert(obj.symbol_table_count() == 2);
-	auto symbol_tab1 = obj.symbol_table(0);
+	std::cout << "Symbol Table Count: " << std::flush << obj->symbol_table_count() << std::endl;
+	assert(obj->symbol_table_count() > 0);
+	assert(obj->symbol_table_count() == 2);
+	auto symbol_tab1 = obj->symbol_table(0);
 	assert(symbol_tab1);
 	auto sym_tab1_name = symbol_tab1->table_name();
 	assert(sym_tab1_name);
 	std::cout << "First Symbol Table Name: " << sym_tab1_name << std::endl;
 	std::cout << "Table Symbol Count: " << symbol_tab1->symbol_count() << std::endl;
 
-	for (int i = 1; i < symbol_tab1->symbol_count(); ++i)
+	for (int i = 0; i < symbol_tab1->symbol_count(); ++i)
 	{
 		auto sym = symbol_tab1->symbol(i);
 		assert(sym);
@@ -704,79 +786,24 @@ void ktest_ELF()
 		}
 
 		std::cout << " value: " << (void*)sym->value() << std::endl;
-
-		if (sym->name())
-		{
-			if (strcmp(sym->name(), "foo") == 0)
-			{
-				if (sym->type() == ELF_SYM_FUNC)
-				{
-					std::cout << "SHNDX: " << (void*)(addr_t)sym->shndx() << std::endl;
-					std::cout << "Raw Value: " << (void*)(addr_t)sym->raw_value() << std::endl;
-					assert(sym->shndx() != 0);
-					auto target_section = obj.section_header(sym->shndx());
-					assert(target_section);
-					if (target_section->name_string_index != 0)
-					{
-						std::cout << "Target Section Name: " << obj.name_lookup(target_section) << std::endl;
-					}
-					std::cout << "Target Section Offset: " << (void*)(addr_t)target_section->offset << std::endl;
-					
-
-
-					const char* man_data = (const char*)libbuf;
-					const char* tmp = man_data;
-					while (*reinterpret_cast<const uint32_t*>(tmp) != 0xDEADBABA)
-					{
-						++tmp;
-					}
-
-					std::cout << "Manually Found 0xDEADBABA:\nOffset to file: " << (void*)(tmp - man_data) << std::endl;
-					std::cout << std::endl << "Symbol Value Relative to file: " << (void*)((const char*)sym->value() - man_data) << std::endl;
-
-					std::cout << "Number of symbols: " << symbol_tab1->symbol_count() << std::endl;
-
-					const char* data = (const char*)sym->value();
-					assert(data);
-
-					tmp = data;
-					while (*reinterpret_cast<const uint32_t*>(tmp) != 0xDEADBABA)
-					{
-						++tmp;
-					}
-
-					std::cout << "Found 0xDEADBABA:\nOffset from value: " << (tmp - data);
-					std::cout << "\nTotal Offset: " << ((const uint8_t*)tmp - libbuf);
-					std::cout << "\nSymbol Value: " << sym->value() << std::endl;
-
-					auto foo = (uint32_t(*)())sym->value();
-					assert(foo() == 0xDEADBABA);
-
-					std::cout << "foo() == " << (void*)foo() << std::endl;
-
-
-					break;
-				}
-			}
-		}
 	}
 
-	auto rela_PLT_section = obj.section_header(".rel.plt");
+	auto rela_PLT_section = obj->section_header(".rel.plt");
 	assert(rela_PLT_section);
 
-	auto rela_PLT = obj.relocation_table(".rel.plt");
+	auto rela_PLT = obj->relocation_table(".rel.plt");
 	assert(rela_PLT);
 	std::cout << rela_PLT->table_name() << std::endl;
 
 	assert(rela_PLT->link() != 0);
-	assert(obj.section_header(rela_PLT->link()));
-	std::cout << obj.section_header(rela_PLT->link())->type << std::endl;
+	assert(obj->section_header(rela_PLT->link()));
+	std::cout << obj->section_header(rela_PLT->link())->type << std::endl;
 	{
-		auto link_section = obj.section_header(rela_PLT->link());
+		auto link_section = obj->section_header(rela_PLT->link());
 		assert(link_section);
 		if (link_section->name_string_index != 0)
 		{
-			std::cout << obj.name_lookup(link_section) << std::endl;
+			std::cout << obj->name_lookup(link_section) << std::endl;
 			std::cout << "Index is: " << rela_PLT->link() << std::endl;
 		}
 		else
@@ -784,11 +811,11 @@ void ktest_ELF()
 			std::cout << "Section has no name, index is: " << rela_PLT->link() << std::endl;
 		}
 
-		for (int i = 0; i < obj.symbol_table_count(); ++i)
+		for (int i = 0; i < obj->symbol_table_count(); ++i)
 		{
-			auto stbl = obj.symbol_table(i);
+			auto stbl = obj->symbol_table(i);
 			assert(stbl);
-			if (stbl->get() == obj.section_header(rela_PLT->link()))
+			if (stbl->get() == obj->section_header(rela_PLT->link()))
 			{
 				std::cout << "Found at symbol table index " << i << std::endl;
 			}
@@ -832,7 +859,7 @@ void ktest_ELF()
 	
 
 
-	auto GOT = obj.symbol("_GLOBAL_OFFSET_TABLE_");
+	auto GOT = obj->symbol("_GLOBAL_OFFSET_TABLE_");
 	assert(GOT);
 	assert(GOT->type() == ELF_SYM_OBJECT);
 	std::cout << "GOT File-Relative Value: " << (void*)(GOT->value() - (addr_t)libbuf) << std::endl;
@@ -840,22 +867,34 @@ void ktest_ELF()
 
 
 
-	void** linker_callback = (void**)(GOT->value() + 2*sizeof(addr_t));
-	void** linker_callback_arg = (void**)(GOT->value() + sizeof(addr_t));
+	// void** linker_callback = (void**)(GOT->value() + 2*sizeof(addr_t));
+	// void** linker_callback_arg = (void**)(GOT->value() + sizeof(addr_t));
 
-	*linker_callback_arg = nullptr;
-	*linker_callback = (void*)(void(*)(void*))[](void* arg) -> void
-	{
-		std::cout << "CALLBACK HIT!" << std::endl;
-		while (true) ;
-	};
+	// *linker_callback_arg = (void*)0xDEADBABA;
+	// *linker_callback = (void*)(void*(*)(void*, void*))::linker_callback;
+	// assert(*linker_callback == (void*)(void*(*)(void*, void*))::linker_callback);
+
+	std::cout << "GOT->raw_value: " << (void*)GOT->raw_value() << std::endl;
+	std::cout << "GOT->value: " << (void*)GOT->value() << std::endl;
+	std::cout << "Libbuf: " << (void*)libbuf << std::endl;
+	std::cout << "Needed_size: " << (void*)needed_size << std::endl;
+	std::cout << "Buffer End: " << (void*)((addr_t)libbuf + needed_size) << std::endl;
+	std::cout << "GOT SHNDX: " << GOT->shndx() << std::endl;
+	auto target = obj->section_header(GOT->shndx());
+	assert(target);
+	assert(target->name_string_index != 0);
+	std::cout << "Target Section: " << obj->name_lookup(target) << std::endl;
+	std::cout << "Target Address: " << (void*)target->address << std::endl;
+	std::cout << "Target Offset: " << (void*)target->offset << std::endl;
+
+
 
 	const Kernel::ELF32Reloc* foo_reloc = nullptr;
 	const Kernel::ELF32Symbol* foo_sym = nullptr;
 
-	for (int i = 0; i < obj.relocation_table_count() && !foo_sym; ++i)
+	for (int i = 0; i < obj->relocation_table_count() && !foo_sym; ++i)
 	{
-		auto tbl = obj.relocation_table(i);
+		auto tbl = obj->relocation_table(i);
 		assert(tbl);
 		for (int j = 1; j < tbl->count(); ++j)
 		{
@@ -875,7 +914,7 @@ void ktest_ELF()
 	assert(foo_reloc);
 	assert(foo_sym);
 
-	auto got_plt = obj.section_header(".got.plt");
+	auto got_plt = obj->section_header(".got.plt");
 	assert(got_plt);
 	std::cout << ".got.plt Offset: " << (void*)got_plt->offset << std::endl;
 	std::cout << ".got.plt Addr: " << (void*)got_plt->address << std::endl;
@@ -890,21 +929,21 @@ void ktest_ELF()
 
 	// 	const Kernel::ELF32SectionHeader_t* last_sec_header = nullptr;
 
-	// 	for (int i = 1; i < obj.section_header_count(); ++i)
+	// 	for (int i = 1; i < obj->section_header_count(); ++i)
 	// 	{
 	// 		if (last_sec_header == nullptr)
 	// 		{
-	// 			last_sec_header = obj.section_header(i);
+	// 			last_sec_header = obj->section_header(i);
 	// 			continue;
 	// 		}
 
-	// 		if (obj.section_header(i)->offset + obj.section_header(i)->size > last_sec_header->offset + last_sec_header->size)
+	// 		if (obj->section_header(i)->offset + obj->section_header(i)->size > last_sec_header->offset + last_sec_header->size)
 	// 		{
-	// 			last_sec_header = obj.section_header(i);
+	// 			last_sec_header = obj->section_header(i);
 	// 		}
 	// 	}
 
-	// 	auto last_sec = obj.section_header_count() - 1;
+	// 	auto last_sec = obj->section_header_count() - 1;
 
 	// 	assert(got_plt->size + got_plt->address > last_sec_header->offset + last_sec_header->size);
 
@@ -934,13 +973,13 @@ void ktest_ELF()
 	std::cout << "Offset-ed target_loc: " << *(void**)((addr_t)foo_reloc->target_loc() - got_plt->address + got_plt->offset) << std::endl;
 	std::cout << "^Address (Relative to file): " << (void*)((addr_t)foo_reloc->target_loc() - got_plt->address + got_plt->offset - (addr_t)libbuf) << std::endl;
 
-	for (int i = 0; i < obj.relocation_table_count(); ++i)
+	for (int i = 0; i < obj->relocation_table_count(); ++i)
 	{
-		auto rtbl = obj.relocation_table(i);
+		auto rtbl = obj->relocation_table(i);
 		assert(rtbl);
-		if (rtbl->info() != 0)
+		if (rtbl->has_info())
 		{
-			std::cout << "Target Table: " << obj.section_name(rtbl->info()) << std::endl;
+			std::cout << "Target Table: " << obj->section_name(rtbl->info()) << std::endl;
 		}
 		for (int j = 0; j < rtbl->count(); ++j)
 		{
@@ -961,7 +1000,10 @@ void ktest_ELF()
 								"   Value at target_loc: " << *(void**)(void*)((addr_t)reloc->target_loc()) << std::endl;
 					std::cout << "Value: " << (void*)((addr_t)reloc->reloc_value()) << std::endl;
 					std::cout << "Symval: " << (void*)(reloc->symbol()->value()) << std::endl;
-					std::cout << "*(" << (void*)((addr_t)reloc->target_loc() - (addr_t)libbuf) << ") = " << (void*)((addr_t)reloc->reloc_value() - (addr_t)libbuf) << std::endl;
+					if (reloc->reloc_value() != nullptr)
+					{
+						std::cout << "*(" << (void*)((addr_t)reloc->target_loc() - (addr_t)libbuf) << ") = " << (void*)((addr_t)reloc->reloc_value() - (addr_t)libbuf) << std::endl;
+					}
 				}
 				else
 				{
@@ -975,11 +1017,15 @@ void ktest_ELF()
 		}
 	}
 
+	std::cout << "Relocs iterated." << std::endl;
+
 	//*(void**)foo_reloc->target_loc() = (void*)foo_reloc->reloc_value();
 
-	for (int i = 0; i < obj.relocation_table_count(); ++i)
+	__sync_synchronize();
+
+	for (int i = 0; i < obj->relocation_table_count(); ++i)
 	{
-		auto rtbl = obj.relocation_table(i);
+		auto rtbl = obj->relocation_table(i);
 		assert(rtbl);
 		for (int j = 0; j < rtbl->count(); ++j)
 		{
@@ -995,18 +1041,19 @@ void ktest_ELF()
 
 
 
+	__sync_synchronize();
+
 	auto foo = (uint32_t(*)())(void*)foo_sym->value();
 	assert(foo() == 0xDEADBABA);
 
 
-	auto foo2_sym = obj.symbol("foo2");
+	auto foo2_sym = obj->symbol("foo2");
 	assert(foo2_sym);
 
 	std::cout << "foo2_sym value (Relative to file): "<< (void*)(foo2_sym->value() - (addr_t)libbuf) << std::endl;
 
 	std::cout << "Manually Calculated (Relative): " << (void*)(0x400 + 0x12fc) << std::endl;
 	std::cout << "Symbol Value Calculated (Relative): " << (void*)(GOT->value() - (addr_t)libbuf) << std::endl;
-	assert((void*)(0x400 + 0x12fc + libbuf) == (void*)(GOT->value()));
 
 	auto foo2 = (uint32_t(*)())foo2_sym->value();
 	assert(foo2);
@@ -1015,9 +1062,9 @@ void ktest_ELF()
 	assert(foo2() == 0xDEADBABA);
 	std::cout << "WTF" << std::endl;
 
-	for (int i = 1; i < obj.symbol_table_count(); ++i)
+	for (int i = 1; i < obj->symbol_table_count(); ++i)
 	{
-		auto stbl = obj.symbol_table(i);
+		auto stbl = obj->symbol_table(i);
 		for (int j = 1; j < stbl->symbol_count(); ++j)
 		{
 			auto s = stbl->symbol(j);
@@ -1029,15 +1076,16 @@ void ktest_ELF()
 		}
 	}
 
-	auto new_sym = obj.symbol("_Znwm");
+	auto new_sym = obj->symbol("_Znwm");
 	assert(new_sym);
 	std::cout << "new_sym value: " << (void*)new_sym->value() << std::endl;
 	std::cout << "new_sym binding: " << new_sym->binding() << std::endl;
+	std::cout << "new_sym raw value: " << (void*)new_sym->value() << std::endl;
 
-	auto get_poly = (void*(*)())obj.symbol("get_poly")->value();
+	auto get_poly = (void*(*)())obj->symbol("get_poly")->value();
 
-	std::cout << "Value at 'new' jump: " << *(void**)0x12dd + obj.symbol("get_poly")->value() << std::endl;
-	std::cout << "Value at 'new' jump (Relative): " << (void*)((addr_t)*(void**)0x12dd + obj.symbol("get_poly")->value() - (addr_t)libbuf) << std::endl;
+	std::cout << "Value at 'new' jump: " << *(void**)0x12dd + obj->symbol("get_poly")->value() << std::endl;
+	std::cout << "Value at 'new' jump (Relative): " << (void*)((addr_t)*(void**)0x12dd + obj->symbol("get_poly")->value() - (addr_t)libbuf) << std::endl;
 
 	std::cout << "EBX at jump to 'new@plt': F + " << (void*)(((addr_t)(void*)get_poly - (addr_t)libbuf) + (0x439 - 0x42f) + 0x12c3) << std::endl;
 	std::cout << "Immediate jump to address at: F + " << (void*)(((addr_t)(void*)get_poly - (addr_t)libbuf) + (0x439 - 0x42f) + 0x12c3 + 0x10) << std::endl;
@@ -1047,87 +1095,58 @@ void ktest_ELF()
 	std::cout << (void*)(libbuf + 0x3a6) << std::endl;
 	std::cout << (void*)(libbuf + 0x42f) << std::endl;
 
+
+	// assert(*linker_callback == (void*)(void*(*)(void*, void*))::linker_callback);
+	// assert((void**)(GOT->value() + 2*sizeof(addr_t)) == linker_callback);
+
+
+	
+	// sleep(3);
+	// ASM_CODE("cli");
+
+	// assert(get_poly);
+	// std::cout << "Here comes the clusterfuck." << std::endl;
+	// auto get_poly_res = get_poly();
+	// assert(get_poly_res);
+
+	Kernel::ELF_kernel_symbols->link_object(obj);
+
+	auto new_reloc2 = obj->reloc("_Znam");
+	assert(new_reloc2);
+	std::cout << "(Relative) Target Loc of new[]: " << (void*)((addr_t)new_reloc2->target_loc() - (addr_t)libbuf) << std::endl;
+	std::cout << "(Relative to GOT) Target Loc of new[]: " << (void*)((addr_t)new_reloc2->target_loc() - (addr_t)GOT->value()) << std::endl;
 	
 
+	auto test_new_sym = obj->symbol("test_new");
+	assert(test_new_sym);
+	auto test_new = (unsigned char*(*)())test_new_sym->value();
+	std::cout << "test_new = " << (void*)test_new << std::endl;
 	sleep(3);
+	std::cout << "Running test_new()..." << std::endl;
+	auto arr = test_new();
+	assert(arr);
+	assert(arr[0] == 0xDE);
+	assert(arr[1] == 0xAD);
+	assert(arr[2] == 0xBA);
+	assert(arr[3] == 0xBA);
 
-	assert(get_poly);
-	std::cout << "Here comes the clusterfuck." << std::endl;
-	auto get_poly_res = get_poly();
-	assert(get_poly_res);
+	std::cout << "test_new checks out." << std::endl;
 
-	// const unsigned char* section_table = reinterpret_cast<const unsigned char*>(obj.section_header_table());
+	std::cout << "get_poly: " << (void*)get_poly << std::endl;
+	sleep(3);
+	std::cout << "Attempting!" << std::endl;
+	auto poly_res = get_poly();
+	assert(false);
 
-	// char* entry_buf = new char[obj.section_header_entry_size() + 1];
-	// memcpy(entry_buf, section_table + (obj.section_header_entry_size()*obj.section_names_index()), obj.section_header_entry_size());
-	// entry_buf[obj.section_header_entry_size()] = 0;
-
-	// char tmp[2];
-	// tmp[1] = 0;
-
-	// std::cout << "Section Names Index: " << obj.section_names_index() << std::endl;
-
-	// std::cout << "Some Entry: " << entry_buf << std::endl;
-	// for (int i = 0; i < obj.section_header_entry_size(); ++i)
-	// {
-	// 	tmp[0] = entry_buf[i];
-	// 	std::cout << tmp;
-	// }
-	// std::cout << std::endl;
-	// for (int i = 0; i < obj.section_header_entry_size(); ++i)
-	// {
-	// 	std::cout << " " << (void*) entry_buf[i] << " ";
-	// }
-	// std::cout << std::endl;
-
-	// bool found_94 = false;
-	// for (int i = 0; i < lib_size; ++i)
-	// {
-	// 	if (libbuf[i] == 0x94)
-	// 	{
-	// 		std::cout << "Found 94 at offset " << i << std::endl;
-	// 		found_94 = true;
-	// 	}
-	// }
-
-	// std::cout << "Table offset: " << section_table - (unsigned char*)libbuf << std::endl;
-
-	// assert(found_94);
-
-
-	// std::cout << obj.name_table() << std::endl;
-
-
-	// for (int i = 0; i < obj.section_header_count(); ++i)
-	// {
-	// 	auto section_header = obj.section_header(i);
-	// 	assert(section_header);
-
-	// 	if (section_header->type == ELF_SEC_SYMTABLE)
-	// 	{
-	// 		for (int j = 1; j < (section_header->size / section_header->entry_size); ++j)
-	// 		{
-	// 			auto sym = obj.symbol(i, j);
-	// 			if (sym)
-	// 			{
-	// 				assert(sym);
-
-	// 				auto name = obj.name_lookup(sym);
-	// 				if (name)
-	// 				{
-	// 					std::cout << name << std::endl;
-	// 				}
-	// 				else
-	// 				{
-	// 					std::cout << "[No Name]" << std::endl;
-	// 				} 
-	// 			}          
-	// 		}
-	// 	}
-	// }
-
-
-	// delete entry_buf;
-	delete[] diskbuf;
+	
+	if (diskbuf != nullptr)
+	{
+		delete[] diskbuf;
+	}
+	else
+	{
+		delete[] libbuf;
+	}
+	
 	delete dev;
 }
