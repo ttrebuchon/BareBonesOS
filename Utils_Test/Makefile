@@ -17,14 +17,13 @@ SRC += ../boot/MultiBoot.cpp
 SRC += $(call GET_SRC,kernel/Memory/Managers)
 SRC += ../kernel/Scheduling/context.cpp
 SRC += $(call GET_SRC_R,Utils,cpp)
-SRC += ../kernel/Registers.cpp
 SRC += ../kernel/scheduling/thread.cpp
 SRC += ../kernel/Timer_c.cpp
 SRC += $(call GET_SRC_R,Support/threading,cpp)
 SRC += ../drivers/CPUID.cpp
 SRC += ../drivers/APIC.cpp
-SRC += ../drivers/ACPI/RSDT.cpp
 SRC += $(call GET_SRC_R,kernel/Filesystem/FAT32,cpp)
+SRC += $(call GET_SRC_R,drivers/ACPI,cpp)
 
 ASM_SRC = ../kernel/Utility_asm.asm
 ASM_OBJS = $(ASM_SRC:.asm=.o)
