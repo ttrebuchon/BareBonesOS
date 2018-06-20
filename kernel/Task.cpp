@@ -29,7 +29,7 @@ extern "C"
 void move_stack(void* new_addr, uint32_t size)
 {
 	bool result = Memory::PageDirectory::Current->map((addr_t)new_addr-size, size, true, false);
-	ASSERT(result);
+	assert(result);
 	TRACE("STARTING TASKING");
 	
 	addr_t i;
@@ -60,10 +60,10 @@ void move_stack(void* new_addr, uint32_t size)
 	}
 
 	asm volatile ("mov %%esp, %0" : "=r"(i));
-	//ASSERT(i == oldSP);
+	//assert(i == oldSP);
 	newSP += i - oldSP;
 	asm volatile ("mov %%ebp, %0" : "=r"(i));
-	ASSERT(i >= oldBP);
+	assert(i >= oldBP);
 	newBP += i - oldBP;
 
 

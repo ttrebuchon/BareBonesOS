@@ -1,5 +1,6 @@
 #ifndef INCLUDED_OSTREAM_HH
 #define INCLUDED_OSTREAM_HH
+#define INCLUDED_OSTREAM_HH_IN_PROGRESS
 
 #include "detail/basic_ios.hh"
 #include "detail/locale.hh"
@@ -130,6 +131,8 @@ namespace Utils {
 
 #endif
 
+#undef INCLUDED_OSTREAM_HH_IN_PROGRESS
+
 #endif
 
-#include "ostream.hpp"
+// #include "ostream.hpp"

@@ -1,7 +1,6 @@
 #ifndef INCLUDED_BITS_FPOS_HH
 #define INCLUDED_BITS_FPOS_HH
 
-#include <Common.h>
 #include <Utils/Types.hh>
 
 namespace Utils

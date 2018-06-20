@@ -63,7 +63,7 @@ namespace Utils
 				alloc.construct(_data + i, v._data[i]);
 			}
 			_size = v.size();
-			ASSERT(_cap >= v.size());
+			assert(_cap >= v.size());
 		}
 	}
 	

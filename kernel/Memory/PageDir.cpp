@@ -29,7 +29,7 @@ namespace Kernel { namespace Memory {
 		
 		
 	// 	uint32_t index;
-	// 	ASSERT(first_frame(&index));
+	// 	assert(first_frame(&index));
 	// 	set_frame(index);
 	// 	present = 1;
 	// 	rw = (is_writeable == 1) ? 1 : 0;
@@ -71,7 +71,7 @@ namespace Kernel { namespace Memory {
 	// 	if (phys != nullptr)
 	// 	{
 	// 		*phys = (addr_t)virtual_to_physical(current_dir, dest);
-	// 		ASSERT(*phys != 0);
+	// 		assert(*phys != 0);
 	// 	}
 		
 	// 	//kmemset(dest, 0, sizeof(struct PageTable));
@@ -114,10 +114,10 @@ namespace Kernel { namespace Memory {
 
     // Page* PageDir::getPage(uint32_t addr, bool create)
 	// {
-	// 	//ASSERT(addr != 0xf0000000);
+	// 	//assert(addr != 0xf0000000);
 	// 	 addr /= 0x1000;
 	// 	uint32_t tableIndex = addr / 1024;
-	// 	ASSERT(tableIndex < 1024);
+	// 	assert(tableIndex < 1024);
 
 	// 	struct PageTable* entry;
 	// 	if (ref_tables[tableIndex])
@@ -141,11 +141,11 @@ namespace Kernel { namespace Memory {
 	// 		{
 	// 			t = (addr_t)virtual_to_physical(kernel_dir, ref_tables[tableIndex]);
 	// 		}
-	// 		ASSERT(t != 0);
+	// 		assert(t != 0);
 	// 		//Might need to get rid of the >> 12 bit?
 	// 		if (t != 0)
 	// 		{
-	// 			ASSERT(phys == t);
+	// 			assert(phys == t);
 	// 		}
 	// 		tables[tableIndex].frame = phys >> 12;
 	// 		tables[tableIndex].present = 1;
@@ -173,8 +173,8 @@ namespace Kernel { namespace Memory {
 	// 	addr_t phys = 0;
 	// 	PageDir* dest = (struct PageDir*)kmalloc(sizeof(struct PageDir),1,&phys);
     //     //PageDir* dest = new PageDir();
-	// 	ASSERT(dest != 0);
-	// 	//ASSERT(phys != 0);
+	// 	assert(dest != 0);
+	// 	//assert(phys != 0);
 	// 	kmemset(dest, 0, sizeof(struct PageDir));
 		
 	// 	addr_t physOffset = (addr_t)&dest->tables - (addr_t)dest;
@@ -193,16 +193,16 @@ namespace Kernel { namespace Memory {
 	// 		else
 	// 		{
 	// 			// DEBUG
-	// 			ASSERT(0);
+	// 			assert(0);
 				
 				
 	// 			addr_t phys;
     //             dest->ref_tables[i] = ref_tables[i]->clone(&phys);
 	// 			addr_t phys2 = (addr_t)virtual_to_physical(this, dest->ref_tables[i]);
-	// 			ASSERT(phys == phys2);
+	// 			assert(phys == phys2);
 				
 	// 			// DEBUG
-	// 			ASSERT(phys != phys2);
+	// 			assert(phys != phys2);
 				
 	// 			dest->tables[i].frame = phys >> 12;
 	// 			dest->tables[i].user = tables[i].user;
@@ -245,7 +245,7 @@ namespace Kernel { namespace Memory {
 		// if (Current)
 		// {
 		// 	dir_phys = Current->getPhysicalAddress(&dir);
-		// 	ASSERT(dir_phys != nullptr);
+		// 	assert(dir_phys != nullptr);
 		// }
 		// else
 		// {
@@ -294,7 +294,7 @@ namespace Kernel { namespace Memory {
 	
 	PageDirectory::Table* PageDirectory::table(const size_t n, bool create) noexcept
 	{
-		ASSERT(n < 1024);
+		assert(n < 1024);
 		if (!tables[n])
 		{
 			if (!create)
@@ -327,7 +327,7 @@ namespace Kernel { namespace Memory {
 	
 	const PageDirectory::Table* PageDirectory::table(const size_t n) const noexcept
 	{
-		ASSERT(n < 1024);
+		assert(n < 1024);
 		if (!tables[n])
 		{
 			return nullptr;
@@ -385,7 +385,7 @@ namespace Kernel { namespace Memory {
 
 	bool PageDirectory::flush() const noexcept
 	{
-		ASSERT(Current == this);
+		assert(Current == this);
 		if (Current != this)
 		{
 			return false;
@@ -409,19 +409,19 @@ namespace Kernel { namespace Memory {
 		for (size_t i = 0; i < len && success; i += PAGE_SIZE)
 		{
 			auto pg = at(virt + i, true);
-			ASSERT(pg);
+			assert(pg);
 			if (pg->present() && !overwrite)
 			{
 				TRACE("Was present!\n");
 				return false;
 			}
 			pg->frame((void*)(phys+i));
-			ASSERT(pg->frame() == (void*)(phys+i));
+			assert(pg->frame() == (void*)(phys+i));
 			pg->read_write(writeable);
 			pg->supervisor(kernel_only);
 			pg->present(true);
 		}
-		ASSERT(success);
+		assert(success);
 		return success;
 	}
 
@@ -431,7 +431,7 @@ namespace Kernel { namespace Memory {
 		for (size_t i = 0; i < len && success; i += PAGE_SIZE)
 		{
 			auto pg = at(virt + i, true);
-			ASSERT(pg);
+			assert(pg);
 			success &= pg->allocate(writeable, kernel_only);
 		}
 		return success;
@@ -458,7 +458,7 @@ namespace Kernel { namespace Memory {
 		TRACE("Cloning...");
 		addr_t phys = 0;
 		PageDirectory* dest = new PageDirectory();
-		ASSERT(dest != 0);
+		assert(dest != 0);
 		
 		TRACE("New directory allocated.");
 
@@ -507,10 +507,10 @@ namespace Kernel { namespace Memory {
 				// addr_t phys;
                 dest->tables[i] = this->table(i)->clone(dest->dir->tables[i]);
 				// addr_t phys2 = (addr_t)virtual_to_physical(this, dest->ref_tables[i]);
-				// ASSERT(phys == phys2);
+				// assert(phys == phys2);
 				
 				// DEBUG
-				// ASSERT(phys != phys2);
+				// assert(phys != phys2);
 				
 				// dest->tables[i].frame = phys >> 12;
 				// dest->tables[i].user = tables[i].user;
@@ -524,7 +524,7 @@ namespace Kernel { namespace Memory {
 
 
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 
 
@@ -538,8 +538,8 @@ namespace Kernel { namespace Memory {
 	{
 		addr_t phys;
 		auto ptr = kmalloc(sizeof(_Pages), PAGE_SIZE, &phys);
-		ASSERT(phys != 0);
-		ASSERT(ptr != nullptr);
+		assert(phys != 0);
+		assert(ptr != nullptr);
 		_pages_phys = (void*)phys;
 		kmemset(ptr, 0, sizeof(_Pages));
 		
@@ -762,7 +762,7 @@ namespace Kernel { namespace Memory {
 	bool PageDirectory::Page::allocate(bool is_writeable, bool kernel_only) noexcept
 	{
 		uint32_t index;
-		ASSERT(first_frame(&index));
+		assert(first_frame(&index));
 		set_frame(index);
 		
 		page->rw = (is_writeable == 1) ? 1 : 0;

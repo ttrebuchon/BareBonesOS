@@ -177,7 +177,7 @@ TEST(shared_ptr)
 		auto na0 = NA_foo<int>();
 		int na0_n = na0.n;
 		auto na0_0 = Utils::allocator_traits<NoisyAllocator<Utils::Allocator, int>>::copy_create(na0);
-		ASSERT(na0_0.n == na0.n);
+		assert(na0_0.n == na0.n);
 		
 		
 		Utils::shared_ptr<int> ptr;

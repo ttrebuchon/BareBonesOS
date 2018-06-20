@@ -14,42 +14,42 @@ namespace Kernel { namespace Filesystem { namespace Init_RD {
     uint32_t DirectoryNode::read(uint32_t, uint32_t, uint8_t*)
     {
         // TODO
-		ASSERT(false);
+		assert(false);
     }
 
 
     uint32_t DirectoryNode::write(uint32_t, uint32_t, const uint8_t*)
     {
         // TODO
-		ASSERT(false);
+		assert(false);
     }
 
 
     void DirectoryNode::open()
     {
         // TODO
-		ASSERT(false);
+		assert(false);
     }
 
 
     void DirectoryNode::close()
     {
         // TODO
-		ASSERT(false);
+		assert(false);
     }
 
 
     DirEnt* DirectoryNode::readDir(uint32_t)
     {
         // TODO
-		ASSERT(false);
+		assert(false);
     }
 
 
     Node* DirectoryNode::findDir(const char* name)
     {
         // TODO
-		ASSERT(false);
+		assert(false);
     }
 
 

@@ -273,6 +273,14 @@ namespace Utils {
 		}
 		return *this;
 	}
+
+
+
+	template <class T, class Traits, class Allocator>
+	basic_ostream<T, Traits>& operator<<(basic_ostream<T, Traits>& os, const basic_string<T, Traits, Allocator>& str)
+	{
+		return (os << str.c_str());
+	}
 }
 
 

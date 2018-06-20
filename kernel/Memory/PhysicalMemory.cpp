@@ -43,8 +43,8 @@ namespace Kernel { namespace Memory
 		frames.resize(lastPg + 1);
 		frames.setAll(false);
 		
-		auto tmp = kPlacement/PageSize + 1;
-		for (int i = 0; i < tmp; ++i)
+		uint32_t tmp = kPlacement/PageSize + 1;
+		for (uint32_t i = 0; i < tmp; ++i)
 		{
 			frames[i] = true;
 		}

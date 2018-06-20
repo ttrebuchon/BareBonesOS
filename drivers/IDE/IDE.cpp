@@ -196,7 +196,7 @@ namespace Drivers { namespace IDE
 			pciDev = PCI::GetDevice(PCIVendorID::ATA, PCIDeviceID::PIIX4, PCIType::Null);
 		}
 
-		ASSERT(pciDev != PCI::NULL_DEVICE);
+		assert(pciDev != PCI::NULL_DEVICE);
 
 		auto bar0 = pciDev.read(PCIRegister::BAR0) + 0x1F0;
 		auto bar1 = pciDev.read(PCIRegister::BAR1) + 0x1F0;
@@ -204,7 +204,7 @@ namespace Drivers { namespace IDE
 		auto bar3 = pciDev.read(PCIRegister::BAR3) + 0x1F0;
 		auto bar4 = pciDev.read(PCIRegister::BAR4);
 
-		ASSERT(bar0 == 0x1F0);
+		assert(bar0 == 0x1F0);
 
 
 

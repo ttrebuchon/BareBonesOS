@@ -12,42 +12,42 @@ namespace Kernel { namespace Filesystem { namespace Init_RD {
 	uint32_t FileNode::read(uint32_t, uint32_t, uint8_t*)
 	{
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 
 
 	uint32_t FileNode::write(uint32_t, uint32_t, const uint8_t*)
 	{
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 
 
 	void FileNode::open()
 	{
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 
 
 	void FileNode::close()
 	{
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 
 
 	DirEnt* FileNode::readDir(uint32_t)
 	{
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 
 
 	Node* FileNode::findDir(const char* name)
 	{
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 	
 	size_t FileNode::size() const noexcept

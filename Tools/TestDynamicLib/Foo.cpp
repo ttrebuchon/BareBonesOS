@@ -1,6 +1,7 @@
 
 #include "Foo.h"
 #include <stdint.h>
+//#include <Utils/iostream>
 
 
 class Bar_Class : public Foo_Class
@@ -8,8 +9,9 @@ class Bar_Class : public Foo_Class
     public:
     virtual int foo_member() override
     {
-		some_extern_foo(42);
-        return 42;
+		//std::cout << __func__ << ": " << x << std::endl;
+		some_extern_foo(x);
+        return x;
     }
 };
 
@@ -38,6 +40,7 @@ int bar(int x)
 extern "C"
 Foo_Class* get_poly()
 {
+	static_assert(sizeof(Bar_Class) == 8);
     return new Bar_Class;
 }
 
@@ -49,4 +52,23 @@ extern "C" unsigned char* test_new()
 	arr[2] = 0xBA;
 	arr[3] = 0xBA;
 	return arr;
+}
+
+extern "C"
+{
+	struct SomeStruct
+	{
+		int x, y, z;
+	};
+}
+
+
+extern "C"
+SomeStruct* test_some_struct(int x, int y, int z)
+{
+	auto ptr = new SomeStruct;
+	ptr->x = x;
+	ptr->y = y;
+	ptr->z = z;
+	return ptr;
 }

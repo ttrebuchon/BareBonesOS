@@ -13,7 +13,7 @@ namespace Kernel { namespace Memory {
         gdt_table = (GDTEntry*)kmalloc(sizeof(GDTEntry)*5, PAGE_SIZE, &gdtPhys);
         kmemset(gdt_table, 0, sizeof(GDTEntry)*5);
 
-        ASSERT(*reinterpret_cast<uint64_t*>(&gdt_table[0]) == 0);
+        assert(*reinterpret_cast<uint64_t*>(&gdt_table[0]) == 0);
         gdt_table[1].limit(0xFFFFFFFF);
         gdt_table[1].base(0);
         gdt_table[1].present = 1;
@@ -47,7 +47,7 @@ namespace Kernel { namespace Memory {
         gdt_table[4].operand_size = 1;
 
         
-        ASSERT(reinterpret_cast<uint8_t*>(&gdt_table[1])[5] == 0x9A);
+        assert(reinterpret_cast<uint8_t*>(&gdt_table[1])[5] == 0x9A);
 
         Kernel::Memory::GDTEntry::Pointer.limit = (sizeof(Kernel::Memory::GDTEntry)*5 - 1);
         Kernel::Memory::GDTEntry::Pointer.base = (uint32_t)gdt_table;

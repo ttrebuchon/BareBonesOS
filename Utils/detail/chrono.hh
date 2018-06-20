@@ -71,7 +71,7 @@ namespace Utils { namespace chrono
 		static time_t to_time_t(time_point) noexcept
 		{
 			// TODO
-			ASSERT(false);
+			assert(false);
 		}
 		
 	};
@@ -109,7 +109,7 @@ namespace Utils { namespace chrono
 		static time_t to_time_t(time_point) noexcept
 		{
 			// TODO
-			ASSERT(false);
+			assert(false);
 		}
 		
 	};

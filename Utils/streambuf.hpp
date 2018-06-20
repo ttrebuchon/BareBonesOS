@@ -103,14 +103,14 @@ namespace Utils {
 	typename basic_streambuf<T, Traits>::pos_type basic_streambuf<T, Traits>::seekoff(off_type off, ios_base::seekdir way, ios_base::openmode which)
 	{
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 	
 	template <class T, class Traits>
 	typename basic_streambuf<T, Traits>::pos_type basic_streambuf<T, Traits>::seekpos(pos_type pos, ios_base::openmode which)
 	{
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 	
 	template <class T, class Traits>
@@ -123,28 +123,28 @@ namespace Utils {
 	streamsize basic_streambuf<T, Traits>::showmanyc()
 	{
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 	
 	template <class T, class Traits>
 	streamsize basic_streambuf<T, Traits>::xsgetn(char_type* s, streamsize n)
 	{
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 	
 	template <class T, class Traits>
 	typename basic_streambuf<T, Traits>::int_type basic_streambuf<T, Traits>::underflow()
 	{
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 	
 	template <class T, class Traits>
 	typename basic_streambuf<T, Traits>::int_type basic_streambuf<T, Traits>::uflow()
 	{
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 	
 	
@@ -153,7 +153,7 @@ namespace Utils {
 	typename basic_streambuf<T, Traits>::int_type basic_streambuf<T, Traits>::pbackfail(int_type c)
 	{
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 	
 	
@@ -246,7 +246,7 @@ namespace Utils {
 	streamsize basic_streambuf<T, Traits>::sgetn(char_type* s, streamsize n)
 	{
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 	
 	

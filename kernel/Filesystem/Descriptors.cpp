@@ -65,7 +65,7 @@ namespace Kernel { namespace Filesystem {
 	
 	void FileDescriptors::makeActive() noexcept
 	{
-		ASSERT(this != FileDescriptors::Current);
+		assert(this != FileDescriptors::Current);
 		FileDescriptors::Current = this;
 		for (auto& fd : handles)
 		{
@@ -159,7 +159,12 @@ namespace Kernel { namespace Filesystem {
 	
 	bool FileDescriptors::unmap(int fd)
 	{
-		assert(fd < handles.size());
+		#ifdef DEBUG
+		if (fd > 0)
+		{
+			assert((size_t)fd < handles.size());
+		}
+		#endif
 		
 		if (handles[fd])
 		{
@@ -190,7 +195,12 @@ namespace Kernel { namespace Filesystem {
 	
 	File* FileDescriptors::resolve(int fd)
 	{
-		assert(fd < handles.size());
+		#ifdef DEBUG
+		if (fd > 0)
+		{
+			assert((size_t)fd < handles.size());
+		}
+		#endif
 		
 		if (handles[fd])
 		{

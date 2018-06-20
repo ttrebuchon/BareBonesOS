@@ -1,7 +1,7 @@
 #include <drivers/PortIO.h>
 
 #ifndef IGNORE_PORT_IO
-	#define _FAIL ASSERT(false)
+	#define _FAIL assert(false)
 #else
 	#define _FAIL 
 #endif

@@ -203,7 +203,7 @@
 // 		//port_byte_out(, 0);
 
 // 		// TODO
-// 		ASSERT(false);
+// 		assert(false);
 // 	}
 	
 	
@@ -235,7 +235,7 @@
 // 		//return dev->ATA_access(true, start, len/512, 1, (addr_t)buf);
 		
 // 		// TODO
-// 		ASSERT(false);
+// 		assert(false);
 // 	}
 	
 // 	size_t ATADisk::capacity() const

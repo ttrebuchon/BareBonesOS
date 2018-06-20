@@ -23,7 +23,7 @@ struct Bitset
 	
 	void set(const uint32_t index, bool value)
 	{
-		ASSERT(index < N);
+		assert(index < N);
 		if (value)
 		{
 			this->bits[index / (sizeof(Type)*8)] |= (0x1 << (index % (sizeof(Type)*8)));
@@ -36,7 +36,7 @@ struct Bitset
 	
 	bool get(const uint32_t index) const
 	{
-		ASSERT(index < N);
+		assert(index < N);
 		return (this->bits[index / (sizeof(Type)*8)] >> (index % (sizeof(Type)*8))) & 0x1;
 	}
 	
@@ -220,7 +220,7 @@ struct Bitset_Ptr
 	
 	void set(const uint32_t index, bool value)
 	{
-		ASSERT(index < count*sizeof(Type)*8);
+		assert(index < count*sizeof(Type)*8);
 		if (value)
 		{
 			this->bits[index / (sizeof(Type)*8)] |= (0x1 << (index % (sizeof(Type)*8)));
@@ -233,7 +233,7 @@ struct Bitset_Ptr
 	
 	bool get(const uint32_t index) const
 	{
-		ASSERT(index < count*sizeof(Type)*8);
+		assert(index < count*sizeof(Type)*8);
 		return (this->bits[index / (sizeof(Type)*8)] >> (index % (sizeof(Type)*8))) & 0x1;
 	}
 	
@@ -324,7 +324,7 @@ struct Bitset_Ptr
 	{
 		if (count > 0)
 		{
-			for (int i = 0; i < nSize && i < count; ++i)
+			for (size_t i = 0; i < nSize && i < count; ++i)
 			{
 				ptr[i] = bits[i];
 			}

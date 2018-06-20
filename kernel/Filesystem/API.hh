@@ -2,6 +2,7 @@
 #define INCLUDED_FILESYSTEM_API_HH
 
 #include <Common.h>
+#include <Std/sys/stat.h>
 
 #ifdef __cplusplus
 extern "C"

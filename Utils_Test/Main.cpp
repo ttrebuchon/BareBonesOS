@@ -189,7 +189,7 @@ void checkMemoryTrack()
 		for (const auto& p : QA::Memory::Map)
 		{
 			QA::out << "\t\t" << p.first << "\t-\t" << p.second->size() << "\n";
-			ASSERT(p.first == p.second->addr());
+			assert(p.first == p.second->addr());
 		}
 	}
 	QA::out << std::flush;

@@ -14,10 +14,10 @@ namespace Kernel
 	{
 		public:
 		#if __P_ARCH__ == 32
-		typedef ELFObject<ELF32Header_t> object_type;
+		typedef ELFObjectBase<ELF32Header_t> object_type;
 
 		#elif __P_ARCH__ == 64
-		typedef ELFObject<ELF64Header_t> object_type;
+		typedef ELFObjectBase<ELF64Header_t> object_type;
 
 		#else
 
@@ -45,7 +45,13 @@ namespace Kernel
 
 
 	extern "C" ELFSymbols* ELF_kernel_symbols;
+
 	void init_kernel_symbols();
+	
+	extern "C"
+	void* ELF32_unpack(const uint8_t* buffer, size_t length, const void* sections, size_t sections_count, const void* program_headers, size_t program_headers_count, int section_names_index);
+
+	ELF32Object* ELF32_unpack_parse(const uint8_t* buffer, size_t length, const void* sections, size_t sections_count, const void* program_headers, size_t program_headers_count, int section_names_index);
 }
 
 

@@ -36,7 +36,7 @@ namespace Utils {
 	{
 		if (_global == nullptr)
 		{
-			ASSERT(classic().imp != nullptr);
+			assert(classic().imp != nullptr);
 			_global = new locale(classic().imp);
 		}
 		return *_global;
@@ -107,6 +107,5 @@ namespace Utils {
 
 
 
-	template <>
 	typename locale::id ctype<char>::id;
 }

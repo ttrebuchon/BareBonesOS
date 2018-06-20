@@ -26,7 +26,7 @@ namespace Kernel { namespace Filesystem
 		if (_base.empty())
 		{
 			// TODO: Error-out
-			ASSERT(false);
+			assert(false);
 		}
 		
 		bool pAbs = IsAbsolute(_path);
@@ -35,7 +35,7 @@ namespace Kernel { namespace Filesystem
 		if (pAbs != bAbs)
 		{
 			// TODO: Error-out
-			ASSERT(false);
+			assert(false);
 		}
 		
 		string_type path = _path;
@@ -51,11 +51,11 @@ namespace Kernel { namespace Filesystem
 		string_type* bSegs = Split(base, pCount);
 		string_type result;
 		
-		ASSERT(pCount >= bCount);
+		assert(pCount >= bCount);
 		size_t i = 0;
 		while (i < bCount)
 		{
-			ASSERT(pSegs[i] == bSegs[i]);
+			assert(pSegs[i] == bSegs[i]);
 			++i;
 		}
 		result = Combine(pSegs, pCount - i);
@@ -188,13 +188,13 @@ namespace Kernel { namespace Filesystem
 	bool Path::CanSimplify(const string_type&)
 	{
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 
 	bool Path::Simplify(string_type&)
 	{
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 }
 }

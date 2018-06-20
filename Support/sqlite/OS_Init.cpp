@@ -7,12 +7,12 @@ extern "C" {
 	
 	int sqlite3_os_init()
 	{
-		sqlite3_vfs_register(Support::SQLite::VFS(), 1);
+		return sqlite3_vfs_register(Support::SQLite::VFS(), 1);
 	}
 	
 	int sqlite3_os_end()
 	{
-		//sqlite3_vfs_unregister(Support::SQLite::VFS());
+		return sqlite3_vfs_unregister(Support::SQLite::VFS());
 	}
 }
 

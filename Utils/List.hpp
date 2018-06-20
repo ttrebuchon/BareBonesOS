@@ -23,8 +23,8 @@ namespace Utils
 		if (r.head)
 		{
 			head = r.head->clone(nalloc, true, &tail);
-			ASSERT(head != nullptr);
-			ASSERT(tail != nullptr);
+			assert(head != nullptr);
+			assert(tail != nullptr);
 		}
 	}
 	

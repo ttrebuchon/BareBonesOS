@@ -16,19 +16,19 @@ extern "C"
 	int fchown(int fd, uid_t owner, gid_t group)
 	{
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 	
 	int fchmod(int fd, mode_t mode)
 	{
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 	
 	int rmdir(const char* path)
 	{
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 	
 	ssize_t write(int fd, const void* buffer, size_t bytes)
@@ -38,13 +38,13 @@ extern "C"
 		return bytes;
 		
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 	
 	ssize_t pread(int fd, void* buffer, size_t bytes, off_t offset)
 	{
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 	
 	ssize_t read(int fd, void* buffer, size_t bytes)
@@ -54,7 +54,7 @@ extern "C"
 		file->in.read(reinterpret_cast<fchar_type*>(buffer), bytes);
 		return bytes;
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 	
 	int close(int fd)
@@ -68,7 +68,7 @@ extern "C"
 			return -1;
 		}
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 	
 	int open(const char* path, int oflags, mode_t mode)
@@ -93,7 +93,7 @@ extern "C"
 		auto fnode = static_cast<FileNode*>(node);
 		
 		// TODO
-		ASSERT(false);
+		assert(false);
 		
 		return -1;
 	}
@@ -101,19 +101,19 @@ extern "C"
 	int fcntl(int fd, int cmd, ...)
 	{
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 	
 	int ftruncate(int fd, off_t len)
 	{
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 	
 	int truncate(const char* path, off_t len)
 	{
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 	
 	int stat(const char* __restrict path, struct stat* __restrict buf)
@@ -124,7 +124,7 @@ extern "C"
 			if (n)
 			{
 				// TODO
-				ASSERT(false);
+				assert(false);
 			}
 		}
 		return -1;
@@ -138,7 +138,7 @@ extern "C"
 			if (n)
 			{
 				// TODO
-				ASSERT(false);
+				assert(false);
 			}
 		}
 		return -1;
@@ -147,31 +147,31 @@ extern "C"
 	char* getcwd(char* buf, size_t size)
 	{
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 	
 	int access(const char* path, int amode)
 	{
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 	
 	int link(const char* from, const char* to)
 	{
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 	
 	int unlink(const char* name)
 	{
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 	
 	int mkdir(const char* path, mode_t mode)
 	{
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 	
 	ssize_t readlink(const char* path, char* buf, size_t bufsize)
@@ -182,7 +182,7 @@ extern "C"
 			if (n)
 			{
 				// TODO
-				ASSERT(false);
+				assert(false);
 			}
 		}
 		return -1;
@@ -191,19 +191,19 @@ extern "C"
 	int fstat(int fd, struct stat* buf)
 	{
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 	
 	off_t lseek(int fd, off_t offset, int whence)
 	{
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 	
 	int fsync(int fd)
 	{
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 	
 	

@@ -427,7 +427,7 @@ namespace Drivers { namespace ATA
 // 		}
 // 		else
 // 		{
-// 			ASSERT(false);
+// 			assert(false);
 // 		}
 		
 // 		if (reg > 0x07 && reg < 0x0C)
@@ -568,7 +568,7 @@ namespace Drivers { namespace ATA
 // 			pciDev = PCI::GetDevice(PCIVendorID::ATA, PCIDeviceID::PIIX4, PCIType::Null);
 // 		}
 
-// 		ASSERT(pciDev != PCI::NULL_DEVICE);
+// 		assert(pciDev != PCI::NULL_DEVICE);
 
 // 		auto bar0 = pciDev.read(PCIRegister::BAR0) + 0x1F0;
 // 		auto bar1 = pciDev.read(PCIRegister::BAR1) + 0x1F0;
@@ -581,7 +581,7 @@ namespace Drivers { namespace ATA
 // 		// bar2 = 0x170;
 // 		// bar3 = 0x376;
 
-// 		ASSERT(bar0 == 0x1F0);
+// 		assert(bar0 == 0x1F0);
 
 // 		Initialize(bar0, bar1, bar2, bar3, bar4);
 // 	}
@@ -612,7 +612,7 @@ namespace Drivers { namespace ATA
 // 			buf[i] = 0;
 // 		}
 
-// 		ASSERT(BAR0 == 0x1F0);
+// 		assert(BAR0 == 0x1F0);
 // 	}
 	
 	
@@ -744,7 +744,7 @@ namespace Drivers { namespace ATA
 // 			pciDev = PCI::GetDevice(PCIVendorID::ATA, PCIDeviceID::PIIX4, PCIType::Null);
 // 		}
 
-// 		ASSERT(pciDev != PCI::NULL_DEVICE);
+// 		assert(pciDev != PCI::NULL_DEVICE);
 
 // 		auto pciCmd = pciDev.read(PCIRegister::Command);
 // 		if (!(pciCmd & (1 << 2)))

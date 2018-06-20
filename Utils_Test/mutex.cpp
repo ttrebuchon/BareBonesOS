@@ -111,7 +111,7 @@ static void do_tests(const int n, const LF locker, const F f)
 				--x;
 			}
 			auto y = x;
-			ASSERT(!m.try_lock());
+			assert(!m.try_lock());
 			m.unlock();
 			Lock lock(m);
 			if (y % 2 == 0)

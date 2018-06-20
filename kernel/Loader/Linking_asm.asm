@@ -10,8 +10,8 @@ link_callback_handler:
 	; mov eax, [esp + 12]
 	; push eax
 	call linker_callback
-	pop ebx
-	pop ebx
+	pop edx
+	pop edx
 	; pop ebp
 	; pop ebx
 	; pop ebx

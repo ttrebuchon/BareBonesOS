@@ -92,7 +92,7 @@ namespace Utils
 			__throw_out_of_range("key not in map");
 		}
 		auto ptr = tree->find(key);
-		ASSERT(ptr != nullptr);
+		assert(ptr != nullptr);
 		
 		return ptr->value.second;
 	}
@@ -105,7 +105,7 @@ namespace Utils
 			__throw_out_of_range("key not in map");
 		}
 		auto ptr = tree->find(forward<key_type>(key));
-		ASSERT(ptr != nullptr);
+		assert(ptr != nullptr);
 		
 		return ptr->value.second;
 	}
@@ -118,7 +118,7 @@ namespace Utils
 			__throw_out_of_range("key not in map");
 		}
 		auto ptr = tree->find(key);
-		ASSERT(ptr != nullptr);
+		assert(ptr != nullptr);
 		
 		return ptr->value.second;
 	}
@@ -131,7 +131,7 @@ namespace Utils
 			__throw_out_of_range("key not in map");
 		}
 		auto ptr = tree->find(forward<key_type>(key));
-		ASSERT(ptr != nullptr);
+		assert(ptr != nullptr);
 		
 		return ptr->value.second;
 	}
@@ -191,7 +191,7 @@ namespace Utils
 		}
 		typename Tree_t::node* parent;
 		auto ptr = tree->findCreate(k, &parent);
-		ASSERT(ptr != nullptr);
+		assert(ptr != nullptr);
 		
 		if (*ptr == nullptr)
 		{
@@ -199,12 +199,12 @@ namespace Utils
 			auto oldSize = tree->size();
 			#endif
 			auto ret = tree->create(parent, *ptr, k);
-			ASSERT(ret != nullptr);
+			assert(ret != nullptr);
 			#ifdef DEBUG_VERIFY
-			ASSERT(ret->size >= 1);
-			ASSERT(tree->verify());
+			assert(ret->size >= 1);
+			assert(tree->verify());
 			//ASSERTEQ(oldSize+1, tree->size());
-			//ASSERT(oldSize + 1 == tree->size());
+			//assert(oldSize + 1 == tree->size());
 			#endif
 			return ret->value.second;
 		}
@@ -222,7 +222,7 @@ namespace Utils
 		}
 		typename Tree_t::node* parent;
 		auto ptr = tree->findCreate(k, &parent);
-		ASSERT(ptr != nullptr);
+		assert(ptr != nullptr);
 		
 		
 		if (*ptr == nullptr)
@@ -231,12 +231,12 @@ namespace Utils
 			auto oldSize = tree->size();
 			#endif
 			auto ret = tree->create(parent, *ptr, forward<key_type&&>(k));
-			ASSERT(ret != nullptr);
+			assert(ret != nullptr);
 			#ifdef DEBUG_VERIFY
-			ASSERT(ret->size >= 1);
-			ASSERT(tree->verify());
-			ASSERT(oldSize+1 == tree->size());
-			ASSERT(oldSize + 1 == tree->size());
+			assert(ret->size >= 1);
+			assert(tree->verify());
+			assert(oldSize+1 == tree->size());
+			assert(oldSize + 1 == tree->size());
 			#endif
 			return ret->value.second;
 		}
@@ -286,6 +286,27 @@ namespace Utils
 		}
 		
 		return iterator();
+	}
+
+	template <class Key, class T, class Comp, class Alloc>
+	auto map<Key, T, Comp, Alloc>::begin() const -> const_iterator
+	{
+		if (tree)
+		{
+			return const_iterator(tree->leftbound());
+		}
+		return const_iterator();
+	}
+	
+	template <class Key, class T, class Comp, class Alloc>
+	auto map<Key, T, Comp, Alloc>::end() const -> const_iterator
+	{
+		if (tree)
+		{
+			return const_iterator((_VNode*)tree->endNode());
+		}
+		
+		return const_iterator();
 	}
 }
 

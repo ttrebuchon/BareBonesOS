@@ -6,6 +6,7 @@
 #ifndef TESTING
 
 #include <drivers/VGA.hh>
+#include <kernel/Debug/Trace.h>
 
 
 
@@ -15,19 +16,21 @@ extern "C" {
 
 inline void __ASSERT_TRUE() {}
 
-//#define ASSERT(X) do { (X) ? __ASSERT_TRUE() : KPANIC(#X); } while (0)
+//#define assert(X) do { (X) ? __ASSERT_TRUE() : KPANIC(#X); } while (0)
 
 #ifdef _TRACE
 
-    #ifdef __cplusplus
+    // #ifdef __cplusplus
 
-        #define TRACE(X) do { ::Drivers::VGA::Write(__FILE__"::"); ::Drivers::VGA::Write((uint32_t)__LINE__); ::Drivers::VGA::Write("::"); ::Drivers::VGA::Write(__func__); ::Drivers::VGA::Write("::"); ::Drivers::VGA::Write(X); ::Drivers::VGA::Write("\n"); } while (false)
+    //     #define TRACE(X) do { ::Drivers::VGA::Write(__FILE__"::"); ::Drivers::VGA::Write((uint32_t)__LINE__); ::Drivers::VGA::Write("::"); ::Drivers::VGA::Write(__func__); ::Drivers::VGA::Write("::"); ::Drivers::VGA::Write(X); ::Drivers::VGA::Write("\n"); } while (false)
 
-    #else
+    // #else
 
-        #define TRACE(X) c_vga_write(X)
+    //     #define TRACE(X) c_vga_write(X)
 
-    #endif
+    // #endif
+
+	#define TRACE(X) do { __do_trace(__FILE__, __LINE__, __func__, X); } while (false)
 
 #else
 
@@ -51,7 +54,7 @@ extern "C" {
 
 
 
-//#define ASSERT(X) assert(X)
+
 
 #ifdef _TRACE
 
@@ -69,6 +72,6 @@ extern "C" {
 
 #endif //ifndef TESTING
 
-#define ASSERT(x) assert(x)
+
 
 #endif

@@ -32,7 +32,7 @@ namespace Kernel { namespace Filesystem
 	File* FileNode::initFile()
 	{
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 	
 	
@@ -52,7 +52,7 @@ namespace Kernel { namespace Filesystem
 		if (!file)
 		{
 			file = initFile();
-			ASSERT(file != nullptr);
+			assert(file != nullptr);
 		}
 		Utils::unique_lock<Utils::mutex> lock(lock_m, Utils::try_to_lock);
 		if (!lock.owns_lock())

@@ -7,7 +7,7 @@ namespace Kernel { namespace Filesystem
 	
 	File_streambuf::File_streambuf(FileNode* fnode) : Utils::basic_streambuf<char>(), __node(fnode), eback_pos(0), pbase_pos(0), size(0)
 	{
-		ASSERT(fnode != nullptr);
+		assert(fnode != nullptr);
 		size = __node->size();
 	}
 	
@@ -39,7 +39,7 @@ namespace Kernel { namespace Filesystem
 				}
 				else
 				{
-					ASSERT(false);
+					assert(false);
 				}
 				
 			}
@@ -52,14 +52,14 @@ namespace Kernel { namespace Filesystem
 			break;
 			
 			default:
-			ASSERT(false);
+			assert(false);
 		}
 		
 		
 		unsigned char* seqStart;
 		size_t rem;
-		auto addr = addrForPos(pos, (which & ios_base::in != 0), &rem, &seqStart);
-		ASSERT(addr != nullptr);
+		auto addr = addrForPos(pos, ((which & ios_base::in) != 0), &rem, &seqStart);
+		assert(addr != nullptr);
 		if (which & ios_base::out)
 		{
 			setp(reinterpret_cast<char*>(seqStart), reinterpret_cast<char*>(addr + rem));
@@ -74,13 +74,13 @@ namespace Kernel { namespace Filesystem
 		
 		 
 		 // TODO (Return value)
-		 ASSERT(false);
+		 assert(false);
 	}
 
 	auto File_streambuf::seekpos(pos_type sp, ios_base::openmode which) -> pos_type
 	{
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 	
 	Utils::streamsize File_streambuf::showmanyc()
@@ -104,7 +104,7 @@ namespace Kernel { namespace Filesystem
 				seekoff(back - gptr(), ios_base::cur, ios_base::in);
 				ptr = gptr();
 				back = egptr();
-				ASSERT(ptr != back);
+				assert(ptr != back);
 			}
 			s[i++] = *(ptr++);
 		}
@@ -116,13 +116,13 @@ namespace Kernel { namespace Filesystem
 	
 	auto File_streambuf::underflow() -> int_type
 	{
-		ASSERT(gptr() == egptr());
+		assert(gptr() == egptr());
 		
 		unsigned char* seqBegin;
 		size_t rem;
 		auto addr = addrForPos(inPos(), true, &rem, &seqBegin);
 		eback_pos = basePosForPos(inPos());
-		ASSERT(addr);
+		assert(addr);
 		if (!addr)
 		{
 			return traits_type::eof();
@@ -152,7 +152,7 @@ namespace Kernel { namespace Filesystem
 				seekoff(back - pptr(), ios_base::cur, ios_base::in);
 				ptr = pptr();
 				back = epptr();
-				ASSERT(ptr != back);
+				assert(ptr != back);
 			}
 			*(ptr++) = s[i++];
 		}
@@ -164,13 +164,13 @@ namespace Kernel { namespace Filesystem
 	
 	auto File_streambuf::overflow(int_type c) -> int_type
 	{
-		ASSERT(pptr() == epptr());
+		assert(pptr() == epptr());
 		
 		unsigned char* seqBegin;
 		size_t rem;
 		auto addr = addrForPos(outPos(), false, &rem, &seqBegin);
 		pbase_pos = basePosForPos(outPos());
-		ASSERT(addr);
+		assert(addr);
 		if (!addr)
 		{
 			return traits_type::eof();

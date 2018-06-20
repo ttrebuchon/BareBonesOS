@@ -35,7 +35,7 @@ namespace Drivers {
 		pci_sizes[(uint16_t)PCIRegister::InterruptLine]		= 1;
 		pci_sizes[(uint16_t)PCIRegister::SecondaryBusNo]	= 1;
 
-		ASSERT(PCI::NULL_DEVICE.data == 0);
+		assert(PCI::NULL_DEVICE.data == 0);
 	}
 
 

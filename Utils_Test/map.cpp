@@ -101,14 +101,14 @@ static void do_tests(const int n, const std::vector<int>& positions, F f)
 		m[0] = Bar_t(0);
 		ASSERTEQ(Bar_t::count, 1);
 		ASSERTEQ(Bar_t::callers.size(), 0);
-		ASSERT(Bar_t::Check(1, 0));
+		assert(Bar_t::Check(1, 0));
 		
 		m[1].n = 4;
 		ASSERTEQ(m.size(), 2);
 	}
 	ASSERTEQ(Bar_t::count, 0);
 	ASSERTEQ(Bar_t::callers.size(), 2);
-	ASSERT(Bar_t::Check(0, 2));
+	assert(Bar_t::Check(0, 2));
 	ASSERTEQ(Bar_t::callers[0], 4);
 	
 	
@@ -120,14 +120,14 @@ static void do_tests(const int n, const std::vector<int>& positions, F f)
 		m[0] = Bar_t(0);
 		ASSERTEQ(Bar_t::count, 1);
 		ASSERTEQ(Bar_t::callers.size(), 0);
-		ASSERT(Bar_t::Check(1, 0));
+		assert(Bar_t::Check(1, 0));
 		
 		m[1].n = 4;
 		ASSERTEQ(m.size(), 2);
 	}
 	ASSERTEQ(Bar_t::count, 0);
 	ASSERTEQ(Bar_t::callers.size(), 2);
-	ASSERT(Bar_t::Check(0, 2));
+	assert(Bar_t::Check(0, 2));
 	ASSERTEQ(Bar_t::callers[0], 4);
 	
 	
@@ -407,7 +407,7 @@ static void do_tests(const int n, const std::vector<int>& positions, F f)
 		ASSERTEQ(x, n);
 		
 		m.clear();
-		ASSERT(m.begin() == m.end());
+		assert(m.begin() == m.end());
 	}
 }
 #endif

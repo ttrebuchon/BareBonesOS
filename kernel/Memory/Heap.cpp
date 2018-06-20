@@ -21,7 +21,7 @@ namespace Kernel { namespace Memory
 		#endif
 		memcpy(nPtr, const_cast<const void*>(p), prev);
 		#ifdef DEBUG
-		ASSERT(res);
+		assert(res);
 		#endif
 		
 		free(p);
@@ -35,7 +35,7 @@ namespace Kernel { namespace Memory
 	
 	void* Heap::realloc(void* p, size_t s, size_t alignment)
 	{
-		ASSERT(s > 0);
+		assert(s > 0);
 		if (p == nullptr)
 		{
 			return alloc(s, alignment);

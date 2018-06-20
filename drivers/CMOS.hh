@@ -31,7 +31,7 @@ namespace Drivers
 		
 		constexpr static unsigned char BCD_to_binary(const unsigned char bcd)
 		{
-			return (bcd & 0xF0 >> 1) + ((bcd & 0xF0) >> 3) + bcd & 0x0F;
+			return (bcd & 0xF0 >> 1) + ((bcd & 0xF0) >> 3) + (bcd & 0x0F);
 		}
 		
 		

@@ -12,8 +12,8 @@ TEST(SQLite)
 	int rc = sqlite3_open(dbName, &db);
 	std::cout << "Result: " << rc << std::endl;
 	std::cout << sqlite3_errstr(rc) << std::endl;
-	ASSERT(rc == SQLITE_OK);
-	ASSERT(db != NULL);
+	assert(rc == SQLITE_OK);
+	assert(db != NULL);
 	
 	sqlite3_close(db);
 }

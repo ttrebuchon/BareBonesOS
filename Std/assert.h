@@ -1,10 +1,13 @@
 #ifndef INCLUDED_ASSERT_H
 #define INCLUDED_ASSERT_H
 
-#include <Common.h>
 
-C_CODE
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+__attribute__((__noreturn__))
 void __assert2(const char* filename, int line, const char* function, const char* exp);
 
 
@@ -17,7 +20,7 @@ void __assert2(const char* filename, int line, const char* function, const char*
 	
 #else
 	
-	#define assert(exp) do { (exp) ? ((void)0) : __assert2(__FILE__, __LINE__, __func__, "assertion failed: \""#exp"\""); } while (0)
+	#define assert(exp) do { if (!(exp)) { __assert2(__FILE__, __LINE__, __func__, "assertion failed: \""#exp"\""); __builtin_unreachable();  } } while (0)
 	
 	
 	
@@ -26,6 +29,8 @@ void __assert2(const char* filename, int line, const char* function, const char*
 
 
 
-C_END
+#ifdef __cplusplus
+}
+#endif
 
 #endif

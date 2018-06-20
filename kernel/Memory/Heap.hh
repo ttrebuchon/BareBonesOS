@@ -10,9 +10,9 @@ namespace Kernel { namespace Memory
 		private:
 		addr_t _startAddr;
 		addr_t _endAddr;
+		size_t pSize;
 		bool _supervisor;
 		bool _readonly;
-		size_t pSize;
 		
 		protected:
 		__attribute__((always_inline))

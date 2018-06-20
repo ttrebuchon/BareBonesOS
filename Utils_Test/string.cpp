@@ -57,12 +57,12 @@ TEST(String)
 		string st(cstr);
 		std::string sst(scstr);
 		
-		ASSERT(st == "Hello");
-		ASSERT(sst == "Hello");
+		assert(st == "Hello");
+		assert(sst == "Hello");
 		
 		cstr[0] = scstr[0] = 'G';
-		ASSERT(st == "Hello");
-		ASSERT(sst == "Hello");
+		assert(st == "Hello");
+		assert(sst == "Hello");
 		
 		
 		

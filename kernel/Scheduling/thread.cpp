@@ -133,7 +133,7 @@ extern "C" {
 		
 	}
 
-	#elif defined(__ENV_x86__)
+	#elif defined(__ENV_x86__) || defined(__VS_CODE__)
 
 	extern "C" void thread_entry_asm();
 
@@ -158,6 +158,8 @@ extern "C" {
 		{
 			*thread = __thr->id;
 		}
+
+		
 		
 		
 		
@@ -169,10 +171,31 @@ extern "C" {
 		{
 			delete e;
 		};
+
+
+		{
+			irq_guard lock;
+			TRACE("Made it here.");
+		}
 		
 		
 		auto stack = malloc(init_stack_size);
-		memset(stack, 4, init_stack_size);
+		// {
+		// 	irq_guard lock;
+		// 	TRACE("Made it here.");
+		// }
+		// memset(stack, 4, init_stack_size);
+		// {
+		// 	irq_guard lock;
+		// 	TRACE("Made it here.");
+		// }
+		{
+			irq_guard lock;
+			TRACE("Made it here.");
+			std::cout << (void*)((addr_t)stack + init_stack_size) << std::endl; 
+			memset(stack, 4, init_stack_size);
+			TRACE("Made it here.");
+		}
 		addr_t stack_addr = (addr_t)stack;
 		size_t stack_size = init_stack_size;
 		if (stack_addr % 16 != 0)

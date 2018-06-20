@@ -11,6 +11,7 @@ namespace Kernel { namespace Memory
 	{
 		private:
 		addr_t _placement;
+		addr_t furthest_paged;
 		
 		protected:
 		

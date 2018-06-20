@@ -1,7 +1,8 @@
 #ifndef INCLUDED_CHAR_TRAITS_HH
 #define INCLUDED_CHAR_TRAITS_HH
 
-#include <Common.h>
+// #include <Common.h>
+#include <Types.h>
 #include "cwchar.hh"
 
 namespace Utils

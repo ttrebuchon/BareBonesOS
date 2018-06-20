@@ -4,6 +4,21 @@
 #include "Utility.hh"
 
 
+void __do_kernel_panic_quiet()
+{
+    __DO_CLI__
+    #ifdef __ENV_AARCH64__
+    asm volatile ("hlt 0");
+    #elif defined(__ENV_x86__)
+    asm volatile ("hlt");
+    #elif defined(__VS_CODE__)
+
+    #else
+    #error Unknown "hlt" asm for architecture
+    #endif
+    while (1) ;
+}
+
 void __do_kernel_panic(const char* msg, const char* file, const int line, const char* function)
 {
     __DO_CLI__
@@ -22,14 +37,5 @@ void __do_kernel_panic(const char* msg, const char* file, const int line, const 
     c_vga_write("::");
 
     c_vga_write(msg);
-    #ifdef __ENV_AARCH64__
-    asm volatile ("hlt 0");
-    #elif defined(__ENV_x86__)
-    asm volatile ("hlt");
-    #elif defined(__VS_CODE__)
-
-    #else
-    #error Unknown "hlt" asm for architecture
-    #endif
-    while (1) ;
+	__do_kernel_panic_quiet();
 }

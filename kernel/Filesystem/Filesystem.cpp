@@ -23,13 +23,13 @@ namespace Kernel { namespace Filesystem {
 			return getNode(Path::Combine(path, relative));
 		}
 		
-		ASSERT(root);
-		ASSERT(root->isKind(NodeType::Directory));
+		assert(root);
+		assert(root->isKind(NodeType::Directory));
 		
 		const auto droot = (DirectoryNode*)root;
 		
 		/*auto index = Path::IndexForRelativeToRoot(path);
-		ASSERT(path.length() > index);
+		assert(path.length() > index);
 		const char* cstr = path.c_str();*/
 		
 		return droot->findChild(Path::MakeRelative(path, Path::Root));

@@ -38,7 +38,7 @@ extern "C" {
 	
 	static inline time_t ydhms_diff(long y1, long yday1, long h1, long m1, long s1, int y0, int yday0, int h0, int m0, int s0)
 	{
-		ASSERT(-1/2 == 0);
+		assert(-1/2 == 0);
 		
 		int a4 = SHR(y1, 2) + SHR(TM_YEAR_BASE, 2) - !(y1 & 3);
 		int b4 = SHR(y0, 2) + SHR(TM_YEAR_BASE, 2) - !(y0 & 3);

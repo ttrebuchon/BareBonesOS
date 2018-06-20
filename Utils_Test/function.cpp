@@ -109,7 +109,7 @@ void do_tests(const int n, F fn)
 		#ifdef __cpp_rtti
 		{
 			Foo_t* in_ptr1 = fc.template target<Foo_t>();
-			ASSERT(in_ptr1 != nullptr);
+			assert(in_ptr1 != nullptr);
 			ASSERTEQ(in_ptr1->n, 6);
 			int* ptr = fc.template target<int>();
 			ASSERTEQ(ptr, nullptr);

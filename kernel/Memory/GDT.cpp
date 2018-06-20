@@ -9,14 +9,15 @@ namespace Kernel { namespace Memory {
                         limit_low(0),
                         base_low(0),
                         base_middle(0),
+						_type(0),
+						desc_type(0),
+						privilege(0),
                         present(0),
-                        privilege(0),
-                        desc_type(0),
-                        _type(0),
+                        len(0),
+						system(0),
+						zero(0),
+						operand_size(0),
                         granularity(0),
-                        operand_size(0),
-                        zero(0),
-                        system(0),
                         base_high(0)
     {
 

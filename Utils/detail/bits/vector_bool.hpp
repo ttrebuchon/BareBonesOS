@@ -38,7 +38,7 @@ namespace Utils
 			ensure_capacity(v.size());
 			memcpy(_data, v._data, v._under_count);
 			_size = v.size();
-			ASSERT(_cap >= v.size());
+			assert(_cap >= v.size());
 		}
 	}
 	

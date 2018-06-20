@@ -1,6 +1,7 @@
 #include "assert.h"
 #include "stdio.h"
 #include "stdlib.h"
+#include <Utils/iostream>
 
 
 C_CODE
@@ -12,13 +13,23 @@ void __do_kernel_panic(const char* msg, const char* file, const int line, const 
 
 void __assert2(const char* filename, int line, const char* func, const char* exp)
 {
+	__DO_CLI__
+	if (!::stdlib_initialized())
+	{
+		__do_kernel_panic(exp, filename, line, func);
+		__builtin_unreachable();
+	}
 
-	__do_kernel_panic(exp, filename, line, func);
-	//int g = stderr;
-	
-	//fprintf(stderr, "%s:%d: %s: assertion "%s" failed\n", filename, line, func, exp);
-	
-	//asm volatile("hlt 0");
+	__try
+	{
+		std::cout << filename << "::" << line << "::" << func << "::" << exp << std::endl;
+	}
+	__catch(...)
+	{
+		__do_kernel_panic(exp, filename, line, func);
+	}
+
+	__do_kernel_panic_quiet();
 	exit(-1);
 }
 

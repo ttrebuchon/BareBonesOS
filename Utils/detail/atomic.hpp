@@ -119,9 +119,9 @@ namespace Utils
 		template <class T>
 		bool atomic_base<T>::compare_exchange_strong(T& expected, T desired, memory_order success, memory_order failure) noexcept
 		{
-			ASSERT(failure != memory_order_release);
-			ASSERT(failure != memory_order_acq_rel);
-			// ASSERT(failure <= success);
+			assert(failure != memory_order_release);
+			assert(failure != memory_order_acq_rel);
+			// assert(failure <= success);
 			
 			T eold = expected;
 			T enew = __sync_val_compare_and_swap(&_val, eold, desired);
@@ -132,9 +132,9 @@ namespace Utils
 		template <class T>
 		bool atomic_base<T>::compare_exchange_strong(T& expected, T desired, memory_order success, memory_order failure) volatile noexcept
 		{
-			ASSERT(failure != memory_order_release);
-			ASSERT(failure != memory_order_acq_rel);
-			// ASSERT(failure <= success);
+			assert(failure != memory_order_release);
+			assert(failure != memory_order_acq_rel);
+			// assert(failure <= success);
 			
 			T eold = expected;
 			T enew = __sync_val_compare_and_swap(&_val, eold, desired);

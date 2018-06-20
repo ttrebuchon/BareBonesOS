@@ -42,6 +42,6 @@ extern "C"
 	uid_t geteuid()
 	{
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 }

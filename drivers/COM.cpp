@@ -3,6 +3,7 @@
 
 extern "C"
 {
+
     void COM_init(uint16_t port)
     {
         port_byte_out(port + COM_REG_INT, 0);

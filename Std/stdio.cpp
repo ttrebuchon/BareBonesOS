@@ -6,16 +6,27 @@ C_CODE
 FILE* stderr = nullptr;
 FILE* stdout = nullptr;
 
+int vfprintf(FILE* fd, const char* fmt, va_list arg)
+{
+	assert(NOT_IMPLEMENTED);
+}
+
 int fprintf(FILE* fd, const char* fmt, ...)
 {
-	// TODO
-	assert(false);
+	va_list ap;
+	va_start (ap, fmt);
+	int res = vfprintf(fd, fmt, ap);
+	va_end(ap);
+	return res;
 }
 
 int printf(const char* fmt, ...)
 {
 	va_list ap;
-	return fprintf(stdout, fmt, ap);
+	va_start (ap, fmt);
+	int res = vfprintf(stdout, fmt, ap);
+	va_end(ap);
+	return res;
 }
 
 

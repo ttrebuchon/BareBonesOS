@@ -297,6 +297,19 @@ namespace Utils
         {
             const difference_type __d = difference_type(__n1 - __n2);
 
+			if (__n1 < __n2)
+			{
+				return -1;
+			}
+			else if (__n1 > __n2)
+			{
+				return 1;
+			}
+			else
+			{
+				return 0;
+			}
+
             if (__d > numeric_limits<int>::max())
             {
                 return numeric_limits<int>::max();
@@ -476,13 +489,13 @@ namespace Utils
         
         int compare(const basic_string& _str) const
         {
-        	const size_type _s = size();
-        	const size_type _s2 = _str.size();
+        	const size_type _s = length();
+        	const size_type _s2 = _str.length();
         	
         	const size_type _len = (_s < _s2 ? _s : _s2);
         	int _r = traits_type::compare(_M_data(), _str._M_data(), _len);
         	
-        	if (!_r)
+        	if (_r == 0)
         	{
         		_r = _S_compare(_s, _s2);
         	}
@@ -672,6 +685,14 @@ namespace Utils
     string to_string(float);
     string to_string(double);
     string to_string(long double);
+
+
+	template <class, class>
+	class basic_ostream;
+
+
+	template <class T, class Traits, class Allocator>
+	basic_ostream<T, Traits>& operator<<(basic_ostream<T, Traits>&, const basic_string<T, Traits, Allocator>&);
     
 
 }

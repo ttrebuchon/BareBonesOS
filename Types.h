@@ -38,7 +38,7 @@ typedef unsigned short __kernel_gid16_t;
 typedef uint64_t    __kernel_time_t;
 typedef size_t      __off_t;
 typedef size_t      ssize_t;
-typedef uint8_t     mode_t;
+typedef uint32_t     mode_t;
 typedef uint32_t    __uid_t;
 typedef uint32_t    gid_t;
 #endif
@@ -49,4 +49,19 @@ typedef __off_t off_t;
 typedef __uid_t uid_t;
 typedef long pthread_t;
 
+typedef unsigned long size_t;
+
+#ifdef __cplusplus
+typedef decltype(sizeof(0)) size_t;
 #endif
+
+
+#include <Env.h>
+
+#if __P_ARCH__ == 64
+	typedef uint64_t addr_t;
+#else
+	typedef uint32_t addr_t;
+#endif
+
+#endif	// !INCLUDED_TYPES_H

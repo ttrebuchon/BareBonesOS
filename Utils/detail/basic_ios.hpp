@@ -2,6 +2,7 @@
 #define INCLUDED_BASIC_IOS_HPP
 
 #include "basic_ios.hh"
+#include <kernel/Error.h>
 
 namespace Utils {
 	

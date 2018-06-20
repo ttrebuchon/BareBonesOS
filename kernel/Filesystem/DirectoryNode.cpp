@@ -16,10 +16,10 @@ namespace Kernel { namespace Filesystem
 	
 	Node* DirectoryNode::findChild(const Utils::string& path)
 	{
-		ASSERT(!Path::IsAbsolute(path));
+		assert(!Path::IsAbsolute(path));
 		
 		// TODO
-		ASSERT(false);
+		assert(false);
 	}
 	
 	Node* DirectoryNode::at(const Utils::string& str) const
@@ -28,7 +28,7 @@ namespace Kernel { namespace Filesystem
 		{
 			Node* n = nullptr;
 			n = at(i);
-			ASSERT(n);
+			assert(n);
 			if (n->name == str)
 			{
 				return n;

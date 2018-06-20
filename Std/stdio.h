@@ -11,6 +11,7 @@ struct FILE;
 extern struct FILE* stderr;
 extern struct FILE* stdout;
 
+int vfprintf(struct FILE* fd, const char* fmt, va_list arg);
 int fprintf(struct FILE* fd, const char* fmt, ...);
 int printf(const char* fmt, ...);
 

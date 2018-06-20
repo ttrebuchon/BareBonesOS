@@ -38,7 +38,7 @@ namespace Kernel { namespace Filesystem
 			{*/
 				if (!readTo(blockIndex))
 				{
-					ASSERT(!forReading);
+					assert(!forReading);
 				}
 			//}
 		}
@@ -47,7 +47,7 @@ namespace Kernel { namespace Filesystem
 		{
 			if (!readTo(blockIndex))
 			{
-				ASSERT(!forReading);
+				assert(!forReading);
 			}
 		}
 		
@@ -80,13 +80,13 @@ namespace Kernel { namespace Filesystem
 				{
 					auto wrote = __node->write(i*BlockSize, BlockSize, reinterpret_cast<uint8_t*>(blocks[i]->data));
 					blocks[i]->dirty = false;
-					ASSERT(wrote == BlockSize);
+					assert(wrote == BlockSize);
 				}
 			}
 		}
 
 		// TODO: Figure out what to return
-		ASSERT(false);
+		assert(false);
 	}
 	
 	
@@ -104,7 +104,7 @@ namespace Kernel { namespace Filesystem
 	
 	bool BlockFile::readTo(size_t index)
 	{
-		ASSERT(blocks.size() > index);
+		assert(blocks.size() > index);
 		if (!blocks[index])
 		{
 			blocks[index] = new Block<BlockSize>();
@@ -119,13 +119,13 @@ namespace Kernel { namespace Filesystem
 			return false;
 		}
 		
-		ASSERT(__node->read(index*BlockSize, BlockSize, reinterpret_cast<uint8_t*>(blocks[index]->data)) == BlockSize);
+		assert(__node->read(index*BlockSize, BlockSize, reinterpret_cast<uint8_t*>(blocks[index]->data)) == BlockSize);
 		return true;
 	}
 	
 	bool BlockFile::writeTo(size_t index, bool force)
 	{
-		ASSERT(blocks.size() > index);
+		assert(blocks.size() > index);
 		Block<BlockSize>* b = blocks[index];
 		if (!b)
 		{
@@ -135,7 +135,7 @@ namespace Kernel { namespace Filesystem
 		if (b->dirty || force)
 		{
 			const auto written = __node->write(index*BlockSize, BlockSize, reinterpret_cast<const uint8_t*>(b->data));
-			ASSERT(written == BlockSize);
+			assert(written == BlockSize);
 			return true;
 		}
 		else

@@ -3,6 +3,7 @@
 
 #include "String.hh"
 #include "detail/functexcept.hh"
+#include <kernel/c_cpp.h>
 
 namespace Utils
 {

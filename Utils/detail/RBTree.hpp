@@ -157,7 +157,7 @@ namespace rb_tree
 			}
 			else
 			{
-				ASSERT(false);
+				assert(false);
 			}
 		}
 		
@@ -221,7 +221,7 @@ namespace rb_tree
 			}
 			else
 			{
-				ASSERT(false);
+				assert(false);
 			}
 		}
 		
@@ -295,9 +295,9 @@ namespace rb_tree
 			auto grandp = ancestor(2);
 			NodeBase* n = this;
 			
-			ASSERT(grandp != nullptr);
-			//ASSERT(grandp->left != nullptr);
-			//ASSERT(grandp->left->right == this || grandp->right != nullptr);
+			assert(grandp != nullptr);
+			//assert(grandp->left != nullptr);
+			//assert(grandp->left->right == this || grandp->right != nullptr);
 			if (grandp->left && grandp->left->right == this)
 			{
 				parent->rotateLeft();
@@ -309,12 +309,12 @@ namespace rb_tree
 				n = right;
 			}
 			
-			ASSERT(n != nullptr);
+			assert(n != nullptr);
 			
 			grandp = n->ancestor(2);
-			ASSERT(grandp != nullptr);
+			assert(grandp != nullptr);
 			auto p = n->parent;
-			ASSERT(p != nullptr);
+			assert(p != nullptr);
 			if (n == p->left)
 			{
 				grandp->rotateRight();
@@ -355,16 +355,16 @@ namespace rb_tree
 		{
 			std::clog << "(this, size, L, R): (" << this << ",\t" << size << ",\t" << (left ? left->size : 0) << ",\t" << (right ? right->size : 0) << "\t)\n";
 		}
-		ASSERT(countCorrect);
+		assert(countCorrect);
 		res &= countCorrect;
-		ASSERT(size > 0);
+		assert(size > 0);
 		
 		bool parentHasChild = true;
 		if (parent)
 		{
 			parentHasChild = (parent->left == this || parent->right == this);
 		}
-		ASSERT(parentHasChild);
+		assert(parentHasChild);
 		res &= parentHasChild;
 		
 		return res;
@@ -457,7 +457,7 @@ namespace rb_tree
 			leftmost = (_Node*)leftmost->left;
 		}
 		#ifdef DEBUG_VERIFY
-		ASSERT(root()->verify());
+		assert(root()->verify());
 		#endif
 		
 		
@@ -557,7 +557,7 @@ namespace rb_tree
 			_Node **link, *ptr, *prev;
 			prev = root();
 			bool choice;
-			if (choice = comp(k, prev->value))
+			if ((choice = comp(k, prev->value)))
 			{
 				ptr = (_Node*)prev->left;
 				link = (_Node**)&prev->left;
@@ -568,7 +568,7 @@ namespace rb_tree
 				link = (_Node**)&prev->right;
 			}
 			
-			if (choice == comp(prev->value, k))
+			if ((choice == comp(prev->value, k)))
 			{
 				if (parent)
 				{
@@ -649,11 +649,11 @@ namespace rb_tree
 		typedef typename node_allocator_type:: template rebind<_Node>::other _Node_Alloc;
 		_Node_Alloc na;
 		branch = na.allocate(1);
-		ASSERT(branch != nullptr);
+		assert(branch != nullptr);
 		nalloc.construct((NodeBase*)branch);
-		ASSERT(branch != nullptr);
+		assert(branch != nullptr);
 		alloc.construct(&branch->value, forward<Args>(args)...);
-		ASSERT(branch != nullptr);
+		assert(branch != nullptr);
 		
 		branch->parent = parent;
 		branch->color = Color::Red;
@@ -665,13 +665,13 @@ namespace rb_tree
 			it = it->parent;
 		}
 		
-		ASSERT(branch != nullptr);
+		assert(branch != nullptr);
 		_Node* ret = branch;
-		ASSERT(branch != nullptr);
+		assert(branch != nullptr);
 		branch->rebalance();
 		
 		
-		ASSERT(root() != nullptr);
+		assert(root() != nullptr);
 		while (root()->parent != nullptr && root()->parent != _header)
 		{
 			root() = (_Node*)root()->parent;
@@ -702,9 +702,9 @@ namespace rb_tree
 		
 		if (branch != nullptr)
 		{
-			ASSERT(branch->size == 1 + (branch->right ? branch->right->size : 0) + (branch->left ? branch->left->size : 0));
+			assert(branch->size == 1 + (branch->right ? branch->right->size : 0) + (branch->left ? branch->left->size : 0));
 			#ifdef DEBUG_VERIFY
-			ASSERT(branch->verify());
+			assert(branch->verify());
 			#endif
 		}
 		
@@ -935,7 +935,8 @@ namespace rb_tree
 				{
 					nBase = (_Node*)parent->right;
 				}
-				else if (nBase < 0)
+				//else if (nBase < 0)
+				else if (side < 0)
 				{
 					nBase = (_Node*)parent->left;
 				}

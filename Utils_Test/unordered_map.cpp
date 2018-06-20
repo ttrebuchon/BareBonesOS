@@ -132,14 +132,14 @@ static void do_tests(const int n, const std::vector<K>& positions, F f)
 		m[K(0)] = Bar_t(0);
 		ASSERTEQ(Bar_t::count, 1);
 		ASSERTEQ(Bar_t::callers.size(), 0);
-		ASSERT(Bar_t::Check(1, 0));
+		assert(Bar_t::Check(1, 0));
 		
 		m[K(1)].n = 4;
 		ASSERTEQ(m.size(), 2);
 	}
 	ASSERTEQ(Bar_t::count, 0);
 	ASSERTEQ(Bar_t::callers.size(), 2);
-	ASSERT(Bar_t::Check(0, 2));
+	assert(Bar_t::Check(0, 2));
 	ASSERTEQ(Bar_t::callers[0], 4);
 	
 	
@@ -151,14 +151,14 @@ static void do_tests(const int n, const std::vector<K>& positions, F f)
 		m[K(0)] = Bar_t(0);
 		ASSERTEQ(Bar_t::count, 1);
 		ASSERTEQ(Bar_t::callers.size(), 0);
-		ASSERT(Bar_t::Check(1, 0));
+		assert(Bar_t::Check(1, 0));
 		
 		m[K(1)].n = 4;
 		ASSERTEQ(m.size(), 2);
 	}
 	ASSERTEQ(Bar_t::count, 0);
 	ASSERTEQ(Bar_t::callers.size(), 2);
-	ASSERT(Bar_t::Check(0, 2));
+	assert(Bar_t::Check(0, 2));
 	ASSERTEQ(Bar_t::callers[0], 4);
 	
 	
@@ -372,7 +372,7 @@ static void do_tests(const int n, const std::vector<K>& positions, F f)
 		z = 0;
 		for (const auto& p : m2)
 		{
-			ASSERT(p.first < n);
+			assert(p.first < n);
 			MASSERTEQ(p.second, m3.at(p.first), p.first);
 			ASSERTEQ(m3.count(p.first), 1);
 			++z;
@@ -384,7 +384,7 @@ static void do_tests(const int n, const std::vector<K>& positions, F f)
 		z = 0;
 		for (auto& p : m2)
 		{
-			ASSERT(p.first < n);
+			assert(p.first < n);
 			ASSERTEQ(m3.count(p.first), 1);
 			ASSERTEQ(p.second, m3.at(p.first));
 			++z;
@@ -403,7 +403,7 @@ static void do_tests(const int n, const std::vector<K>& positions, F f)
 		}
 		m.clear();
 		ASSERTEQ(m.size(), 0);
-		ASSERT(m.begin() == m.end());
+		assert(m.begin() == m.end());
 		
 		map<K, long, H> em;
 		for (int i = 0; i < n; ++i)
@@ -503,7 +503,7 @@ static void do_tests(const int n, const std::vector<K>& positions, F f)
 		z = 0;
 		for (const auto& p : m2)
 		{
-			ASSERT(p.first < n);
+			assert(p.first < n);
 			MASSERTEQ(p.second, m3.at(p.first), p.first);
 			ASSERTEQ(m3.count(p.first), 1);
 			++z;
@@ -515,7 +515,7 @@ static void do_tests(const int n, const std::vector<K>& positions, F f)
 		z = 0;
 		for (auto& p : m2)
 		{
-			ASSERT(p.first < n);
+			assert(p.first < n);
 			ASSERTEQ(m3.count(p.first), 1);
 			ASSERTEQ(p.second, m3.at(p.first));
 			++z;

@@ -49,7 +49,7 @@ void* memcpy(void*, const void*, unsigned long)
 
 void abort()
 {
-	ASSERT(false);
+	assert(false);
 }
 
 void foo();

@@ -152,7 +152,7 @@ namespace Drivers
 	{
 		tm obj = instance.readTime();
 		auto res = mktime(&obj);
-		ASSERT(res != -1);
+		assert(res != (time_t)-1);
 		if (t)
 		{
 			*t = res;

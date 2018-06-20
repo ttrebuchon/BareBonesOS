@@ -22,70 +22,66 @@
 typedef unsigned char uchar;
 
 #include "Env.h"
+#include "Types.h"
 
-#if __P_ARCH__ == 64
-typedef uint64_t addr_t;
-#else
-typedef uint32_t addr_t;
+
+#ifdef likely
+	#undef likely
 #endif
 
-#include "Types.h"
+#ifdef unlikely
+	#undef unlikely
+#endif
 
 #define likely(X) __builtin_expect((X), 1)
 #define unlikely(X) __builtin_expect((X), 0)
 
 #ifdef __cplusplus
-#include <kernel/CppSupport/new.hh>
-//#include <new>
-//#ifndef TESTING
-
-typedef unsigned long size_t;
-typedef decltype(sizeof(0)) size_t;
-
-//#endif
+	#include <kernel/CppSupport/new.hh>
+	//#include <new>
+	//#ifndef TESTING
 
 
 
-
-#define C_CODE extern "C" {
-#define C_END }
-
-#define C_namespace(X) namespace X {
-#define C_namespace_e(X) }
-
-#define IF_CPP_ELSE(X, Y) X
-#define IF_CPP(X) X
-#define IF_C(X) 
-#define _NOEX noexcept
+	//#endif
 
 
 
-	#if __cplusplus >= 201703L
-		#define IFCPP17(X) X
-	#else
-		#define IFCPP17(X)
-	#endif
+
+	#define C_CODE extern "C" {
+	#define C_END }
+
+	#define C_namespace(X) namespace X {
+	#define C_namespace_e(X) }
+
+	#define IF_CPP_ELSE(X, Y) X
+	#define IF_CPP(X) X
+	#define IF_C(X) 
+	#define _NOEX noexcept
+
+
+	
 
 
 #else
 
-//#ifndef TESTING
-typedef unsigned long size_t;
-//#endif
+	//#ifndef TESTING
+	typedef unsigned long size_t;
+	//#endif
 
 
-#define C_CODE
-#define C_END
+	#define C_CODE
+	#define C_END
 
-#define C_namespace(X)
-#define C_namespace_e(X)
+	#define C_namespace(X)
+	#define C_namespace_e(X)
 
-#define IF_CPP_ELSE(X, Y) Y
-#define IF_CPP(X)
-#define IF_C(X) X
-#define _NOEX 
+	#define IF_CPP_ELSE(X, Y) Y
+	#define IF_CPP(X)
+	#define IF_C(X) X
+	#define _NOEX 
 
-#define IFCPP17(X)
+	#define IFCPP17(X)
 
 #endif
 
@@ -108,26 +104,26 @@ typedef unsigned long size_t;
    gcc 2.8.x and egcs.  For gcc 3.2 and up we even mark C functions
    as non-throwing using a function attribute since programs can use
    the -fexceptions options for C code as well.  */
-# if !defined __cplusplus
-#  define __THROW	__attribute__ ((__nothrow__ __LEAF))
-#  define __THROWNL	__attribute__ ((__nothrow__))
-#  define __NTH(fct)	__attribute__ ((__nothrow__ __LEAF)) fct
-# else
-#   define __THROW	throw ()
-#   define __THROWNL	throw ()
-#   define __NTH(fct)	__LEAF_ATTR fct throw ()
-# endif
+	# if !defined __cplusplus
+		#  define __THROW	__attribute__ ((__nothrow__ __LEAF))
+		#  define __THROWNL	__attribute__ ((__nothrow__))
+		#  define __NTH(fct)	__attribute__ ((__nothrow__ __LEAF)) fct
+	# else
+		#   define __THROW	throw ()
+		#   define __THROWNL	throw ()
+		#   define __NTH(fct)	__LEAF_ATTR fct throw ()
+	# endif
 
-#ifndef __nonnull
-# define __nonnull(params) __attribute__ ((__nonnull__ params))
-#endif
+	#ifndef __nonnull
+		# define __nonnull(params) __attribute__ ((__nonnull__ params))
+	#endif
 
 #endif
 
 
 
 #ifdef __cplusplus
-#include <kernel/CppSupport/new.hh>
+	#include <kernel/CppSupport/new.hh>
 #endif
 
 #include <kernel/Timer.h>

@@ -4,5 +4,6 @@
 
 
 void initialize_stdlib();
+bool stdlib_initialized();
 
 #endif

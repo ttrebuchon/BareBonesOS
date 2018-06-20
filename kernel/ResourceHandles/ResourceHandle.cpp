@@ -5,7 +5,7 @@ namespace Kernel
 {
 	ResourceHandle::~ResourceHandle() noexcept
 	{
-		ASSERT(__cleaned);
+		assert(__cleaned);
 	}
 	
 	

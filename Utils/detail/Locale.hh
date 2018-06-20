@@ -1,8 +1,8 @@
 #ifndef INCLUDED_LOCALE_HH
 #define INCLUDED_LOCALE_HH
 
-#include <Common.h>
-#include <Debug.h>
+// #include <Common.h>
+#include <kernel/Error.h>
 #include "../Iterator.hh"
 #include <Utils/stringFwd.hh>
 

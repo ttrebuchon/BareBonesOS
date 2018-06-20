@@ -35,9 +35,9 @@ namespace Kernel { namespace Memory
 		uint32_t page_table_index = (((uint32_t)virt_addr)/4096)&0x3ff;
 		uint32_t frame_offset = ((uint32_t)virt_addr)&0xfff;
 
-		ASSERT((((uint32_t)virt_addr) >> 22) == page_dir_index);
-		ASSERT(((((uint32_t)virt_addr) >> 12) & 0x3ff) == page_table_index);
-		ASSERT((((uint32_t)virt_addr) & 0xfff) == frame_offset);
+		assert((((uint32_t)virt_addr) >> 22) == page_dir_index);
+		assert(((((uint32_t)virt_addr) >> 12) & 0x3ff) == page_table_index);
+		assert((((uint32_t)virt_addr) & 0xfff) == frame_offset);
 
 		if (!dir->ref_tables[page_dir_index])
 		{
@@ -80,7 +80,7 @@ namespace Kernel { namespace Memory
 		identity_dir = create_empty_page_dir(&iphys);
 		TRACE("identity_dir allocated.\n");
 		
-		ASSERT(iphys == (uint32_t)&identity_dir->tables);
+		assert(iphys == (uint32_t)&identity_dir->tables);
 		Drivers::VGA::Write("Identity_Dir Physical Address: ");
 		c_vga_write_addr(identity_dir);
 		Drivers::VGA::Write("\n");
@@ -89,9 +89,9 @@ namespace Kernel { namespace Memory
 		{
 			uint64_t q2 = q;
 			q2 *= 0x1000;
-			ASSERT(q*0x1000 == q2);
+			assert(q*0x1000 == q2);
 			auto pg = identity_dir->getPage(q*0x1000, true);
-			ASSERT(pg->map(q*0x1000, true, false, true));
+			assert(pg->map(q*0x1000, true, false, true));
 			
 		}
 		
@@ -106,7 +106,7 @@ namespace Kernel { namespace Memory
 		unsigned int i = 0;
 		for (i = KHEAP_START; i < KHEAP_START+KHEAP_INITIAL_SIZE; i += 0x1000)
 		{
-			ASSERT(kernel_dir->at(i, true) != nullptr);
+			assert(kernel_dir->at(i, true) != nullptr);
 			// kernel_dir->getPage(i, 1);
 		}
 		TRACE("Pages created.\n");
@@ -120,9 +120,9 @@ namespace Kernel { namespace Memory
 		// kmemset(kernel_dir, 0, sizeof(struct PageDir));
 		// for (int i = 0; i < sizeof(PageDir); ++i)
 		// {
-		// 	ASSERT(((unsigned char*)kernel_dir)[i] == 0);
+		// 	assert(((unsigned char*)kernel_dir)[i] == 0);
 		// }
-		// ASSERT(phys == (uint32_t)&kernel_dir->thisPhysical());
+		// assert(phys == (uint32_t)&kernel_dir->thisPhysical());
 		
 		// //kernel_dir->physicalAddress = (uint32_t)kernel_dir->physicalTables;
 		
@@ -161,11 +161,11 @@ namespace Kernel { namespace Memory
 		for (i = KHEAP_START; i < KHEAP_START + KHEAP_INITIAL_SIZE; i += 0x1000)
 		{
 			auto pg = kernel_dir->at(i, true);
-			ASSERT(pg);
-			ASSERT(!pg->present());
+			assert(pg);
+			assert(!pg->present());
 			pg->allocate(true, false);
-			ASSERT(pg->present());
-			ASSERT(pg->frame() != 0);
+			assert(pg->present());
+			assert(pg->frame() != 0);
 			// kernel_dir->getPage(i, 1)->alloc_frame(0, 0);
 			//alloc_frame(get_page(i, 1, kernel_dir), 0, 0);
 		}
@@ -175,24 +175,24 @@ namespace Kernel { namespace Memory
 		TRACE("Page fault handler registered\n");
 		
 		addr_t sanity_checker = (addr_t)&mem_end;
-		ASSERT(kernel_dir->dir == kernel_dir->dir_phys);
+		assert(kernel_dir->dir == kernel_dir->dir_phys);
 		TRACE("Switching page directories...");
 		PageDirectory::Current = 0x0;
 		#ifdef DEBUG_IDENTITY_DIR
 		//switch_page_dir(identity_dir);
 		identity_dir->switch_to();
-		ASSERT(identity_dir == PageDirectory::Current);
+		assert(identity_dir == PageDirectory::Current);
 		#else
 		kernel_dir->switch_to();
 		//switch_page_dir(kernel_dir);
-		ASSERT(kernel_dir == PageDirectory::Current);
+		assert(kernel_dir == PageDirectory::Current);
 		#endif
 		TRACE("Page directory switched\n");
 
-		ASSERT(sanity_checker == (addr_t)&mem_end);
-		ASSERT(mem_end == 0xF0000000);
+		assert(sanity_checker == (addr_t)&mem_end);
+		assert(mem_end == 0xF0000000);
 		
-		ASSERT(kernel_dir->dir == kernel_dir->thisPhysical());
+		assert(kernel_dir->dir == kernel_dir->thisPhysical());
 
 		
 		
@@ -214,7 +214,7 @@ namespace Kernel { namespace Memory
 		// tmp_dir->switch_to();
 		// TRACE("Switched page directory to clone.");
 		#else
-		ASSERT(virtual_to_physical(current_dir, identity_dir) != 0x0);
+		assert(virtual_to_physical(current_dir, identity_dir) != 0x0);
 		switch_page_dir(identity_dir);
 		TRACE("Switched to identity directory\n");
 		#endif
@@ -236,7 +236,7 @@ namespace Kernel { namespace Memory
 		// {
 		// 	phys = (uint32_t)virtual_to_physical(PageDirectory::Current, &dir->tables);
 		// }
-		ASSERT(tables_phys != 0);
+		assert(tables_phys != 0);
 		// PageDirectory::Current = dir;
 		// asm volatile ("mov %0, %%cr3":: "r"(dir->physicalAddress));
 		
@@ -408,7 +408,7 @@ namespace Kernel { namespace Memory
 		// // Drivers::VGA::Write("\nTable Accessed?   ");
 		// // Drivers::VGA::Write(current_dir->tables[upperBits].access == 1);
 		
-		// // ASSERT(current_dir->ref_tables[upperBits] != 0);
+		// // assert(current_dir->ref_tables[upperBits] != 0);
 
 		// // Drivers::VGA::Write("\nPage Present?   ");
 		// // Drivers::VGA::Write(current_dir->ref_tables[upperBits]->pages[midBits].present == 1);

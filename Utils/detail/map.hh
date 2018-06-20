@@ -224,8 +224,8 @@ namespace Utils
 				return old;
 			}
 			
-			bool operator==(const const_iterator) const;
-			bool operator!=(const const_iterator) const;
+			// bool operator==(const const_iterator) const;
+			// bool operator!=(const const_iterator) const;
 		};
 		
 		

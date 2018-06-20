@@ -18,6 +18,8 @@ namespace Kernel { namespace Memory
 		frames_type& frames;
 		
 		public:
+
+		virtual ~PMM() noexcept = default;
 		
 		// Modifies size to equal the
 		// the actual amount reserved

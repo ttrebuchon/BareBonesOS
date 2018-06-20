@@ -3,6 +3,7 @@
 rwildcard=$(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2) $(filter $(subst *,%,$2),$d))
 
 GET_SRC = $(call rwildcard,$1/,*.$2)
+LASTPART = $(shell basename $1)
 
 
 
@@ -31,6 +32,7 @@ HDD2_GEN = Tools/Dummy_Img/Main.out
 HDD2_SRC = $(wildcard Tools/Dummy_Img/*.cpp)
 HDD2_IN = Tools/Dummy_Img/libDynamic.so
 ASM_OUT_SUFFIX = .asm_out
+LIBDIR = Libraries
 
 C_OBJS = $(C_SRC:.c=.o)
 _CPP_OBJS = $(CPP_SRC:.cpp=.o)
@@ -62,6 +64,14 @@ CRTEND_OBJ = $(shell $(CC) $(CFLAGS) -print-file-name=crtend.o)
 
 NO_WARN = -Wno-unused-parameter -Wno-unused-variable -Wno-unused-but-set-variable -Wno-unused-function -Wno-comment
 
+STRICT_ERROR += -Werror
+STRICT_ERROR += -Wno-error=unused-local-typedefs
+STRICT_ERROR += -Wno-unused-local-typedefs
+STRICT_ERROR += -Wno-int-to-pointer-cast
+
+LIB_FLAGS += -Wno-error
+LIB_FLAGS += -Wno-implicit-fallthrough
+
 BOTH_FLAGS += -DFIXED_PAGE_STRUCT
 BOTH_FLAGS += -D_TRACE
 BOTH_FLAGS += $(NO_WARN)
@@ -75,6 +85,9 @@ BOTH_FLAGS += -DPTHREAD_IGNORE
 #BOTH_FLAGS += -D__NOSTDLIB__
 #BOTH_FLAGS += -D_GNU_SOURCE
 BOTH_FLAGS += -DLIBCXXRT_WEAK_LOCKS
+BOTH_FLAGS += -isystem Libraries/libcxxrt
+BOTH_FLAGS += -isystem Libraries/sqlite3
+
 
 
 
@@ -100,11 +113,11 @@ CXX_FLAGS  += $(BOTH_FLAGS)
 ASM_FLAGS	= 
 
 all: .fake $(HDD2) myos.iso
-	@echo $(CPP_DEPS)
+	@#echo $(CPP_DEPS)
 
 .fake:
 	@echo '   '
-	@echo '$$OBJS = ' $(BOOT_OBJS) $(CRTBEGIN_OBJ) $(CPP_OBJS) $(C_OBJS) $(ASM_OBJS) $(CRTEND_OBJ)
+	@#echo '$$OBJS = ' $(BOOT_OBJS) $(CRTBEGIN_OBJ) $(CPP_OBJS) $(C_OBJS) $(ASM_OBJS) $(CRTEND_OBJ)
 	@echo '   '
 
 clean:
@@ -117,27 +130,38 @@ myos.iso: myos.bin
 
 
 myos.bin: $(BOOT_OBJS) $(CRTBEGIN_OBJ) $(CPP_OBJS) $(C_OBJS) $(ASM_OBJS) $(CRTEND_OBJ) linker.ld
-	$(CXX) -T linker.ld -o $@ $(CXX_FLAGS) -nostdlib $(BOOT_OBJS) $(CRTBEGIN_OBJ) $(CPP_OBJS) $(C_OBJS) $(ASM_OBJS) $(CRTEND_OBJ) -lgcc
+	@$(CXX) -T linker.ld -o $@ $(CXX_FLAGS) $(STRICT_ERROR) -nostdlib $(BOOT_OBJS) $(CRTBEGIN_OBJ) $(CPP_OBJS) $(C_OBJS) $(ASM_OBJS) $(CRTEND_OBJ) -lgcc
+	@echo '*** > ' $@
 
 %.o: %.s
-	$(ASM) $(ASM_FLAGS) -c $< -o $@
+	@$(ASM) $(ASM_FLAGS) -c $< -o $@
+	@echo $(call LASTPART,$<) ' > ' $(call LASTPART,$@)
 
 %.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	@$(CC) $(CFLAGS) $(STRICT_ERROR) -c $< -o $@
+	@echo $(call LASTPART,$<) ' > ' $(call LASTPART,$@)
+
+$(LIBDIR)/%.o: $(LIBDIR)/%.c
+	@$(CC) $(CFLAGS) $(LIB_FLAGS) -c $< -o $@
+	@echo $(call LASTPART,$<) ' > ' $(call LASTPART,$@)
 
 %.o: %.cpp
-	$(CXX) $(CXX_FLAGS) -c $< -o $@
+	@$(CXX) $(CXX_FLAGS) $(STRICT_ERROR) -c $< -o $@
+	@echo $(call LASTPART,$<) ' > ' $(call LASTPART,$@)
 	@#$(CXX) $(CXX_FLAGS) -o $(@:.o=$(ASM_OUT_SUFFIX)) -S $<
 
 kernel/Task.o: kernel/Task.cpp
-	$(CXX) $(CXX_FLAGS) -c $< -o $@
+	$(CXX) $(CXX_FLAGS) $(STRICT_ERROR) -c $< -o $@
 	@#$(CXX) $(CXX_FLAGS) -S $< -o $(@:.o=$(ASM_OUT_SUFFIX))
+	@echo $(call LASTPART,$<) ' > ' $(call LASTPART,$@)
 
 %.o: %.cc
-	$(CXX) $(CXX_FLAGS) -c $< -o $@
+	@$(CXX) $(CXX_FLAGS) $(STRICT_ERROR) -c $< -o $@
+	@echo $(call LASTPART,$<) ' > ' $(call LASTPART,$@)
 
 %.o: %.asm
 	@nasm $(ASM_FLAGS) -f elf $< -o $@
+	@echo $(call LASTPART,$<) ' > ' $(call LASTPART,$@)
 
 -include $(CPP_DEPS)
 -include $(C_DEPS)
@@ -147,4 +171,8 @@ $(HDD2): $(HDD2_GEN) $(HDD2_IN)
 
 $(HDD2_GEN): $(HDD2_SRC)
 	g++ -std=c++14 -o $(HDD2_GEN) $^
-	
+
+$(HDD2_IN): 
+	$(MAKE) -C Tools/TestDynamicLib
+
+.PHONY: all $(HDD2_IN)

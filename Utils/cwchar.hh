@@ -1,7 +1,7 @@
 #ifndef INCLUDED_CWCHAR_HH
 #define INCLUDED_CWCHAR_HH
 
-#include <Common.h>
+#include <stdint.h>
 
 namespace Utils {
 	

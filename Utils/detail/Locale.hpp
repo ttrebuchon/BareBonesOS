@@ -104,7 +104,7 @@ namespace Utils {
 			
 		}
 		
-		ASSERT(base > 0);
+		assert(base > 0);
 		
 		N div = 1;
 		size_t digitCount = 1;
@@ -148,8 +148,7 @@ namespace Utils {
 	template <class T, class OutputIt>
 	void num_put<T, OutputIt>::ptr_str(const void* v, iter_type& it, ios_base& io)
 	{
-		STACK();
-		ASSERT(false);
+		assert(NOT_IMPLEMENTED);
 	}
 	
 	
@@ -228,8 +227,7 @@ namespace Utils {
 	template <class T, class OutputIt>
 	void num_put<T, OutputIt>::ptr_str(const void* v, iter_type& it, ios_base& io, ios_base::fmtflags flags)
 	{
-		STACK();
-		ASSERT(false);
+		assert(NOT_IMPLEMENTED);
 	}
 	
 	

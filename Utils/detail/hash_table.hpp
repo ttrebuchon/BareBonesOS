@@ -33,8 +33,8 @@ namespace Utils
 		{
 			buckets[i] = nullptr;
 		}
-		ASSERT(buckets);
-		ASSERT(bucketCount > 0);
+		assert(buckets);
+		assert(bucketCount > 0);
 	}
 	
 	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy, template <class...> class Resolution>
@@ -84,9 +84,9 @@ namespace Utils
 		}
 		
 		
-		ASSERT(buckets);
-		ASSERT(bucketCount > 0);
-		ASSERT(elemCount == t.elemCount);
+		assert(buckets);
+		assert(bucketCount > 0);
+		assert(elemCount == t.elemCount);
 	}
 	
 	
@@ -107,8 +107,8 @@ namespace Utils
 		t.elemCount = 0;
 		
 		
-		ASSERT(buckets);
-		ASSERT(bucketCount > 0);
+		assert(buckets);
+		assert(bucketCount > 0);
 	}*/
 	
 	
@@ -127,14 +127,14 @@ namespace Utils
 			ptr = next(ptr);
 			while (ptr)
 			{
-				ASSERT(last != &beforeBegin);
+				assert(last != &beforeBegin);
 				nalloc.destroy(last);
 				nalloc.deallocate(last, 1);
 				
 				last = ptr;
 				ptr = next(ptr);
 			}
-			ASSERT(last != &beforeBegin);
+			assert(last != &beforeBegin);
 			nalloc.destroy(last);
 			nalloc.deallocate(last, 1);
 		}*/
@@ -209,9 +209,9 @@ namespace Utils
 		}
 		
 		
-		ASSERT(buckets);
-		ASSERT(bucketCount > 0);
-		ASSERT(elemCount == t.elemCount);
+		assert(buckets);
+		assert(bucketCount > 0);
+		assert(elemCount == t.elemCount);
 		
 		
 		return *this;
@@ -665,7 +665,7 @@ namespace Utils
 	template <class Key, class T, class Selector, class Hash, class Equals, class Alloc, class Policy, template <class...> class Resolution>
 	void hash_table<Key, T, Selector, Hash, Equals, Alloc, Policy, Resolution>::_rehash(size_type bCount)
 	{
-		ASSERT(bCount > 0);
+		assert(bCount > 0);
 		typedef typename allocator_type::template rebind<Bucket>::other bucket_alloc_type;
 		bucket_alloc_type bAlloc(alloc);
 		
@@ -674,11 +674,11 @@ namespace Utils
 		{
 			newBuckets[i] = nullptr;
 		}
-		ASSERT(newBuckets != nullptr);
-		ASSERT(buckets != nullptr);
-		ASSERT(bucketCount > 0);
+		assert(newBuckets != nullptr);
+		assert(buckets != nullptr);
+		assert(bucketCount > 0);
 		_VNode* ptr = _begin();
-		ASSERT(ptr != nullptr);
+		assert(ptr != nullptr);
 		beforeBegin.next = nullptr;
 		size_t beginBkt = 0;
 		while (ptr)
@@ -945,14 +945,14 @@ namespace Utils
 			ptr = next(ptr);
 			while (ptr)
 			{
-				ASSERT(last != &beforeBegin);
+				assert(last != &beforeBegin);
 				nalloc.destroy(last);
 				nalloc.deallocate(last, 1);
 				
 				last = ptr;
 				ptr = next(ptr);
 			}
-			ASSERT(last != &beforeBegin);
+			assert(last != &beforeBegin);
 			nalloc.destroy(last);
 			nalloc.deallocate(last, 1);
 		}

@@ -104,14 +104,14 @@ void* memmove(void* dest, const void* src, size_t num)
 	}
 	else // if (dest < src) <- Implication
 	{
-		const auto diff = cs - cd;
+		const size_t diff = cs - cd;
 		if (cd + num < cs)
 		{
 			memcpy(dest, src, num);
 		}
 		else if (diff < sizeof(uint64_t))
 		{
-			for (int i = 0; i < num; ++i)
+			for (size_t i = 0; i < num; ++i)
 			{
 				cd[i] = cs[i];
 			}
@@ -130,7 +130,7 @@ void* memmove(void* dest, const void* src, size_t num)
 size_t strcspn(const char* str, const char* chars)
 {
 	// TODO
-	ASSERT(false);
+	assert(false);
 }
 
 char* strdup(const char* s1)
@@ -159,11 +159,11 @@ char* strstr(const char* hay, const char* needle)
 		return (char*)hay;
 	}
 	
-	for (int i = 0; i <= hlen - nlen; ++i)
+	for (size_t i = 0; i <= hlen - nlen; ++i)
 	{
 		if (hay[i] == needle[0])
 		{
-			int j;
+			size_t j;
 			for (j = 1; j < nlen; ++j)
 			{
 				if (hay[i+j] != needle[j])
@@ -201,11 +201,11 @@ char* strstr(char* hay, const char* needle)
 		return hay;
 	}
 	
-	for (int i = 0; i <= hlen - nlen; ++i)
+	for (size_t i = 0; i <= hlen - nlen; ++i)
 	{
 		if (hay[i] == needle[0])
 		{
-			int j;
+			size_t j;
 			for (j = 1; j < nlen; ++j)
 			{
 				if (hay[i+j] != needle[j])

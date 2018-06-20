@@ -3,7 +3,7 @@
 #include <kernel/Filesystem/API.hh>
 #include <Std/cstring>
 //#include <sys/file.h>
-#include <Std/stat.h>
+#include <Std/sys/stat.h>
 #include <kernel/Memory.h>
 #include <Std/errno.h>
 //#include <unistd.h>
@@ -63,7 +63,7 @@ extern "C" {
 			return SQLITE_IOERR_WRITE;
 		}
 		
-		nWrite = write(p->fd, zBuf, size);
+		nWrite = ::write(p->fd, zBuf, size);
 		if (nWrite != size)
 		{
 			return SQLITE_IOERR_WRITE;
@@ -273,7 +273,17 @@ extern "C" {
 			checkReservedLock,
 			fileControl,
 			sectorSize,
-			deviceCharacteristics
+			deviceCharacteristics,
+
+			// Version 2 Initializers (Empty)
+			nullptr,
+			nullptr,
+			nullptr,
+			nullptr,
+
+			// Version 3 Initializers (Empty)
+			nullptr,
+			nullptr
 		};
 		
 		File* p = (File*)pFile;
@@ -315,7 +325,7 @@ extern "C" {
 		}
 		
 		::memset(p, 0, sizeof(File));
-		p->fd = ::open(zName, oflags, 0600);
+		p->fd = ::open(zName, oflags, S_IRUSR | S_IWUSR);
 		if (p->fd < 0)
 		{
 			sqlite3_free(aBuf);
@@ -468,6 +478,11 @@ extern "C" {
 		//*pTime = t/86400.0 + 2440587.5;
 		return SQLITE_OK;
 	}
+
+	static int last_error(sqlite3_vfs*, int, char*)
+	{
+		assert(NOT_IMPLEMENTED);
+	}
 	
 	
 	
@@ -490,7 +505,18 @@ extern "C" {
 			dlClose,
 			randomness,
 			sleep,
-			currentTime
+			currentTime,
+			last_error,
+
+
+			// Version 2 Initializers (Empty)
+			nullptr,
+
+
+			// Version 3 Initializers (Empty)
+			nullptr,
+			nullptr,
+			nullptr
 		};
 		return &vfs;
 	}

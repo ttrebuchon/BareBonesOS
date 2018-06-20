@@ -20,7 +20,7 @@ extern "C" {
             if (phys != 0)
             {
                 auto page = Kernel::Memory::kernel_dir->at(addr);
-                ASSERT(page != nullptr);
+                assert(page != nullptr);
                 // *phys = page->frame*0x1000 + ((addr_t)addr&0xFFF);
                 *phys = (addr_t)page->frame() + ((addr_t)addr&0xFFF);
             }
@@ -67,19 +67,19 @@ extern "C" {
     void* kmremap(void* old_addr, size_t oSize, size_t nSize, long unsigned int flags)
     {
         // TODO
-        ASSERT(false);
+        assert(false);
     }
 
     int kmunmap(void* addr, size_t len)
     {
         // TODO
-        ASSERT(false);
+        assert(false);
     }
 
     void* kmmap(void* addr, size_t len, int prot, int flags, int fileDescriptor, off_t off)
     {
         // TODO
-        ASSERT(false);
+        assert(false);
     }
 }
 
@@ -128,14 +128,14 @@ namespace Kernel { namespace Memory {
         //KHeap* heap = (KHeap*)kmalloc(sizeof(KHeap), false, 0x0);
         //TRACE("Heap memory allocated.\n");
         
-        ASSERT(start % 0x1000 == 0);
-        ASSERT(end % 0x1000 == 0);
+        assert(start % 0x1000 == 0);
+        assert(end % 0x1000 == 0);
         
         //new (&heap->index) Utils::OrderedArray<KHeapHeader*, HeapComp>((void*)start, HEAP_INDEX_SIZE);
         //TRACE("Index constructed.\n");
 
-        ASSERT(index.size() == 0);
-        ASSERT(&index[0] == (void*)start);
+        assert(index.size() == 0);
+        assert(&index[0] == (void*)start);
 
         start += sizeof(KHeapHeader*)*HEAP_INDEX_SIZE;
 
@@ -169,7 +169,7 @@ namespace Kernel { namespace Memory {
     void KHeap::expand(size_t nSize)
     {
 
-        ASSERT(nSize > endAddr() - startAddr());
+        assert(nSize > endAddr() - startAddr());
 
         if ((nSize & 0xFFFFF000) != 0)
         {
@@ -183,10 +183,10 @@ namespace Kernel { namespace Memory {
         TRACE("nSize: ");
         TRACE(nSize);
         TRACE("\n");
-        ASSERT(startAddr() + nSize <= addrMax);
+        assert(startAddr() + nSize <= addrMax);
 
         uint32_t oSize = endAddr() - startAddr();
-        ASSERT(kernel_dir->map(startAddr()+oSize, nSize - oSize, supervisor(), !readonly()));
+        assert(kernel_dir->map(startAddr()+oSize, nSize - oSize, supervisor(), !readonly()));
         // uint32_t i = oSize;
         // while (i < nSize)
         // {
@@ -216,7 +216,7 @@ namespace Kernel { namespace Memory {
         for (size_t i = oSize; i > nSize; i -= 0x1000)
         {
             auto page = kernel_dir->at((void*)(startAddr()+i));
-            ASSERT(page);
+            assert(page);
             clear_frame(((addr_t)page->frame()) >> 12);
             page->present(false);
             page->frame(nullptr);
@@ -331,7 +331,7 @@ namespace Kernel { namespace Memory {
 
             index.insert(holeHeader);
         }
-        ASSERT(((KHeapFooter*)((addr_t)blockHead + blockHead->size - sizeof(KHeapFooter)))->magic == HEAP_MAGIC);
+        assert(((KHeapFooter*)((addr_t)blockHead + blockHead->size - sizeof(KHeapFooter)))->magic == HEAP_MAGIC);
         return (void*)((addr_t)blockHead + sizeof(KHeapHeader));
     }
 
@@ -345,8 +345,8 @@ namespace Kernel { namespace Memory {
         auto head = (KHeapHeader*)((addr_t)ptr - sizeof(KHeapHeader));
         auto foot = (KHeapFooter*)((addr_t)head + head->size - sizeof(KHeapFooter));
 
-        ASSERT(head->magic == HEAP_MAGIC);
-        ASSERT(foot->magic == HEAP_MAGIC);
+        assert(head->magic == HEAP_MAGIC);
+        assert(foot->magic == HEAP_MAGIC);
 
         bool add = true;
 
@@ -413,7 +413,7 @@ namespace Kernel { namespace Memory {
     size_t KHeap::allocated_size(void* p) const noexcept
     {
         // TODO
-        ASSERT(false);
+        assert(false);
     }
 
 }

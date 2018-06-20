@@ -1,6 +1,8 @@
 #ifndef INCLUDED_FUNCTEXCEPT_HH
 #define INCLUDED_FUNCTEXCEPT_HH
 
+#include <kernel/c_cpp.h>
+
 #ifdef __EXCEPTIONS
 	#include <Utils/stringfwd.hh>
 	#include <Utils/exception>
@@ -8,17 +10,8 @@
 
 namespace Utils
 {
-	#ifndef __EXCEPTIONS
-	
-	#define __try if (true)
-	#define __catch(X) if (false)
-	#define __throw_exception_again
-	
-	#else
-	
-	#define __try try
-	#define __catch(X) catch (X)
-	#define __throw_exception_again throw
+	#ifdef __EXCEPTIONS
+
 	
 	class logic_error : public Utils::exception
 	{

@@ -109,13 +109,13 @@
 	
 // 	unsigned char* DMADrive::readSector(uint32_t lba, uint32_t len)
 // 	{
-// 		ASSERT(len <= 512);
+// 		assert(len <= 512);
 // 		auto data = (unsigned char*)kmalloc(len, 0, 0);
 		
 // 		// DEBUG
 // 		//kmemset(data, 0, 512);
 // 		kmemset(data, 1, 512);
-// 		ASSERT(data[511] == 1);
+// 		assert(data[511] == 1);
 		
 // 		if (read(lba, len, data) == 0)
 // 		{
@@ -173,7 +173,7 @@
 		
 // 		configureForSize(len);
 		
-// 		ASSERT(BMR != 0);
+// 		assert(BMR != 0);
 // 		port_byte_out(dev->control, 0);
 // 		port_byte_out(BMR + (uint16_t)Register::Command, 0);
 // 		port_long_out(BMR + (uint16_t)Register::PRDT_Addr, prdt_phys);
@@ -181,7 +181,7 @@
 // 		port_byte_out(BMR + (uint16_t)Register::Status, Status{0,0,0,0,0,0});
 // 		port_byte_out(dev->select, (uchar)dev->drive);
 // 		port_byte_out(dev->sectorCount, len / 512 + (int)((len % 512) > 0));
-// 		ASSERT((len / 512 + (int)((len % 512) > 0)) > 0);
+// 		assert((len / 512 + (int)((len % 512) > 0)) > 0);
 // 		port_byte_out(dev->lbaLow, lba & 0xFF);
 // 		// port_byte_out(dev->lbaMid, (lba >> 8) & 0xFF);
 // 		port_byte_out(dev->lbaMid, (lba & 0x0000FF00) >> 8);
@@ -190,7 +190,7 @@
 
 // 		current_drive = const_cast<DMADrive*>(this);
 // 		int_fired = false;
-// 		ASSERT(int_fired == false);
+// 		assert(int_fired == false);
 // 		TRACE("int_fired = false\n");
 
 // 		port_byte_out(dev->command, ATA_CMD_READ_DMA);
@@ -212,19 +212,19 @@
 // 		// 	{
 // 		// 		break;
 // 		// 	}
-// 		// 	//ASSERT(Status::Get(stat).done);
+// 		// 	//assert(Status::Get(stat).done);
 // 		// }
-// 		// ASSERT(count < 10000000);
+// 		// assert(count < 10000000);
 // 		while (!int_fired) ;
 
-// 		ASSERT(!(port_byte_in(BMR + 0x2) & 0x2));
+// 		assert(!(port_byte_in(BMR + 0x2) & 0x2));
 		
-// 		ASSERT(!Status::Get(port_byte_in(BMR + 0x2)).done);
+// 		assert(!Status::Get(port_byte_in(BMR + 0x2)).done);
 // 		VGA::Write("Command: ");
 // 		VGA::Write((void*)port_byte_in(BMR));
 // 		VGA::Write("\n");
 
-// 		ASSERT(!Status::Get(port_byte_in(BMR + (uint16_t)Register::Status)).failed);
+// 		assert(!Status::Get(port_byte_in(BMR + (uint16_t)Register::Status)).failed);
 		
 // 		auto last = (len % (64*1024) > 0) ? (len / (64*1024)) : (len / (64*1024)) - 1;
 		
@@ -252,7 +252,7 @@
 		
 		
 // 		// TODO
-// 		ASSERT(false);
+// 		assert(false);
 		
 // 	}
 	
