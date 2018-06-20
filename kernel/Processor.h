@@ -4,8 +4,21 @@
 #include <kernel/Interrupts/ISR.h>
 #include <Types.h>
 
+#ifdef __cplusplus
+namespace Kernel { namespace Memory {
+	
+	class PageDirectory;
+}
+}
+#endif
+
 START_NS(Kernel)
 C_CODE
+
+// Forward Declaration
+typedef struct __thread_struct __thread_t;
+
+
 
 // For processor specific data
 // Each Processor_t will be page-mapped to the same virtual address in their kernel
@@ -16,7 +29,14 @@ typedef struct
 	uint8_t ID;
 	volatile int cli_count;
 	isr_t interrupt_handlers[256];
-	
+	#ifdef __cplusplus
+	Memory::PageDirectory* page_dir;
+	Memory::PageDirectory* current_page_dir;
+	#else
+	void* page_dir;
+	void* current_page_dir;
+	#endif
+	__thread_t* current_thread;
 	
 } __attribute__((__aligned__ (4096)))
 Processor_t;

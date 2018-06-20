@@ -4,7 +4,12 @@
 #include <drivers/ACPI/RSDT.h>
 #include <drivers/ACPI/SDTs/FADT.h>
 #include <drivers/ACPI/SDTs/MADT.h>
+#include <kernel/Processor.h>
 
+enum
+{
+	RSDP_NOT_FOUND = 0,
+};
 
 TEST(SMP)
 {
