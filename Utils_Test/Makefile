@@ -22,8 +22,20 @@ SRC += ../kernel/Timer_c.cpp
 SRC += $(call GET_SRC_R,Support/threading,cpp)
 SRC += ../drivers/CPUID.cpp
 SRC += ../drivers/APIC.cpp
-SRC += $(call GET_SRC_R,kernel/Filesystem/FAT32,cpp)
+#SRC += $(call GET_SRC_R,kernel/Filesystem/FAT32,cpp)
 SRC += $(call GET_SRC_R,drivers/ACPI,cpp)
+#SRC += ../kernel/Filesystem/Filesystem.cpp
+SRC += $(call GET_SRC_R,kernel/Filesystem,cpp)
+SRC += $(call GET_SRC_R,kernel/ResourceHandles,cpp)
+#SRC += $(call GET_SRC_R,kernel/Filesystem/FAT32,cpp)
+#SRC += $(call GET_SRC_R,kernel/Filesystem/Files,cpp)
+#SRC += $(call GET_SRC_R,kernel/Filesystem/initrd,cpp)
+SRC += $(call GET_SRC_R,kernel/Memory/PageRegions,cpp)
+SRC += $(call GET_SRC_R,kernel/Memory/Heaps,cpp)
+SRC += ../kernel/Memory/Heap.cpp
+SRC += ../kernel/Memory/PageDir.cpp
+SRC += ../kernel/Memory/Paging.cpp
+#SRC += $(call GET_SRC_R,kernel/Memory,cpp)
 
 ASM_SRC = ../kernel/Utility_asm.asm
 ASM_OBJS = $(ASM_SRC:.asm=.o)

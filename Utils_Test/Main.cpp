@@ -98,6 +98,7 @@ class MI_Printer
 int main()
 {
 	QA::Init();
+	std::cout << "QA Initialized." << std::endl;
 	
 	MI_Printer pr(std::clog);
 	auto mi_pr = new MetaInfo::ClassPrinter<MI_Printer, void>(pr, &MI_Printer::write);

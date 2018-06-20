@@ -23,3 +23,5 @@ MAC(thread_entry);
 MAC(SMP);
 MAC(concurrent_circular_list);
 MAC(FAT32);
+MAC(filesystem);
+MAC(page_region);
