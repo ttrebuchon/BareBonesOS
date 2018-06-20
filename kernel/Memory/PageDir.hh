@@ -2,6 +2,8 @@
 #define INCLUDED_PAGEDIR_HH
 
 #include <Common.h>
+#include <Utils/map>
+#include "Allocators/cross_processor_allocator.hh"
 
 #ifdef PAGE_SIZE
 #undef PAGE_SIZE
@@ -12,7 +14,13 @@
 
 extern "C" void flush_tlb_page(addr_t addr);
 
+
+
 namespace Kernel { namespace Memory {
+	
+	class PageRegion;
+	template <class T>
+	class cross_proc_allocator;
 	
 	
 	class Page
@@ -141,7 +149,7 @@ namespace Kernel { namespace Memory {
 			// 0 = Enabled
 			uint32_t cacheDisabled : 1;
 			
-			// Set by CPU when read/wrriten
+			// Set by CPU when read/written
 			// from/to
 			uint32_t accessed : 1;
 			
@@ -175,13 +183,18 @@ namespace Kernel { namespace Memory {
 		static_assert(sizeof (_Dir) == 1024*sizeof (_Table));
 		
 		public:
+		class Table;
+		
+		
 		class Page
 		{
 			protected:
 			_Page* page;
+			//Table* _table;
+			uint16_t page_index;
 			
 			Page();
-			Page(_Page&);
+			Page(_Page&, uint16_t pg_indx);
 			
 			public:
 			
@@ -212,6 +225,18 @@ namespace Kernel { namespace Memory {
 
 			bool allocate(bool, bool) noexcept;
 			
+			Table* table() noexcept;
+			const Table* table() const noexcept
+			{ return (Table*)((addr_t)this - (offsetof(Table, pages) + sizeof(Page)*page_index)); }
+			
+			uint16_t index() const noexcept
+			{
+				return page_index;
+			}
+			
+			void* virtual_address() const noexcept;
+			
+			
 			friend class Table;
 			friend class PageDirectory;
 		};
@@ -225,14 +250,17 @@ namespace Kernel { namespace Memory {
 			Page pages[1024];
 			_Pages* _pages;
 			void* _pages_phys;
+			size_t present_count;
+			PageDirectory* _dir;
+			uint16_t table_index;
 			
 			
 			
 			
-			Table(_Table&) noexcept;
+			Table(_Table&, PageDirectory&, uint16_t) noexcept;
 			
 			template <class Alloc>
-			Table(_Table&, const Alloc&);
+			Table(_Table&, const Alloc&, PageDirectory&, uint16_t);
 			
 			public:
 			
@@ -242,7 +270,7 @@ namespace Kernel { namespace Memory {
 			Page& operator[](size_t index) noexcept;
 			Page& at(size_t index) noexcept;
 			const Page& at(size_t index) const noexcept;
-			Table* clone(_Table&) const noexcept;
+			Table* clone(_Table&, PageDirectory& other) const noexcept;
 			
 			_Table* operator->() noexcept;
 			const _Table* operator->() const noexcept;
@@ -250,6 +278,18 @@ namespace Kernel { namespace Memory {
 			const _Table& operator*() const noexcept;
 			Table& operator=(const Table&) = delete;
 			Table& operator=(Table&&) = delete;
+			
+			
+			uint16_t index() const noexcept
+			{
+				return table_index;
+			}
+			
+			__attribute__((__always_inline__))
+			constexpr size_t page_count() const noexcept
+			{
+				return 1024;
+			}
 			
 			friend class PageDirectory;
 		};
@@ -309,6 +349,12 @@ namespace Kernel { namespace Memory {
 		PageDirectory& operator=(const PageDirectory&) = delete;
 		PageDirectory& operator=(PageDirectory&&) = delete;
 		
+		__attribute__((__always_inline__))
+		constexpr size_t table_count() const noexcept
+		{
+			return 1024;
+		}
+		
 		
 		__attribute__((always_inline))
 		constexpr static size_t GetTableIndex(const void* const p) noexcept
@@ -326,6 +372,8 @@ namespace Kernel { namespace Memory {
 		
 		
 		static PageDirectory* Current;
+		
+		static Utils::map<uint16_t, PageRegion*, Utils::less<uint16_t>, cross_proc_allocator<Utils::pair<const uint16_t, PageRegion*>>> Regions;
 	};
 }
 }

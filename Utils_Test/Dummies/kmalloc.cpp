@@ -8,7 +8,12 @@ extern "C" {
 
 void* kmalloc(unsigned long size, int a, uint64_t* p)
 {
-	return malloc(size);
+	auto ptr = malloc(size);
+	if (p)
+	{
+		*p = (uint64_t)ptr;
+	}
+	return ptr;
 }
 
 void kfree(void* ptr)

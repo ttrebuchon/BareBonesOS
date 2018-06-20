@@ -7,6 +7,12 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 #include "../Tests.hh"
+#include <kernel/Memory/PhysicalMemory.hh>
+#include <kernel/Memory/Managers/Basic_Physical.hh>
+#include <kernel/Memory/PageDir.hh>
+#include <kernel/Memory/Paging.hh>
+#include <kernel/Memory/PageRegions/DynamicCodeRegion.hh>
+#include "QADrive.hh"
 
 
 void QA::Init()
@@ -15,6 +21,8 @@ void QA::Init()
 	MultiBoot_Init();
 	Timer_Init();
 	SetTimerInterval_ns(50*1000*1000);
+	Filesystem_Init();
+	Paging_Init();
 }
 
 //static QA::_ostream _out;
@@ -266,4 +274,76 @@ void QA::CheckPIC()
 	assert(signal(PIC_signal, hndl) == SIG_IGN);*/
 	
 	//ASSERTEQ(timer_getoverrun(PIC_timer), 0);
+}
+
+#include <kernel/Filesystem/Filesystem.hh>
+#include <kernel/Filesystem/initrd.hh>
+
+void QA::Filesystem_Init()
+{
+	using namespace Kernel;
+	using namespace Kernel::FS;
+	
+	FILE* file = fopen("../Tools/initrd/initrd.img", "r");
+	assert(file);
+	
+	fseek(file, 0, SEEK_END);
+	size_t fsize = ftell(file);
+	fseek(file, 0, SEEK_SET);
+	
+	auto buffer = new unsigned char[fsize];
+	fread(buffer, 1, fsize, file);
+	fclose(file);
+	
+	
+	auto initrd = new InitRD_FS(buffer);
+	Filesystem::Current = initrd;
+	
+	
+	
+}
+
+void QA::Paging_Init()
+{
+	using namespace Kernel::Memory;
+	//PhysicalMemory::Use<Basic_Physical>();
+	
+	auto pd = new PageDirectory;
+	pd->switch_to();
+	kernel_dir = pd;
+	
+	assert(boot::mboot);
+	size_t mmap_free;
+	auto seg = boot::mboot->free_segments(mmap_free);
+	assert(seg);
+	addr_t last = 0x0;
+	for (size_t i = 0; i < mmap_free; ++i)
+	{
+		assert(seg[i]->size == sizeof(multiboot_mmap_t));
+		assert(seg[i]->type == 1);
+		while (last < seg[i]->base_addr)
+		{
+			auto pg = pd->at((void*)last, true);
+			if (!pg->present())
+			{
+				pg->present(true);
+			}
+			last += 4096;
+		}
+		assert(last % 4096 == 0);
+		
+		last = seg[i]->base_addr + seg[i]->len;
+		last = (last / 4096) * 4096;
+	}
+	
+	
+	auto cr = new PageRegions::Dynamic_Code(PageDirectory::Current);
+	PageDirectory::Regions[CODE_MEM_REGION] = cr;
+	
+}
+
+
+Drivers::Disk* QA::QADrive(const char* filename, const size_t size)
+{
+	return new TestUtils::QADrive(filename, size);
 }

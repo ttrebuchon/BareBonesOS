@@ -9,7 +9,9 @@
 extern "C" void copy_page_physical(uint32_t, uint32_t);
 extern "C" void flush_tlb_page(addr_t addr)
 {
+	#ifndef TESTING
 	asm volatile("invlpg (%0)" ::"r" (addr) : "memory");
+	#endif
 }
 
 namespace Kernel { namespace Memory {
@@ -233,6 +235,7 @@ namespace Kernel { namespace Memory {
 	
 	
 	PageDirectory* PageDirectory::Current = nullptr;
+	Utils::map<uint16_t, PageRegion*, Utils::less<uint16_t>, cross_proc_allocator<Utils::pair<const uint16_t, PageRegion*>>> PageDirectory::Regions;
 	
 	
 	PageDirectory::PageDirectory() : dir(nullptr), tables(), dir_phys(nullptr)
@@ -302,7 +305,7 @@ namespace Kernel { namespace Memory {
 				return nullptr;
 			}
 			
-			tables[n] = new Table(dir->tables[n]);
+			tables[n] = new Table(dir->tables[n], *this, n);
 		}
 		
 		return tables[n];
@@ -319,7 +322,7 @@ namespace Kernel { namespace Memory {
 				return nullptr;
 			}
 			
-			tables[n] = new Table(dir->tables[n]);
+			tables[n] = new Table(dir->tables[n], *this, n);
 		}
 		
 		return tables[n];
@@ -391,10 +394,13 @@ namespace Kernel { namespace Memory {
 			return false;
 		}
 		else
-		{	asm volatile("	movl %0, %%ecx" : : "r"(dir_phys));
+		{
+			#ifndef TESTING
+			asm volatile("	movl %0, %%ecx" : : "r"(dir_phys));
 			asm volatile("	movl %ecx, %cr3");
 			// asm volatile("	movl %cr3, %eax ; \
 			// 				movl %eax, %cr3");
+			#endif
 			return true;
 		}
 	}
@@ -505,7 +511,7 @@ namespace Kernel { namespace Memory {
 				
 				
 				// addr_t phys;
-                dest->tables[i] = this->table(i)->clone(dest->dir->tables[i]);
+                dest->tables[i] = this->table(i)->clone(dest->dir->tables[i], *dest);
 				// addr_t phys2 = (addr_t)virtual_to_physical(this, dest->ref_tables[i]);
 				// ASSERT(phys == phys2);
 				
@@ -534,7 +540,7 @@ namespace Kernel { namespace Memory {
 	
 	
 	
-	PageDirectory::Table::Table(_Table& t) noexcept : table(&t), pages(), _pages(nullptr), _pages_phys(nullptr)
+	PageDirectory::Table::Table(_Table& t, PageDirectory& dir, uint16_t indx) noexcept : table(&t), pages(), _pages(nullptr), _pages_phys(nullptr), _dir(&dir), table_index(indx)
 	{
 		addr_t phys;
 		auto ptr = kmalloc(sizeof(_Pages), PAGE_SIZE, &phys);
@@ -548,6 +554,7 @@ namespace Kernel { namespace Memory {
 		for (auto i = 0; i < 1024; ++i)
 		{
 			pages[i].page = &_pages->pages[i];
+			pages[i].page_index = i;
 		}
 		
 		table->frame = (((addr_t)_pages_phys) >> 12);
@@ -573,9 +580,9 @@ namespace Kernel { namespace Memory {
 		return pages[index];
 	}
 
-	PageDirectory::Table* PageDirectory::Table::clone(_Table& tbl) const noexcept
+	PageDirectory::Table* PageDirectory::Table::clone(_Table& tbl, PageDirectory& other) const noexcept
 	{
-		Table* dest = new Table(tbl);
+		Table* dest = new Table(tbl, other, table_index);
 		tbl.rw = table->rw;
 		tbl.user = table->user;
 		tbl.w_through = table->w_through;
@@ -678,7 +685,7 @@ namespace Kernel { namespace Memory {
 		
 	}
 	
-	PageDirectory::Page::Page(_Page& p) : page(&p)
+	PageDirectory::Page::Page(_Page& p, uint16_t page_index) : page(&p), page_index(page_index)
 	{
 		
 	}
@@ -762,8 +769,14 @@ namespace Kernel { namespace Memory {
 	bool PageDirectory::Page::allocate(bool is_writeable, bool kernel_only) noexcept
 	{
 		uint32_t index;
-		ASSERT(first_frame(&index));
-		set_frame(index);
+		//ASSERT(first_frame(&index));
+		//set_frame(index);
+		
+		size_t sz = PAGE_SIZE;
+		auto frame_addr = PhysicalMemory::reserve(sz);
+		assert(sz == PAGE_SIZE);
+		assert(frame_addr % PAGE_SIZE == 0);
+		index = frame_addr / PAGE_SIZE;
 		
 		page->rw = (is_writeable == 1) ? 1 : 0;
 		page->user = (kernel_only == 1) ? 0 : 1;
@@ -771,6 +784,13 @@ namespace Kernel { namespace Memory {
 		page->present = 1;
 		flush();
 		return true;
+	}
+	
+	void* PageDirectory::Page::virtual_address() const noexcept
+	{
+		auto tbl = this->table();
+		assert(tbl);
+		return (void*)((tbl->index() * tbl->page_count() + this->index())*PAGE_SIZE);
 	}
 
 }

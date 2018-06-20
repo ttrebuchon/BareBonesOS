@@ -2,12 +2,19 @@
 #include <iostream>
 #include <Common.h>
 
+namespace Drivers
+{
+	class Disk;
+}
+
 class QA
 {
 	private:
 	static void Out_Init();
 	static void MultiBoot_Init();
 	static void Timer_Init();
+	static void Filesystem_Init();
+	static void Paging_Init();
 	
 	static void* phys_start;
 	static void* phys_end;
@@ -53,4 +60,6 @@ class QA
 	
 	static timer_t GetPICTimer()
 	{ return PIC_timer; }
+	
+	static Drivers::Disk* QADrive(const char* file, const size_t size);
 };

@@ -34,6 +34,7 @@ namespace Utils
 
         inline const T& at(const size_t n) const
         {
+        	assert(n < _size);
             return array[n];
         }
 

@@ -31,13 +31,13 @@ namespace Kernel { namespace Memory
 
 	void* virtual_to_physical(const PageDir* dir, const void* virt_addr)
 	{
-		uint32_t page_dir_index = ((uint32_t)virt_addr)/(1024*4096); // >> 22
-		uint32_t page_table_index = (((uint32_t)virt_addr)/4096)&0x3ff;
-		uint32_t frame_offset = ((uint32_t)virt_addr)&0xfff;
+		uint32_t page_dir_index = ((addr_t)virt_addr)/(1024*4096); // >> 22
+		uint32_t page_table_index = (((addr_t)virt_addr)/4096)&0x3ff;
+		uint32_t frame_offset = ((addr_t)virt_addr)&0xfff;
 
-		ASSERT((((uint32_t)virt_addr) >> 22) == page_dir_index);
-		ASSERT(((((uint32_t)virt_addr) >> 12) & 0x3ff) == page_table_index);
-		ASSERT((((uint32_t)virt_addr) & 0xfff) == frame_offset);
+		ASSERT((((addr_t)virt_addr) >> 22) == page_dir_index);
+		ASSERT(((((addr_t)virt_addr) >> 12) & 0x3ff) == page_table_index);
+		ASSERT((((addr_t)virt_addr) & 0xfff) == frame_offset);
 
 		if (!dir->ref_tables[page_dir_index])
 		{
@@ -50,7 +50,7 @@ namespace Kernel { namespace Memory
 			return 0x0;
 		}
 
-		uint32_t t = table->pages[page_table_index].frame;
+		addr_t t = table->pages[page_table_index].frame;
 		t = (t << 12) + frame_offset;
 		return (void*)t;
 	}
@@ -240,12 +240,14 @@ namespace Kernel { namespace Memory
 		// PageDirectory::Current = dir;
 		// asm volatile ("mov %0, %%cr3":: "r"(dir->physicalAddress));
 		
+		#ifndef TESTING
 		asm volatile ("mov %0, %%cr3":: "r"(phys));
 		uint32_t cr0;
 		asm volatile ("mov %%cr0, %0" : "=r"(cr0));
 		cr0 |= 0x80000000;
 		__sync_synchronize();
 		asm volatile ("mov %0, %%cr0":: "r"(cr0));
+		#endif
 	}
 
 	
@@ -317,7 +319,9 @@ namespace Kernel { namespace Memory
 	void page_fault(Registers_t regs)
 	{
 		uint32_t fault_addr;
+		#ifndef TESTING
 		asm volatile ("mov %%cr2, %0" : "=r" (fault_addr));
+		#endif
 		Drivers::VGA::Write("PAGE_FAULT\n");
 		
 		bool present = ((regs.err_code & 0x1) != 0);
@@ -326,12 +330,12 @@ namespace Kernel { namespace Memory
 		bool reserved = ((regs.err_code & 0x8) != 0);
 		bool instr_fetch = ((regs.err_code & 0x10) != 0);
 
-		uint32_t upperBits = ((uint32_t)fault_addr) >> 22;
-		uint32_t midBits = (((uint32_t)fault_addr) << 10) >> 22;
+		uint32_t upperBits = ((addr_t)fault_addr) >> 22;
+		uint32_t midBits = (((addr_t)fault_addr) << 10) >> 22;
 		
 		//TODO
 		Drivers::VGA::Write("Virtual Addr: ");
-		Drivers::VGA::Write((void*)fault_addr);
+		Drivers::VGA::Write((void*)(addr_t)fault_addr);
 		Drivers::VGA::Write("\n");
 		Drivers::VGA::Write("Present: ");
 		Drivers::VGA::Write(present);
@@ -344,16 +348,16 @@ namespace Kernel { namespace Memory
 		Drivers::VGA::Write("\nInstruction Fetch: ");
 		Drivers::VGA::Write(instr_fetch);
 		Drivers::VGA::Write("\nInstruction Address: ");
-		Drivers::VGA::Write((void*)regs.eip);
+		Drivers::VGA::Write((void*)(addr_t)regs.eip);
 		Drivers::VGA::Write("\n");
 		Drivers::VGA::Write("Physical Address: ");
-		Drivers::VGA::Write(PageDirectory::Current->physical((void*)fault_addr));
+		Drivers::VGA::Write(PageDirectory::Current->physical((void*)(addr_t)fault_addr));
 		Drivers::VGA::Write("\n");
 
 		Drivers::VGA::Write("Upper Bits: ");
-		Drivers::VGA::Write((void*)upperBits);
+		Drivers::VGA::Write((void*)(addr_t)upperBits);
 		Drivers::VGA::Write("\nMiddle Bits: ");
-		Drivers::VGA::Write((void*)midBits);
+		Drivers::VGA::Write((void*)(addr_t)midBits);
 		Drivers::VGA::Write("\n");
 
 		// auto pgEntry = &PageDirectory::Current->ref_tables[upperBits]->pages[midBits];

@@ -56,7 +56,7 @@ namespace Kernel { namespace Memory
 	
 	
 	template <class _Alloc>
-	PageDirectory::Table::Table(_Table& t, const _Alloc& _alloc) : table(&t), _pages(nullptr), pages(), _pages_phys(nullptr)
+	PageDirectory::Table::Table(_Table& t, const _Alloc& _alloc, PageDirectory& dir, uint16_t indx) : table(&t), _pages(nullptr), pages(), _pages_phys(nullptr), _dir(&dir), table_index(indx)
 	{
 		typedef typename _Alloc::template rebind<_Pages>::other Alloc;
 		Alloc alloc(_alloc);
