@@ -673,6 +673,19 @@ namespace Utils
     string to_string(double);
     string to_string(long double);
     
+    
+    template <class T, class CharT>
+    class basic_ostream;
+    
+    template <class T, class CharT>
+    class basic_istream;
+    
+    
+    template <class T, class Traits, class Alloc>
+    basic_ostream<T, Traits>& operator<<(basic_ostream<T, Traits>&, const basic_string<T, Traits, Alloc>& str);
+    
+    template <class T, class Traits, class Alloc>
+    basic_istream<T, Traits>& operator>>(basic_istream<T, Traits>&, basic_string<T, Traits, Alloc>& str);
 
 }
 #endif
