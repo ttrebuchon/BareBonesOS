@@ -18,6 +18,7 @@ all: $(TARGET) $(ELF_OUT) $(DUMP_OUT)
 $(TARGET): Foo.o
 	$(CXX) $^ $(BOTH_FLAGS) -shared -o $@ -nostdlib -export-dynamic -Wl,-soname,$@,-shared
 	cp $(TARGET) ../Dummy_Img/
+	cp $(TARGET) ../initrd/FS_ROOT/
 	
 
 $(ELF_OUT): $(TARGET)

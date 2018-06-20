@@ -27,6 +27,10 @@ namespace Drivers
             return;
         }
         initialized = true;
+		terminal_buffer = (uint16_t*) 0xB8000;
+		terminal_column = 0;
+		terminal_row = 0;
+		terminal_color = AttributeValue(Color::LIGHT_GREY, Color::BLACK);
         for (size_t y = 0; y < VGA::Height; ++y)
         {
             for (size_t x = 0; x < VGA::Width; ++x)
@@ -36,6 +40,12 @@ namespace Drivers
             }
         }
     }
+
+	void VGA::Reinitialize()
+	{
+		initialized = false;
+		Init();
+	}
 
     void VGA::SetColor(const uint8_t color)
     {

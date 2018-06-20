@@ -43,6 +43,7 @@ dummy.img
 # Project Output
 *.iso
 *.bin
+*.initrd
 
 #IDE Settings
 .c4droid

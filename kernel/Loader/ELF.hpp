@@ -45,13 +45,10 @@ namespace Kernel
 				continue;
 			}
 
-			
 			auto nsection = new section_type(head.name_string_index + sh_names, this, &head, head.offset + (const uint8_t*)section_table);
 			this->_sections[i] = nsection;
 			assert(this->_sections[i]);
 		}
-
-		TRACE("Non-Special Sections added...");
 
 		for (int i = 1; i < sections_count; ++i)
 		{
@@ -59,9 +56,7 @@ namespace Kernel
 			{
 				auto& head = section_table[i];
 				assert(head.name_string_index != 0);
-				TRACE(head.name_string_index + sh_names);
 				add_section(head.name_string_index + sh_names, i, &head, head.offset + (const uint8_t*)section_table);
-				TRACE("Section added...");
 			}
 		}
 	}
@@ -70,16 +65,13 @@ namespace Kernel
 	void ELFObjectBase<HeaderType>::add_symbol_table(const char* name, int index, const section_header_type* header, const void* section)
 	{
 		assert(header->type == ELF_SEC_SYMTABLE || header->type == ELF_SEC_DYN_SYMTABLE);
-
 		assert(!this->_sections[index]);
-
 		assert(this->_sections[header->link]);
 
 		const char* name_table = (const char*)_sections[header->link]->section();
 		assert(name_table);
 
 		auto sec = new symbol_table_type(name, _program_base_address, this, header, section, name_table);
-
 		_symbol_tables.push_back(sec);
 		this->_sections[index] = sec;
 
@@ -114,9 +106,6 @@ namespace Kernel
 				_symbols[sym_name] = sym;
 				assert(strcmp(_symbols[sym_name]->name(), sym_name) == 0);
 			}
-
-			// assert(_symbols.count(sym_name) == 0);
-			// _symbols[sym_name] = sym;
 		}
 	}
 
@@ -228,11 +217,13 @@ namespace Kernel
 	{
 		if (_symbols.count(name))
 		{
-			Utils::string _name = name;
-			Utils::string _other = _symbols.at(_name)->name();
+			#ifdef DEBUG
+				Utils::string _name = name;
+				Utils::string _other = _symbols.at(_name)->name();
 
-			assert(_name == _other);
-			assert(_symbols.at(name)->name() == _name);
+				assert(_name == _other);
+				assert(_symbols.at(name)->name() == _name);
+			#endif
 			return _symbols.at(_name);
 		}
 		else
@@ -244,51 +235,6 @@ namespace Kernel
 	template <class HeaderType>
 	typename ELFObjectBase<HeaderType>::symbol_type* ELFObjectBase<HeaderType>::symbol(const char* name) noexcept
 	{
-		if (_symbols.count(name))
-		{
-			if (strcmp(_symbols.at(name)->name(), name))
-			{
-				auto sym = _symbols.at(name);
-				TRACE(sym->name());
-				TRACE(name);
-
-				bool found = false;
-
-				for (auto& pair : _symbols)
-				{
-					if (pair.second == sym)
-					{
-						if (&pair.second == &_symbols.at(name))
-						{
-							found = true;
-							assert(pair.first == name);
-							TRACE("----");
-							TRACE(pair.first);
-							TRACE(name);
-							Utils::string name1(pair.first);
-							Utils::string name2(name);
-							TRACE("----");
-							assert(name1 == name2);
-							TRACE(name1);
-							TRACE(name2);
-							if (name1.length() != name2.length())
-							{
-								assert(name1.compare(name2) != 0);
-								assert(strcmp(name1.c_str(), name2.c_str()) != 0);
-							}
-							assert(name1.length() == name2.length());
-							break;
-						}
-					}
-				}
-				assert(found);
-			}
-			assert(strcmp(_symbols.at(name)->name(), name) == 0);
-		}
-		else
-		{
-			assert(_symbols[name] == nullptr);
-		}
 		return _symbols[name];
 	}
 
@@ -398,65 +344,11 @@ namespace Kernel
 		return _section_headers.at(i);
 	}
 
-	// template <class HeaderType>
-	// typename ELFObjectBase<HeaderType>::section_header_type* ELFObjectBase<HeaderType>::section_header(const size_t i) noexcept
-	// {
-	// 	assert(this->section(i));
-	// 	assert(this->section(i)->header() == _section_headers.at(i));
-	// 	return _section_headers.at(i);
-	// }
-
-
-	// template <class HeaderType>
-	// typename ELFObjectBase<HeaderType>::section_header_type* ELFObjectBase<HeaderType>::section_header(const char* name) noexcept
-	// {
-	// 	return this->section(name)->header();
-	// }
-
 	template <class HeaderType>
 	const typename ELFObjectBase<HeaderType>::section_header_type* ELFObjectBase<HeaderType>::section_header(const char* name) const noexcept
 	{
 		return this->section(name)->header();
 	}
-
-
-
-
-	// #ifdef DEBUG
-	template <class HeaderType>
-	void ELFObjectBase<HeaderType>::verify_integrity()
-	{
-		TRACE("Verifying...");
-		for (const auto& sym : this->_symbols)
-		{
-			if (!sym.second)
-			{
-				TRACE("Null symbol: ");
-				TRACE(sym.first);
-				continue;
-			}
-
-			if (!sym.second->name())
-			{
-				TRACE("No Name");
-				continue;
-			}
-
-			assert(sym.first == sym.second->name());
-			assert(strlen(sym.second->name()) == sym.first.length());
-			// TRACE("Verified: ");
-			// TRACE(sym.first);
-			// TRACE(sym.second->name());
-			// TRACE("-----");
-		}
-		if (this->_symbols.size() == 0)
-		{
-			TRACE("No symbols to verify.");
-		}
-
-		TRACE("Verified");
-	}
-	// #endif
 
 
 
@@ -624,7 +516,7 @@ namespace Kernel
 				else
 				{
 					// DEBUG
-					//assert(NOT_IMPLEMENTED);
+					// assert(NOT_IMPLEMENTED);
 					return 0;
 					
 				}
@@ -746,13 +638,9 @@ namespace Kernel
 		{
 			auto target = obj->section_header(_table->info());
 			assert(target);
-			// return (void*)((addr_t)__object->get() + _raw_reloc->offset + target->offset - target->address);
 			return (address_type*)((addr_t)_table->value_base_address + _raw_reloc->offset);
 		}
 		assert(_raw_reloc->offset > 0);
-		// assert(_table->info() > 0);
-		// auto target = obj->section_header(_table->info());
-		// assert(target);
 
 		address_type* ref = (address_type*)((addr_t)_table->value_base_address + _raw_reloc->offset);
 		
@@ -786,10 +674,6 @@ namespace Kernel
 			assert(l >= 0);
 			auto sec = _table->parent()->section(l);
 			assert(sec);
-			if (!(sec->header()->type == ELF_SEC_SYMTABLE || sec->header()->type == ELF_SEC_DYN_SYMTABLE))
-			{
-				TRACE(sec->header()->type);
-			}
 			assert(sec->header()->type == ELF_SEC_SYMTABLE || sec->header()->type == ELF_SEC_DYN_SYMTABLE);
 			auto sym_table = (symbol_table_type*)sec;
 			assert(sym_table);
@@ -805,7 +689,7 @@ namespace Kernel
 		// The bitshifting process for 64-bit may be different, need to check that before using this for ELF64
 		static_assert(detail::elf_entry_type_chooser<header_type>::is_32);
 		
-		return ((sword_type)(_raw_reloc->info >> 8))/* - 1*/;
+		return ((sword_type)(_raw_reloc->info >> 8));
 	}
 
 	template <class HeaderType>
@@ -838,6 +722,7 @@ namespace Kernel
 		}
 		else
 		{
+			TRACE((void*)*ref);
 			assert(NOT_IMPLEMENTED);
 		}
 
@@ -857,266 +742,21 @@ namespace Kernel
 			case ELF_RELOC_386_JUMP_SLOT:
 				assert(_table->has_info());
 				{
-					auto target = obj->section_header(_table->info());
-					assert(target);
-					if (false)//(symval == 0)
-					{
-						symval = (void*)_table->value_base_address;
-						return (void*)(*(word_type*)((addr_t)_table->value_base_address + _raw_reloc->offset - target->address) + (addr_t)symval);
-					}
-					else
-					{
-						// TRACE("------");
-						// TRACE((void*)(symbol()->value() - symbol()->raw_value() - target->address));
-						// TRACE(_table->value_base_address);
-						// TRACE("------");
-						return (void*)(*ref + (addr_t)_table->value_base_address);
-						return (void*)(*ref + this->symbol()->raw_value());
-						return (void*)(*ref + (addr_t)symval);
-					}
+					assert(ref);
+					return (void*)(*ref + (addr_t)_table->value_base_address);
 					
 				}
-				//assert(NOT_IMPLEMENTED);
-				// return (const void*)(*ref + (addr_t)symval - /* --> */ (addr_t)ref /* <-- ????? I'm not sure about this at all. There's a chance the documentation made a mistake*/);
 
 			case ELF_RELOC_386_GLOB_DAT:
-				// TODO
-				// return (void*)(*ref + (addr_t)symbol()->raw_value());
 				return (void*)(*ref + (addr_t)symval);
-				return nullptr;
 			
 			default:
 				TRACE(info_type());
-				return nullptr;
 				assert(NOT_IMPLEMENTED);
+				return nullptr;
+				
 		}
 	}
-
-
-
-
-
-
-
-
-
-
-
-	// template <class HeaderType>
-	// void ELFObject<HeaderType>::__build_tables()
-	// {
-	// 	auto section_header_table = this->section_header_table();
-	// 	assert(section_header_table);
-	// 	for (int i = 1; i < __section_header_count; ++i)
-	// 	{
-	// 		if (section_header_table[i].type == ELF_SEC_SYMTABLE || section_header_table[i].type == ELF_SEC_DYN_SYMTABLE)
-	// 		{
-	// 			++__symbol_table_count;
-	// 		}
-	// 		else if (section_header_table[i].type == ELF_SEC_RELOC_NADDEND || section_header_table[i].type == ELF_SEC_RELOC_ADDEND)
-	// 		{
-	// 			++__relocation_table_count;
-	// 		}
-	// 	}
-		
-	// 	int j = 0;
-	// 	this->__symbol_tables = new symbol_table_type*[__symbol_table_count];
-	// 	for (int i = 1; i < __section_header_count && j < __symbol_table_count; ++i)
-	// 	{
-	// 		if (section_header_table[i].type == ELF_SEC_SYMTABLE || section_header_table[i].type == ELF_SEC_DYN_SYMTABLE)
-	// 		{
-	// 			__symbol_tables[j++] = new symbol_table_type(this, &section_header_table[i], i);
-	// 		}
-	// 	}
-	// 	assert(j == __symbol_table_count);
-
-	// 	this->__relocation_tables = new relocation_table_type*[__relocation_table_count];
-	// 	j = 0;
-	// 	for (int i = 1; i < __section_header_count && j < __relocation_table_count; ++i)
-	// 	{
-	// 		if (section_header_table[i].type == ELF_SEC_RELOC_NADDEND || section_header_table[i].type == ELF_SEC_RELOC_ADDEND)
-	// 		{
-	// 			__relocation_tables[j++] = new relocation_table_type(this, &section_header_table[i], i);
-	// 		}
-	// 	}
-	// 	assert(j == __relocation_table_count);
-	// }
-
-
-	// template <class HeaderType>
-	// const typename ELFObject<HeaderType>::symbol_table_type* ELFObject<HeaderType>::symbol_table(const char* name) const noexcept
-	// {
-	// 	assert(name);
-	// 	for (int i = 0; i < symbol_table_count(); ++i)
-	// 	{
-	// 		auto tbl = this->symbol_table(i);
-	// 		assert(tbl);
-
-	// 		auto tbl_name = tbl->table_name();
-	// 		if (tbl_name)
-	// 		{
-	// 			if (strcmp(tbl_name, name) == 0)
-	// 			{
-	// 				return tbl;
-	// 			}
-	// 		}
-	// 	}
-	// 	return nullptr;
-	// }
-
-	// template <class HeaderType>
-	// const typename ELFObject<HeaderType>::symbol_table_type* ELFObject<HeaderType>::symbol_table(const section_header_type* sec) const noexcept
-	// {
-	// 	assert(sec);
-
-	// 	for (int i = 0; i < symbol_table_count(); ++i)
-	// 	{
-	// 		if (&section_header_table()[symbol_table(i)->index() + 1] == sec)
-	// 		{
-	// 			return symbol_table(i);
-	// 		}
-	// 	}
-
-	// 	return nullptr;
-	// }
-
-	// template <class HeaderType>
-	// const typename ELFObject<HeaderType>::relocation_table_type* ELFObject<HeaderType>::relocation_table(const char* name) const noexcept
-	// {
-	// 	assert(name);
-	// 	for (int i = 0; i < relocation_table_count(); ++i)
-	// 	{
-	// 		auto tbl = this->relocation_table(i);
-	// 		assert(tbl);
-
-	// 		auto tbl_name = tbl->table_name();
-	// 		if (tbl_name)
-	// 		{
-	// 			if (strcmp(tbl_name, name) == 0)
-	// 			{
-	// 				return tbl;
-	// 			}
-	// 		}
-	// 	}
-	// 	return nullptr;
-	// }
-
-
-	// template <class HeaderType>
-	// const typename ELFObject<HeaderType>::symbol_type* ELFObject<HeaderType>::symbol(const char* name) const noexcept
-	// {
-	// 	assert(name);
-	// 	for (int i = 0; i < symbol_table_count(); ++i)
-	// 	{
-	// 		auto sym_tbl = this->symbol_table(i);
-	// 		assert(sym_tbl);
-
-	// 		auto sym = sym_tbl->symbol(name);
-	// 		if (sym)
-	// 		{
-	// 			return sym;
-	// 		}
-	// 	}
-	// 	return nullptr;
-	// }
-
-	// template <class HeaderType>
-	// const typename ELFObject<HeaderType>::relocation_type* ELFObject<HeaderType>::reloc(const char* name, int skip) const noexcept
-	// {
-	// 	assert(name);
-
-	// 	for (int i = 0; i < this->relocation_table_count(); ++i)
-	// 	{
-	// 		auto tbl = this->relocation_table(i);
-	// 		assert(tbl);
-	// 		for (int j = 0; j < tbl->count(); ++j)
-	// 		{
-	// 			auto r = tbl->reloc(j);
-	// 			assert(r);
-	// 			auto sym = r->symbol();
-	// 			if (sym)
-	// 			{
-	// 				auto sname = sym->name();
-	// 				if (sname)
-	// 				{
-	// 					if (strcmp(sname, name) == 0)
-	// 					{
-	// 						return r;
-	// 					}
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// 	return nullptr;
-	// }
-
-
-
-
-
-
-
-
-	// template <class HeaderType>
-	// void ELFSymbolTable<HeaderType>::__build_symbols()
-	// {
-	// 	assert(symbol_count() >= 1);
-	// 	__symbols = new symbol_type*[symbol_count()];
-
-	// 	for (int i = 0; i < symbol_count(); ++i)
-	// 	{
-	// 		__symbols[i] = new symbol_type(__object, this, raw_symbol(i));
-	// 	}
-	// }
-
-
-	// template <class HeaderType>
-	// const typename ELFSymbolTable<HeaderType>::symbol_type* ELFSymbolTable<HeaderType>::symbol(const char* name) const noexcept
-	// {
-	// 	assert(name);
-
-	// 	for (int i = 0; i < this->symbol_count(); ++i)
-	// 	{
-	// 		auto sym = this->symbol(i);
-	// 		assert(sym);
-	// 		auto sym_name = sym->name();
-	// 		if (sym_name)
-	// 		{
-	// 			if (strcmp(sym_name, name) == 0)
-	// 			{
-	// 				return sym;
-	// 			}
-	// 		}
-	// 	}
-	// 	return nullptr;
-	// }
-
-
-
-
-
-
-	// template <class HeaderType>
-	// void ELFRelocationTable<HeaderType>::__build_relocs()
-	// {
-	// 	__relocs = new relocation_type*[count()];
-
-	// 	if (is_addend())
-	// 	{
-	// 		for (int i = 0; i < count(); ++i)
-	// 		{
-	// 			__relocs[i] = new relocation_type(__object, this, &(reinterpret_cast<const raw_relocation_addend_type*>(((addr_t)__object->base_address()) + __section->offset)[i]));
-	// 		}
-	// 	}
-	// 	else
-	// 	{
-	// 		for (int i = 0; i < count(); ++i)
-	// 		{
-	// 			__relocs[i] = new relocation_type(__object, this, &(reinterpret_cast<const raw_relocation_type*>(((addr_t)__object->base_address()) + __section->offset)[i]));
-	// 		}
-	// 	}
-	// }
-
 }
 
 

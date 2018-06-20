@@ -6,8 +6,11 @@
 #include <sys/stat.h>
 #include <assert.h>
 
-#define ROOT "FS_ROOT"
-#define OUT_IMG "initrd.img"
+// #define ROOT "FS_ROOT"
+// #define OUT_IMG "initrd.img"
+
+const char* ROOT;
+const char* OUT_IMG;
 
 class Folder;
 class File;
@@ -171,8 +174,11 @@ void writePacked(FILE*, FRecord*);
 
 
 
-int main()
+int main(int argc, const char** argv)
 {
+	assert(argc >= 3);
+	ROOT = argv[1];
+	OUT_IMG = argv[2];
 	Folder* root = new Folder(nullptr, "");
 	root->stat();
 	traverseDir(root);

@@ -113,6 +113,17 @@ typedef struct multiboot_mmap_item
 	
 }__attribute__((packed)) multiboot_mmap_t;
 
+
+typedef struct multiboot_module
+{
+	uint32_t mod_start;
+	uint32_t mod_end;
+	uint32_t string_addr;
+	uint32_t reserved;
+}
+__attribute__((__packed__))
+multiboot_module_t;
+
 #ifdef __cplusplus
 }
 #endif

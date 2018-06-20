@@ -69,6 +69,7 @@ namespace Drivers
         }
 
         static void Init();
+		static void Reinitialize();
         static void SetColor(const uint8_t color);
         static void PutAt(const char c, const uint8_t color, const size_t x, const size_t y);
         static void PutChar(const char c);

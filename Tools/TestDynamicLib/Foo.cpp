@@ -1,7 +1,8 @@
 
 #include "Foo.h"
 #include <stdint.h>
-//#include <Utils/iostream>
+#include <Utils/vector>
+#include <drivers/VGA.hh>
 
 
 class Bar_Class : public Foo_Class
@@ -9,9 +10,20 @@ class Bar_Class : public Foo_Class
     public:
     virtual int foo_member() override
     {
-		//std::cout << __func__ << ": " << x << std::endl;
+		
+		this->str = __func__;
+		Utils::vector<int> v;
+		for (int i = 0; i < 100; ++i)
+		{
+			v.push_back(i + (v.size() % 10));
+		}
 		some_extern_foo(x);
-        return x;
+		int old_x = x;
+		x = v.size();
+
+		Drivers::VGA::Write("foo_member() says hello!\n");
+
+        return old_x;
     }
 };
 
@@ -40,7 +52,7 @@ int bar(int x)
 extern "C"
 Foo_Class* get_poly()
 {
-	static_assert(sizeof(Bar_Class) == 8);
+	static_assert(sizeof(Bar_Class) == 12);
     return new Bar_Class;
 }
 

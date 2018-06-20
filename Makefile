@@ -33,6 +33,10 @@ HDD2_SRC = $(wildcard Tools/Dummy_Img/*.cpp)
 HDD2_IN = Tools/Dummy_Img/libDynamic.so
 ASM_OUT_SUFFIX = .asm_out
 LIBDIR = Libraries
+INITRD = grub/isodir/boot/$(INITRD_OUT_IMG)
+INITRD_GEN = Tools/initrd/gen.out
+INITRD_ROOT_NAME = ROOT_FS
+INITRD_OUT_IMG = myos.initrd
 
 C_OBJS = $(C_SRC:.c=.o)
 _CPP_OBJS = $(CPP_SRC:.cpp=.o)
@@ -124,9 +128,9 @@ clean:
 	-@rm -f $(C_OBJS) $(CPP_OBJS) $(CPP_DEPS) $(BOOT_OBJS) *.bin $(wildcard boot/*.o boot/*.bin) $(ASM_OBJS)
 	-@rm -f $(CPP_DEPS) $(C_DEPS)
 
-myos.iso: myos.bin
+myos.iso: myos.bin $(INITRD)
 	@cp $< grub/isodir/boot/$<
-	@grub-mkrescue -o $@ grub/isodir
+	grub-mkrescue -o $@ grub/isodir
 
 
 myos.bin: $(BOOT_OBJS) $(CRTBEGIN_OBJ) $(CPP_OBJS) $(C_OBJS) $(ASM_OBJS) $(CRTEND_OBJ) linker.ld
@@ -174,5 +178,14 @@ $(HDD2_GEN): $(HDD2_SRC)
 
 $(HDD2_IN): 
 	$(MAKE) -C Tools/TestDynamicLib
+
+$(INITRD_GEN): Tools/initrd/Main.cpp
+	g++ -std=c++14 -o $@ $^
+
+
+$(INITRD): $(HDD2_IN) $(INITRD_GEN)
+	cp $< Tools/initrd/FS_ROOT/
+	$(INITRD_GEN) $(INITRD_ROOT_NAME) $@
+
 
 .PHONY: all $(HDD2_IN)

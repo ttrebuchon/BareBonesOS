@@ -2,6 +2,12 @@ class Foo_Class
 {
     public:
     int x;
+	const char* str;
+
+	Foo_Class() : x(0), str(nullptr)
+	{
+
+	}
 
     virtual int foo_member() = 0;
 };
