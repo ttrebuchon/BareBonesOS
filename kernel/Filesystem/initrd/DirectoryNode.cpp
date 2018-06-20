@@ -1,9 +1,9 @@
 #include "DirectoryNode.hh"
 
-namespace Kernel { namespace Filesystem { namespace Init_RD {
+namespace Kernel { namespace FS { namespace Init_RD {
 
 
-    DirectoryNode::DirectoryNode(const char* name) : Filesystem::DirectoryNode(NodeType::Directory)
+    DirectoryNode::DirectoryNode(const char* name) : FS::DirectoryNode(NodeType::Directory)
     {
         this->_name = name;
     }

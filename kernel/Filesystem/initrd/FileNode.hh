@@ -4,9 +4,9 @@
 #include <Common.h>
 #include <kernel/Filesystem/FileNode.hh>
 
-namespace Kernel { namespace Filesystem { namespace Init_RD {
+namespace Kernel { namespace FS { namespace Init_RD {
 
-    class FileNode : public Filesystem::FileNode
+    class FileNode : public FS::FileNode
     {
         protected:
         size_t _size;

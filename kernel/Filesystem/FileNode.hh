@@ -11,7 +11,7 @@ namespace Kernel
 	class ReadFileHandle;
 }
 
-namespace Kernel { namespace Filesystem {
+namespace Kernel { namespace FS {
 	
 	class File;
 	
@@ -34,7 +34,7 @@ namespace Kernel { namespace Filesystem {
 		virtual ~FileNode();
 		
 		virtual File* getFile() const;
-		virtual ResourcePtr<FileHandle>&& handle();
+		virtual ResourcePtr<FileHandle> handle();
 		//virtual ReadFileHandle* readOnlyHandle();
 		virtual bool inUse() const;
 		//virtual bool readInUse() const;

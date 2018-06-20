@@ -6,7 +6,7 @@
 #include "File_streambuf.hh"
 #include <Utils/iostream>
 
-namespace Kernel { namespace Filesystem
+namespace Kernel { namespace FS
 {
 	
 	

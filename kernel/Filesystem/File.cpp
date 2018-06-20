@@ -1,7 +1,7 @@
 #include "File.hh"
 #include "Files/File_streambuf.hpp"
 
-namespace Kernel { namespace Filesystem
+namespace Kernel { namespace FS
 {
 	
 	File::File(FileNode* fnode) : __node(fnode), sbuf(File_streambuf::GetForNode(fnode)), in(sbuf), out(sbuf)

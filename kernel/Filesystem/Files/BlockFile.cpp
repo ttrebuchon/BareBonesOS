@@ -1,7 +1,7 @@
 #include "BlockFile.hh"
 #include "../FileNode.hh"
 
-namespace Kernel { namespace Filesystem
+namespace Kernel { namespace FS
 {
 	
 	BlockFile::BlockFile(FileNode* fnode) : File_streambuf(fnode), blocks()
@@ -97,7 +97,8 @@ namespace Kernel { namespace Filesystem
 		if (blocks.size() <= index)
 		{
 			blocks.resize(index+1);
-			readTo(index);
+			bool res = readTo(index);
+			assert(res);
 			size = blocks.size() * BlockSize;
 		}
 	}
@@ -114,12 +115,13 @@ namespace Kernel { namespace Filesystem
 			return false;
 		}
 		
-		if (__node->size() < (index + 1)*BlockSize)
+		if (__node->size() < (index/* + 1*/)*BlockSize)
 		{
 			return false;
 		}
 		
-		ASSERT(__node->read(index*BlockSize, BlockSize, reinterpret_cast<uint8_t*>(blocks[index]->data)) == BlockSize);
+		auto res = __node->read(index*BlockSize, BlockSize, reinterpret_cast<uint8_t*>(blocks[index]->data));
+		assert(res == BlockSize);
 		return true;
 	}
 	

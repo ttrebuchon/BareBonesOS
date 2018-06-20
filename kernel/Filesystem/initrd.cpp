@@ -2,7 +2,7 @@
 #include "initrd/DirectoryNode.hh"
 #include "initrd/FileNode.hh"
 
-namespace Kernel { namespace Filesystem {
+namespace Kernel { namespace FS {
 	
 	Node* readRecord(void* addr, void**);
 	Node* readFolder(void*, void**);
@@ -70,6 +70,18 @@ namespace Kernel { namespace Filesystem {
 			*end = ptr;
 		}
 		return dir;
+	}
+	
+	
+	
+	
+	
+	InitRD_FS::InitRD_FS(void* base) : Filesystem::Filesystem(), _root(nullptr), _base(base)
+	{
+		assert(base);
+		auto r = init_initrd(base);
+		assert(r->isKind(NodeType::Directory));
+		_root = (Init_RD::DirectoryNode*)r;
 	}
 }
 }

@@ -4,7 +4,7 @@
 #include <Common.h>
 #include <Utils/streambuf>
 
-namespace Kernel { namespace Filesystem
+namespace Kernel { namespace FS
 {
 	class FileNode;
 	class File;

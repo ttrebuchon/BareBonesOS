@@ -1,6 +1,6 @@
 #include "Path.hh"
 
-namespace Kernel { namespace Filesystem
+namespace Kernel { namespace FS
 {
 	
 	bool Path::IsAbsolute(const string_type& path) noexcept

@@ -3,7 +3,7 @@
 
 #include <Utils/string>
 
-namespace Kernel { namespace Filesystem
+namespace Kernel { namespace FS
 {
 	
 	class Path

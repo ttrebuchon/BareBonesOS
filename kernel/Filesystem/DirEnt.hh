@@ -3,7 +3,7 @@
 
 #include <Common.h>
 
-namespace Kernel { namespace Filesystem {
+namespace Kernel { namespace FS {
 
     class DirEnt
     {

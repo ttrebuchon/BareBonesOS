@@ -7,15 +7,17 @@
 #include <Utils/iostream>
 #include "Files/File_streambuf.hh"
 
-namespace Kernel { namespace Filesystem
+namespace Kernel { namespace FS
 {
 	class FileNode;
+	class FileRep;
 	
 	class File
 	{
 		protected:
 		FileNode* __node;
 		File_streambuf* sbuf;
+		FileRep* _rep;
 		
 		
 		

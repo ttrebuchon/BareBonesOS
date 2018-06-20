@@ -9,7 +9,7 @@
 #include <kernel/ResourceHandles/ResourceHandle.hh>
 #include <kernel/ResourceHandles/FileHandle.hh>
 
-namespace Kernel { namespace Filesystem {
+namespace Kernel { namespace FS {
 	
 	class FileNode;
 	

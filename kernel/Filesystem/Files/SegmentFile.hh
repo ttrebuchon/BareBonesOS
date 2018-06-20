@@ -4,7 +4,7 @@
 #include <Common.h>
 #include <Utils/vector>
 
-namespace Kernel { namespace Filesystem
+namespace Kernel { namespace FS
 {
 	
 	struct FileSegment

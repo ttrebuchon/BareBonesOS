@@ -3,7 +3,7 @@
 
 #include <Utils/EnumOperators.hh>
 
-namespace Kernel { namespace Filesystem {
+namespace Kernel { namespace FS {
 	
 	enum class NodeType : short
 	{

@@ -4,7 +4,7 @@
 #include <Common.h>
 #include "Node.hh"
 
-namespace Kernel { namespace Filesystem {
+namespace Kernel { namespace FS {
 
     class DirectoryNode : public Node
     {

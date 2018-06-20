@@ -5,7 +5,7 @@
 #include "NodeType.hh"
 #include <Utils/string>
 
-namespace Kernel { namespace Filesystem {
+namespace Kernel { namespace FS {
 	
 	class DirEnt;
 	class DirectoryNode;

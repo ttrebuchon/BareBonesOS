@@ -1,7 +1,7 @@
 #include "FileNode.hh"
 #include "File.hh"
 
-namespace Kernel { namespace Filesystem
+namespace Kernel { namespace FS
 {
 	
 	FileNode::FileNode(const NodeType t) : Node(t | NodeType::File)
@@ -31,6 +31,7 @@ namespace Kernel { namespace Filesystem
 	
 	File* FileNode::initFile()
 	{
+		return new File(this);
 		// TODO
 		ASSERT(false);
 	}
@@ -47,7 +48,7 @@ namespace Kernel { namespace Filesystem
 		return file;
 	}
 	
-	ResourcePtr<FileHandle>&& FileNode::handle()
+	ResourcePtr<FileHandle> FileNode::handle()
 	{
 		if (!file)
 		{
@@ -57,16 +58,17 @@ namespace Kernel { namespace Filesystem
 		Utils::unique_lock<Utils::mutex> lock(lock_m, Utils::try_to_lock);
 		if (!lock.owns_lock())
 		{
-			return Utils::move(ResourcePtr<FileHandle>(nullptr));
+			return ResourcePtr<FileHandle>(nullptr);
 		}
-		return Utils::move(ResourcePtr<FileHandle>(new FileHandle(*this, *file, Utils::move(lock))));
+		assert(lock.owns_lock());
+		return ResourcePtr<FileHandle>(new FileHandle(*this, *file, Utils::move(lock)));
 	}
 	
 	bool FileNode::inUse() const
 	{
-		if (lock_m.try_lock())
+		Utils::unique_lock<Utils::mutex> lock(lock_m, Utils::try_to_lock);
+		if (lock.owns_lock())
 		{
-			lock_m.unlock();
 			return false;
 		}
 		return true;

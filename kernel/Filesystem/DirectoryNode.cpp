@@ -1,7 +1,7 @@
 #include "DirectoryNode.hh"
 #include "Path.hh"
 
-namespace Kernel { namespace Filesystem
+namespace Kernel { namespace FS
 {
 	
 	DirectoryNode::DirectoryNode(const NodeType t) : Node(t | NodeType::Directory)

@@ -1,3 +1,5 @@
+#ifndef TESTING
+
 #include "API.hh"
 #include "FileNode.hh"
 #include "Filesystem.hh"
@@ -208,3 +210,5 @@ extern "C"
 	
 	
 }
+
+#endif

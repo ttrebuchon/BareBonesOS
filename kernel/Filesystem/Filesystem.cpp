@@ -3,12 +3,13 @@
 #include "DirectoryNode.hh"
 #include "Path.hh"
 
-namespace Kernel { namespace Filesystem {
+namespace Kernel { namespace FS {
 	
 	Filesystem* Filesystem::Current = nullptr;
 	
 	Node* Filesystem::getNode(const Utils::string& path, const Utils::string& relative)
 	{
+		std::cout << "Path: " << path.c_str() << std::endl;
 		if (path.length() <= 0)
 		{
 			return nullptr;
@@ -20,8 +21,10 @@ namespace Kernel { namespace Filesystem {
 			{
 				return nullptr;
 			}
-			return getNode(Path::Combine(path, relative));
+			return getNode(Path::Combine(relative, path));
 		}
+		
+		auto root = this->root();
 		
 		ASSERT(root);
 		ASSERT(root->isKind(NodeType::Directory));

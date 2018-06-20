@@ -2,7 +2,7 @@
 #include "BlockFile.hh"
 #include "../FileNode.hh"
 
-namespace Kernel { namespace Filesystem
+namespace Kernel { namespace FS
 {
 	
 	File_streambuf::File_streambuf(FileNode* fnode) : Utils::basic_streambuf<char>(), __node(fnode), eback_pos(0), pbase_pos(0), size(0)
@@ -72,7 +72,7 @@ namespace Kernel { namespace Filesystem
 			eback_pos = basePosForPos(pos);
 		}
 		
-		 
+		 return pos;
 		 // TODO (Return value)
 		 ASSERT(false);
 	}

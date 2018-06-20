@@ -4,7 +4,12 @@
 #include <Common.h>
 #include <Utils/string>
 
-namespace Kernel { namespace Filesystem {
+namespace Drivers
+{
+	class Disk;
+}
+
+namespace Kernel { namespace FS {
 	
 	class Node;
 	
@@ -13,12 +18,17 @@ namespace Kernel { namespace Filesystem {
 		private:
 		
 		protected:
-		Node* root;
+		Node* _root;
 		
 		public:
 		static Filesystem* Current;
 		
-		Node* getNode(const Utils::string& path, const Utils::string& relative = Utils::string());
+		virtual Node* getNode(const Utils::string& path, const Utils::string& relative = Utils::string());
+		
+		virtual Node* root() const noexcept
+		{
+			return _root;
+		}
 	};
 	
 }

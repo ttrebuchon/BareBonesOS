@@ -1,16 +1,32 @@
 #include "FileNode.hh"
 
-namespace Kernel { namespace Filesystem { namespace Init_RD {
+namespace Kernel { namespace FS { namespace Init_RD {
 	
 
 
-	FileNode::FileNode(const char* name, void* data, uint32_t size) noexcept : Filesystem::FileNode(NodeType::RAMFile), _size(size), _data(data)
+	FileNode::FileNode(const char* name, void* data, uint32_t size) noexcept : FS::FileNode(NodeType::RAMFile), _size(size), _data(data)
 	{
 		this->_name = name;
 	}
 
-	uint32_t FileNode::read(uint32_t, uint32_t, uint8_t*)
+	uint32_t FileNode::read(uint32_t pos, uint32_t len, uint8_t* buf)
 	{
+		assert(buf);
+		if (pos >= this->size())
+		{
+			return 0;
+		}
+		
+		uint32_t adj_len = len;
+		if (pos + len > size())
+		{
+			adj_len = size() - pos;
+		}
+		
+		memcpy(buf, _data, adj_len);
+		memset(buf + adj_len, 0, len - adj_len);
+		return len;
+		
 		// TODO
 		ASSERT(false);
 	}

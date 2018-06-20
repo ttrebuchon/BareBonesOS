@@ -8,7 +8,7 @@
 
 C_CODE
 C_namespace(Kernel)
-C_namespace(Filesystem)
+C_namespace(FS)
 
 IF_CPP(class File);
 
@@ -21,7 +21,7 @@ struct OpenFile_Hndl
 
 
 
-C_namespace_e(Filesystem)
+C_namespace_e(FS)
 C_namespace_e(Kernel)
 C_END
 

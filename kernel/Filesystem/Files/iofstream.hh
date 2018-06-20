@@ -4,7 +4,7 @@
 #include <Utils/iostream>
 #include "File_streambuf.hh"
 
-namespace Kernel { namespace Filesystem
+namespace Kernel { namespace FS
 {
 	template <class T, class Traits = Utils::char_traits<T>>
 	class basic_iofstream : public virtual Utils::basic_ostream<T, Traits>, public virtual Utils::basic_istream<T, Traits>

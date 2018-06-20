@@ -5,7 +5,7 @@
 #include <Utils/vector>
 #include "File_streambuf.hh"
 
-namespace Kernel { namespace Filesystem
+namespace Kernel { namespace FS
 {
 	template <size_t BlkSize>
 	struct Block

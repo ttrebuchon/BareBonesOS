@@ -1,6 +1,6 @@
 #include "Node.hh"
 
-namespace Kernel { namespace Filesystem {
+namespace Kernel { namespace FS {
 	
 	uint32_t Node::counter = 1;
 	

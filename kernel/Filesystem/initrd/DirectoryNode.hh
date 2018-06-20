@@ -5,9 +5,9 @@
 #include <kernel/Filesystem/DirectoryNode.hh>
 #include <Utils/vector>
 
-namespace Kernel { namespace Filesystem { namespace Init_RD {
+namespace Kernel { namespace FS { namespace Init_RD {
 
-    class DirectoryNode : public Filesystem::DirectoryNode
+    class DirectoryNode : public FS::DirectoryNode
     {
         protected:
         
