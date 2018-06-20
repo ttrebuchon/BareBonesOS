@@ -43,6 +43,11 @@ inline void __ASSERT_TRUE() {}
 //Are testing
 #else
 
+
+#ifdef __cplusplus
+#include <iostream>
+#endif
+
 #include "MetaInfo.h"
 
 #ifdef __cplusplus
@@ -55,7 +60,16 @@ extern "C" {
 
 #ifdef _TRACE
 
+#ifdef __cplusplus
+
+#define TRACE(X) (std::cout << __FILE__"::" << __LINE__ << "::" << __func__ << "::" << X << std::endl);
+//STACK(X)
+
+#else // !__cplusplus
+
 #define TRACE(X) STACK(X)
+
+#endif // !__cplusplus
 
 #else
 
