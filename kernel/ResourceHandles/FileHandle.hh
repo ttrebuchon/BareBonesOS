@@ -6,7 +6,7 @@
 
 namespace Kernel
 {
-	namespace Filesystem
+	namespace FS
 	{
 		class Node;
 		class FileNode;
@@ -17,15 +17,15 @@ namespace Kernel
 	class FileHandle : public ResourceHandle
 	{
 		protected:
-		Filesystem::FileNode* _node;
-		Filesystem::File* _file;
+		FS::FileNode* _node;
+		FS::File* _file;
 		Utils::unique_lock<Utils::mutex> lock;
 		
 		virtual void __cleanup() noexcept;
 		
 		public:
 		// References to guarantee no null-pointers here
-		FileHandle(Filesystem::FileNode&, Filesystem::File&, Utils::unique_lock<Utils::mutex>&&);
+		FileHandle(FS::FileNode&, FS::File&, Utils::unique_lock<Utils::mutex>&&);
 		FileHandle(const FileHandle& o) = delete;
 		FileHandle(FileHandle&&) = default;
 		
@@ -34,7 +34,7 @@ namespace Kernel
 		
 		
 		__attribute__((__always_inline__))
-		Filesystem::File* file() const noexcept
+		FS::File* file() const noexcept
 		{ return _file; }
 	};
 }
