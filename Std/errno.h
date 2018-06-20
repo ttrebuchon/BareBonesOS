@@ -1,6 +1,8 @@
 #ifndef INCLUDED_ERRNO_H
 #define INCLUDED_ERRNO_H
 
+#ifndef TESTING
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -15,5 +17,7 @@ extern __thread int errno;
 
 
 #define ENOENT 2
+
+#endif
 
 #endif
