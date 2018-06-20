@@ -28,7 +28,7 @@ typedef struct thread_entry
 	
 } thread_entry_t;
 
-typedef struct
+typedef struct __thread_struct
 {
 	thread_entry_t* entry;
 	context_t* context;
