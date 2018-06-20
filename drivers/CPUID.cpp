@@ -37,6 +37,34 @@ extern "C" {
 	
 	
 	
+	int cpuid_function_supported(uint32_t func, uint32_t sub_func)
+	{
+		#ifdef __ENV_x86__
+		
+		uint32_t res;
+		asm volatile("cpuid" : "=c"(res) : "a"(func), "c"(sub_func) : "eax", "ecx");
+		res >>= 30;
+		return (res == 1);
+		
+		#elif defined(TESTING)
+		
+		return 1;
+		
+		#else
+		
+		#error Unknown architecture
+		
+		#endif
+	}
+	
+	
+	
+	int cpuid_rdrand_supported()
+	{
+		return cpuid_function_supported(1, 0);
+	}
+	
+	
 }
 	
 	Utils::string cpuid_string(uint32_t code)

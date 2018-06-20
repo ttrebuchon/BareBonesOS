@@ -24,6 +24,9 @@ C_CODE
 	int cpuid_supported();
 	uint32_t cpuid_cmd(uint32_t code, uint32_t* ax);
 	
+	int cpuid_function_supported(uint32_t func, uint32_t sub_func);
+	int cpuid_rdrand_supported();
+	
 	
 C_END
 
