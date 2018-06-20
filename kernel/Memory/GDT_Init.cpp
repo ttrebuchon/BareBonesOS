@@ -50,7 +50,7 @@ namespace Kernel { namespace Memory {
         ASSERT(reinterpret_cast<uint8_t*>(&gdt_table[1])[5] == 0x9A);
 
         Kernel::Memory::GDTEntry::Pointer.limit = (sizeof(Kernel::Memory::GDTEntry)*5 - 1);
-        Kernel::Memory::GDTEntry::Pointer.base = (uint32_t)gdt_table;
+        Kernel::Memory::GDTEntry::Pointer.base = (addr_t)gdt_table;
         Kernel::Memory::GDTEntry::Flush();
     }
 
