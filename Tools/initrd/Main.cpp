@@ -187,6 +187,7 @@ int main()
 		if (ent->type() == F_File)
 		{
 			std::cout << " -- " << ((File*)ent)->size;
+			assert(((File*)ent)->size == 13);
 		}
 		std::cout << "\n";
 	}
@@ -335,7 +336,7 @@ void writeFilePacked(FILE* out, FileRecord* rec)
 {
 	FILE* in = ::fopen(rec->fileHandle.c_str(), "r");
 	
-	auto len = rec->span - sizeof(unsigned long) - rec->nameLen - 1 - sizeof(int);
+	auto len = rec->span - sizeof(unsigned long) - rec->nameLen/* - 1*/ - sizeof(int);
 	
 	auto data = malloc(len);
 	::fread(data, 1, len, in);
