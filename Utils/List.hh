@@ -166,6 +166,7 @@ namespace Utils
 		template <class InputIt>
 		List(InputIt start, InputIt end);
 		List(List&&) noexcept;
+		explicit List(const allocator_type&);
 		
 		//Destructor
 		~List() noexcept;

@@ -28,6 +28,12 @@ namespace Utils
 		}
 	}
 	
+	template <class T, class A>
+	List<T, A>::List(const allocator_type& alloc) : head(nullptr), tail(nullptr), _size(0), alloc(alloc), nalloc(alloc)
+	{
+		
+	}
+	
 	
 	template <class T, class A>
 	List<T, A>::~List() noexcept
