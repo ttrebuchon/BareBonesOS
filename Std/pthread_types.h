@@ -75,7 +75,9 @@
 
 /* Thread identifiers.  The structure of the attribute type is not
    exposed on purpose.  */
-typedef unsigned long int pthread_t;
+//typedef unsigned long int pthread_t;
+
+#include <Common.h>
 
 
 union pthread_attr_t
