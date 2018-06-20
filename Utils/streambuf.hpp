@@ -245,6 +245,7 @@ namespace Utils {
 	template <class T, class Traits>
 	streamsize basic_streambuf<T, Traits>::sgetn(char_type* s, streamsize n)
 	{
+		return xsgetn(s, n);
 		// TODO
 		ASSERT(false);
 	}
