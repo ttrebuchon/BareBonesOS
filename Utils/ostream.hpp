@@ -54,6 +54,29 @@ namespace Utils {
 		return pf(*this);
 	}
 
+
+	template <class T, class Traits>
+	basic_ostream<T, Traits>& basic_ostream<T, Traits>::operator<<(char_type c)
+	{
+		sentry __cerb(*this);
+		if (__cerb)
+		{
+			ios_base::iostate __err = ios_base::goodbit;
+			
+			if (this->rdbuf()->sputc(c) != c)
+			{
+				__err |= ios_base::badbit;
+			}
+			
+			
+			if (__err)
+			{
+				this->setstate(__err);
+			}
+		}
+		return *this;
+	}
+
 	
 	template <class T, class Traits>
 	basic_ostream<T, Traits>& basic_ostream<T, Traits>::operator<<(bool n)

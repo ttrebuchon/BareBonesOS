@@ -71,6 +71,7 @@ namespace Utils {
 		basic_ostream<T, Traits>& operator<<(basic_ios<T, Traits>& (*pf)(basic_ios<T, Traits>&));
         basic_ostream<T, Traits>& operator<<(ios_base& (*pf)(ios_base&));
         
+		basic_ostream<T, Traits>& operator<<(char_type n);
         basic_ostream<T, Traits>& operator<<(bool n);
         basic_ostream<T, Traits>& operator<<(short n);
         basic_ostream<T, Traits>& operator<<(unsigned short n);
