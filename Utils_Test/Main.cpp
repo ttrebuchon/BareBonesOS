@@ -33,6 +33,7 @@ TEST(queue);
 TEST(PhysicalMemory);
 TEST(context);*/
 TEST(mutex);
+TEST(concurrent_circular_list);
 
 
 #ifdef __EXCEPTIONS
@@ -58,7 +59,9 @@ void checkMemoryTrack();
 	QA::out << "-----------------\n" << "Running test for " << #X << "...\n-----------------\n" << std::endl; \
 	QA::Memory::Reset(); \
 	QA::Memory::Start(); \
+	QA::EnableMemPool(); \
 	Test_##X(); \
+	QA::DisableMemPool(); \
 	QA::Memory::Pause(); \
 	QA::out << "-----------------\n" << #X << " testing done.\n-----------------\n\n\n\n"; \
 	checkMemoryTrack(); \
@@ -75,6 +78,9 @@ void checkMemoryTrack();
 #define RUN_NO_TRACK_ALLOC(X) do { \
 	QA::out << "-----------------\n" << "Running test for " << #X << "...\n-----------------\n" << std::endl; \
 	QA::Memory::Reset(); \
+	QA::Memory::Pause(); \
+	QA::DisableMemPool(); \
+	assert(!QA::MemPoolEnabled()); \
 	Test_##X(); \
 	QA::out << "-----------------\n" << #X << " testing done.\n-----------------\n\n\n\n"; \
 	} while (false)
@@ -101,8 +107,12 @@ int main()
 	std::cout << "QA Initialized." << std::endl;
 	
 	MI_Printer pr(std::clog);
-	auto mi_pr = new MetaInfo::ClassPrinter<MI_Printer, void>(pr, &MI_Printer::write);
-	MetaInfo::registerPrinter(mi_pr);
+	MetaInfo::ClassPrinter<MI_Printer, void> mi_pr(pr, &MI_Printer::write);
+	auto mi_pr_id = MetaInfo::registerPrinter(&mi_pr);
+	
+	auto tmp = new int;
+	
+	QA::out << "Beginning tests..." << std::endl;
 	
 	#ifdef __EXCEPTIONS
 	try
@@ -113,6 +123,7 @@ int main()
 	#define CMAC(X) RUNC(X)
 	
 	RUN_NO_TRACK_ALLOC(mutex);
+	RUN_NO_TRACK_ALLOC(concurrent_circular_list);
 	#include "Tests.inc"
 	
 	#undef MAC
@@ -161,6 +172,8 @@ int main()
 		throw;
 	}
 	#endif
+	
+	MetaInfo::unregisterPrinter(mi_pr_id);
 	
 	std::cerr << "\n\n\nAll Done!\n" << std::flush;
 }
