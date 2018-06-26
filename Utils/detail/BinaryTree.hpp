@@ -7,36 +7,43 @@ namespace Utils { namespace detail
 {
 namespace binary_tree
 {
-	NodeBase::NodeBase() : size(1), left(nullptr), right(nullptr), parent(nullptr)
+	template <class V>
+	_NodeBase<V>::_NodeBase() : size(1), left(nullptr), right(nullptr), parent(nullptr)
 	{
 		
 	}
 	
 	
 	template <class T, class Comp>
-	template <class NAlloc, class Alloc>
-	void Node<T, Comp>::destroyChildren(NAlloc& na, Alloc& a)
+	template <class NAlloc>
+	void Node<T, Comp>::destroyChildren(NAlloc& na)
 	{
 		if (left)
 		{
-			((Self*)left)->destroyChildren(na, a);
-			a.destroy(&((Self*)left)->value);
-			na.destroy(left);
-			na.deallocate((Self*)left, 1);
+			l()->destroyChildren(na);
+			na.destroy(l());
+			na.deallocate(l(), 1);
 			left = nullptr;
 		}
 		
 		if (right)
 		{
-			((Self*)right)->destroyChildren(na, a);
-			a.destroy(&((Self*)right)->value);
-			na.destroy(right);
-			na.deallocate((Self*)right, 1);
+			r()->destroyChildren(na);
+			na.destroy(r());
+			na.deallocate(r(), 1);
 			right = nullptr;
 		}
 	}
 	
 	
+	
+	
+	
+	template <class T, class Comp, class Alloc>
+	BinaryTree<T, Comp, Alloc>::BinaryTree(const allocator_type& a) : root(nullptr), comp(), alloc(a), nalloc(a)
+	{
+		
+	}
 	
 	
 	
@@ -182,7 +189,7 @@ namespace binary_tree
 		_Node_Alloc na;
 		branch = na.allocate(1);
 		nalloc.construct((NodeBase*)branch);
-		alloc.template construct<T>(&branch->value, forward<Args>(args)...);
+		alloc.construct(&branch->value, forward<Args>(args)...);
 		
 		NodeBase* it = parent;
 		while (it != nullptr)
@@ -199,8 +206,7 @@ namespace binary_tree
 	{
 		if (root)
 		{
-			root->destroyChildren(nalloc, a);
-			a.destroy(&root->value);
+			root->destroyChildren(nalloc);
 			nalloc.destroy((NodeBase*)root);
 			nalloc.deallocate(root, 1);
 			root = nullptr;

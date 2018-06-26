@@ -16,7 +16,7 @@ namespace Kernel::Memory
 		{
 			uint32_t magic;
 			uint8_t is_hole;
-			uint32_t size;
+			uint32_t size; // <- Includes header and footer
 		};
 		
 		struct HeapFooter

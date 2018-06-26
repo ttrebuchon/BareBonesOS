@@ -26,6 +26,7 @@ namespace Kernel { namespace Memory
 		{
 			return;
 		}
+		TRACE("Initializing physical memory.");
 		
 		size_t avail = boot::mboot->available_memory();
 		

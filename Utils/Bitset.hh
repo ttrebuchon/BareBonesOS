@@ -135,13 +135,27 @@ struct Bitset_Ptr
 	
 	private:
 	uint32_t count;
+	size_t _bits_used;
+	Type _bits_used_mask;
 	
 	protected:
 	constexpr static size_t ssize = sizeof(storage_type);
 	constexpr static size_t sbits = ssize*8;
 	constexpr size_t bit_count() const noexcept
 	{
+		return _bits_used;
 		return sbits*count;
+	}
+	
+	
+	void recalculate_used_mask()
+	{
+		_bits_used_mask = 0;
+		auto rem = _bits_used % (sizeof(Type)*8);
+		for (auto j = 0; j < rem; ++j)
+		{
+			_bits_used_mask |= (1 << j);
+		}
 	}
 	
 	public:
@@ -205,21 +219,28 @@ struct Bitset_Ptr
 	
 	
 	
-	Bitset_Ptr(Type* ptr, uint32_t count) : count(count), bits(ptr)
+	Bitset_Ptr(Type* ptr, uint32_t count, size_t bits_used = 0) : count(count), bits(ptr), _bits_used(bits_used), _bits_used_mask(0)
 	{
+		assert(bits_used <= sizeof(Type)*8*count);
 		setAll(false);
+		if (_bits_used == 0)
+		{
+			_bits_used = count*sizeof(Type)*8;
+		}
+		else
+		{
+			recalculate_used_mask();
+		}
 	}
 	
 	~Bitset_Ptr()
 	{
-		if (bits)
-		{
-			delete[] bits;
-		}
+		
 	}
 	
 	void set(const uint32_t index, bool value)
 	{
+		assert(index < _bits_used);
 		ASSERT(index < count*sizeof(Type)*8);
 		if (value)
 		{
@@ -233,6 +254,7 @@ struct Bitset_Ptr
 	
 	bool get(const uint32_t index) const
 	{
+		assert(index < _bits_used);
 		ASSERT(index < count*sizeof(Type)*8);
 		return (this->bits[index / (sizeof(Type)*8)] >> (index % (sizeof(Type)*8))) & 0x1;
 	}
@@ -265,7 +287,7 @@ struct Bitset_Ptr
 	
 	bool firstTrue(uint32_t* index, const uint32_t start = 0) const
 	{
-		for (uint32_t i = (start / (sizeof(Type)*8)); i < count; ++i)
+		for (uint32_t i = (start / (sizeof(Type)*8)); i < (_bits_used/(sizeof(Type)*8)); ++i)
 		{
 			if ((bits[i] & ~0) > 0)
 			{
@@ -282,12 +304,44 @@ struct Bitset_Ptr
 				}
 			}
 		}
+		
+		if (_bits_used_mask)
+		{
+			auto i = _bits_used/(sizeof(Type)*8);
+			if (start > i)
+			{
+				return false;
+			}
+			if (bits[i] & _bits_used_mask)
+			{
+				auto diff = bits[i] & _bits_used_mask;
+				if (diff)
+				{
+					auto cnt = 0;
+					while (diff > 0)
+					{
+						if (diff & 0x1)
+						{
+							break;
+						}
+						diff >>= 1;
+						++cnt;
+					}
+					if (index)
+					{
+						*index = i*sizeof(Type)*8 + cnt;
+					}
+					return true;
+				}
+			}
+		}
+		
 		return false;
 	}
 	
 	bool firstFalse(uint32_t* index, const uint32_t start = 0) const
 	{
-		for (uint32_t i = (start / (sizeof(Type)*8)); i < count; ++i)
+		for (uint32_t i = (start / (sizeof(Type)*8)); i < (_bits_used/(sizeof(Type)*8)); ++i)
 		{
 			if ((~(bits[i]) & ~0) != 0)
 			{
@@ -304,6 +358,40 @@ struct Bitset_Ptr
 				}
 			}
 		}
+		
+		
+		if (_bits_used_mask)
+		{
+			auto i = _bits_used/(sizeof(Type)*8);
+			if (start > i)
+			{
+				return false;
+			}
+			if (bits[i] & _bits_used_mask)
+			{
+				auto diff = ~bits[i] & _bits_used_mask;
+				if (diff)
+				{
+					auto cnt = 0;
+					while (diff > 0)
+					{
+						if (diff & 0x1)
+						{
+							break;
+						}
+						diff >>= 1;
+						++cnt;
+					}
+					if (index)
+					{
+						*index = i*sizeof(Type)*8 + cnt;
+					}
+					return true;
+				}
+			}
+		}
+		
+		
 		return false;
 	}
 	
@@ -320,7 +408,7 @@ struct Bitset_Ptr
 		return bs2;
 	}
 	
-	void resize(Type* ptr, const size_t nSize) noexcept
+	void resize(Type* ptr, const size_t nSize, const size_t bit_count = 0) noexcept
 	{
 		if (count > 0)
 		{
@@ -328,10 +416,19 @@ struct Bitset_Ptr
 			{
 				ptr[i] = bits[i];
 			}
-			delete[] bits;
 		}
 		count = nSize;
 		bits = ptr;
+		if (bit_count == 0)
+		{
+			_bits_used = count*sizeof(Type)*8;
+			_bits_used_mask = 0;
+		}
+		else
+		{
+			_bits_used = bit_count;
+			recalculate_used_mask();
+		}
 	}
 	
 	void resize(const size_t nSize) noexcept
