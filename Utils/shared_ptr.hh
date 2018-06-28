@@ -2,6 +2,8 @@
 #define INCLUDED_SHARED_PTR_HH
 
 #include <Common.h>
+#include <Utils/detail/type_traits.hh>
+#include <Utils/detail/enable_if.hh>
 
 namespace Utils
 {
@@ -37,7 +39,7 @@ namespace Utils
 		// Constructors / Destructors
 		constexpr shared_ptr() noexcept;
 		constexpr shared_ptr(nullptr_t) noexcept;
-		template <class Y>
+		template <class Y, typename = typename enable_if<is_convertible<T*, Y*>::value, void>::type>
 		explicit shared_ptr(Y*);
 		
 		template <class Y, class Deleter>
@@ -46,9 +48,9 @@ namespace Utils
 		template <class Y, class Deleter, class Alloc>
 		shared_ptr(Y* ptr, Deleter d, const Alloc&);
 		
-		template <class Y>
+		template <class Y, typename = typename enable_if<is_convertible<T*, Y*>::value, void>::type>
 		shared_ptr(const shared_ptr<Y>&) noexcept;
-		template <class Y>
+		template <class Y, typename = typename enable_if<is_convertible<T*, Y*>::value, void>::type>
 		shared_ptr(shared_ptr<Y>&&) noexcept;
 		
 		shared_ptr(const shared_ptr&) noexcept;
@@ -74,7 +76,20 @@ namespace Utils
 		shared_ptr& operator=(const shared_ptr&) noexcept;
 		ref_type operator[](ptrdiff_t) const;
 		template <class Y>
-		shared_ptr& operator=(const shared_ptr<Y>&) noexcept;
+		enable_if_t<is_convertible<T*, Y*>::value, shared_ptr&> operator=(const shared_ptr<Y>& r) noexcept
+		{
+			static_assert(Utils::is_convertible<T*, Y*>::value);
+			
+			auto ctrl2 = r.ctrl;
+			if (ctrl2)
+			{
+				++ctrl2->refcount;
+				++ctrl2->usecount;
+			}
+			reset();
+			ctrl = ctrl2;
+			return *this;
+		}
 		
 		
 		

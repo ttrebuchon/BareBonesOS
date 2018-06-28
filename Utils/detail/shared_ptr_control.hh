@@ -41,7 +41,7 @@ namespace Utils
 					
 				}
 				
-				Destructor(Deleter d) : del(d)
+				Destructor(const Deleter& d) : del(d)
 				{
 					
 				}

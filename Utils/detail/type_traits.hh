@@ -3,6 +3,7 @@
 
 #include "type_traits_arithmetic.hh"
 #include "bits/decay.hh"
+#include "bits/add_reference.hh"
 #include <Utils/utility>
 
 #define _DEFINE_SPEC_BODY(_Value) : public integral_constant<bool, _Value> {};
@@ -283,14 +284,14 @@ namespace Utils
 	
 	
 	
-	// is_floating
+	// is_floating_point
 	template <class T>
-	struct is_floating : public false_type
+	struct is_floating_point : public false_type
 	{};
 	
-	_DEFINE_SPEC(0, is_floating, float, true);
-	_DEFINE_SPEC(0, is_floating, double, true);
-	_DEFINE_SPEC(0, is_floating, long double, true);
+	_DEFINE_SPEC(0, is_floating_point, float, true);
+	_DEFINE_SPEC(0, is_floating_point, double, true);
+	_DEFINE_SPEC(0, is_floating_point, long double, true);
 	
 	
 	
@@ -413,6 +414,59 @@ namespace Utils
 	template <class T, class Y>
 	struct is_base_of : public integral_constant<bool, detail::is_base_of<typename Utils::decay<T>::type, typename Utils::decay<Y>::type>::value>
 	{ };
+	
+	
+	
+	// is_convertible
+	namespace
+	{
+		
+		template <class To, class From>
+		struct is_convertible_simple : public detail::__sfinae_t
+		{
+			private:
+			
+			static __one make_with(To);
+			static __two make_with(...);
+			static From make_from();
+			
+			public:
+			
+			constexpr static bool value = (sizeof(decltype(make_with(make_from()))) == 1);
+		};
+		
+		
+		template <class T>
+		struct __is_int_or_cref
+		{
+			typedef typename remove_reference<T>::type T2;
+			constexpr static bool __value = (is_integral<T>::value || (is_integral<T2>::value && is_const<T2>::value && !is_volatile<T2>::value));
+		};
+		
+		
+		
+		
+		template <class To, class From, bool b = (
+		is_void<From>::value || is_void<To>::value
+		|| is_function<To>::value
+		|| is_array<To>::value
+		|| (is_floating_point<typename remove_reference<From>::type>::value && __is_int_or_cref<To>::__value))>
+		struct is_convertible_helper
+		{
+			constexpr static bool value = (is_convertible_simple<To, typename add_reference<From>::type>::value);
+		};
+		
+		template <class To, class From>
+		struct is_convertible_helper<To, From, true>
+		{
+			constexpr static bool value = (is_void<To>::value || (__is_int_or_cref<To>::__value && !is_void<From>::value));
+		};
+	}
+	
+	
+	template <class To, class From>
+	struct is_convertible : public integral_constant<bool, is_convertible_helper<To, From>::value>
+	{};
 }
 
 #undef _DEFINE_SPEC

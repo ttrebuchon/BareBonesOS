@@ -37,16 +37,20 @@ namespace Utils
 	}
 	
 	template <class T>
-	template <class Y>
+	template <class Y, class>
 	shared_ptr<T>::shared_ptr(Y* ptr) : ctrl(detail::shared_ptr_control::CreateControl(ptr))
 	{
 		
 	}
 	
 	template <class T>
-	template <class Y>
+	template <class Y, class>
 	shared_ptr<T>::shared_ptr(const shared_ptr<Y>& r) noexcept : ctrl(r.ctrl)
 	{
+		//T* x = get();
+		//x = r.get();
+		
+		
 		++ctrl->refcount;
 		++ctrl->usecount;
 	}
@@ -68,7 +72,7 @@ namespace Utils
 	}
 	
 	template <class T>
-	template <class Y>
+	template <class Y, class>
 	shared_ptr<T>::shared_ptr(shared_ptr<Y>&& r) noexcept : ctrl(r.ctrl)
 	{
 		r.ctrl = nullptr;
@@ -196,7 +200,6 @@ namespace Utils
 	{
 		return get()[in];
 	}
-	
 	
 	
 	

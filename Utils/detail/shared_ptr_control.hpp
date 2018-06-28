@@ -48,8 +48,8 @@ namespace detail
 		
 		ctrl->refcount = ctrl->usecount = 1;
 		auto destr = dalloc.allocate(1);
-		dalloc.construct(destr);
-		destr->del = d;
+		dalloc.construct(destr, d);
+		//destr->del = d;
 		ctrl->deleter_obj = (void*)destr;
 		ctrl->deleter = shared_ptr_control::template Destructor<Y, Deleter>::template call<Alloc>;
 		ctrl->obj = ptr;
