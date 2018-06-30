@@ -17,8 +17,6 @@ namespace detail
 	
 	
 	
-	
-	
 	template <class Y, class Deleter, class Alloc>
 	shared_ptr_control* shared_ptr_control::CreateControl(Y* ptr, Deleter d, const Alloc& _alloc)
 	{
@@ -50,7 +48,14 @@ namespace detail
 		auto destr = dalloc.allocate(1);
 		dalloc.construct(destr, d);
 		//destr->del = d;
-		ctrl->deleter_obj = (void*)destr;
+		
+		typedef typename Alloc::template rebind<alloc_deleter_t<Alloc>>::other data_alloc_t;
+		data_alloc_t data_alloc(_alloc);
+		auto data = data_alloc.allocate(1);
+		data_alloc.construct(data, _alloc);
+		data->dest = (void*)destr;
+		
+		ctrl->deleter_obj = (void*)data;
 		ctrl->deleter = shared_ptr_control::template Destructor<Y, Deleter>::template call<Alloc>;
 		ctrl->obj = ptr;
 		return ctrl;

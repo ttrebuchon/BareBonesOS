@@ -8,6 +8,16 @@ namespace Utils
 {
 	namespace detail
 	{
+		template <class Alloc>
+		struct alloc_deleter_t
+		{
+			void* dest;
+			Alloc alloc;
+			
+			alloc_deleter_t(const Alloc& a) : alloc(a)
+			{}
+		};
+		
 		class shared_ptr_control
 		{
 			public:
@@ -27,13 +37,18 @@ namespace Utils
 				}
 				
 				template <class Alloc>
-				static void call(void* d, void* ptr)
+				static void call(void* data_ptr, void* ptr)
 				{
-					Destructor* dest = static_cast<Destructor<Y, Deleter>*>(d);
+					typedef alloc_deleter_t<Alloc> data_t;
+					auto data = static_cast<data_t*>(data_ptr);
+					Destructor* dest = static_cast<Destructor<Y, Deleter>*>(data->dest);
 					dest->del((Y*)ptr);
-					typename Alloc::template rebind<Destructor>::other dalloc;
+					typename Alloc::template rebind<Destructor>::other dalloc(data->alloc);
 					dalloc.destroy(dest);
 					dalloc.deallocate(dest, 1);
+					typename Alloc::template rebind<data_t>::other data_alloc(dalloc);
+					data_alloc.destroy(data);
+					data_alloc.deallocate(data, 1);
 				}
 				
 				Destructor()
