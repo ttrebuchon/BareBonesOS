@@ -1,12 +1,13 @@
 #ifndef INCLUDED_MEMORY_ALLOCATORS_CROSS_PROCESSOR_HH
 #define INCLUDED_MEMORY_ALLOCATORS_CROSS_PROCESSOR_HH
 
-#include <Common.h>
+#include <Types.h>
 
 namespace Kernel { namespace Memory
 {
 	
 	void* allocate_cross_processor(size_t, size_t alignment);
+	void* allocate_cross_processor(size_t, size_t alignment, void** phys);
 	void free_cross_processor(void*);
 	
 	template <class T>
@@ -92,16 +93,18 @@ namespace Kernel { namespace Memory
 			return (pointer)allocate_cross_processor(sizeof(T)*n, alignof(T));
 		}
 		
+		pointer allocate_physical(size_type n, void** phys)
+		{
+			return (pointer)allocate_cross_processor(sizeof(T)*n, alignof(T), phys);
+		}
+		
 		void deallocate(pointer p, size_type n)
 		{
 			free_cross_processor(p);
 		}
 		
 		template <class U, class... Args>
-		void construct(U* p, Args&&... args)
-		{
-			::new ((void*)p) U(Utils::forward<Args>(args)...);
-		}
+		void construct(U* p, Args... args);
 		
 		template <class U>
 		void destroy(U* u)
@@ -125,5 +128,6 @@ namespace Kernel { namespace Memory
 }
 }
 
+#include "cross_processor_allocator.hpp"
 
 #endif
