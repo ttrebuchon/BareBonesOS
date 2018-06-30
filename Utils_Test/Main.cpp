@@ -33,7 +33,8 @@ TEST(queue);
 TEST(PhysicalMemory);
 TEST(context);*/
 TEST(mutex);
-TEST(concurrent_circular_list);
+
+//TEST(concurrent_circular_list); <- In Progress
 
 
 #ifdef __EXCEPTIONS
@@ -56,33 +57,33 @@ const char* sqlite_out_db = SQLITE_DB;
 void checkMemoryTrack();
 
 #define RUN(X) do { \
-	QA::out << "-----------------\n" << "Running test for " << #X << "...\n-----------------\n" << std::endl; \
+	QA::write_divider(QA::write_divider()) << "\n" << "Running test for " << #X << "...\n-----------------\n" << std::endl; \
 	QA::Memory::Reset(); \
 	QA::Memory::Start(); \
 	QA::EnableMemPool(); \
 	Test_##X(); \
 	QA::DisableMemPool(); \
 	QA::Memory::Pause(); \
-	QA::out << "-----------------\n" << #X << " testing done.\n-----------------\n\n\n\n"; \
+	QA::write_divider(QA::write_divider()) << "\n" << #X << " testing done.\n-----------------\n\n\n\n"; \
 	checkMemoryTrack(); \
 	QA::out << "----------------------------------\n\n\n\n\n" << std::endl; \
 	QA::CheckPIC(); \
 	} while (false)
 
 #define RUNC(X) do { \
-	QA::out << "-----------------\n" << "Running C test for " << #X << "...\n-----------------\n" << std::endl; \
+	QA::write_divider(QA::write_divider()) << "\n" << "Running C test for " << #X << "...\n-----------------\n" << std::endl; \
 	TestC_##X(); \
-	QA::out << "-----------------\n" << #X << " C testing done.\n-----------------\n\n\n\n" << "----------------------------------\n\n\n\n\n" << std::endl; \
+	QA::write_divider(QA::write_divider()) << "\n" << #X << " C testing done.\n-----------------\n\n\n\n" << "----------------------------------\n\n\n\n\n" << std::endl; \
 	} while (false)
 
 #define RUN_NO_TRACK_ALLOC(X) do { \
-	QA::out << "-----------------\n" << "Running test for " << #X << "...\n-----------------\n" << std::endl; \
+	QA::write_divider(QA::write_divider()) << "\n" << "Running test for " << #X << "...\n-----------------\n" << std::endl; \
 	QA::Memory::Reset(); \
 	QA::Memory::Pause(); \
 	QA::DisableMemPool(); \
 	assert(!QA::MemPoolEnabled()); \
 	Test_##X(); \
-	QA::out << "-----------------\n" << #X << " testing done.\n-----------------\n\n\n\n"; \
+	QA::write_divider(QA::write_divider()) << "\n" << #X << " testing done.\n-----------------\n\n\n\n"; \
 	} while (false)
 
 class MI_Printer
@@ -101,8 +102,14 @@ class MI_Printer
 	{}
 };
 
+void run_immediate_test();
+
+
+
 int main()
 {
+	run_immediate_test();
+	
 	QA::Init();
 	std::cout << "QA Initialized." << std::endl;
 	
@@ -123,7 +130,7 @@ int main()
 	#define CMAC(X) RUNC(X)
 	
 	RUN_NO_TRACK_ALLOC(mutex);
-	RUN_NO_TRACK_ALLOC(concurrent_circular_list);
+	//RUN_NO_TRACK_ALLOC(concurrent_circular_list);
 	#include "Tests.inc"
 	
 	#undef MAC

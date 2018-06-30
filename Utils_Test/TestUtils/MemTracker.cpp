@@ -1,5 +1,13 @@
 #include "MemTracker.hh"
 #include <iostream>
+#include <kernel/Memory.h>
+
+
+#ifdef __USE_MEM_POOL__
+	#ifdef TRACK_ALLOC
+		#error Cannot use both TRACK_ALLOC and __USE_MEM_POOL__
+	#endif
+#endif
 
 using Memory = typename QA::Memory;
 	
@@ -14,6 +22,7 @@ using Memory = typename QA::Memory;
 	MAllocator<Memory::Allocation> Memory::alloc;
 	bool Memory::__initted = false;
 	size_t Memory::_total = 0;
+	bool Memory::__print_allocs = false;
 	
 	const std::map<void*, Memory::Allocation*, std::less<void*>, MAllocator<std::pair<void* const, Memory::Allocation*>>>& Memory::Map = Memory::allocationMap;
 	const std::list<Memory::Allocation*, MAllocator<Memory::Allocation*>>& Memory::Allocations = Memory::allocations;
@@ -38,6 +47,11 @@ using Memory = typename QA::Memory;
 		
 		if (__initted && !meta)
 		{
+			if (__print_allocs)
+			{
+				out << "Allocating " << s << std::endl;
+			}
+			
 			if (s == 0)
 			{
 				out << "\n\nZero byte allocation requested, granted at " << p << "\n\n" << std::endl;
@@ -59,6 +73,11 @@ using Memory = typename QA::Memory;
 		
 		if (__initted && !meta)
 		{
+			if (__print_allocs)
+			{
+				out << "Allocating (Array) " << s << std::endl;
+			}
+			
 			if (s == 0)
 			{
 				out << "\n\nZero byte allocation requested, granted at " << p << "\n\n" << std::endl;
@@ -149,6 +168,12 @@ using Memory = typename QA::Memory;
 		_total = 0;
 	}
 	
+	bool Memory::SetPrintAllocs(bool value) noexcept
+	{
+		std::swap(value, __print_allocs);
+		return value;
+	}
+	
 	
 	
 	
@@ -182,5 +207,82 @@ void operator delete[](void* ptr)
 void operator delete[](void* ptr, size_t s)
 {
     QA::Memory::ReleaseArray(ptr, s);
+}
+#endif
+
+static bool mem_pool_initialized = false;
+
+bool QA::MemPoolEnabled() noexcept
+{
+	return ::mem_pool_initialized;
+}
+
+void QA::EnableMemPool() noexcept
+{
+	::mem_pool_initialized = true;
+}
+
+void QA::DisableMemPool() noexcept
+{
+	::mem_pool_initialized = false;
+}
+
+#ifdef __USE_MEM_POOL__
+void* operator new(size_t size)
+{
+	if (!mem_pool_initialized)
+	{
+		return malloc(size);
+	}
+    return kmalloc(size, 0, 0);
+}
+
+void* operator new[](size_t size)
+{
+	if (!mem_pool_initialized)
+	{
+		return malloc(size);
+	}
+	return kmalloc(size, 0, 0);
+}
+
+void operator delete(void* ptr)
+{
+	if (!mem_pool_initialized)
+	{
+		free(ptr);
+		return;
+	}
+    kfree(ptr);
+}
+
+void operator delete(void* ptr, size_t s)
+{
+	if (!mem_pool_initialized)
+	{
+		free(ptr);
+		return;
+	}
+	kfree(ptr);
+}
+
+void operator delete[](void* ptr)
+{
+	if (!mem_pool_initialized)
+	{
+		free(ptr);
+		return;
+	}
+    kfree(ptr);
+}
+
+void operator delete[](void* ptr, size_t s)
+{
+	if (!mem_pool_initialized)
+	{
+		free(ptr);
+		return;
+	}
+    kfree(ptr);
 }
 #endif

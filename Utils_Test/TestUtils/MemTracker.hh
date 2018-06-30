@@ -131,6 +131,7 @@
 		static MetaAllocator<Allocation> alloc;
 		static bool __initted;
 		static size_t _total;
+		static bool __print_allocs;
 		
 		public:
 		
@@ -138,6 +139,8 @@
 		static const std::list<Allocation*, MetaAllocator<Allocation*>>& Allocations;
 		
 		static const size_t& Total;
+		
+		static bool SetPrintAllocs(bool value) noexcept;
 		
 	};
 	

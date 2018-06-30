@@ -1,24 +1,48 @@
 //#include <Common.h>
 #include <stdint.h>
 #include <cstdlib>
+#include "../TestUtils/MemTracker.hh"
+#include <kernel/Memory/Heap.hh>
+
+Kernel::Memory::Heap* kheap = nullptr;
 
 extern "C" {
 	
 	uint32_t kPlacement;
+	
 
-void* kmalloc(unsigned long size, int a, uint64_t* p)
+void* kmalloc(unsigned long size, int a, addr_t* p)
 {
-	auto ptr = malloc(size);
-	if (p)
+	if (!kheap)
 	{
-		*p = (uint64_t)ptr;
+		auto ptr = malloc(size);
+		if (p)
+		{
+			*p = (addr_t)ptr;
+		}
+		return ptr;
 	}
-	return ptr;
+	else
+	{
+		auto ptr = kheap->alloc(size, a);
+		if (a > 0)
+		{
+			assert((addr_t)ptr % a == 0);
+		}
+		return ptr;
+	}
 }
 
 void kfree(void* ptr)
 {
-	free(ptr);
+	if (!kheap)
+	{
+		free(ptr);
+	}
+	else
+	{
+		kheap->free(ptr);
+	}
 }
 
 void kmemset(void* ptr, unsigned char byte, uint32_t size)
@@ -31,7 +55,14 @@ void kmemset(void* ptr, unsigned char byte, uint32_t size)
 
 void* krealloc(void* ptr, size_t nsize)
 {
-	return realloc(ptr, nsize);
+	if (!kheap)
+	{
+		return realloc(ptr, nsize);
+	}
+	else
+	{
+		return kheap->realloc(ptr, nsize);
+	}
 }
 
 }

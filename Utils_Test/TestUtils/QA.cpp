@@ -66,7 +66,7 @@ void QA::MultiBoot_Init()
 	auto pgs = free_ram / PAGE_SIZE;
 	
 	auto dzero = ::open("/dev/zero", O_RDWR | O_APPEND);
-	uint32_t addrStart = 0xF0000000;
+	uint32_t addrStart = 0xD0000000;
 	uint32_t addrEnd = 0xFFFFFFFF;
 	size_t len = addrEnd - addrStart;
 	auto phys = ::mmap((void*)addrStart, len, PROT_READ | PROT_WRITE, MAP_PRIVATE, dzero, 0);
@@ -75,11 +75,17 @@ void QA::MultiBoot_Init()
 	phys_start = phys;
 	phys_end = (void*)((addr_t)phys + len);
 	
+	assert((uint32_t)(addr_t)phys == (addr_t)phys);
+	for (unsigned char* ptr = (unsigned char*)addrStart; ptr != (unsigned char*)addrEnd; ++ptr)
+	{
+		assert(*ptr == 0);
+	}
+	
 	
 	auto mb = (multiboot*)malloc(sizeof(multiboot));
 	mb->flags |= (1 << 6);
 	
-	auto map = (multiboot_mmap_t*)::mmap((void*)0xE0000000, 2*sizeof(multiboot_mmap_t), PROT_READ | PROT_WRITE, MAP_PRIVATE, dzero, 0);
+	auto map = (multiboot_mmap_t*)::mmap((void*)0xC0000000, 2*sizeof(multiboot_mmap_t), PROT_READ | PROT_WRITE, MAP_PRIVATE, dzero, 0);
 	assert(map != MAP_FAILED);
 	//auto map = (multiboot_mmap_t*)malloc(sizeof(multiboot_mmap_t));
 	
@@ -303,6 +309,8 @@ void QA::Filesystem_Init()
 	
 }
 
+#include <kernel/Memory/Heaps/PageHeap.hh>
+
 void QA::Paging_Init()
 {
 	using namespace Kernel::Memory;
@@ -340,10 +348,120 @@ void QA::Paging_Init()
 	auto cr = new PageRegions::Dynamic_Code(PageDirectory::Current);
 	PageDirectory::Regions[CODE_MEM_REGION] = cr;
 	
+	PhysicalMemory::Use<Basic_Physical>();
+	
+	extern Heap* kheap;
+	kheap = nullptr;
+	
+	auto kheap_tmp = new PageHeap<cross_proc_allocator<void>>(PageDirectory::Current, false, false, 4096);
+	kheap = kheap_tmp;
+	
 }
 
 
 Drivers::Disk* QA::QADrive(const char* filename, const size_t size)
 {
 	return new TestUtils::QADrive(filename, size);
+}
+
+
+void QA::EnablePrintAllocs()
+{
+	Memory::SetPrintAllocs(true);
+}
+
+void QA::DisablePrintAllocs()
+{
+	Memory::SetPrintAllocs(false);
+}
+
+
+
+
+int QA::type_func_prefix_count = -1;
+int QA::type_func_suffix_count = -1;
+
+std::ostream& QA::write_types_string(std::ostream& os, const char* fstring, size_t type_count)
+{
+	if (type_func_prefix_count == -1)
+	{
+		auto rstring = get_types_string<>();
+		auto len = strlen(rstring);
+		
+		auto ptr = strstr(rstring, "Types");
+		assert(ptr);
+		ptr += 5;
+		auto index = ptr - rstring;
+		while (rstring[index] != '\0' && rstring[index] != '{')
+		{
+			++index;
+		}
+		assert(rstring[index] == '{');
+		++index;
+		type_func_prefix_count = index;
+		
+		while (rstring[index] != '}' && rstring[index] != '\0')
+		{
+			++index;
+		}
+		assert(rstring[index] == '}');
+		type_func_suffix_count = len - index;
+		
+	}
+	os.rdbuf()->sputn(fstring + type_func_prefix_count, strlen(fstring) - type_func_prefix_count - type_func_suffix_count);
+	//os << fstring;
+	return os;
+}
+
+
+
+
+std::ostream& QA::write_break(std::ostream& os)
+{
+	return (os << get_break());
+}
+
+std::ostream& QA::write_divider(std::ostream& os)
+{
+	return (os << get_divider());
+}
+
+
+std::ostream& QA::write_break()
+{
+	return write_break(out);
+}
+std::ostream& QA::write_divider()
+{
+	return write_divider(out);
+}
+
+const char* QA::get_break()
+{
+	return "\n\n\n";
+}
+
+const char* QA::get_divider()
+{
+	return "--------";
+}
+
+std::ostream& QA::split_sections(std::ostream& os)
+{
+	return (write_break(os) << get_divider() << get_break() << "\n");
+}
+
+std::ostream& QA::split_sections()
+{
+	return split_sections(out);
+}
+
+std::ostream& QA::split_sections(std::ostream& os, const char* name)
+{
+	return (write_break(os) << get_divider() << "\n" << name << "\n" << get_divider() << get_break() << "\n");
+}
+
+std::ostream& QA::split_sections(const char* name)
+{
+	return split_sections(out, name);
 }

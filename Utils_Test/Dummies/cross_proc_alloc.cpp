@@ -25,6 +25,16 @@ namespace Kernel::Memory
 		return ptr;
 	}
 	
+	void* allocate_cross_processor(size_t size, size_t alignment, void** phys)
+	{
+		auto res = allocate_cross_processor(size, alignment);
+		if (phys)
+		{
+			*phys = res;
+		}
+		return res;
+	}
+	
 	void free_cross_processor(void* ptr)
 	{
 		free(ptr);

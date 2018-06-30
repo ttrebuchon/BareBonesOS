@@ -1,6 +1,8 @@
 #include "Tests.hh"
 #include <kernel/Memory/Heaps/BuddyHeap.hh>
 #include <kernel/Scheduling/Thread.h>
+#include <memory>
+#include <Utils/memory>
 
 TEST(buddy)
 {
@@ -158,7 +160,7 @@ TEST(buddy)
 		
 	}
 	
-	
+	std::cout << "\n\n\n\n\n";
 	
 	{
 		
@@ -228,7 +230,7 @@ TEST(buddy)
 	delete[] mem;
 	
 	
-	
+	std::cout << "\n\n\n\n\n";
 	
 	
 	size_t mem_sz = 131072;
@@ -247,11 +249,123 @@ TEST(buddy)
 		}
 		
 		const int ptr_count = mem_sz / block_size;
+		std::cout << "Smallest Block: " << bheap.smallest_alloc() << std::endl;
+		assert(ptr_count > 256);
 		
 		uint64_t* ptrs[ptr_count];
 		memset(ptrs, 0, sizeof(ptrs));
 		
 		const int ppt = 128;
+		assert(ppt > 0);
+		assert(ptr_count % ppt == 0);
+		
+		const int tcount = ptr_count / ppt;
+		
+		pthread_t ids[tcount];
+		
+		for (int i = 0; i < tcount; ++i)
+		{
+			Kernel::thread_create(&ids[i], [=, &bheap, &ptrs]() -> void
+			{
+				for (int j = 0; j < ppt; ++j)
+				{
+					ptrs[i*ppt+j] = (uint64_t*)bheap.alloc(sizeof(uint64_t));
+				}
+				
+				for (int j = 0; j < ppt; ++j)
+				{
+					bheap.free(ptrs[i*ppt+j]);
+				}
+				
+				for (int j = 0; j < ppt; ++j)
+				{
+					ptrs[i*ppt+j] = (uint64_t*)bheap.alloc(1);
+				}
+			});
+		}
+		
+		__sync_synchronize();
+		
+		for (int i = tcount-1; i >= 0; --i)
+		{
+			Kernel::thread_join(ids[i], nullptr);
+		}
+		
+		__sync_synchronize();
+		
+		std::clog << "Threads done!\n";
+		
+		assert(bheap.alloc(sizeof(uint64_t)) == nullptr);
+		
+		for (int i = 0; i < ptr_count; ++i)
+		{
+			if (!ptrs[i])
+			{
+				std::cout << i << std::endl;
+			}
+			assert(ptrs[i]);
+		}
+		
+		for (int i = 0; i < ptr_count; ++i)
+		{
+			bheap.free(ptrs[i]);
+			ptrs[i] = nullptr;
+		}
+	}
+	
+	std::cout << "\n\n\n\n\n";
+	
+	
+	{
+		typedef Kernel::Memory::BuddyHeap<> htype;
+		
+		float eff = 0.75;
+		auto count = htype::pre_calc_max_node_count(mem, mem_sz, eff);
+		auto size = htype::pre_calc_max_meta_size(mem, mem_sz, eff);
+		std::cout << "Frames Size: " << mem_sz << std::endl;
+		std::cout << "size: " << size << "\ncount: " << count << std::endl;
+		assert(size/count == 33);
+		
+		std::cout << std::fixed;
+		
+		assert(size <= mem_sz);
+		
+		std::cout << "Efficiency Numerator: " << (mem_sz - size) << std::endl;
+		
+		
+		std::cout << ((long double)(mem_sz - size))/mem_sz << std::endl;
+		
+	}
+	
+	delete[] mem;
+	
+	std::cout << "\n\n\n\n\n";
+	
+	
+	mem_sz = 1024*1024;
+	mem = new uint8_t[mem_sz];
+	assert(mem_sz / 16 == (64*1024));
+	
+	
+	
+	{
+		
+		Kernel::Memory::BuddyHeap<> bheap(mem, mem_sz, false, false, 4096, 0.999);
+		
+		size_t block_size = bheap.smallest_alloc();
+		if (block_size < sizeof(uint64_t))
+		{
+			block_size = sizeof(uint64_t);
+		}
+		
+		const int ptr_count = mem_sz / block_size;
+		std::cout << "Smallest Block: " << bheap.smallest_alloc() << std::endl;
+		assert(ptr_count == 16);
+		
+		uint64_t* ptrs[ptr_count];
+		memset(ptrs, 0, sizeof(ptrs));
+		
+		const int ppt = 4;
 		assert(ppt > 0);
 		assert(ptr_count % ppt == 0);
 		

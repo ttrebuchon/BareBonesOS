@@ -36,6 +36,7 @@ SRC += ../kernel/Memory/Heap.cpp
 SRC += ../kernel/Memory/PageDir.cpp
 SRC += ../kernel/Memory/Paging.cpp
 #SRC += $(call GET_SRC_R,kernel/Memory,cpp)
+SRC += $(call GET_SRC_R,kernel/Memory/Allocators,cpp)
 
 ASM_SRC = ../kernel/Utility_asm.asm
 ASM_OBJS = $(ASM_SRC:.asm=.o)
@@ -76,7 +77,7 @@ BOTH_FLAGS += -fmax-errors=1
 BOTH_FLAGS += #-DINCLUDED_DEBUG_H_ENABLED
 BOTH_FLAGS += #-D"kassert(x)"="assert(x)"
 BOTH_FLAGS += -DDEBUG #-DDEBUG_VERIFY
-#BOTH_FLAGS += -DTRACK_ALLOC
+BOTH_FLAGS += -DTRACK_ALLOC
 BOTH_FLAGS += #-D__USE_MEM_POOL__
 BOTH_FLAGS += -DDEBUG_TRACK_QUERY
 BOTH_FLAGS += -D__USE_STD_NEW__
