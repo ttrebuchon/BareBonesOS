@@ -67,62 +67,9 @@ namespace Kernel::Memory
 		assert(len >= 512);
 		
 		
-		size_t val = 1;
-		while (val <= len)
-		{
-			++highest_order;
-			val <<= 1;
-		}
-		val >>= 1;
-		assert(highest_order > 2);
-		--highest_order;
-		
-		assert(val > sizeof(tree_node_type));
+		calculate_bounds(mem, len, &lowest_order, &highest_order, efficiency);
 		assert(detail::required_order(len) == highest_order);
-		
-		uint8_t order_delta = 0;
-		if (efficiency > 0)
-		{
-			auto log_val = (((long double)len) / efficiency - len)/sizeof(tree_node_type) - 1;
-			val = 1;
-			while (val <= log_val)
-			{
-				val <<= 1;
-				++order_delta;
-			}
-			TRACE(log_val);
-			assert(order_delta > 1);
-			--order_delta;
-		}
-		else if (efficiency == 0)
-		{
-			order_delta = highest_order;
-		}
-		else
-		{
-			val = 1;
-			while (val <= sizeof(tree_node_type))
-			{
-				++lowest_order;
-				val <<= 1;
-			}
-			assert(highest_order > lowest_order);
-			assert(lowest_order > 1);
-			order_delta = highest_order - lowest_order;
-		}
-		
-		
-		
-		
-		
-		if (order_delta < highest_order)
-		{
-			lowest_order = highest_order - order_delta;
-		}
-		else
-		{
-			lowest_order = 0;
-		}
+		assert(highest_order - lowest_order > 0);
 	}
 	
 	
@@ -190,6 +137,111 @@ namespace Kernel::Memory
 		else
 		{
 			return 0;
+		}
+	}
+	
+	
+	
+	
+	
+	
+	
+	template <class Alloc, class Mutex>
+	constexpr size_t BuddyHeap<Alloc, Mutex>::pre_calc_max_node_count(void* mem, size_t len, float efficiency) noexcept
+	{
+		uint8_t lowest_order = 0;
+		uint8_t highest_order = 0;
+		
+		calculate_bounds(mem, len, &lowest_order, &highest_order, efficiency);
+		
+		return (1 << ((highest_order - lowest_order) + 1)) - 1;
+		
+	}
+	
+	
+	
+	template <class Alloc, class Mutex>
+	constexpr size_t BuddyHeap<Alloc, Mutex>::pre_calc_max_meta_size(void* mem, size_t len, float efficiency) noexcept
+	{
+		return sizeof(tree_node_type)*pre_calc_max_node_count(mem, len, efficiency);
+	}
+	
+	
+	
+	template <class Alloc, class Mutex>
+	constexpr void BuddyHeap<Alloc, Mutex>::calculate_bounds(void* mem, size_t len, uint8_t* low, uint8_t* high, float efficiency) noexcept
+	{
+		detail::align_heap_start(mem, len);
+		uint8_t highest_order = 0;
+		
+		size_t val = 1;
+		while (val <= len)
+		{
+			++highest_order;
+			val <<= 1;
+		}
+		val >>= 1;
+		assert(highest_order > 2);
+		--highest_order;
+		
+		assert(detail::required_order(len) == highest_order);
+		
+		
+		uint8_t order_delta = 0;
+		if (efficiency >= 1.0f)
+		{
+			order_delta = 0;
+		}
+		else if (efficiency > 0)
+		{
+			auto log_val = ((long double)len)/sizeof(tree_node_type)*(1 - efficiency) + 1;
+			assert(log_val >= 0);
+			auto lval = (8*sizeof(unsigned long long) - __builtin_clzll((unsigned long long)log_val) - 1);
+			if ((1 << lval) > (unsigned long long)log_val)
+			{
+				--lval;
+			}
+			assert(lval < (1 << 7));
+			assert(lval > 0);
+			order_delta = (uint8_t)(lval - 1);
+		}
+		else if (efficiency == 0)
+		{
+			order_delta = highest_order;
+		}
+		else
+		{
+			val = 1;
+			while (val <= sizeof(tree_node_type))
+			{
+				++order_delta;
+				val <<= 1;
+			}
+			assert(highest_order > order_delta);
+			assert(order_delta > 1);
+			order_delta = highest_order - order_delta;
+		}
+		
+		
+		
+		uint8_t lowest_order = 0;
+		if (order_delta < highest_order)
+		{
+			lowest_order = highest_order - order_delta;
+		}
+		else
+		{
+			lowest_order = 0;
+		}
+		
+		if (high)
+		{
+			*high = highest_order;
+		}
+		
+		if (low)
+		{
+			*low = lowest_order;
 		}
 	}
 	

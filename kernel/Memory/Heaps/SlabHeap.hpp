@@ -111,6 +111,10 @@ namespace Kernel::Memory
 		{
 			return nullptr;
 		}
+		if (size > sizeof(T))
+		{
+			TRACE(size);
+		}
 		assert(size <= sizeof(T));
 		assert(alignment == 0 || (alignof(T) % alignment == 0));
 		uint32_t index;
@@ -185,6 +189,24 @@ namespace Kernel::Memory
 	{
 		return sizeof(T);
 	}
+	
+	
+	
+	template <class T, class Meta_Alloc>
+	size_t SlabHeap<T, Meta_Alloc>::Available_Count(size_t len) noexcept
+	{
+		return (len / sizeof(slab_type))*16;
+	}
+	
+	template <class T, class Meta_Alloc>
+	size_t SlabHeap<T, Meta_Alloc>::Size_For_Count(size_t count) noexcept
+	{
+		size_t slab_count = (count / 16) + (count % 16 != 0 ? 1 : 0);
+		assert(Available_Count(slab_count*sizeof(slab_type)) >= count);
+		return slab_count * sizeof(slab_type);
+	}
+	
+	
 }
 
 #endif

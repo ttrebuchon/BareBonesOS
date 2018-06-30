@@ -22,7 +22,7 @@ namespace Kernel::Memory
 			uint16_t free_count;
 			uint16_t free_mask;
 			
-			static_assert(alignof(T) == sizeof(T));
+			static_assert((alignof(T) == sizeof(T)) || (sizeof(T) % alignof(T) == 0));
 			uint8_t region[sizeof(T)*16] __attribute__((__aligned__(alignof(T))));
 			
 			slab_t() : signature(SLAB_SIGNATURE), free_count(16), free_mask(0xFFFF), region()
@@ -36,6 +36,12 @@ namespace Kernel::Memory
 		
 		
 	}
+	
+	template <size_t sz, size_t alignment = 1>
+	struct alignas(alignment) slab_heap_item
+	{
+		uint8_t dat[sz];
+	};// __attribute__((alignas(alignment)));
 	
 	
 	template <class T, class Meta_Alloc = Utils::allocator<void>>
@@ -73,7 +79,15 @@ namespace Kernel::Memory
 		__attribute__((__always_inline__))
 		size_t slab_count() const noexcept
 		{ return _slab_count; }
+		
+		
+		static size_t Available_Count(size_t len) noexcept;
+		static size_t Size_For_Count(size_t count) noexcept;
 	};
+	
+	template <size_t size, size_t alignment = 0, class Meta_Alloc = Utils::allocator<void>>
+	using SlabHeap_N = SlabHeap<slab_heap_item<size, alignment>, Meta_Alloc>;
+	
 	
 }
 

@@ -36,9 +36,9 @@ namespace Kernel::Memory
 			void* _mid;
 			
 			public:
+			tree_node *parent, *left, *right;
 			uint8_t order : 7;
 			uint8_t full : 1;
-			tree_node *parent, *left, *right;
 			
 			tree_node(void* start, uint8_t order) noexcept : _mid(nullptr), order(order), full(0), parent(nullptr), left(nullptr), right(nullptr)
 			{
@@ -114,7 +114,7 @@ namespace Kernel::Memory
 					return false;
 				}
 			}
-		};
+		} __attribute__((__packed__));
 		
 		
 		template <class Alloc = Utils::Allocator<tree_node>>
@@ -169,10 +169,12 @@ namespace Kernel::Memory
 		uint8_t highest_order;
 		uint8_t lowest_order;
 		
+		constexpr static float default_efficiency = 0.75;
+		
 		public:
 		
-		BuddyHeap(void* mem, size_t len, bool kernel_mem, bool default_read_only, size_t pg_sz = 0, float efficiency = 0.75);
-		BuddyHeap(const allocator_type&, void* mem, size_t len, bool kernel_mem, bool default_read_only, size_t pg_sz = 0, float efficiency = 0.75);
+		BuddyHeap(void* mem, size_t len, bool kernel_mem, bool default_read_only, size_t pg_sz = 0, float efficiency = default_efficiency);
+		BuddyHeap(const allocator_type&, void* mem, size_t len, bool kernel_mem, bool default_read_only, size_t pg_sz = 0, float efficiency = default_efficiency);
 		
 		virtual ~BuddyHeap();
 		
@@ -190,6 +192,23 @@ namespace Kernel::Memory
 		{
 			return ((size_t)1) << lowest_order;
 		}
+		
+		constexpr size_t max_node_count() const noexcept
+		{
+			return (1 << (highest_order - lowest_order + 1)) - 1;
+		}
+		
+		constexpr size_t max_meta_size() const noexcept
+		{
+			return sizeof(tree_node_type)*max_node_count();
+		}
+		
+		
+		constexpr static size_t pre_calc_max_node_count(void* mem, size_t len, float efficiency = default_efficiency) noexcept;
+		constexpr static size_t pre_calc_max_meta_size(void* mem, size_t len, float efficiency = default_efficiency) noexcept;
+		
+		
+		constexpr static void calculate_bounds(void* mem, size_t len, uint8_t* low, uint8_t* high, float efficiency = default_efficiency) noexcept;
 	};
 	
 }
