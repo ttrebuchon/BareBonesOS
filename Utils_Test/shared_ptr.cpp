@@ -151,7 +151,6 @@ TEST(shared_ptr)
 		Utils::shared_ptr<int> ptr3((int*)nullptr, foo<2>);
 		Utils::shared_ptr<int> ptr4(ptr2);
 		Utils::shared_ptr<int> ptr5(nullptr);
-		Utils::shared_ptr<int> ptr6((unsigned int*)nullptr);
 		ptr = Utils::shared_ptr<int>(ptr2);
 		assert(ptr == nullptr);
 		assert(!ptr);
@@ -187,7 +186,6 @@ TEST(shared_ptr)
 		Utils::shared_ptr<int> ptr3((int*)nullptr, foo<2>);
 		Utils::shared_ptr<int> ptr4(ptr2);
 		Utils::shared_ptr<int> ptr5(nullptr);
-		Utils::shared_ptr<int> ptr6((unsigned int*)nullptr);
 		ptr = Utils::shared_ptr<int>(ptr2);
 		assert(ptr == nullptr);
 		assert(!ptr);

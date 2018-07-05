@@ -1,5 +1,9 @@
 #include "Tests.hh"
+#define private public
+#define protected public
 #include <Utils/Bitset.hh>
+#undef protected
+#undef private
 #include <cassert>
 #include <iomanip>
 #include <bitset>
@@ -125,11 +129,13 @@ TEST(Bitset)
 	
 	
 	
-	
-	Bitset_Ptr<> bs3(new uchar[256], 256);
+	auto mem = new uchar[256];
+	Bitset_Ptr<> bs3(mem, 256);
 	prevIndex = index;
 	assert(!bs3.firstTrue(&index));
 	assert(index == prevIndex);
+	assert(bs3.size() == 256*8);
+	assert(bs3._bits_used_mask == 0);
 	
 	bs3.setAll(true);
 	assert(!bs3.firstFalse(&index));
@@ -143,7 +149,72 @@ TEST(Bitset)
 		assert(bs3.bits[i] == 0x0);
 	}
 	assert(bs3.firstFalse(nullptr));
+	bs3.bits = nullptr;
+	delete[] mem;
+	mem = nullptr;
 	
+	
+	
+	
+	
+	auto mem2 = new uint32_t[2];
+	Bitset_Ptr<uint32_t> bs4(mem2, 2, 60);
+	assert(bs4._bits_used == 60);
+	
+	bs4.setAll(true);
+	for (uint32_t i = 0; i < 60; ++i)
+	{
+		bs4.set(i, false);
+	}
+	assert(!bs4.firstTrue(nullptr));
+	
+	
+	bs4.setAll(false);
+	prevIndex = index;
+	assert(!bs4.firstTrue(&index));
+	assert(index == prevIndex);
+	assert(bs4.size() == 60);
+	//assert(bs4._bits_used_mask == 3);
+	
+	bs4.setAll(true);
+	assert(!bs4.firstFalse(&index));
+	assert(index == prevIndex);
+	
+	assert(bs4.firstTrue(nullptr));
+	
+	bs4.setAll(false);
+	for (uint32_t i = 0; i < 2; ++i)
+	{
+		assert(bs4.bits[i] == 0x0);
+	}
+	assert(bs4.firstFalse(nullptr));
+	
+	bs4.setAll(false);
+	for (uint32_t i = 0; i < 59; ++i)
+	{
+		bs4.set(i, true);
+	}
+	assert(bs4.firstFalse(nullptr));
+	bs4.set(59, true);
+	assert(!bs4.firstFalse(nullptr));
+	
+	bs4.setAll(true);
+	for (uint32_t i = 0; i < 60; ++i)
+	{
+		bs4.set(i, false);
+	}
+	{
+		uint32_t ind;
+		if (bs4.firstTrue(&ind))
+		{
+			std::cout << ind << std::endl;
+		}
+		std::cout << "bits[1]: " << (void*)(addr_t)(bs4.bits[1] & bs4._bits_used_mask) << std::endl;
+	}
+	assert(!bs4.firstTrue(nullptr));
+	
+	bs4.bits = nullptr;
+	delete[] mem2;
 	
 	test_bitset();
 }

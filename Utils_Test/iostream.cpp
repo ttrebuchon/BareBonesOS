@@ -19,10 +19,11 @@ class Foo : public Utils::basic_ios<char>
 	
 };
 
-class StdBuf : public Utils::streambuf, public std::stringbuf
+class StdBuf : public Utils::streambuf, std::stringbuf
 {
 	
 	protected:
+	char* _arr;
 		
 	/*virtual Utils::streambuf::pos_type seekoff(Utils::streambuf::off_type off, Utils::ios_base::seekdir way, Utils::ios_base::openmode which)
 	{
@@ -67,13 +68,15 @@ class StdBuf : public Utils::streambuf, public std::stringbuf
 	
 	public:
 	
-	StdBuf() : Utils::streambuf(), std::stringbuf()
+	StdBuf() : Utils::streambuf(), std::stringbuf(), _arr(nullptr)
 	{
 		resetPtrs();
 	}
 	
 	std::string str()
 	{
+		return std::string(Utils::streambuf::pbase(), Utils::streambuf::pptr());
+		
 		std::stringbuf::setp(Utils::streambuf::pbase(), Utils::streambuf::epptr());
 		std::stringbuf::pbump(Utils::streambuf::pptr() - Utils::streambuf::pbase());
 		
@@ -112,9 +115,19 @@ class StdBuf : public Utils::streambuf, public std::stringbuf
 	
 	void setArray(const size_t n)
 	{
+		if (_arr)
+		{
+			std::stringbuf::setg(nullptr, nullptr, nullptr);
+			std::stringbuf::setp(nullptr, nullptr);
+			delete[] _arr;
+		}
 		char* arr = new char[n];
+		_arr = arr;
+		memset(arr, 0, n);
 		std::stringbuf::setbuf(arr, n);
 		Utils::streambuf::setbuf(arr, n);
+		
+		
 		
 		
 		std::stringbuf::setp(arr, arr+n);
@@ -146,6 +159,20 @@ class StdBuf : public Utils::streambuf, public std::stringbuf
 		assert(std::stringbuf::pptr() == Utils::streambuf::pptr());
 		assert(std::stringbuf::epptr() == Utils::streambuf::epptr());
 		
+		
+		assert(std::stringbuf::pptr() == _arr);
+		assert(strlen(_arr) == 0);
+		assert(std::stringbuf::epptr() == _arr + n);
+		assert(std::stringbuf::pbase() == _arr);
+		ASSERTEQ(_arr[n-1], '\0');
+		assert(_arr[0] == 0);
+		assert(std::stringbuf::sync() == 0);
+		ASSERTEQ(std::string(std::stringbuf::pbase(), std::stringbuf::pptr()).length(), 0);
+		if (str().length() != 0)
+		{
+			std::clog << "n: " << n << std::endl;
+		}
+		ASSERTEQ(str().length(), 0);
 	}
 };
 
@@ -283,7 +310,14 @@ TEST(IOSTREAM)
 	bool j = true;
 	
 	buf->setArray(400000);
-	assert(buf->str() == "");
+	{
+		std::string s1 = buf->str();
+		ASSERTEQ(s1.length(), 0);
+		std::string s2("");
+		std::cout << "'" << s1 << "'" << std::endl;
+		std::cout << "'" << s2 << "'" << std::endl;
+		ASSERTEQ(s1, s2);
+	}
 	
 	std::string control = "";
 	

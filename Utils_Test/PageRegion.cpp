@@ -10,7 +10,7 @@ struct alignas(4096) some_align_struct
 
 TEST(page_region)
 {
-	auto pr = Kernel::Memory::PageDirectory::Regions.at(CODE_MEM_REGION);
+	auto pr = Kernel::Memory::PageDirectory::Regions[CODE_MEM_REGION];
 	
 	
 	

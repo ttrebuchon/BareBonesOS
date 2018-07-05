@@ -22,6 +22,7 @@ namespace Kernel::Memory
 			assert(false);
 		}
 		assert((size_t)ptr % alignment == 0);
+		assert(ptr);
 		return ptr;
 	}
 	
