@@ -2,6 +2,7 @@
 #include <mutex>
 #include "Tests.hh"
 #include <future>
+#include <Support/threading/SpinMutex.hh>
 
 template <class mutex, class T, class L, class LF, class F>
 static void do_tests(const int n, const LF locker, const F f);
@@ -39,7 +40,7 @@ void run_for(const int n, F f)
 	do_tests<std::mutex, T, std::lock_guard>(n, stdLock, f);
 	
 	std::clog << "Testing Utils..." << std::endl;
-	do_tests<Utils::mutex, T, std::lock_guard>(n, stdLock, f);
+	do_tests<Support::threading::spin_mutex, T, std::lock_guard>(n, stdLock, f);
 	
 	
 }
