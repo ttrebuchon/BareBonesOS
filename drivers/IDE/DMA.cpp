@@ -220,7 +220,7 @@ namespace Drivers { namespace IDE {
 		
 		ASSERT(!Status::Get(port_byte_in(BMR + 0x2)).done);
 		VGA::Write("Command: ");
-		VGA::Write((void*)port_byte_in(BMR));
+		VGA::Write((void*)(addr_t)port_byte_in(BMR));
 		VGA::Write("\n");
 
 		ASSERT(!Status::Get(port_byte_in(BMR + (uint16_t)Register::Status)).failed);
