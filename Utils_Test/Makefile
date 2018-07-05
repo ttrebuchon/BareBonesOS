@@ -37,6 +37,8 @@ SRC += ../kernel/Memory/PageDir.cpp
 SRC += ../kernel/Memory/Paging.cpp
 #SRC += $(call GET_SRC_R,kernel/Memory,cpp)
 SRC += $(call GET_SRC_R,kernel/Memory/Allocators,cpp)
+#SRC += ../Std/pthread/pthread_cond_wait.cpp
+SRC += $(call GET_SRC_R,Std/pthread,cpp)
 
 ASM_SRC = ../kernel/Utility_asm.asm
 ASM_OBJS = $(ASM_SRC:.asm=.o)
@@ -74,10 +76,12 @@ BOTH_FLAGS += -I../../CppUtilities
 BOTH_FLAGS += #-Wfatal-errors
 BOTH_FLAGS += #-fmax-errors=5
 BOTH_FLAGS += -fmax-errors=1
+BOTH_FLAGS += -Werror=nonnull
+BOTH_FLAGS += -Werror=int-to-pointer-cast
 BOTH_FLAGS += #-DINCLUDED_DEBUG_H_ENABLED
 BOTH_FLAGS += #-D"kassert(x)"="assert(x)"
 BOTH_FLAGS += -DDEBUG #-DDEBUG_VERIFY
-BOTH_FLAGS += -DTRACK_ALLOC
+BOTH_FLAGS += #-DTRACK_ALLOC
 BOTH_FLAGS += #-D__USE_MEM_POOL__
 BOTH_FLAGS += -DDEBUG_TRACK_QUERY
 BOTH_FLAGS += -D__USE_STD_NEW__
@@ -87,6 +91,7 @@ BOTH_FLAGS += -fPIC
 BOTH_FLAGS += -pie
 BOTH_FLAGS += -D"throw(...)"=""
 #BOTH_FLAGS += -fgnu-tm
+BOTH_FLAGS += -D"FS_INITRD_TEST_IMG"="\"../Tools/initrd/initrd.img\""
 
 BOTH_FLAGS += $(SQLITE_FLAGS)
 

@@ -27,3 +27,5 @@ MAC(page_region);
 MAC(slab);
 MAC(buddy);
 MAC(slab_allocator);
+MAC(choice_alloc);
+MAC(osthread);

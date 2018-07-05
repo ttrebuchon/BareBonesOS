@@ -689,6 +689,9 @@ void test_threads()
 	}
 	
 	
+	QA::out << "Testing joining..." << QA::br;
+	
+	
 	int counter = 0;
 	Utils::vector<pthread_t> ids;
 	ids.reserve(100*Multiplier);
