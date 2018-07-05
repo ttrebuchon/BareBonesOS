@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-void* kmalloc(uint32_t size, int align, addr_t* phys);
+void* kmalloc(uint32_t size, int align, addr_t* phys) __attribute__((__malloc__));
 void kfree(void*);
 void* kmemset(void*, int, size_t);
 void* krealloc(void*, size_t);
@@ -18,11 +18,11 @@ void* kmmap(void* addr, size_t len, int prot, int flags, int fileDesc, off_t off
 
 
 
-void* malloc(size_t);
+void* malloc(size_t) __attribute__((__malloc__));
 void free(void*);
 void* realloc(void*, size_t);
 void* memset(void*, int, size_t);
-void* calloc(size_t num, size_t size);
+void* calloc(size_t num, size_t size) __attribute__((__malloc__));
 
 // Expand memory to nsize, if (flags & MREMAP_MAYMOVE), function may remap
 void* mremap(void* old_addr, size_t osize, size_t nsize, long unsigned int flags);
