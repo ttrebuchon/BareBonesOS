@@ -14,6 +14,7 @@
 #Compiled Resource Files
 initrd.img
 dummy.img
+*.img
 
 # Precompiled Headers
 *.gch
