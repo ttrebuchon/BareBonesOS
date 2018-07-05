@@ -35,7 +35,7 @@ namespace Kernel::Memory::PageRegions
 		
 		
 		public:
-		Dynamic_Code(PageDirectory* kernel_dir) noexcept;
+		Dynamic_Code(PageDirectory* kernel_dir) noexcept __attribute__((__nonnull__(1)));
 	};
 	
 	
