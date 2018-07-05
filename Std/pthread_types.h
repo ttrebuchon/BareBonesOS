@@ -79,29 +79,39 @@
 
 #include <Common.h>
 
+#ifdef TESTING
+#define PTHREAD_N(X) osthread_##X
+#define PTHREAD_N2(Y, X) Y##osthread_##X
+#else
+#define PTHREAD_N(X) pthread_##X
+#define PTHREAD_N2(Y, X) Y##pthread_##X
+#endif
 
-union pthread_attr_t
+
+union PTHREAD_N2(_,attr_t)//_pthread_attr_t
 {
   char __size[__SIZEOF_PTHREAD_ATTR_T];
   long int __align;
 };
-#ifndef __have_pthread_attr_t
-typedef union pthread_attr_t pthread_attr_t;
+#if !defined(__have_pthread_attr_t) && !defined(TESTING)
+typedef union PTHREAD_N2(_,attr_t) PTHREAD_N(attr_t);
 # define __have_pthread_attr_t	1
 #endif
 
 
-typedef struct __pthread_internal_slist
+
+
+typedef struct PTHREAD_N2(__,internal_slist)
 {
-  struct __pthread_internal_slist *__next;
-} __pthread_slist_t;
+	struct PTHREAD_N2(__,internal_slist)* __next;
+} PTHREAD_N2(__,slist_t);
 
 
 /* Data structures for mutex handling.  The structure of the attribute
    type is not exposed on purpose.  */
 typedef union
 {
-  struct __pthread_mutex_s
+	struct PTHREAD_N2(__,mutex_s)
   {
     int __lock;
     unsigned int __count;
@@ -113,18 +123,21 @@ typedef union
     __extension__ union
     {
       int __spins;
-      __pthread_slist_t __list;
+      PTHREAD_N2(__, slist_t) __list;
+      //__pthread_slist_t __list;
     };
   } __data;
   char __size[__SIZEOF_PTHREAD_MUTEX_T];
   long int __align;
 } pthread_mutex_t;
+//} pthread_mutex_t;
 
 typedef union
 {
   char __size[__SIZEOF_PTHREAD_MUTEXATTR_T];
   long int __align;
-} pthread_mutexattr_t;
+} PTHREAD_N(mutexattr_t);
+//} pthread_mutexattr_t;
 
 
 /* Data structure for conditional variable handling.  The structure of
@@ -144,21 +157,27 @@ typedef union
   } __data;
   char __size[__SIZEOF_PTHREAD_COND_T];
   __extension__ long long int __align;
-} pthread_cond_t;
+} PTHREAD_N(cond_t);
+//} pthread_cond_t;
 
 typedef union
 {
   char __size[__SIZEOF_PTHREAD_CONDATTR_T];
   long int __align;
-} pthread_condattr_t;
+} PTHREAD_N(condattr_t);
+//} pthread_condattr_t;
 
 
 /* Keys for thread-specific data */
-typedef unsigned int pthread_key_t;
+//typedef unsigned int pthread_key_t;
+
+typedef unsigned int PTHREAD_N(key_t);
 
 
 /* Once-only execution */
-typedef int pthread_once_t;
+//typedef int pthread_once_t;
+
+typedef int PTHREAD_N(once_t);
 
 
 #if defined __USE_UNIX98 || defined __USE_XOPEN2K

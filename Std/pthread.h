@@ -1163,21 +1163,21 @@
 
 extern "C" {
 	
-	void* pthread_getspecific(pthread_key_t);
-	int pthread_setspecific(pthread_key_t, const void*);
+	void* PTHREAD_N(getspecific)(pthread_key_t);
+	int PTHREAD_N(setspecific)(pthread_key_t, const void*);
 	
-	int pthread_once(pthread_once_t*, void (*)(void));
+	int PTHREAD_N(once)(pthread_once_t*, void (*)(void));
 	
-	int pthread_mutex_lock(pthread_mutex_t*);
+	int PTHREAD_N(mutex_lock)(pthread_mutex_t*);
 	
-	int pthread_mutex_unlock(pthread_mutex_t*);
+	int PTHREAD_N(mutex_unlock)(pthread_mutex_t*);
 	
-	int pthread_key_create(pthread_key_t*, void (*)(void*));
+	int PTHREAD_N(key_create)(pthread_key_t*, void (*)(void*));
 	
-	int pthread_cond_signal(pthread_cond_t*);
+	int PTHREAD_N(cond_signal)(pthread_cond_t*);
 	
-	int pthread_cond_broadcast(pthread_cond_t*);
+	int PTHREAD_N(cond_broadcast)(pthread_cond_t*);
 	
-	int pthread_cond_wait(pthread_cond_t*, pthread_mutex_t*);
+	int PTHREAD_N(cond_wait)(pthread_cond_t*, pthread_mutex_t*);
 }
 #endif
