@@ -133,9 +133,6 @@ namespace boot
 		{
 			uint64_t start = free_ranges[i]->base_addr;
 			uint64_t end = start + free_ranges[i]->len;
-			TRACE("Start/End");
-			TRACE((void*)start);
-			TRACE((void*)end);
 			
 			end -= (end % PAGE_SIZE);
 			if (start % PAGE_SIZE != 0)
