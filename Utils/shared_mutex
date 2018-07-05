@@ -1,2 +1,3 @@
 #include "detail/shared_mutex.hh"
+#include "detail/bits/shared_lock.hh"
 #include "detail/shared_mutex.hpp"

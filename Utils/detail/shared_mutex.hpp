@@ -9,42 +9,30 @@ namespace Utils
 	bool shared_timed_mutex::try_lock_until(const chrono::time_point<Clock, Dur>& t)
 	{
 		unique_lock<mutex> lk(_mut);
-		if (state & _write_entered)
+		while (writers > 0)
 		{
-			while (true)
+			cv_status status = wwait.wait_until(lk, t);
+			if (status == cv_status::timeout)
 			{
-				cv_status status = g1.wait_until(lk, t);
-				if ((state & _write_entered) == 0)
-				{
-					break;
-				}
-				
-				if (status == cv_status::timeout)
-				{
-					return false;
-				}
-				
+				return false;
 			}
+			__sync_synchronize();
+		}
+		++writers;
+		
+		while (readers > 0)
+		{
+			cv_status status = rwait.wait_until(lk, t);
+			if (status == cv_status::timeout)
+			{
+				--writers;
+				wwait.notify_all();
+				return false;
+			}
+			__sync_synchronize();
 		}
 		
-		state |= _write_entered;
-		if (state & _n_readers)
-		{
-			while (true)
-			{
-				cv_status status = g2.wait_until(lk, t);
-				if ((state & _n_readers) == 0)
-				{
-					break;
-				}
-				
-				if (status == cv_status::timeout)
-				{
-					state &= ~_write_entered;
-					return false;
-				}
-			}
-		}
+		
 		return true;
 	}
 	
@@ -55,27 +43,29 @@ namespace Utils
 	bool shared_timed_mutex::try_lock_shared_until(const chrono::time_point<Clock, Dur>& t)
 	{
 		unique_lock<mutex> lk(_mut);
-		if ((state & _write_entered) || (state & _n_readers) == _n_readers)
+		cv_status status;
+		while (writers > 0)
 		{
-			while (true)
+			status = wwait.wait(lk, t);
+			if (status == cv_status::timeout)
 			{
-				cv_status status = g1.wait_until(lk, t);
-				if (((state & _write_entered) == 0) && (state & _n_readers) < _n_readers)
-				{
-					break;
-				}
-				
-				if (status == cv_status::timeout)
-				{
-					return false;
-				}
-				
+				return false;
 			}
+			__sync_synchronize();
 		}
-		
-		unsigned numReaders = (state & _n_readers) + 1;
-		state &= ~_n_readers;
-		state |= numReaders;
+		++waiting_readers;
+		while (readers >= max_readers)
+		{
+			status = rwait.wait_until(lk, t);
+			if (status == cv_status::timeout)
+			{
+				--waiting_readers;
+				return false;
+			}
+			__sync_synchronize();
+		}
+		--waiting_readers;
+		++readers;
 		return true;
 	}
 }

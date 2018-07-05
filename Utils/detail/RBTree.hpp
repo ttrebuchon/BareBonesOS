@@ -424,14 +424,47 @@ namespace rb_tree
 	
 	
 	template <class T, class Comp, class Alloc>
-	RBTree<T, Comp, Alloc>::RBTree() : _header(nullptr), comp(), alloc(), nalloc(), leftmost(nullptr)
+	RBTree<T, Comp, Alloc>::RBTree() : RBTree(allocator_type())/* : _header(nullptr), comp(), alloc(), nalloc(), leftmost(nullptr)*/
+	{
+		/*_header = nalloc.allocate(1);
+		nalloc.construct(_header);
+		_header->left = _header;
+		_header->right = _header;*/
+		
+		
+	}
+	
+	template <class T, class Comp, class Alloc>
+	RBTree<T, Comp, Alloc>::RBTree(const Comp& cmp) : RBTree(allocator_type(), cmp)
+	{
+		
+	}
+	
+	template <class T, class Comp, class Alloc>
+	RBTree<T, Comp, Alloc>::RBTree(const allocator_type& a) : RBTree(a, node_allocator_type(a))
+	{
+		
+	}
+	
+	template <class T, class Comp, class Alloc>
+	RBTree<T, Comp, Alloc>::RBTree(const allocator_type& a, const Comp& cmp) : RBTree(a, node_allocator_type(a), cmp)
+	{
+		
+	}
+	
+	template <class T, class Comp, class Alloc>
+	RBTree<T, Comp, Alloc>::RBTree(const allocator_type& a, const node_allocator_type& na) : RBTree(a, na, Comp())
+	{
+		
+	}
+	
+	template <class T, class Comp, class Alloc>
+	RBTree<T, Comp, Alloc>::RBTree(const allocator_type& a, const node_allocator_type& na, const Comp& cmp) : _header(nullptr), comp(cmp), alloc(a), nalloc(na), leftmost(nullptr)
 	{
 		_header = nalloc.allocate(1);
 		nalloc.construct(_header);
 		_header->left = _header;
 		_header->right = _header;
-		
-		
 	}
 	
 	template <class T, class Comp, class Alloc>
@@ -725,7 +758,7 @@ namespace rb_tree
 		}
 		else
 		{
-			talloc.construct(ntree);
+			talloc.construct(ntree, alloc, comp);
 		}
 		return ntree;
 	}

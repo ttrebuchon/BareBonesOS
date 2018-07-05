@@ -91,7 +91,11 @@ namespace Utils { namespace detail
 			typedef const _Node* const_node_ptr;
 			
 			RBTree();
-			RBTree(const allocator_type&, const node_allocator_type& = node_allocator_type());
+			RBTree(const Comp&);
+			RBTree(const allocator_type&);
+			RBTree(const allocator_type&, const Comp&);
+			RBTree(const allocator_type&, const node_allocator_type&);
+			RBTree(const allocator_type&, const node_allocator_type&, const Comp&);
 			RBTree(const RBTree&);
 			
 			~RBTree();

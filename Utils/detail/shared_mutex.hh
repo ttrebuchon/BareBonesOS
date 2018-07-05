@@ -15,11 +15,15 @@ namespace Utils
 		
 		protected:
 		mutex _mut;
-		condition_variable g1, g2;
-		unsigned state;
+		condition_variable rwait, wwait;
+		unsigned int writers;
+		unsigned int readers;
+		unsigned int waiting_readers;
 		
-		static constexpr unsigned _write_entered = 1u << (sizeof(unsigned)*8 - 1);
-		static constexpr unsigned _n_readers = ~_write_entered;
+		/*static constexpr unsigned _write_entered = 1u << (sizeof(unsigned)*8 - 1);
+		static constexpr unsigned _n_readers = ~_write_entered;*/
+		
+		constexpr static unsigned int max_readers = 10;
 		
 		public:
 		

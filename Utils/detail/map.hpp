@@ -13,7 +13,7 @@ namespace Utils
 		typedef typename Alloc::template rebind<Tree_t>::other TAlloc;
 		TAlloc ta(get_allocator());
 		tree = Allocator_Traits<TAlloc>::allocate(ta, 1);
-		Allocator_Traits<TAlloc>::construct(ta, tree);
+		Allocator_Traits<TAlloc>::construct(ta, tree, alloc, cmp);
 		
 	}
 	
@@ -21,19 +21,32 @@ namespace Utils
 	
 	
 	template <class Key, class T, class Comp, class Alloc>
-	map<Key, T, Comp, Alloc>::map() : alloc(), tree(nullptr)
+	map<Key, T, Comp, Alloc>::map() : map(key_compare(), allocator_type())
 	{
 		
 	}
 	
 	template <class Key, class T, class Comp, class Alloc>
-	map<Key, T, Comp, Alloc>::map(map&& m) : tree(m.tree)
+	map<Key, T, Comp, Alloc>::map(const key_compare& cmp, const allocator_type& a) : alloc(a), tree(nullptr), cmp(cmp)
+	{
+		
+	}
+	
+	template <class Key, class T, class Comp, class Alloc>
+	map<Key, T, Comp, Alloc>::map(const allocator_type& a) : map(key_compare(), a)
+	{
+		
+	}
+	
+	template <class Key, class T, class Comp, class Alloc>
+	map<Key, T, Comp, Alloc>::map(map&& m) : alloc((allocator_type&&)move(m.alloc)), tree(m.tree), cmp((value_type_compare&&)move(m.cmp))
 	{
 		m.tree = nullptr;
+		
 	}
 	
 	template <class Key, class T, class Comp, class Alloc>
-	map<Key, T, Comp, Alloc>::map(const map& m) : tree(m.tree->clone(typename Alloc::template rebind<Tree_t>::other()))
+	map<Key, T, Comp, Alloc>::map(const map& m) : alloc(m.alloc), tree(m.tree->clone(typename Alloc::template rebind<Tree_t>::other(this->alloc))), cmp(m.cmp)
 	{
 		
 	}

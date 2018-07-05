@@ -5,25 +5,19 @@
 #include "atomic.hpp"
 #include "bits/lock_tags.hh"
 #include <Support/threading/mutex.hh>
+#include "chrono_fwd.hh"
 
 
 
 namespace Utils
 {
 	
-	namespace chrono
-	{
-		template <class, class>
-		class duration;
-		
-		template <class, class>
-		class time_point;
-	}
+	
 	
 	class mutex
 	{
 		protected:
-		Support::threading::spin_mutex __mutex;
+		Support::threading::spin_yield_mutex __mutex;
 		
 		public:
 		mutex() : __mutex() {}
@@ -50,7 +44,7 @@ namespace Utils
 	};
 	
 	
-	template <class M>
+	/*template <class M>
 	class unique_lock
 	{
 		public:
@@ -83,7 +77,7 @@ namespace Utils
 		bool owns_lock() const noexcept
 		{ return _owns; }
 		
-	};
+	};*/
 }
 
 #endif

@@ -37,6 +37,11 @@ namespace Utils
 		{
 			key_compare key;
 			
+			value_type_compare(const key_compare& cmp) : key(cmp)
+			{
+				
+			}
+			
 			bool operator()(const value_type& l, const value_type& r) const noexcept
 			{
 				return key(l.first, r.first);
@@ -243,6 +248,8 @@ namespace Utils
 		// Members
 		allocator_type alloc;
 		Tree_t* tree;
+		value_type_compare cmp;
+		
 		
 		public:
 		map();
