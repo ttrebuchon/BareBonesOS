@@ -50,9 +50,7 @@ inline void __ASSERT_TRUE() {}
 
 #include "MetaInfo.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+
 
 
 
@@ -61,9 +59,23 @@ extern "C" {
 #ifdef _TRACE
 
 #ifdef __cplusplus
-
-#define TRACE(X) (std::cout << __FILE__"::" << __LINE__ << "::" << __func__ << "::" << X << std::endl);
+	
+	#ifdef __USE_MEM_POOL__
+		#include <sstream>
+		#include <kernel/Memory/Allocators/cross_processor_allocator.hh>
+		#define TRACE(X) do { \
+			::std::basic_stringstream<char, ::std::char_traits<char>, ::Kernel::Memory::cross_proc_allocator<char>> ss; \
+			ss << __FILE__"::" << __LINE__ << "::" << __func__ << "::" << X; \
+			::std::cout << ss.str().c_str() << std::endl; \
+		} \
+		while (false)
+		
+	#else
+		
+		#define TRACE(X) (std::cout << __FILE__"::" << __LINE__ << "::" << __func__ << "::" << X << std::endl);
 //STACK(X)
+	
+	#endif // __USE_MEM_POOL
 
 #else // !__cplusplus
 
@@ -77,9 +89,7 @@ extern "C" {
 
 #endif
 
-#ifdef __cplusplus
-}
-#endif
+
 
 #endif //ifndef TESTING
 
