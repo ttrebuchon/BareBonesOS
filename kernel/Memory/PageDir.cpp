@@ -235,7 +235,8 @@ namespace Kernel { namespace Memory {
 	
 	
 	PageDirectory* PageDirectory::Current = nullptr;
-	Utils::map<uint16_t, PageRegion*, Utils::less<uint16_t>, cross_proc_allocator<Utils::pair<const uint16_t, PageRegion*>>> PageDirectory::Regions;
+	//Utils::map<uint16_t, PageRegion*, Utils::less<uint16_t>, cross_proc_allocator<Utils::pair<const uint16_t, PageRegion*>>> PageDirectory::Regions;
+	PageRegion* PageDirectory::Regions[Regions_Max];
 	
 	
 	PageDirectory::PageDirectory() : dir(nullptr), tables(), dir_phys(nullptr)
@@ -297,6 +298,7 @@ namespace Kernel { namespace Memory {
 	
 	PageDirectory::Table* PageDirectory::table(const size_t n, bool create) noexcept
 	{
+		
 		ASSERT(n < 1024);
 		if (!tables[n])
 		{
@@ -304,8 +306,10 @@ namespace Kernel { namespace Memory {
 			{
 				return nullptr;
 			}
-			
-			tables[n] = new Table(dir->tables[n], *this, n);
+			tables[n] = tbl_alloc.allocate(1);
+			assert(tables[n]);
+			new (tables[n]) Table(dir->tables[n], *this, n);
+			//tables[n] = new Table(dir->tables[n], *this, n);
 		}
 		
 		return tables[n];
@@ -540,10 +544,11 @@ namespace Kernel { namespace Memory {
 	
 	
 	
-	PageDirectory::Table::Table(_Table& t, PageDirectory& dir, uint16_t indx) noexcept : table(&t), pages(), _pages(nullptr), _pages_phys(nullptr), _dir(&dir), table_index(indx)
+	PageDirectory::Table::Table(_Table& t, PageDirectory& dir, uint16_t indx) noexcept : table(&t), pages(), _pages(nullptr), _pages_phys(nullptr), _dir(&dir), table_index(indx), alloc()
 	{
 		addr_t phys;
-		auto ptr = kmalloc(sizeof(_Pages), PAGE_SIZE, &phys);
+		auto ptr = alloc.allocate_physical(1, (void**)&phys);
+		//auto ptr = kmalloc(sizeof(_Pages), PAGE_SIZE, &phys);
 		ASSERT(phys != 0);
 		ASSERT(ptr != nullptr);
 		_pages_phys = (void*)phys;

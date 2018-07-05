@@ -253,6 +253,7 @@ namespace Kernel { namespace Memory {
 			size_t present_count;
 			PageDirectory* _dir;
 			uint16_t table_index;
+			cross_proc_allocator<_Pages> alloc;
 			
 			
 			
@@ -299,6 +300,7 @@ namespace Kernel { namespace Memory {
 		_Dir* dir;
 		Table* tables[1024];
 		void* dir_phys;
+		cross_proc_allocator<Table> tbl_alloc;
 		
 		
 		public:
@@ -372,8 +374,10 @@ namespace Kernel { namespace Memory {
 		
 		
 		static PageDirectory* Current;
+		constexpr static size_t Regions_Max = 1;
 		
-		static Utils::map<uint16_t, PageRegion*, Utils::less<uint16_t>, cross_proc_allocator<Utils::pair<const uint16_t, PageRegion*>>> Regions;
+		static PageRegion* Regions[Regions_Max];
+		//static Utils::map<uint16_t, PageRegion*, Utils::less<uint16_t>, cross_proc_allocator<Utils::pair<const uint16_t, PageRegion*>>> Regions;
 	};
 }
 }
