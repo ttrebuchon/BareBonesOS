@@ -4,7 +4,7 @@
 #include <Common.h>
 
 #ifdef __cplusplus
-#include "SpinMutex.hh"
+#include "SpinYieldMutex.hh"
 #endif
 
 
