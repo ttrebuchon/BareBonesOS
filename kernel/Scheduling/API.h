@@ -6,7 +6,7 @@
 C_CODE
 
 int sched_yield();
-
+int donate_priority(pthread_t);
 
 C_END
 

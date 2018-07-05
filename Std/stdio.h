@@ -6,17 +6,21 @@
 
 C_CODE
 
-struct FILE;
+#ifndef TESTING
+typedef struct __sFILE FILE;
 
-extern struct FILE* stderr;
-extern struct FILE* stdout;
 
-int fprintf(struct FILE* fd, const char* fmt, ...);
-int printf(const char* fmt, ...);
+extern FILE* stderr;
+extern FILE* stdout;
+#endif
 
-size_t fwrite(const void* ptr, size_t size, size_t nmemb, struct FILE*);
+int fprintf(FILE* fd, const char* fmt, ...) __attribute__((__format__(__printf__, 2, 3)));
 
-int snprintf(char* s, size_t n, const char* fmt, ...);
+int printf(const char* fmt, ...) __attribute__((__format__(__printf__, 1, 2)));
+
+size_t fwrite(const void* ptr, size_t size, size_t nmemb, FILE*);
+
+int snprintf(char* s, size_t n, const char* fmt, ...) __attribute__((__format__(__printf__, 3, 4)));
 
 C_END
 

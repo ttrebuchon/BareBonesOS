@@ -22,6 +22,8 @@ namespace detail
 {
 	template <class T>
 	using scheduler_list = Support::Collections::concurrent_circular_list<T, Support::threading::spin_mutex, Memory::cross_proc_allocator<T>>;
+	
+	
 }
 
 class Scheduler
@@ -39,11 +41,19 @@ class Scheduler
 	Utils::map<pthread_t, __thread_t*> waiting_threads;
 	detail::scheduler_list<pthread_t> threads_to_reap;
 	
-	
 	public:
 	//Memory::cross_proc_allocator<__thread> thread_alloc;
 	
 	
+	__thread_t* current_thread() const noexcept;
+	
+	__attribute__((__always_inline__))
+	pthread_t current_thread_id() const noexcept
+	{
+		auto t = current_thread();
+		assert(t);
+		return t->id;
+	}
 };
 
 

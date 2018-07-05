@@ -189,6 +189,14 @@ void* operator new[](size_t size)
 	return QA::Memory::AllocateArray(size);
 }
 
+void* operator new(size_t size, std::align_val_t al)
+{
+	auto ptr = QA::Memory::Allocate(size);
+	assert(ptr);
+	assert((addr_t)ptr % (size_t)al == 0);
+	return ptr;
+}
+
 void operator delete(void* ptr)
 {
     QA::Memory::Release(ptr);
@@ -244,6 +252,15 @@ void* operator new[](size_t size)
 		return malloc(size);
 	}
 	return kmalloc(size, 0, 0);
+}
+
+void* operator new(size_t size, std::align_val_t al)
+{
+	if (!mem_pool_initialized)
+	{
+		return malloc(size);
+	}
+	return kmalloc(size, al, 0);
 }
 
 void operator delete(void* ptr)

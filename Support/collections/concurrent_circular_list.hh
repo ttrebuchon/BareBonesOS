@@ -75,7 +75,7 @@ namespace Support::Collections
 		
 	}
 	
-	template <class T, class Mutex = Support::threading::spin_mutex, class Alloc = Utils::allocator<T>>
+	template <class T, class Mutex = Support::threading::spin_yield_mutex, class Alloc = Utils::allocator<T>>
 	class concurrent_circular_list
 	{
 		protected:

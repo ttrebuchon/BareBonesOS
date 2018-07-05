@@ -13,16 +13,23 @@
 #include <kernel/Memory/Paging.hh>
 #include <kernel/Memory/PageRegions/DynamicCodeRegion.hh>
 #include "QADrive.hh"
+#include <kernel/Processor.h>
 
 
 void QA::Init()
 {
 	Out_Init();
+	out << "Multiboot_Init()" << std::endl;
 	MultiBoot_Init();
+	out << "Timer_Init()" << std::endl;
 	Timer_Init();
 	SetTimerInterval_ns(50*1000*1000);
+	out << "Filesystem_Init()" << std::endl;
 	Filesystem_Init();
+	out << "Paging_Init()" << std::endl;
 	Paging_Init();
+	out << "Processors_Init()" << std::endl;
+	Processors_Init();
 }
 
 //static QA::_ostream _out;
@@ -66,10 +73,10 @@ void QA::MultiBoot_Init()
 	auto pgs = free_ram / PAGE_SIZE;
 	
 	auto dzero = ::open("/dev/zero", O_RDWR | O_APPEND);
-	uint32_t addrStart = 0xD0000000;
-	uint32_t addrEnd = 0xFFFFFFFF;
+	addr_t addrStart = 0xD0000000;
+	addr_t addrEnd = 0xFFFFFFFF;
 	size_t len = addrEnd - addrStart;
-	auto phys = ::mmap((void*)addrStart, len, PROT_READ | PROT_WRITE, MAP_PRIVATE, dzero, 0);
+	auto phys = ::mmap((void*)(addr_t)addrStart, len, PROT_READ | PROT_WRITE, MAP_PRIVATE, dzero, 0);
 	assert(phys != MAP_FAILED);
 	
 	phys_start = phys;
@@ -290,7 +297,9 @@ void QA::Filesystem_Init()
 	using namespace Kernel;
 	using namespace Kernel::FS;
 	
-	FILE* file = fopen("../Tools/initrd/initrd.img", "r");
+	// FS_INITRD_TEST_IMG defined
+	// in Makefile
+	FILE* file = fopen(FS_INITRD_TEST_IMG, "r");
 	assert(file);
 	
 	fseek(file, 0, SEEK_END);
@@ -348,6 +357,7 @@ void QA::Paging_Init()
 	auto cr = new PageRegions::Dynamic_Code(PageDirectory::Current);
 	PageDirectory::Regions[CODE_MEM_REGION] = cr;
 	
+	
 	PhysicalMemory::Use<Basic_Physical>();
 	
 	extern Heap* kheap;
@@ -356,6 +366,15 @@ void QA::Paging_Init()
 	auto kheap_tmp = new PageHeap<cross_proc_allocator<void>>(PageDirectory::Current, false, false, 4096);
 	kheap = kheap_tmp;
 	
+}
+
+void QA::Processors_Init()
+{
+	auto proc = (Kernel::Processor_t*)malloc(sizeof(Kernel::Processor_t));
+	assert(proc);
+	memset(proc, 0, sizeof(Kernel::Processor_t));
+	assert((addr_t)proc % alignof(Kernel::Processor_t) == 0);
+	Kernel::current_processor = proc;
 }
 
 

@@ -15,6 +15,7 @@ class QA
 	static void Timer_Init();
 	static void Filesystem_Init();
 	static void Paging_Init();
+	static void Processors_Init();
 	
 	static void* phys_start;
 	static void* phys_end;
