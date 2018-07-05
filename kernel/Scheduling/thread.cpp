@@ -2,6 +2,7 @@
 #include <Std/stdlib.h>
 #include <Utils/map>
 #include <Utils/list>
+#include <kernel/Processor.h>
 
 namespace Kernel
 {
@@ -40,6 +41,7 @@ extern "C" {
 	static __thread_t* get_current_thread();
 	static thread_data_t* get_create_thread_data(pthread_t);
 	static void reap_threads();
+	static void switch_to_thread(__thread_t*) __attribute__((__noreturn__));
 
 	#ifdef __ENV_AARCH64__
 	void thread_entry_func(__thread_t*);
@@ -47,7 +49,7 @@ extern "C" {
 	int thread_create(pthread_t* thread, void(*start)(void*), void* arg)
 	{
 		const size_t init_stack_size = 16*1024;//*1024;
-		assert(thread);
+		//assert(thread);
 		auto __thr = new __thread_t;
 		auto context = new context_t;
 		auto entry = new thread_entry_t;
@@ -309,6 +311,9 @@ extern "C" {
 		__thread_map[thread->id] = thread;
 		runlist.push_back(thread);
 		thread_it = runlist.begin();
+		assert(current_processor);
+		current_processor->current_thread = thread;
+		assert(get_current_thread() == thread);
 	}
 	
 	int thread_count()
@@ -319,9 +324,11 @@ extern "C" {
 	static void deregister_exit_thread_current(void* ret)
 	{
 		pthread_t id;
+		__thread_t* next = nullptr;
 		{
 		Interrupts::irq_guard lock;
-		id = (*thread_it)->id;
+		id = get_current_thread()->id;
+		__sync_synchronize();
 		
 		
 		auto thread = __thread_map[id];
@@ -373,6 +380,7 @@ extern "C" {
 		}
 		
 		assert(thread_it != runlist.end());
+		next = *thread_it;
 		
 		
 		thread->status = THREAD_STATUS_DONE;
@@ -383,8 +391,8 @@ extern "C" {
 		}
 		
 		
-		
-		load_context((*thread_it)->context);
+		switch_to_thread(next);
+		//load_context((*thread_it)->context);
 	}
 	
 	int thread_join(pthread_t id, void** retval)
@@ -429,6 +437,7 @@ extern "C" {
 			
 			pthread_t this_id = current->id;
 			waiting_threads[this_id] = current;
+			assert(*thread_it == current);
 			thread_it = runlist.erase(thread_it);
 			if (thread_it == runlist.end())
 			{
@@ -455,11 +464,22 @@ extern "C" {
 		
 		if (save_result == 0)
 		{
-			load_context((*thread_it)->context);
+			switch_to_thread(*thread_it);
+			/*current_processor->current_thread = *thread_it;
+			load_context((*thread_it)->context);*/
 		}
+		else
+		{
+			Interrupts::irq_guard lock;
+			current_processor->current_thread = current;
+			__sync_synchronize();
+		}
+		
+		
 		
 		{
 			Interrupts::irq_guard lock;
+			current_processor->current_thread = current;
 			
 			if (retval)
 			{
@@ -483,6 +503,15 @@ extern "C" {
 	static __thread_t* get_current_thread()
 	{
 		assert(thread_it != runlist.end());
+		assert(current_processor);
+		assert(current_processor->current_thread);
+		if (current_processor->current_thread != *thread_it)
+		{
+			TRACE(current_processor->current_thread->id);
+			TRACE((*thread_it)->id);
+		}
+		assert(current_processor->current_thread == *thread_it);
+		return current_processor->current_thread;
 		return *thread_it;
 	}
 	
@@ -548,15 +577,18 @@ static volatile int main_already_saved = 0;
 extern "C" int sched_yield()
 {
 	using namespace Kernel;
+	__thread_t* next = nullptr;
+	{
+	Interrupts::irq_guard lock;
 	assert(thread_it != runlist.end());
 	auto old = *thread_it;
 	++thread_it;
 	if (thread_it == runlist.end())
 	{
-		if (runlist.size() > 1)
+		/*if (runlist.size() > 1)
 		{
 			assert(false);
-		}
+		}*/
 		if (runlist.size() > __thread_map.size())
 		{
 			assert(threads_to_reap.size() > 0);
@@ -572,17 +604,12 @@ extern "C" int sched_yield()
 		reap_threads();
 	}
 	
-	auto next = *thread_it;
+	next = *thread_it;
 
 	if (next == old)
 	{
 		return -1;
 	}
-	
-	
-	
-	{
-	Interrupts::irq_guard irq_lock;
 	
 
 	int save_result = save_context(old->context);
@@ -590,16 +617,33 @@ extern "C" int sched_yield()
 
 	if (save_result != 0)
 	{
+		assert(current_processor->current_thread == old);
 		return 0;
 	}
 
 	main_already_saved = 1;
-
-
-
 	
+	
+	//assert(current_processor->current_thread == old);
+	// TODO: Come up with something better
+	current_processor->current_thread = next;
+	__sync_synchronize();
 	}
-	load_destroy_context(next->context, nullptr);
+	switch_to_thread(next);
+}
+
+extern "C" {
+	
+	void Kernel::switch_to_thread(__thread_t* t)
+	{
+		{
+			Interrupts::irq_guard lock;
+			current_processor->current_thread = t;
+			__sync_synchronize();
+		}
+		load_destroy_context(t->context, nullptr);
+	}
+	
 }
 
 //#endif

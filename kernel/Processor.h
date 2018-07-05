@@ -1,7 +1,8 @@
 #ifndef INCLUDED_KERNEL_PROCESSOR_H
 #define INCLUDED_KERNEL_PROCESSOR_H
 
-#include <kernel/Interrupts/ISR.h>
+//#include <kernel/Interrupts/ISR.h>
+#include <Common.h>
 #include <Types.h>
 
 #ifdef __cplusplus

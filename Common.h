@@ -20,8 +20,12 @@ typedef unsigned char uchar;
 
 #if __P_ARCH__ == 64
 typedef uint64_t addr_t;
+typedef uint64_t uword_t;
+typedef int64_t sword_t;
 #else
 typedef uint32_t addr_t;
+typedef uint32_t uword_t;
+typedef int32_t sword_t;
 #endif
 
 #include "Types.h"
