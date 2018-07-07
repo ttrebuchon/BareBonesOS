@@ -40,12 +40,15 @@ SRC += $(call GET_SRC_R,kernel/Memory/Allocators,cpp)
 #SRC += ../Std/pthread/pthread_cond_wait.cpp
 SRC += $(call GET_SRC_R,Std/pthread,cpp)
 
-ASM_SRC = ../kernel/Utility_asm.asm
+ASM_SRC = 
 ASM_OBJS = $(ASM_SRC:.asm=.o)
 ASM = $(word 1,$(CXX:-g++=-as))
 
+GASM_SRC = Dummies/Utility_asm.S
+GASM_OBJS = $(GASM_SRC:.S=.o)
+
 C_OBJS = $(SRC:.c=.o)
-OBJS = $(C_OBJS:.cpp=.o) $(ASM_OBJS)
+OBJS = $(C_OBJS:.cpp=.o) $(ASM_OBJS) $(GASM_OBJS)
 
 TESTSLIB_SRC = $(wildcard TestUtils/*.cpp)
 TESTSLIB = $(TESTSLIB_SRC:.cpp=.o)
@@ -67,10 +70,24 @@ SHARED_LIB_OBJS = $(SHARED_LIB_SRC:.cpp=.o)
 
 
 
+DEF_FLAGS += -DTESTING
+DEF_FLAGS += -DSTACK_INFO_V
+DEF_FLAGS += #-DINCLUDED_DEBUG_H_ENABLED
+DEF_FLAGS += #-D"kassert(x)"="assert(x)"
+DEF_FLAGS += -DDEBUG
+DEF_FLAGS += #-DDEBUG_VERIFY
+DEF_FLAGS += #-DTRACK_ALLOC
+DEF_FLAGS += #-D__USE_MEM_POOL__
+DEF_FLAGS += -DDEBUG_TRACK_QUERY
+DEF_FLAGS += -D__USE_STD_NEW__
+DEF_FLAGS += -DIGNORE_PORT_IO
+DEF_FLAGS += -D_TRACE
+DEF_FLAGS += -D"throw(...)"=""
+DEF_FLAGS += -D"FS_INITRD_TEST_IMG"="\"../Tools/initrd/initrd.img\""
 
+
+BOTH_FLAGS += $(DEF_FLAGS)
 BOTH_FLAGS += -O0
-BOTH_FLAGS += -DTESTING
-BOTH_FLAGS += -DSTACK_INFO_V
 BOTH_FLAGS += -I../Libraries
 BOTH_FLAGS += -I../../CppUtilities
 BOTH_FLAGS += #-Wfatal-errors
@@ -78,20 +95,9 @@ BOTH_FLAGS += #-fmax-errors=5
 BOTH_FLAGS += -fmax-errors=1
 BOTH_FLAGS += -Werror=nonnull
 BOTH_FLAGS += -Werror=int-to-pointer-cast
-BOTH_FLAGS += #-DINCLUDED_DEBUG_H_ENABLED
-BOTH_FLAGS += #-D"kassert(x)"="assert(x)"
-BOTH_FLAGS += -DDEBUG #-DDEBUG_VERIFY
-BOTH_FLAGS += #-DTRACK_ALLOC
-BOTH_FLAGS += #-D__USE_MEM_POOL__
-BOTH_FLAGS += -DDEBUG_TRACK_QUERY
-BOTH_FLAGS += -D__USE_STD_NEW__
-BOTH_FLAGS += -DIGNORE_PORT_IO
-BOTH_FLAGS += -D_TRACE
 BOTH_FLAGS += -fPIC
 BOTH_FLAGS += -pie
-BOTH_FLAGS += -D"throw(...)"=""
 #BOTH_FLAGS += -fgnu-tm
-BOTH_FLAGS += -D"FS_INITRD_TEST_IMG"="\"../Tools/initrd/initrd.img\""
 
 BOTH_FLAGS += $(SQLITE_FLAGS)
 
@@ -183,6 +189,7 @@ $(TARGET): $(OBJS) $(TESTS) $(TESTSLIB)
 	@echo ' '
 	@$(CXX) $(CXXFLAGS) -o $@ $(OBJS) $(TESTS) $(TESTSLIB) -lgcc -ldl
 	@echo ' '
+	echo $(ASM_OBJS)
 	
 
 
@@ -207,6 +214,13 @@ $(TARGET): $(OBJS) $(TESTS) $(TESTSLIB)
 	@echo '    '
 	@echo '    '
 	$(ASM) -o $@ $<
+	@echo '     '
+	
+%.o: %.S
+	@echo '    '
+	@echo '    '
+	@echo '    '
+	$(CXX) -c $(DEF_FLAGS) -o $@ $<
 	@echo '     '
 
 -include $(DEPS)
