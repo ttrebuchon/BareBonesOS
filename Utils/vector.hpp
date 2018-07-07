@@ -112,6 +112,15 @@ namespace Utils
 	template <class T, class A>
 	void vector<T, A>::reallocate(size_type n)
 	{
+		if (!_data)
+		{
+			assert(_cap == 0);
+			assert(_size == 0);
+			_data = ATraits::allocate(alloc, n);
+			_cap = n;
+			return;
+		}
+		
 		if (n == 0)
 		{
 			if (_data)

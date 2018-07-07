@@ -32,7 +32,7 @@ namespace Kernel { namespace Memory
 		virtual void* alloc(size_t size, size_t alignment = 0) = 0;
 		virtual void free(void*) = 0;
 		virtual void free(nullptr_t) { }
-		void* realloc(void*, size_t, size_t alignment = 0);
+		virtual void* realloc(void*, size_t, size_t alignment = 0);
 		virtual size_t allocated_size(void*) const noexcept = 0;
 		
 		__attribute__((__always_inline__))

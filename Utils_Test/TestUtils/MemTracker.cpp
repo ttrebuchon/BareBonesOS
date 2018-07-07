@@ -256,15 +256,41 @@ void* operator new[](size_t size)
 
 void* operator new(size_t size, std::align_val_t al)
 {
+	void* ptr = nullptr;
+	/*if ((size_t)al < 2)
+	{
+		al = (std::align_val_t)sizeof(void*);
+	}*/
 	if (!mem_pool_initialized)
 	{
-		return malloc(size);
+		assert(size > 0);
+		ptr = malloc(size);
+		/*int err;
+		err = posix_memalign(&ptr, (size_t)al, size);
+		if (err != 0)
+		{
+			QA::out << "No. " << err << std::endl;
+			QA::out << "EINVAL = " << EINVAL << "\nENOMEM = " << ENOMEM << std::endl;
+			QA::out << "Al: " << (size_t)al << std::endl;
+		}
+		assert(ptr);*/
 	}
-	return kmalloc(size, al, 0);
+	else
+	{
+		ptr = kmalloc(size, (size_t)al, 0);
+	}
+	assert(ptr);
+	if ((addr_t)ptr % (size_t)al != 0)
+	{
+		QA::out << (void*)ptr << std::endl << (size_t)al << std::endl;
+	}
+	assert((addr_t)ptr % (size_t)al == 0);
+	return ptr;
 }
 
 void operator delete(void* ptr)
 {
+	assert(ptr);
 	if (!mem_pool_initialized)
 	{
 		free(ptr);
@@ -275,6 +301,7 @@ void operator delete(void* ptr)
 
 void operator delete(void* ptr, size_t s)
 {
+	assert(ptr);
 	if (!mem_pool_initialized)
 	{
 		free(ptr);
@@ -285,6 +312,7 @@ void operator delete(void* ptr, size_t s)
 
 void operator delete[](void* ptr)
 {
+	assert(ptr);
 	if (!mem_pool_initialized)
 	{
 		free(ptr);
@@ -295,11 +323,23 @@ void operator delete[](void* ptr)
 
 void operator delete[](void* ptr, size_t s)
 {
+	assert(ptr);
 	if (!mem_pool_initialized)
 	{
 		free(ptr);
 		return;
 	}
     kfree(ptr);
+}
+#endif
+
+#if !defined(__USE_MEM_POOL__) && !defined(TRACK_ALLOC)
+void* operator new(size_t size, std::align_val_t al)
+{
+	assert(size > 0);
+	void* ptr = malloc(size);
+	assert(ptr);
+	assert((addr_t)ptr % (size_t)al == 0);
+	return ptr;
 }
 #endif

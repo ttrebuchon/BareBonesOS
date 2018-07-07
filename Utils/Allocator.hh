@@ -90,7 +90,7 @@ namespace Utils
 		
 		pointer allocate(size_type n, Allocator<void>::const_pointer hint = 0)
 		{
-			return (pointer)operator new(sizeof(T)*n);
+			return (pointer)operator new(sizeof(T)*n, (std::align_val_t)alignof(T));
 		}
 		
 		void deallocate(pointer p, size_type n)

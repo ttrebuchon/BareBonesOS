@@ -307,6 +307,7 @@ void QA::Filesystem_Init()
 	fseek(file, 0, SEEK_SET);
 	
 	auto buffer = new unsigned char[fsize];
+	assert(buffer);
 	fread(buffer, 1, fsize, file);
 	fclose(file);
 	
@@ -318,7 +319,7 @@ void QA::Filesystem_Init()
 	
 }
 
-#include <kernel/Memory/Heaps/PageHeap.hh>
+#include <kernel/Memory/Heaps/UnifyHeap.hh>
 
 void QA::Paging_Init()
 {
@@ -363,7 +364,7 @@ void QA::Paging_Init()
 	extern Heap* kheap;
 	kheap = nullptr;
 	
-	auto kheap_tmp = new PageHeap<cross_proc_allocator<void>>(PageDirectory::Current, false, false, 4096);
+	auto kheap_tmp = new UnifyHeap<cross_proc_allocator<void>>(PageDirectory::Current, false, false, 4096);
 	kheap = kheap_tmp;
 	
 }

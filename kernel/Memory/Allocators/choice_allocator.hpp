@@ -26,7 +26,10 @@ namespace Kernel { namespace Memory
 			option_alloc_t opt_alloc(alloc);
 			auto obj = opt_alloc.allocate(1);
 			opt_alloc.construct(obj, a);
-			auto ptr = Utils::shared_ptr<choice_option>(obj, alloc);
+			auto ptr = Utils::shared_ptr<choice_option>(obj, [](auto ptr) -> void
+			{
+				delete ptr;
+			}, alloc);
 			alloc_spec_t key(sizeof(obj_type), alignof(obj_type));
 			
 			{
@@ -39,7 +42,7 @@ namespace Kernel { namespace Memory
 		template <class Alloc>
 		Utils::shared_ptr<choice_option> choice_option_set<Alloc>::get(const alloc_spec_t& s)
 		{
-			Utils::lock_guard<s_mutex_type> lock(s_mut);
+			Utils::shared_lock<mutex_type> lock(mut);
 			if (options.count(s))
 			{
 				return options.at(s);
@@ -72,9 +75,65 @@ namespace Kernel { namespace Memory
 	
 	
 	template <class T, class A>
-	choice_allocator<T, A>::choice_allocator(const A& a) : set(nullptr)
+	choice_allocator<T, A>::choice_allocator(const A& a) : set(nullptr), backup(a)
 	{
 		set = detail::choice_option_set<A>::Make(a);
+	}
+	
+	
+	template <class T, class A>
+	auto choice_allocator<T, A>::allocate(size_type n, typename choice_allocator<void, A>::const_pointer hint) -> pointer
+	{
+		assert(set);
+		auto opt = set->get(alloc_spec_t(sizeof(T), alignof(T)));
+		assert(opt);
+		if (opt)
+		{
+			return (pointer)opt->allocate(n, hint);
+		}
+		else
+		{
+			return backup.allocate(n, hint);
+		}
+	}
+	
+	template <class T, class A>
+	void choice_allocator<T, A>::deallocate(pointer ptr, size_type n)
+	{
+		assert(set);
+		auto opt = set->get(alloc_spec_t(sizeof(T), alignof(T)));
+		assert(opt);
+		if (opt)
+		{
+			opt->deallocate(ptr, n);
+		}
+		else
+		{
+			backup.deallocate(ptr, n);
+		}
+	}
+	
+	template <class T, class A>
+	template <class U, class... Args>
+	void choice_allocator<T, A>::construct(U* ptr, Args... args)
+	{
+		backup.template construct<U, Args...>(ptr, args...);
+	}
+	
+	template <class T, class A>
+	template <class U>
+	void choice_allocator<T, A>::destroy(U* ptr)
+	{
+		backup.template destroy<U>(ptr);
+	}
+	
+	
+	template <class T, class A>
+	template <class U>
+	void choice_allocator<T, A>::add_choice(const U& a)
+	{
+		assert(set);
+		set->add_alloc(a);
 	}
 }
 }

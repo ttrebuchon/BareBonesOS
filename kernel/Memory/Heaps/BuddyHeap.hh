@@ -63,6 +63,11 @@ namespace Kernel::Memory
 				return (void*)((addr_t)_mid - ((size_t)1 << (order-1)));
 			}
 			
+			void* end() const noexcept
+			{
+				return (void*)((uintptr_t)start() + size());
+			}
+			
 			__attribute__((__always_inline__))
 			bool is_leaf() const noexcept
 			{
@@ -137,7 +142,7 @@ namespace Kernel::Memory
 			public:
 			node_type* const& root = _root;
 			
-			buddy_tree(void* start, uint8_t order, const n_allocator_type& = n_allocator_type());
+			buddy_tree(void* start, uint8_t order, const n_allocator_type&);
 			
 			~buddy_tree();
 			
@@ -182,6 +187,7 @@ namespace Kernel::Memory
 		virtual void* alloc(size_t size, size_t alignment = 0) override;
 		virtual void free(void*) override;
 		virtual size_t allocated_size(void*) const noexcept override;
+		void* allocation_info(void* address, size_t* size = nullptr) const noexcept;
 		
 		bool full() const noexcept
 		{

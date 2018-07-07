@@ -3,6 +3,7 @@
 
 #include "BuddyHeap.hh"
 #include "details/buddy_tree.hpp"
+#include <Support/misc/bits.hh>
 
 namespace Kernel::Memory
 {
@@ -10,13 +11,10 @@ namespace Kernel::Memory
 	{
 		inline addr_t align_heap_start(void*& paddr, size_t& len)
 		{
+			assert(len > 0);
 			{
 				size_t nlen = 1;
-				while (nlen <= len)
-				{
-					nlen <<= 1;
-				}
-				nlen >>= 1;
+				nlen <<= Support::misc::highest_bit_index(len);
 				len = nlen;
 			}
 			assert(len > 0);
@@ -39,16 +37,16 @@ namespace Kernel::Memory
 		inline uint8_t required_order(size_t sz) noexcept
 		{
 			assert(sz > 0);
-			for (uint8_t order = 0; order < 256; ++order)
+			int order = Support::misc::highest_bit_index(sz);
+			size_t val = 1;
+			val <<= order;
+			if (val != sz)
 			{
-				if ((((size_t)1) << order) >= sz)
-				{
-					return order;
-				}
+				++order;
+				val <<= 1;
 			}
-			
-			assert(false);
-			return 0;
+			assert(val >= sz);
+			return order;
 		}
 	}
 	
@@ -65,7 +63,6 @@ namespace Kernel::Memory
 	BuddyHeap<Alloc, Mutex>::BuddyHeap(const allocator_type& a, void* mem, size_t len, bool kernel_mem, bool default_read_only, size_t pg_sz, float efficiency) : Heap(detail::align_heap_start(mem, len), ((addr_t)mem + len), pg_sz, kernel_mem, default_read_only), tree(mem, detail::required_order(len), a), tree_m(), highest_order(0), lowest_order(0)
 	{
 		assert(len >= 512);
-		
 		
 		calculate_bounds(mem, len, &lowest_order, &highest_order, efficiency);
 		assert(detail::required_order(len) == highest_order);
@@ -105,6 +102,10 @@ namespace Kernel::Memory
 		}
 		else
 		{
+			if (alignment)
+			{
+				assert((uintptr_t)n->start() % alignment == 0);
+			}
 			return n->start();
 		}
 	}
@@ -137,6 +138,29 @@ namespace Kernel::Memory
 		else
 		{
 			return 0;
+		}
+	}
+	
+	template <class Alloc, class Mutex>
+	void* BuddyHeap<Alloc, Mutex>::allocation_info(void* addr, size_t* size) const noexcept
+	{
+		Utils::lock_guard<mutex_type> lock(tree_m);
+		auto n = tree.find_leaf_node(addr);
+		if (n)
+		{
+			if (size)
+			{
+				*size = n->size();
+			}
+			return n->start();
+		}
+		else
+		{
+			if (size)
+			{
+				*size = 0;
+			}
+			return nullptr;
 		}
 	}
 	
@@ -174,15 +198,10 @@ namespace Kernel::Memory
 		detail::align_heap_start(mem, len);
 		uint8_t highest_order = 0;
 		
+		highest_order = Support::misc::highest_bit_index(len);
 		size_t val = 1;
-		while (val <= len)
-		{
-			++highest_order;
-			val <<= 1;
-		}
-		val >>= 1;
-		assert(highest_order > 2);
-		--highest_order;
+		val <<= highest_order;
+		assert(highest_order > 1);
 		
 		assert(detail::required_order(len) == highest_order);
 		

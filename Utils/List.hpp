@@ -51,9 +51,10 @@ namespace Utils
 	template <class T, class A>
 	void List<T, A>::push_back(const T& t)
 	{
-		
 		auto ptr = nalloc.allocate(1);
-		nalloc.construct(ptr, Utils::forward<const T&>(t));
+		assert(ptr);
+		assert((uintptr_t)ptr % alignof(Node) == 0);
+		nalloc.construct(ptr, t);
 		if (!head)
 		{
 			head = ptr;
@@ -61,6 +62,7 @@ namespace Utils
 		}
 		else
 		{
+			assert(tail);
 			tail->next = ptr;
 			ptr->prev = tail;
 			tail = ptr;
@@ -72,6 +74,8 @@ namespace Utils
 	void List<T, A>::push_back(T&& t)
 	{
 		auto ptr = nalloc.allocate(1);
+		assert(ptr);
+		assert((uintptr_t)ptr % alignof(Node) == 0);
 		nalloc.construct(ptr, Utils::forward<T&&>(t));
 		if (!head)
 		{
@@ -80,6 +84,7 @@ namespace Utils
 		}
 		else
 		{
+			assert(tail);
 			tail->next = ptr;
 			ptr->prev = tail;
 			tail = ptr;

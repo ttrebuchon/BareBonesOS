@@ -22,7 +22,8 @@ namespace Kernel { namespace Memory
 			
 			protected:
 			
-			choice_option(size_t Size, size_t Align);
+			choice_option(size_t Size, size_t Align) : Size(Size), Alignment(Align)
+			{}
 			
 			public:
 			const size_t Size;
@@ -79,7 +80,7 @@ namespace Kernel { namespace Memory
 			
 			virtual void* deallocate(void* ptr, size_t count)
 			{
-				alloc.deallocate(ptr, count);
+				alloc.deallocate((typename allocator_type::pointer)ptr, count);
 			}
 		};
 		
@@ -97,7 +98,7 @@ namespace Kernel { namespace Memory
 			public:
 			typedef Alloc allocator_type;
 			typedef Utils::shared_timed_mutex mutex_type;
-			typedef Utils::shared_lock<mutex_type> s_mutex_type;
+			typedef Utils::shared_lock<mutex_type> s_mutex_lock_type;
 			
 			protected:
 			typedef typename allocator_type::template rebind<Utils::pair<const alloc_spec_t, Utils::shared_ptr<choice_option>>>::other pair_alloc_t;
@@ -105,7 +106,6 @@ namespace Kernel { namespace Memory
 			allocator_type alloc;
 			Utils::map<alloc_spec_t, Utils::shared_ptr<choice_option>, alloc_spec_cmp, pair_alloc_t> options;
 			mutex_type mut;
-			s_mutex_type s_mut;
 			
 			
 			choice_option_set(const Alloc&);
@@ -227,6 +227,7 @@ namespace Kernel { namespace Memory
 		
 		protected:
 		Utils::shared_ptr<detail::choice_option_set<A>> set;
+		typename A::template rebind<T>::other backup;
 		
 		public:
 		choice_allocator(const A& = A());
@@ -265,6 +266,8 @@ namespace Kernel { namespace Memory
 			swap(set, other.set);
 		}
 		
+		template <class U>
+		void add_choice(const U& = U());
 		
 		
 		template <class, class>

@@ -242,7 +242,7 @@ namespace Utils
 		template <class T, class... Args>
 		static void construct(allocator_type& alloc, T* p, Args&&... args)
 		{
-			alloc.template construct<T>(p, forward<Args>(args)...);
+			alloc.construct(p, Utils::forward<Args>(args)...);
 		}
 		
 		static pointer allocate(allocator_type& alloc, size_t n)

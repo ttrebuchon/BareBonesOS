@@ -128,4 +128,11 @@ class QA
 	{
 		return lbreak(os);
 	}
+	
+	
+	__attribute__((__always_inline__))
+	static std::ostream& div(std::ostream& os)
+	{
+		return write_divider(os);
+	}
 };

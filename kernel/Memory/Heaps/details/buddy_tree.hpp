@@ -2,6 +2,7 @@
 #define INCLUDED_MEMORY_HEAPS_BUDDY_TREE_HPP
 
 #include "../BuddyHeap.hh"
+#include <Support/misc/bits.hh>
 
 namespace Kernel::Memory::buddy_heap_detail
 {
@@ -37,17 +38,25 @@ namespace Kernel::Memory::buddy_heap_detail
 		
 		assert(n);
 		assert(n->is_leaf());
-		assert(n->start() == addr);
+		assert(n->start() <= addr);
+		assert(n->end() >= addr);
+		//assert(n->start() == addr);
 		return n;
 	}
 	
 	template <class Alloc>
 	auto buddy_tree<Alloc>::find_leaf_node(void* addr) const noexcept -> const node_type*
 	{
-		if (!_root)
+		if (unlikely(!_root))
 		{
 			return nullptr;
 		}
+		
+		if (unlikely((addr < _root->start()) || (addr > _root->end())))
+		{
+			return nullptr;
+		}
+		
 		auto n = _root;
 		while (n && !n->is_leaf())
 		{
@@ -56,7 +65,9 @@ namespace Kernel::Memory::buddy_heap_detail
 		
 		assert(n);
 		assert(n->is_leaf());
-		assert(n->start() == addr);
+		assert(n->start() <= addr);
+		assert(n->end() >= addr);
+		//assert(n->start() == addr);
 		return n;
 	}
 	
@@ -104,14 +115,66 @@ namespace Kernel::Memory::buddy_heap_detail
 		}
 	}
 	
+	namespace
+	{
+		template <class Node>
+		Node* allocate_node_recurse(Node* const n, const uint8_t order)
+		{
+			if (unlikely(n->full))
+			{
+				return nullptr;
+			}
+			else if (unlikely(n->order < order))
+			{
+				return nullptr;
+			}
+			else if (n->is_leaf())
+			{
+				return n;
+			}
+			else if (likely(n->order > order))
+			{
+				if (n->left && !n->left->full)
+				{
+					auto result = allocate_node_recurse(n->left, order);
+					if (result)
+					{
+						return result;
+					}
+				}
+				else if (n->right && !n->right->full)
+				{
+					auto result = allocate_node_recurse(n->right, order);
+					if (result)
+					{
+						return result;
+					}
+				}
+			}
+			
+			return nullptr;
+		}
+	}
+	
 	template <class Alloc>
 	auto buddy_tree<Alloc>::allocate_node(uint8_t order) -> node_type*
 	{
 		assert(order > 0);
 		assert(order <= root->order);
 		
-		auto n = _root;
-		while (n)
+		auto n = allocate_node_recurse(_root, order);
+		
+		if (n)
+		{
+			while (n->order > order)
+			{
+				split_node(n);
+				n = n->left;
+			}
+		}
+		
+		//auto n = _root;
+		/*while (n && n->order >= order)
 		{
 			if (n->full)
 			{
@@ -134,6 +197,11 @@ namespace Kernel::Memory::buddy_heap_detail
 			{
 				n = n->right;
 			}
+		}*/
+		
+		if (!n)
+		{
+			return nullptr;
 		}
 		
 		
@@ -190,16 +258,16 @@ namespace Kernel::Memory::buddy_heap_detail
 	uint8_t buddy_tree<Alloc>::order_for(size_t sz) const noexcept
 	{
 		assert(sz > 0);
-		for (uint8_t order = 0; order < 256; ++order)
+		int order = Support::misc::highest_bit_index(sz);
+		size_t val = 1;
+		val <<= order;
+		if (val != sz)
 		{
-			if ((((size_t)1) << order) >= sz)
-			{
-				return order;
-			}
+			++order;
+			val <<= 1;
 		}
-		
-		assert(false);
-		return 0;
+		assert(val >= sz);
+		return order;
 	}
 	
 	
