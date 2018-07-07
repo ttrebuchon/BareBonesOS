@@ -53,3 +53,11 @@ Barebones.code-workspace
 
 #Non-Committed Libraries
 Libraries/sqlite3**
+
+#Logs
+bochsout.txt
+serial_out*.txt
+Utils_Test/QA_Out.txt
+
+#Misc
+Utils_Test/PreProcTest.cxx
