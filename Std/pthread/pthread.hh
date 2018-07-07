@@ -1,7 +1,7 @@
-// #ifndef INCLUDED_PTHREAD_HH
-// #define INCLUDED_PTHREAD_HH
+#ifndef INCLUDED_PTHREAD_PTHREAD_HH
+#define INCLUDED_PTHREAD_PTHREAD_HH
 
-// #include <Common.h>
+#include <Common.h>
 // #include <pthread_types.h>
 // #include <Utils/id_queue>
 // #include <Utils/mutex>
@@ -50,5 +50,35 @@
 
 // };
 
+extern "C" {
+	int sched_yield();
+}
 
-// #endif
+
+template <class T>
+static inline void __attribute__((__always_inline__)) lll_lock(T& val)//, T expect, T desire)
+{
+	/*T tmp = expect;
+	while (!__atomic_compare_exchange_n(&val, &tmp, desire, false, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED))
+	{
+		sched_yield();
+		tmp = expect;
+	}*/
+	
+	T tmp = 0;
+	
+	while (!__atomic_compare_exchange_n(&val, &tmp, 1, false, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED))
+	{
+		sched_yield();
+		tmp = 0;
+	}
+}
+
+template <class T>
+static inline void __attribute__((__always_inline__)) lll_unlock(T& val)
+{
+	__atomic_exchange_n(&val, 0, __ATOMIC_RELEASE);
+}
+
+
+#endif
