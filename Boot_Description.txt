@@ -1,0 +1,22 @@
+1) Boot.s:
+	A) Allocate 16 KB for a stack
+	B) Set stack pointers
+	C) Get multiboot structure
+	
+2) kernel.cpp:
+	A) Store stack pointer into $init_esp
+	B) Initialize VGA
+	C) Initialize GDT
+		i) Seg 1: Kernel Code
+		ii) Seg 2: Kernel Data
+		iii) Seg 3: User Code
+		iv) Seg 4: User Data
+		v) Base: 0
+		vi) Limit: 0xFFFFFFFF
+	D) Initialize Interrupt Table
+	E) Initialize Timer
+	F) Initialize Paging
+	//G) Initialize Tasking
+	H) Initialize RamDisk
+	I) Initialize PCI
+	J) Initialize IDE/ATA
