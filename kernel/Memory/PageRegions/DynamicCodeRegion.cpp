@@ -1,5 +1,5 @@
 #include "DynamicCodeRegion.hh"
-#include <kernel/Memory/Heaps/PageHeap.hh>
+#include <kernel/Memory/Heaps/UnifyHeap.hh>
 
 
 namespace Kernel::Memory::PageRegions
@@ -7,7 +7,7 @@ namespace Kernel::Memory::PageRegions
 	
 	Dynamic_Code::Dynamic_Code(PageDirectory* kernel_dir) noexcept : _tables(), kernel_dir(kernel_dir), _heap(nullptr)
 	{
-		cross_proc_allocator<PageHeap<cross_proc_allocator<void>>> halloc;
+		cross_proc_allocator<UnifyHeap<cross_proc_allocator<void>>> halloc;
 		auto heap_ptr = halloc.allocate(1);
 		halloc.construct(heap_ptr, kernel_dir, true, false);
 		_heap = heap_ptr;

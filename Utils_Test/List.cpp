@@ -21,23 +21,25 @@ TEST(List)
 	
 	Allocator<Foo> x;
 	auto p = x.allocate(4);
+	assert(p);
 	x.deallocate(p, 4);
 	std::cerr << p << "\n";
-	x.construct<Foo>(p);
 	p = x.allocate(4);
 	x.construct<Foo>(p);
-	x.deallocate(p, 4);
 	x.destroy(p);
+	x.deallocate(p, 4);
 	std::cerr << p << "\n";
 	
 	List<Foo> fl;
-	
+	TRACE(alignof(std::max_align_t));
 	fl.push_back(Foo());
 	Foo f;
+	QA::out << "Pushing back 2nd..." << std::endl;
 	fl.push_back(f);
+	QA::out << "Pushed back 2nd." << std::endl;
 	
 	
-	std::clog << "\n\n\n" << std::endl;
+	QA::out << "\n\n\n" << std::endl;
 	
 	
 	assert(Foo_t::callers.size() == 0);

@@ -34,7 +34,7 @@ TEST(vector)
 		v1.emplace_back(0);
 		v1.emplace_back(1);
 		v1.emplace_back(2);
-		assert(v1.size() == 3);
+		ASSERTEQ(v1.size(), 3);
 		assert(Foo_t::callers.size() == 0);
 	}
 	ASSERTEQ(Foo_t::callers.size(), 3);

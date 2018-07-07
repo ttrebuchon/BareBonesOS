@@ -20,7 +20,7 @@ TEST(choice_alloc)
 	using namespace Kernel::Memory;
 	
 	{
-		Utils::condition_variable cv;
+		/*Utils::condition_variable cv;
 		bool woken = false;
 		
 		auto wake_func = [&cv, &woken]()
@@ -167,9 +167,10 @@ TEST(choice_alloc)
 				
 				QA::out << "Joined." << QA::br;
 			}
-		}
+		}*/
 		choice_allocator<int, Utils::allocator<void>> alloc;
 		
+		alloc.add_choice(Utils::allocator<int>());
 		
 		auto iptr_4 = alloc.allocate(4);
 		
@@ -184,6 +185,8 @@ TEST(choice_alloc)
 		}
 		
 		alloc.deallocate(iptr_4, 4);
+		
+		alloc.add_choice(std::allocator<long>());
 		
 		//fooghv(NULL);
 	}

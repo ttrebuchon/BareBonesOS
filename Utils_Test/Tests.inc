@@ -29,3 +29,4 @@ MAC(buddy);
 MAC(slab_allocator);
 MAC(choice_alloc);
 MAC(osthread);
+MAC(kheap);
