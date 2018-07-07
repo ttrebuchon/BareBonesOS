@@ -85,6 +85,8 @@ namespace Utils
 	void vector<bool, A>::reallocate(size_type n)
 	{
 		auto a = getAlloc();
+		
+		
 		if (n == 0)
 		{
 			if (_data)
@@ -102,9 +104,12 @@ namespace Utils
 		if (_data)
 		{
 			memcpy(nData, _data, _under_count);
+			ATraits::deallocate(a, _data, _cap);
 		}
-		
-		ATraits::deallocate(a, _data, _cap);
+		else
+		{
+			memset(nData, 0, count*sizeof(storage_type));
+		}
 		
 		_data = nData;
 		_cap = count*sizeof(storage_type)*8;

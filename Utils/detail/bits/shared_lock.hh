@@ -29,7 +29,7 @@ namespace Utils
 		
 		public:
 		
-		shared_lock() noexcept = default;
+		shared_lock() noexcept;
 		shared_lock(shared_lock&&) noexcept;
 		
 		
@@ -125,7 +125,7 @@ namespace Utils
 		
 		mutex_type* release() noexcept
 		{
-			
+			assert(false);
 			auto old = _mutex;
 			_mutex = nullptr;
 			return old;

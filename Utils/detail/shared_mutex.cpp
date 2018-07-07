@@ -1,6 +1,7 @@
 #include "shared_mutex.hh"
 #include "shared_mutex.hpp"
 #include "locks.hh"
+#include "locks.hpp"
 
 namespace Utils
 {
