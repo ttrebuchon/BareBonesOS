@@ -13,6 +13,10 @@ extern "C" {
 
 void* kmalloc(unsigned long size, int a, addr_t* p)
 {
+	if (a == 1)
+	{
+		a = sizeof(void*);
+	}
 	if (!kheap)
 	{
 		auto ptr = malloc(size);
@@ -25,6 +29,7 @@ void* kmalloc(unsigned long size, int a, addr_t* p)
 	else
 	{
 		auto ptr = kheap->alloc(size, a);
+		assert(size == 0 || ptr);
 		if (a > 0)
 		{
 			assert((addr_t)ptr % a == 0);

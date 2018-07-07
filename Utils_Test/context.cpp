@@ -19,6 +19,8 @@ TEST(context)
 	void* f = nullptr;
 	void* i = &&Label;
 	auto c = new Kernel::context_t;
+	assert(c);
+	assert((addr_t)(void*)c % alignof(Kernel::context_t) == 0);
 	int j = 0;
 	c->stack.sp = c->stack.fp = c->ip = nullptr;
 	

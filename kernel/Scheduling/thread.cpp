@@ -502,15 +502,15 @@ extern "C" {
 
 	static __thread_t* get_current_thread()
 	{
-		assert(thread_it != runlist.end());
+		//assert(thread_it != runlist.end());
 		assert(current_processor);
 		assert(current_processor->current_thread);
-		if (current_processor->current_thread != *thread_it)
+		/*if (current_processor->current_thread != *thread_it)
 		{
 			TRACE(current_processor->current_thread->id);
 			TRACE((*thread_it)->id);
 		}
-		assert(current_processor->current_thread == *thread_it);
+		assert(current_processor->current_thread == *thread_it);*/
 		return current_processor->current_thread;
 		return *thread_it;
 	}
