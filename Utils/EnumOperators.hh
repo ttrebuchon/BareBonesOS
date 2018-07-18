@@ -59,7 +59,11 @@ constexpr inline bool operator>=(const E n, const E r) \
 constexpr inline E operator&(const E n, const E r) \
 { return (E)((T)n & (T)r); } \
 constexpr inline E operator|(const E n, const E r) \
-{ return (E)((T)n | (T)r); }
+{ return (E)((T)n | (T)r); } \
+constexpr inline E& operator&=(E& n, const E r) \
+{ return n = (E)((T)n & (T)r); } \
+constexpr inline E& operator|=(E& n, const E r) \
+{ return n = (E)((T)n | (T)r); }
 
 
 

@@ -5,7 +5,7 @@ namespace Kernel
 {
 	
 	typedef Utils::unique_lock<Utils::mutex> unique_lock_t;
-	FileHandle::FileHandle(FS::FileNode& node, FS::File& file, unique_lock_t&& lock) : ResourceHandle(), _node(&node), _file(&file), lock(Utils::forward<unique_lock_t&&>(lock))
+	FileHandle::FileHandle(FS::FileNode_v& node, FS::File& file, unique_lock_t&& lock) : ResourceHandle(), _node(&node), _file(&file), lock(Utils::forward<unique_lock_t&&>(lock))
 	{
 		ASSERT(this->lock.owns_lock());
 	}

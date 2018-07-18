@@ -9,7 +9,7 @@ namespace Kernel
 	namespace FS
 	{
 		class Node;
-		class FileNode;
+		class FileNode_v;
 		class File;
 	}
 	
@@ -17,7 +17,7 @@ namespace Kernel
 	class FileHandle : public ResourceHandle
 	{
 		protected:
-		FS::FileNode* _node;
+		FS::FileNode_v* _node;
 		FS::File* _file;
 		Utils::unique_lock<Utils::mutex> lock;
 		
@@ -25,7 +25,7 @@ namespace Kernel
 		
 		public:
 		// References to guarantee no null-pointers here
-		FileHandle(FS::FileNode&, FS::File&, Utils::unique_lock<Utils::mutex>&&);
+		FileHandle(FS::FileNode_v&, FS::File&, Utils::unique_lock<Utils::mutex>&&);
 		FileHandle(const FileHandle& o) = delete;
 		FileHandle(FileHandle&&) = default;
 		

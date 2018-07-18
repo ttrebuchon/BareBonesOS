@@ -89,6 +89,25 @@ namespace Utils
 	using index_sequence = integer_sequence<size_t, Ns...>;
 	
 }
-#endif
+
 #include "detail/forward.hh"
 #include "void_t.hh"
+
+#endif
+
+
+#ifndef INCLUDED_SWAP_DEF
+#define INCLUDED_SWAP_DEF
+#include "detail/bits/is_constructible.hh"
+
+namespace Utils
+{
+	template <class T>
+	constexpr void swap(T& a, T& b)/* noexcept(is_nothrow_move_constructible<T>::value && is_nothrow_move_assignable<T>::value)*/
+	{
+		T tmp = move(a);
+		a = move(b);
+		b = move(tmp);
+	}
+}
+#endif
