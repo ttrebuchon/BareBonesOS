@@ -167,6 +167,40 @@ namespace Utils
 		return new_it;
 	}
 	
+	template <class T, class A>
+	bool List<T, A>::empty() const noexcept
+	{
+		return size() == 0;
+	}
+	
+	template <class T, class A>
+	auto List<T, A>::front() -> reference
+	{
+		assert(head);
+		return head->elem;
+	}
+	
+	template <class T, class A>
+	auto List<T, A>::front() const -> const_reference
+	{
+		assert(head);
+		return head->elem;
+	}
+	
+	template <class T, class A>
+	auto List<T, A>::back() -> reference
+	{
+		assert(tail);
+		return tail->elem;
+	}
+	
+	template <class T, class A>
+	auto List<T, A>::back() const -> const_reference
+	{
+		assert(tail);
+		return tail->elem;
+	}
+	
 	
 	template <class T, class A>
 	List<T, A>& List<T, A>::operator=(List&& l)

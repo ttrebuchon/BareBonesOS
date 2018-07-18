@@ -179,6 +179,11 @@ namespace Utils
 		size_type size() const noexcept;
 		void clear();
 		iterator erase(iterator);
+		[[nodiscard]] bool empty() const noexcept;
+		reference front();
+		const_reference front() const;
+		reference back();
+		const_reference back() const;
 		
 		
 		

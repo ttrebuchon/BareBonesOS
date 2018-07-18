@@ -29,6 +29,7 @@ namespace Utils
 		
 		// Members
 		mutable detail::shared_ptr_control* ctrl;
+		mutable element_type* other;
 		
 		//Private Constructors
 		template <class Deleter>
@@ -47,6 +48,9 @@ namespace Utils
 		
 		template <class Y, class Deleter, class Alloc>
 		shared_ptr(Y* ptr, Deleter d, const Alloc&);
+		
+		template <class Y>
+		shared_ptr(const shared_ptr<Y>&, element_type*) noexcept;
 		
 		template <class Y, typename = typename enable_if<is_convertible<T*, Y*>::value, void>::type>
 		shared_ptr(const shared_ptr<Y>&) noexcept;
