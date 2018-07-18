@@ -53,12 +53,27 @@ namespace Utils
 		return r->_M_refdata();
 	}
 	
+	__STRTEMP__ basic_string<Char_t, T, Alloc>::basic_string(const Alloc& alloc)
+	#ifndef _GLIBCXX_FULLY_DYNAMIC_STRING
+         : _M_dataplus(_S_empty_rep()._M_refdata(), alloc)
+    #else
+         : _M_dataplus(_S_construct(size_type(), Char_t(), alloc), alloc)
+    #endif
+    {
+    	
+    }
+	
 	__STRTEMP__ basic_string<Char_t, T, Alloc>::basic_string(const Char_t* cstr, const Alloc& a) : _M_dataplus(_S_construct(cstr, cstr ? cstr + traits_type::length(cstr) : cstr + npos, a), a)
 	{
 		
 	}
 	
 	__STRTEMP__ basic_string<Char_t, T, Alloc>::basic_string(const basic_string& str) : _M_dataplus(str._M_rep()->_M_grab(Alloc(str.get_allocator()), str.get_allocator()), str.get_allocator())
+	{
+		
+	}
+	
+	__STRTEMP__ basic_string<Char_t, T, Alloc>::basic_string(const basic_string& str, const Alloc& alloc) : _M_dataplus(str._M_rep()->_M_grab(alloc, str.get_allocator()), alloc)
 	{
 		
 	}
@@ -86,6 +101,11 @@ namespace Utils
 		
 	{
 
+	}
+	
+	__STRTEMP__ basic_string<Char_t, T, Alloc>::basic_string(const Char_t* cstring, size_t n, const Alloc& a) : _M_dataplus(_S_construct(cstring, cstring+n, a), a)
+	{
+		
 	}
 	
 	__STRTEMP__ typename basic_string<Char_t, T, Alloc>::_Rep* basic_string<Char_t, T, Alloc>::_Rep::_S_create(size_type _capacity, size_type oldCapacity, const Alloc& a)
