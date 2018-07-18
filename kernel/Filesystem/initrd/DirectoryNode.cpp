@@ -11,14 +11,14 @@ namespace Kernel { namespace FS { namespace Init_RD {
 
 
 
-    uint32_t DirectoryNode::read(uint32_t, uint32_t, uint8_t*)
+    uint64_t DirectoryNode::read(uint64_t, uint64_t, uint8_t*)
     {
         // TODO
 		ASSERT(false);
     }
 
 
-    uint32_t DirectoryNode::write(uint32_t, uint32_t, const uint8_t*)
+    uint64_t DirectoryNode::write(uint64_t, uint64_t, const uint8_t*)
     {
         // TODO
 		ASSERT(false);

@@ -14,7 +14,7 @@ namespace Kernel::FS
 		FAT32ClusterNumber_t cluster_no;
 		FAT32DirEnt_t* entity;
 		
-		FAT32Node(FAT32&, const NodeType, FAT32DirEnt_t*, DirectoryNode* parent);
+		FAT32Node(FAT32&, const NodeType, FAT32DirEnt_t*, DirectoryNode_v* parent);
 		
 		public:
 		

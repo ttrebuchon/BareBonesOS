@@ -12,6 +12,7 @@ namespace Kernel { namespace FS {
 		File = 2,
 		Link = 4,
 		RAMFile = 8,
+		Block = 16,
 	};
 	
 	ENUM_OPS(NodeType, short);

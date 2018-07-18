@@ -82,7 +82,8 @@ namespace Kernel { namespace FS {
 		auto r = init_initrd(base);
 		assert(r);
 		assert(r->isKind(NodeType::Directory));
-		_root = (Init_RD::DirectoryNode*)r;
+		_root = (Init_RD::DirectoryNode*)r->as_directory();
+		//_root = (Init_RD::DirectoryNode*)r;
 	}
 }
 }

@@ -4,12 +4,12 @@ namespace Kernel { namespace FS { namespace Init_RD {
 	
 
 
-	FileNode::FileNode(const char* name, void* data, uint32_t size) noexcept : FS::FileNode(NodeType::RAMFile), _size(size), _data(data)
+	FileNode::FileNode(const char* name, void* data, uint64_t size) noexcept : FS::FileNode(NodeType::RAMFile), _size(size), _data(data)
 	{
 		this->_name = name;
 	}
 
-	uint32_t FileNode::read(uint32_t pos, uint32_t len, uint8_t* buf)
+	uint64_t FileNode::read(uint64_t pos, uint64_t len, uint8_t* buf)
 	{
 		assert(buf);
 		if (pos >= this->size())
@@ -17,7 +17,7 @@ namespace Kernel { namespace FS { namespace Init_RD {
 			return 0;
 		}
 		
-		uint32_t adj_len = len;
+		uint64_t adj_len = len;
 		if (pos + len > size())
 		{
 			adj_len = size() - pos;
@@ -32,7 +32,7 @@ namespace Kernel { namespace FS { namespace Init_RD {
 	}
 
 
-	uint32_t FileNode::write(uint32_t, uint32_t, const uint8_t*)
+	uint64_t FileNode::write(uint64_t, uint64_t, const uint8_t*)
 	{
 		// TODO
 		ASSERT(false);

@@ -9,7 +9,6 @@ namespace Kernel { namespace FS {
 	
 	Node* Filesystem::getNode(const Utils::string& path, const Utils::string& relative)
 	{
-		std::cout << "Path: " << path.c_str() << std::endl;
 		if (path.length() <= 0)
 		{
 			return nullptr;
@@ -19,6 +18,7 @@ namespace Kernel { namespace FS {
 		{
 			if (relative.empty())
 			{
+				return getNode(Path::Combine(Path::Root, path));
 				return nullptr;
 			}
 			return getNode(Path::Combine(relative, path));
@@ -29,11 +29,12 @@ namespace Kernel { namespace FS {
 		ASSERT(root);
 		ASSERT(root->isKind(NodeType::Directory));
 		
-		const auto droot = (DirectoryNode*)root;
+		const auto droot = root->as_directory();
 		
 		/*auto index = Path::IndexForRelativeToRoot(path);
 		ASSERT(path.length() > index);
 		const char* cstr = path.c_str();*/
+		
 		
 		return droot->findChild(Path::MakeRelative(path, Path::Root));
 	}

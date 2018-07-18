@@ -6,7 +6,7 @@
 
 namespace Kernel { namespace FS
 {
-	class FileNode;
+	class FileNode_v;
 	class File;
 	
 	
@@ -28,7 +28,7 @@ namespace Kernel { namespace FS
 		
 		
 		protected:
-		FileNode* __node;
+		FileNode_v* __node;
 		size_t eback_pos;
 		size_t pbase_pos;
 		size_t size;
@@ -60,9 +60,9 @@ namespace Kernel { namespace FS
 		
 		public:
 		
-		File_streambuf(FileNode*);
+		File_streambuf(FileNode_v*);
 		
-		static File_streambuf* GetForNode(FileNode*);
+		static File_streambuf* GetForNode(FileNode_v*);
 	};
 	
 	

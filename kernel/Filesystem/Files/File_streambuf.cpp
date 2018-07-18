@@ -5,7 +5,7 @@
 namespace Kernel { namespace FS
 {
 	
-	File_streambuf::File_streambuf(FileNode* fnode) : Utils::basic_streambuf<char>(), __node(fnode), eback_pos(0), pbase_pos(0), size(0)
+	File_streambuf::File_streambuf(FileNode_v* fnode) : Utils::basic_streambuf<char>(), __node(fnode), eback_pos(0), pbase_pos(0), size(0)
 	{
 		ASSERT(fnode != nullptr);
 		size = __node->size();
@@ -205,7 +205,7 @@ namespace Kernel { namespace FS
 	
 	
 	
-	File_streambuf* File_streambuf::GetForNode(FileNode* fnode)
+	File_streambuf* File_streambuf::GetForNode(FileNode_v* fnode)
 	{
 		// TODO
 		return new BlockFile(fnode);

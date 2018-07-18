@@ -2,7 +2,7 @@
 
 namespace Kernel::FS
 {
-	FAT32Node::FAT32Node(FAT32& fs, const NodeType kind, FAT32DirEnt_t* ent, DirectoryNode* _parent) : Node(kind), fs(&fs), cluster_no(), entity(ent)
+	FAT32Node::FAT32Node(FAT32& fs, const NodeType kind, FAT32DirEnt_t* ent, DirectoryNode_v* _parent) : Node(kind), fs(&fs), cluster_no(), entity(ent)
 	{
 		assert(entity);
 		assert(_parent);

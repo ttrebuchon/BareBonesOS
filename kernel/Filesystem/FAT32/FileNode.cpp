@@ -4,13 +4,13 @@ namespace Kernel::FS
 {
 	
 	
-	FAT32FileNode::FAT32FileNode(FAT32& fs, FAT32DirEnt_t* entity, DirectoryNode* parent) : Node(NodeType::File), FileNode(), FAT32Node(fs, NodeType::File, entity, parent)
+	FAT32FileNode::FAT32FileNode(FAT32& fs, FAT32DirEnt_t* entity, DirectoryNode_v* parent) : Node(NodeType::File), FileNode(), FAT32Node(fs, NodeType::File, entity, parent)
 	{
 		
 	}
 	
 	
-	uint32_t FAT32FileNode::read(uint32_t off, uint32_t len, uint8_t* buf)
+	uint64_t FAT32FileNode::read(uint64_t off, uint64_t len, uint8_t* buf)
 	{
 		if (len == 0)
 		{
@@ -26,12 +26,12 @@ namespace Kernel::FS
 		uint32_t cluster_num = ((uint32_t)entity->cluster_high) << 16;
 		cluster_num |= (uint32_t)entity->cluster_low;
 		
-		uint32_t cluster_off = off / clu_sz;
-		uint32_t cluster_read_count = len / clu_sz;
+		uint64_t cluster_off = off / clu_sz;
+		uint64_t cluster_read_count = len / clu_sz;
 		
 		
 		
-		uint32_t cluster_index = off / clu_sz;
+		uint64_t cluster_index = off / clu_sz;
 		uint8_t* buf_it = buf;
 		if (off % clu_sz)
 		{
@@ -51,7 +51,7 @@ namespace Kernel::FS
 			}
 		}
 		
-		uint32_t last_clust = (off + len) / clu_sz;
+		uint64_t last_clust = (off + len) / clu_sz;
 		
 		
 		
@@ -75,7 +75,7 @@ namespace Kernel::FS
 	}
 	
 	
-	uint32_t FAT32FileNode::write(uint32_t, uint32_t, const uint8_t*)
+	uint64_t FAT32FileNode::write(uint64_t, uint64_t, const uint8_t*)
 	{
 		assert(NOT_IMPLEMENTED);
 	}

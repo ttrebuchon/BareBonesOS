@@ -4,7 +4,7 @@
 namespace Kernel { namespace FS
 {
 	
-	BlockFile::BlockFile(FileNode* fnode) : File_streambuf(fnode), blocks()
+	BlockFile::BlockFile(FileNode_v* fnode) : File_streambuf(fnode), blocks()
 	{
 		
 	}

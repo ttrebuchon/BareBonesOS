@@ -9,13 +9,13 @@
 
 namespace Kernel { namespace FS
 {
-	class FileNode;
+	class FileNode_v;
 	class FileRep;
 	
 	class File
 	{
 		protected:
-		FileNode* __node;
+		FileNode_v* __node;
 		File_streambuf* sbuf;
 		FileRep* _rep;
 		
@@ -25,7 +25,7 @@ namespace Kernel { namespace FS
 		Utils::basic_istream<char> in;
 		Utils::basic_ostream<char> out;
 		
-		File(FileNode*);
+		File(FileNode_v*);
 		~File();
 	};
 	

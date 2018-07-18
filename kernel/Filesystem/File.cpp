@@ -4,7 +4,7 @@
 namespace Kernel { namespace FS
 {
 	
-	File::File(FileNode* fnode) : __node(fnode), sbuf(File_streambuf::GetForNode(fnode)), in(sbuf), out(sbuf)
+	File::File(FileNode_v* fnode) : __node(fnode), sbuf(File_streambuf::GetForNode(fnode)), in(sbuf), out(sbuf)
 	{
 		
 	}

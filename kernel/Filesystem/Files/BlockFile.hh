@@ -39,7 +39,7 @@ namespace Kernel { namespace FS
 		
 		public:
 		
-		BlockFile(FileNode*);
+		BlockFile(FileNode_v*);
 	};
 	
 }

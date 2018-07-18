@@ -17,8 +17,8 @@ namespace Kernel { namespace FS { namespace Init_RD {
         DirectoryNode(const char* name);
 
 
-        virtual uint32_t read(uint32_t, uint32_t, uint8_t*) override;
-        virtual uint32_t write(uint32_t, uint32_t, const uint8_t*) override;
+        virtual uint64_t read(uint64_t, uint64_t, uint8_t*) override;
+        virtual uint64_t write(uint64_t, uint64_t, const uint8_t*) override;
         virtual void open() override;
         virtual void close() override;
         virtual DirEnt* readDir(uint32_t) override;

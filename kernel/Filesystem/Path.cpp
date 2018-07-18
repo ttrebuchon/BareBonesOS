@@ -38,17 +38,17 @@ namespace Kernel { namespace FS
 			ASSERT(false);
 		}
 		
+		
 		string_type path = _path;
 		Simplify(path);
 		string_type base = _base;
 		Simplify(base);
 		
 		
-		
 		size_t pCount;
 		string_type* pSegs = Split(path, pCount);
 		size_t bCount;
-		string_type* bSegs = Split(base, pCount);
+		string_type* bSegs = Split(base, bCount);
 		string_type result;
 		
 		ASSERT(pCount >= bCount);
@@ -57,8 +57,10 @@ namespace Kernel { namespace FS
 		{
 			ASSERT(pSegs[i] == bSegs[i]);
 			++i;
+			
 		}
-		result = Combine(pSegs, pCount - i);
+		result = Combine(pSegs + i, pCount - i);
+		
 		
 		delete[] pSegs;
 		delete[] bSegs;
@@ -114,10 +116,9 @@ namespace Kernel { namespace FS
 		size_t max_poss = 0;
 		for (size_t i = 0; i < count; ++i)
 		{
-			max_poss += ps[i].length();
+			max_poss += ps[i].length() + 1;
 		}
-		max_poss += count - 1;
-		
+		//max_poss += count - 1;
 
 		string_type accum;
 		accum.reserve(max_poss);
@@ -161,7 +162,13 @@ namespace Kernel { namespace FS
 
 	auto Path::Split(const string_type& path, size_t& count) noexcept -> string_type*
 	{
-		count = 0;
+		if (path.length() == 0)
+		{
+			count = 0;
+			return nullptr;
+		}
+		
+		count = 1;
 		for (size_t i = 0; i < path.length() - 1; ++i)
 		{
 			if (path[i] == '/')
@@ -169,10 +176,13 @@ namespace Kernel { namespace FS
 				++count;
 			}
 		}
+		
 
 		string_type* array = new string_type[count];
-		for (size_t i = 0, n = 0; i < path.length() - 1; ++i)
+		size_t n = 0;
+		for (size_t i = 0; i < path.length() - 1; ++i)
 		{
+			assert(n < count);
 			if (path[i] == '/')
 			{
 				++n;
@@ -182,18 +192,26 @@ namespace Kernel { namespace FS
 				array[n] += path[i];
 			}
 		}
+		
+		if (path[path.length()-1] != '/')
+		{
+			array[n] += path[path.length()-1];
+		}
+		
 		return array;
 	}
 
 	bool Path::CanSimplify(const string_type&)
 	{
 		// TODO
+		return false;
 		ASSERT(false);
 	}
 
 	bool Path::Simplify(string_type&)
 	{
 		// TODO
+		return false;
 		ASSERT(false);
 	}
 }
