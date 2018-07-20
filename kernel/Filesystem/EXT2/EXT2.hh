@@ -93,6 +93,7 @@ namespace Kernel::FS
 			constexpr static uint32_t first_non_rsv_node = 11;
 			constexpr static uint16_t node_struct_size = 128;
 			constexpr static uint16_t ext2_signature = 0xEF53;
+			constexpr static uint32_t offset = 1024;
 			
 			struct optional_features
 			{
@@ -128,6 +129,9 @@ namespace Kernel::FS
 			};
 			
 		};
+		
+		#define EXT2_STATE_CLEAN 0x1
+		#define EXT2_STATE_ERROR 0x2
 		
 		
 		
@@ -362,6 +366,8 @@ namespace Kernel::FS
 		
 		Utils::shared_ptr<const detail::EXT2::inode_t> get_inode(inode_index_t) const noexcept;
 		
+		
+		static bool Format(Drivers::Disk* part);
 		
 		
 		friend class EXT2Node;
