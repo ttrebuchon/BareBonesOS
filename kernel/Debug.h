@@ -22,10 +22,13 @@ inline void __ASSERT_TRUE() {}
     #ifdef __cplusplus
 
         #define TRACE(X) do { ::Drivers::VGA::Write(__FILE__"::"); ::Drivers::VGA::Write((uint32_t)__LINE__); ::Drivers::VGA::Write("::"); ::Drivers::VGA::Write(__func__); ::Drivers::VGA::Write("::"); ::Drivers::VGA::Write(X); ::Drivers::VGA::Write("\n"); } while (false)
+        
+        #define TRACE_VAL(X) do { ::Drivers::VGA::Write(__FILE__"::"); ::Drivers::VGA::Write((uint32_t)__LINE__); ::Drivers::VGA::Write("::"); ::Drivers::VGA::Write(__func__); ::Drivers::VGA::Write("::"); ::Drivers::VGA::Write(#X " = "); ::Drivers::VGA::Write(X); ::Drivers::VGA::Write("\n"); } while (false)
 
     #else
 
         #define TRACE(X) c_vga_write(X)
+        #define TRACE_VAL(X) do { c_vga_write(#X " = "); c_vga_write(X); } while (false)
 
     #endif
 
@@ -70,9 +73,20 @@ inline void __ASSERT_TRUE() {}
 		} \
 		while (false)
 		
+		
+		#define TRACE_VAL(X) do { \
+			::std::basic_stringstream<char, ::std::char_traits<char>, ::Kernel::Memory::cross_proc_allocator<char>> ss; \
+			ss << __FILE__"::" << __LINE__ << "::" << __func__ << "::" << #X << " = " << X; \
+			::std::cout << ss.str().c_str() << std::endl; \
+		} \
+		while (false)
+		
 	#else
 		
 		#define TRACE(X) (std::cout << __FILE__"::" << __LINE__ << "::" << __func__ << "::" << X << std::endl);
+		
+		#define TRACE_VAL(X) (std::cout << __FILE__"::" << __LINE__ << "::" << __func__ << "::" << #X << " = " << X << std::endl);
+		
 //STACK(X)
 	
 	#endif // __USE_MEM_POOL
@@ -86,6 +100,7 @@ inline void __ASSERT_TRUE() {}
 #else
 
 #define TRACE(X) 
+#define TRACE_VAL(X) 
 
 #endif
 
