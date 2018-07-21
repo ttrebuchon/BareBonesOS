@@ -14,7 +14,7 @@ namespace Drivers
 namespace Kernel::FS
 {
 	// Little-endian
-	struct MBR_Entry_t
+	struct MBR_Partition_Entry_t
 	{
 		uint8_t bootable;
 		uint8_t start_head;
@@ -29,15 +29,17 @@ namespace Kernel::FS
 		
 	} __attribute__((__packed__));
 	
-	static_assert(sizeof(MBR_Entry_t) == 16);
+	static_assert(sizeof(MBR_Partition_Entry_t) == 16);
 	
-	struct MBR_t
+	struct MBR_PTable_t
 	{
-		MBR_Entry_t partitions[4];
+		MBR_Partition_Entry_t partitions[4];
 		
 	} __attribute__((__packed__));
 	
-	int read_MBR(Drivers::Disk*, MBR_t*);
+	int MBR_ptable_read(Drivers::Disk*, MBR_PTable_t*);
+	MBR_PTable_t MBR_ptable_read(Drivers::Disk*);
+	int MBR_ptable_write(Drivers::Disk*, const MBR_PTable_t*);
 }
 
 

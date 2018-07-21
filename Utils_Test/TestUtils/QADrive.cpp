@@ -48,6 +48,10 @@ namespace TestUtils
 	
 	int QADrive::read(size_t start, size_t len, unsigned char* buf) const
 	{
+		if (start + len >= size)
+		{
+			QA::out << "[" << start << ", " << (start+len) << "]" << std::endl;
+		}
 		assert(start + len < size);
 		memcpy(buf, base_address + start, len);
 		return len;

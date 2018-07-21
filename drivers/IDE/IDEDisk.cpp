@@ -52,7 +52,7 @@ namespace Drivers { namespace IDE {
 		ASSERT(false);
 	}
 	
-	size_t IDEDisk::capacity() const
+	size_t IDEDisk::capacity() const noexcept
 	{
 		return dev->size*512;
 	}

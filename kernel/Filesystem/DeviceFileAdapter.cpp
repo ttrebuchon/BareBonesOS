@@ -25,7 +25,7 @@ namespace Kernel::FS
 	}
 	
 		
-	size_t DeviceFileAdapter::capacity() const
+	size_t DeviceFileAdapter::capacity() const noexcept
 	{
 		return file->size();
 	}

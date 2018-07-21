@@ -255,7 +255,7 @@ namespace Drivers { namespace IDE {
 		
 	}
 	
-	size_t DMADrive::capacity() const
+	size_t DMADrive::capacity() const noexcept
 	{
 		return 512*dev->size;
 	}

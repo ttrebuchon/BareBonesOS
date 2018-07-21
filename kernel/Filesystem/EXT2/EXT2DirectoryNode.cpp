@@ -41,10 +41,10 @@ namespace Kernel::FS
 		}
 		
 		auto data = fs->read_inode(this->node, 0, blks);
-		assert(data);
+		//assert(data);
 		if (!data)
 		{
-			return false;
+			return (this->node->direct[0] == 0);
 		}
 		
 		using namespace detail::EXT2;

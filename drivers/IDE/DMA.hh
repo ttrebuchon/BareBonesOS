@@ -96,7 +96,7 @@ namespace Drivers { namespace IDE {
 		virtual int read(size_t start, size_t len, unsigned char* buf) const;
 		virtual int write(size_t start, size_t len, const unsigned char* buf);
 		
-		virtual size_t capacity() const;
+		virtual size_t capacity() const noexcept;
 	};
 	
 }

@@ -6,8 +6,10 @@
 #include <kernel/Filesystem/BlockDeviceNode.hh>
 #include <kernel/Filesystem/MBR.hh>
 #include <kernel/Filesystem/MBR_System_IDs.h>
+#include <Utils/BitSet.hh>
 
-#define EXT2_SUPERBLOCK_OFFSET 1024
+#define EXT2_SUPERBLOCK_OFFSET (::Kernel::FS::detail::EXT2::superblock_constants::offset)
+//#define EXT2_SUPERBLOCK_OFFSET 1024
 #define EXT2_ROOT_INODE 0x2
 
 
@@ -90,9 +92,12 @@ namespace Kernel::FS
 		if (partition >= 0)
 		{
 			assert(partition < 4);
-			MBR_t mbr;
-			auto mbr_res = disk.read(MBR_DISK_OFFSET, sizeof(MBR_t), (uint8_t*)&mbr);
-			assert(mbr_res == sizeof(MBR_t));
+			/*MBR_PTable_t mbr;
+			auto mbr_res = disk.read(MBR_DISK_OFFSET, sizeof(MBR_PTable_t), (uint8_t*)&mbr);
+			assert(mbr_res == sizeof(MBR_PTable_t));*/
+			
+			MBR_PTable_t mbr;
+			MBR_ptable_read(&disk, &mbr);
 			
 			
 			auto sys = mbr.partitions[partition].system_ID;
@@ -111,6 +116,22 @@ namespace Kernel::FS
 		
 		assert(sb.signature == detail::EXT2::superblock_constants::ext2_signature);
 		
+		TRACE("\n\n\n\n");
+		TRACE_VAL(sb.nodes);
+		TRACE_VAL(sb.blocks);
+		TRACE_VAL(sb.su_rsv_blocks);
+		TRACE_VAL(sb.unallocated_blocks);
+		TRACE_VAL(sb.unallocated_nodes);
+		TRACE_VAL(sb.superblock_block_num);
+		TRACE_VAL(sb.blocks_per_group);
+		TRACE_VAL(sb.fragments_per_group);
+		TRACE_VAL(sb.nodes_per_group);
+		TRACE_VAL(sb.state);
+		TRACE_VAL(sb.OS_ID);
+		TRACE_VAL(sb.usr_rsv_block_ID);
+		TRACE_VAL(sb.group_rsv_block_ID);
+		TRACE("\n\n\n\n");
+		
 		const size_t block_sz = (1024 << sb.block_size_modifier);
 		
 		size_t bgdt_off = (EXT2_SUPERBLOCK_OFFSET + sizeof(sb))/block_sz;
@@ -127,10 +148,6 @@ namespace Kernel::FS
 		{
 			++this->block_group_count;
 		}
-		TRACE(sb.blocks);
-		TRACE(sb.blocks_per_group);
-		TRACE("");
-		TRACE(sb.superblock_block_num);
 		
 		
 		
@@ -182,6 +199,23 @@ namespace Kernel::FS
 		assert(root);
 		_root = new EXT2DirectoryNode(nullptr, this, root, "");
 		nodes[2] = _root;
+		TRACE_VAL(((void*)(uintptr_t)root->raw_perms));
+		TRACE_VAL(root->perms.user_read);
+		TRACE_VAL(root->perms.user_write);
+		TRACE_VAL(root->perms.user_execute);
+		TRACE_VAL(root->perms.group_read);
+		TRACE_VAL(root->perms.group_write);
+		TRACE_VAL(root->perms.group_execute);
+		TRACE_VAL(root->perms.other_read);
+		TRACE_VAL(root->perms.other_write);
+		TRACE_VAL(root->perms.other_execute);
+		TRACE_VAL(root->user_ID);
+		TRACE_VAL(root->group_ID);
+		TRACE_VAL(root->perms.sticky);
+		TRACE_VAL(root->perms.set_GID);
+		TRACE_VAL(root->perms.set_UID);
+		TRACE_VAL(root->size_low);
+		TRACE_VAL(root->sector_count);
 		/*
 		size_t root_sz = root->size_low;
 		auto dat = read_inode(root, 0, root_sz/block_size());
@@ -214,7 +248,20 @@ namespace Kernel::FS
 	
 	EXT2::~EXT2()
 	{
-		assert(NOT_IMPLEMENTED);
+		assert(bg_table);
+		delete[] bg_table;
+		bg_table = nullptr;
+		
+		for (auto& kv : nodes)
+		{
+			delete kv.second;
+		}
+		
+		nodes.clear();
+		_root = nullptr;
+		cached_blocks.clear();
+		
+		//assert(NOT_IMPLEMENTED);
 	}
 	
 	
@@ -564,26 +611,26 @@ namespace Kernel::FS
 		
 		Utils::string nname((const char*)ent->name, dirent_name_len(ent));
 		
-		if (next_n->type_perms.type == EXT2_INODE_TYPE_DIR)
+		if (next_n->type == EXT2_INODE_TYPE_DIR)
 		{
 			n = new EXT2DirectoryNode(parent, this, next_n, Utils::string((const char*)ent->name, dirent_name_len(ent)));
 		}
-		else if (next_n->type_perms.type == EXT2_INODE_TYPE_BLOCK_DEV)
+		else if (next_n->type == EXT2_INODE_TYPE_BLOCK_DEV)
 		{
 			n = new BlockDeviceNode(Utils::string((const char*)ent->name, dirent_name_len(ent)));
 		}
-		else if (next_n->type_perms.type == EXT2_INODE_TYPE_CHAR_DEV)
+		else if (next_n->type == EXT2_INODE_TYPE_CHAR_DEV)
 		{
 			// TODO: Write an actual character device node
 			n = new BlockDeviceNode(nname);
 			/*TRACE(nname.c_str());
 			assert(NOT_IMPLEMENTED);*/
 		}
-		else if (next_n->type_perms.type == EXT2_INODE_TYPE_FILE)
+		else if (next_n->type == EXT2_INODE_TYPE_FILE)
 		{
 			n = new EXT2FileNode(parent, this, next_n, Utils::string((const char*)ent->name, dirent_name_len(ent)));
 		}
-		else if (next_n->type_perms.type == EXT2_INODE_TYPE_SYMLINK)
+		else if (next_n->type == EXT2_INODE_TYPE_SYMLINK)
 		{
 			
 			n = new EXT2SymLinkNode(parent, this, next_n, Utils::string((const char*)ent->name, dirent_name_len(ent)));
@@ -591,7 +638,7 @@ namespace Kernel::FS
 		else
 		{
 			TRACE((const char*)ent->name);
-			TRACE(next_n->type_perms.type);
+			TRACE(next_n->type);
 			assert(NOT_IMPLEMENTED);
 		}
 		
@@ -690,7 +737,7 @@ namespace Kernel::FS
 		
 		if (extended_superblock())
 		{
-			if (n->type_perms.type != EXT2_INODE_TYPE_DIR)
+			if (n->type != EXT2_INODE_TYPE_DIR)
 			{
 				static_assert((((uint64_t)((uint32_t)1 << 31)) << 32) > 0);
 				
@@ -708,6 +755,324 @@ namespace Kernel::FS
 	
 	
 	
+	
+	
+	
+	
+	
+	bool EXT2::Format(Drivers::Disk* part)
+	{
+		assert(part);
+		if (!part)
+		{
+			return false;
+		}
+		
+		
+		using namespace detail::EXT2;
+		
+		const size_t sz = part->capacity();
+		block_group_desc_t* bg_table = nullptr;
+		superblock_ext_t sb;
+		uint8_t* group_block_map_template = nullptr;
+		int res;
+		int used_count;
+		size_t total_unalloc_blocks = 0;
+		
+		
+		
+		
+		sb.su_rsv_blocks = 10;
+		
+		
+		sb.superblock_block_num = 1;
+		sb.block_size_modifier = 0;
+		sb.fragment_size_modifier = 0;
+		
+		
+		const size_t block_sz = (1024 << sb.block_size_modifier);
+		const size_t node_sz = superblock_constants::node_struct_size;
+		
+		/*sb.blocks_per_group = 8192;
+		sb.fragments_per_group = 8192;
+		sb.nodes_per_group = 1024;*/
+		sb.blocks_per_group = 4096;
+		sb.fragments_per_group = 4096;
+		sb.nodes_per_group = 512;
+		
+		sb.last_mount_time = sb.last_write_time = 0;
+		sb.mounts_since_chk = 0;
+		sb.mounts_before_chk = 20;
+		sb.signature = superblock_constants::ext2_signature;
+		sb.state = EXT2_STATE_CLEAN;
+		
+		
+		
+		sb.major_ver = 0;
+		sb.usr_rsv_block_ID = 0;
+		sb.group_rsv_block_ID = 0;
+		
+		
+		
+		const size_t group_sz = block_sz*sb.blocks_per_group;
+		
+		TRACE_VAL(sz);
+		
+		const size_t groups = sz / group_sz;
+		
+		TRACE_VAL(groups);
+		
+		
+		uint32_t reserved_nodes = superblock_constants::first_non_rsv_node;
+		
+		assert(reserved_nodes >= 2);
+		
+		// Was index, make it a count
+		reserved_nodes -= 1;
+		
+		
+		sb.nodes = groups*sb.nodes_per_group;
+		sb.unallocated_nodes = sb.nodes - reserved_nodes;
+		sb.blocks = groups*sb.blocks_per_group;
+		sb.unallocated_blocks = sb.blocks - 1 - (sb.superblock_block_num + 1);
+		auto get_block_lba = [&](auto i) -> size_t
+		{
+			return (i - sb.superblock_block_num)*block_sz + EXT2_SUPERBLOCK_OFFSET;
+		};
+		
+		
+		
+		
+		size_t bgdt_off = (EXT2_SUPERBLOCK_OFFSET + sizeof(sb))/block_sz;
+		if ((EXT2_SUPERBLOCK_OFFSET + sizeof(sb)) % block_sz)
+		{
+			++bgdt_off;
+		}
+		
+		bgdt_off *= block_sz;
+		
+		
+		size_t block_group_count = sb.blocks / sb.blocks_per_group;
+		if (sb.blocks % sb.blocks_per_group)
+		{
+			++block_group_count;
+		}
+		
+		
+		{
+			size_t groups_inodes = sb.nodes / sb.nodes_per_group;
+			if (sb.nodes % sb.nodes_per_group)
+			{
+				++groups_inodes;
+			}
+			assert(block_group_count == groups_inodes);
+		}
+		
+		bg_table = new block_group_desc_t[block_group_count];
+		memset(bg_table, 0, block_group_count*sizeof(block_group_desc_t));
+		
+		
+		
+		assert(sb.blocks_per_group % 8 == 0);
+		group_block_map_template = new uint8_t[sb.blocks_per_group/8];
+		Utils::Bitset_Ptr<uint8_t> block_map(group_block_map_template, sb.blocks_per_group/8, sb.blocks_per_group);
+		block_map.setAll(false);
+		
+		auto block_map_block_sz = DIVU((sb.blocks_per_group/8), block_sz);
+		auto node_map_block_sz = DIVU((sb.nodes_per_group/8), block_sz);
+		auto node_table_block_sz = DIVU((sb.nodes_per_group*node_sz),  block_sz);
+		
+		
+		
+		inode_t nodes_table[sb.nodes_per_group];
+		assert(sizeof(nodes_table) == sb.nodes_per_group*node_sz);
+		memset(nodes_table, 0, sizeof(nodes_table));
+		assert(sizeof(nodes_table) == block_sz*node_table_block_sz);
+		
+		
+		for (size_t i = 0; i < block_map_block_sz + node_map_block_sz + node_table_block_sz; ++i)
+		{
+			block_map.set(i, true);
+		}
+		
+		for (size_t i = 1; i < block_group_count; ++i)
+		{
+			auto blk_start = i*sb.blocks_per_group + sb.superblock_block_num;
+			bg_table[i].unallocated_inodes = sb.nodes_per_group;
+			bg_table[i].unallocated_blocks = sb.blocks_per_group - block_map_block_sz - node_map_block_sz - node_table_block_sz;
+			bg_table[i].block_usage_map = blk_start;
+			bg_table[i].inode_usage_map = blk_start + block_map_block_sz;
+			bg_table[i].inode_table = blk_start + block_map_block_sz + node_map_block_sz;
+			
+			
+			res = part->write(get_block_lba(blk_start + 0), block_map_block_sz*block_sz, group_block_map_template);
+			assert(res == block_map_block_sz*block_sz);
+			if (res != block_map_block_sz*block_sz)
+			{
+				goto failure;
+			}
+			
+			res = part->write(get_block_lba(bg_table[i].inode_usage_map), 0, node_map_block_sz*block_sz);
+			assert(res == node_map_block_sz*block_sz);
+			if (res != node_map_block_sz*block_sz)
+			{
+				goto failure;
+			}
+			
+			res = part->write(get_block_lba(bg_table[i].inode_table), 0, node_table_block_sz*block_sz);
+			assert(res == node_table_block_sz*block_sz);
+			if (res != node_table_block_sz*block_sz)
+			{
+				goto failure;
+			}
+			
+			total_unalloc_blocks += bg_table[i].unallocated_blocks;
+		}
+		
+		
+		
+		
+		
+		// Set up first block group
+		
+		
+		
+		block_map.setAll(false);
+		used_count = 0;
+		
+		
+		// Reserve boot sector(s) and
+		// superblock
+		for (int i = 0; i <= sb.superblock_block_num; ++i)
+		{
+			block_map.set(used_count++, true);
+		}
+		
+		for (int i = 0; i < DIVU(block_group_count*sizeof(block_group_desc_t), block_sz); ++i)
+		{
+			block_map.set(used_count++, true);
+		}
+		
+		bg_table[0].block_usage_map = used_count;
+		
+		for (int i = 0; i < block_map_block_sz; ++i)
+		{
+			block_map.set(used_count++, true);
+		}
+		
+		bg_table[0].inode_usage_map = used_count;
+		
+		for (int i = 0; i < node_map_block_sz; ++i)
+		{
+			block_map.set(used_count++, true);
+		}
+		
+		bg_table[0].inode_table = used_count;
+		
+		for (int i = 0; i < node_table_block_sz; ++i)
+		{
+			block_map.set(used_count++, true);
+		}
+		
+		bg_table[0].unallocated_blocks = sb.blocks_per_group - used_count;
+		bg_table[0].unallocated_inodes = sb.nodes_per_group - 1;
+		bg_table[0].directories = 1;
+		
+		
+		{
+			uint8_t val = 1;
+			val <<= 6;
+			assert(val > 0);
+			assert((uint8_t)(val << 2) == 0);
+			
+			res = part->write(get_block_lba(bg_table[0].inode_usage_map), 0, node_map_block_sz*block_sz);
+			assert(res == node_map_block_sz*block_sz);
+			if (res != node_map_block_sz*block_sz)
+			{
+				goto failure;
+			}
+			
+			res = part->write(get_block_lba(bg_table[0].inode_usage_map), val, 1);
+			assert(res == 1);
+			if (res != 1)
+			{
+				goto failure;
+			}
+		}
+		
+		
+		res = part->write(get_block_lba(bg_table[0].block_usage_map), block_map_block_sz*block_sz, group_block_map_template);
+		assert(res == block_map_block_sz*block_sz);
+		if (res != block_map_block_sz*block_sz)
+		{
+			goto failure;
+		}
+		
+		
+		// Setup root directory node
+		memset(nodes_table, 0, sizeof(nodes_table));
+		#pragma GCC diagnostic push
+		#pragma GCC diagnostic ignored "-Woverflow"
+		nodes_table[1].raw_perms = 0xFFFF;
+		#pragma GCC diagnostic pop
+		nodes_table[1].perms.set_UID = 0;
+		nodes_table[1].perms.set_GID = 0;
+		nodes_table[1].perms.sticky = 0;
+		nodes_table[1].perms.group_write = 0;
+		nodes_table[1].perms.other_write = 0;
+		nodes_table[1].type = EXT2_INODE_TYPE_DIR;
+		nodes_table[1].sector_count = 0;
+		
+		
+		
+		res = part->write(get_block_lba(bg_table[0].inode_table), node_table_block_sz*block_sz, (const uint8_t*)nodes_table);
+		assert(res == node_table_block_sz*block_sz);
+		if (res != node_table_block_sz*block_sz)
+		{
+			goto failure;
+		}
+		
+		total_unalloc_blocks += bg_table[0].unallocated_blocks;
+		
+		
+		
+		
+		// Recalculate unallocated_blocks
+		// on the superblock
+		sb.unallocated_blocks = total_unalloc_blocks;
+		res = part->write(EXT2_SUPERBLOCK_OFFSET, sizeof(sb), (const uint8_t*)&sb);
+		assert(res == sizeof(sb));
+		if (res != sizeof(sb))
+		{
+			goto failure;
+		}
+		
+		res = part->write(bgdt_off, block_group_count*sizeof(block_group_desc_t), (const uint8_t*)bg_table);
+		assert(res == block_group_count*sizeof(block_group_desc_t));
+		
+		// TODO: Figure out if I'm doing
+		// this right
+		
+		
+		
+		delete[] bg_table;
+		delete[] group_block_map_template;
+		
+		
+		return true;
+		
+		
+		failure:
+		if (bg_table)
+		{
+			delete[] bg_table;
+		}
+		if (group_block_map_template)
+		{
+			delete[] group_block_map_template;
+		}
+		return false;
+	}
 	
 	
 	

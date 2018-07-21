@@ -165,31 +165,22 @@ namespace Kernel::FS
 		
 		struct EXT2_Types_Perms
 		{
-			union {
-			struct {
-			uint16_t user_read : 1;
-			uint16_t user_write : 1;
-			uint16_t user_execute : 1;
-			
-			uint16_t group_read : 1;
-			uint16_t group_write : 1;
-			uint16_t group_execute : 1;
-			
-			uint16_t other_read : 1;
-			uint16_t other_write : 1;
-			uint16_t other_execute : 1;
-			
-			uint16_t set_UID : 1;
-			uint16_t set_GID : 1;
-			uint16_t sticky : 1;
-			
-			uint16_t type : 4;
-			
-			
-			};
-			uint16_t raw;
+			union
+			{
+				union
+				{
+					UGO_t perms;
+					struct
+					{
+						uint16_t ____ignore : 12;
+						uint16_t type : 4;
+					};
+				};
+				uint16_t raw;
 			};
 		};
+		
+		
 		
 		static_assert(sizeof(EXT2_Types_Perms) == 2);
 		
@@ -198,7 +189,24 @@ namespace Kernel::FS
 		
 		struct inode_t
 		{
-			EXT2_Types_Perms type_perms;
+			union
+			{
+				union
+				{
+					UGO_t perms;
+					struct
+					{
+						uint16_t _____ignore : 12;
+						uint16_t type : 4;
+					};
+				};
+				struct
+				{
+					uint16_t raw_perms : 12;
+					uint16_t _____ignore2 : 4;
+				};
+			};
+			//EXT2_Types_Perms type_perms;
 			uint16_t user_ID;
 			uint32_t size_low;
 			uint32_t access_time;

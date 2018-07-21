@@ -19,7 +19,7 @@ namespace Kernel::FS
 		virtual int read(size_t start, size_t len, unsigned char* buf) const override;
 		virtual int write(size_t start, size_t len, const unsigned char* buf) override;
 		
-		virtual size_t capacity() const override;
+		virtual size_t capacity() const noexcept override;
 	};
 }
 
