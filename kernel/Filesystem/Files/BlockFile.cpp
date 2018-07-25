@@ -105,7 +105,7 @@ namespace Kernel { namespace FS
 	
 	bool BlockFile::readTo(size_t index)
 	{
-		ASSERT(blocks.size() > index);
+		assert(blocks.size() > index);
 		if (!blocks[index])
 		{
 			blocks[index] = new Block<BlockSize>();
@@ -127,7 +127,7 @@ namespace Kernel { namespace FS
 	
 	bool BlockFile::writeTo(size_t index, bool force)
 	{
-		ASSERT(blocks.size() > index);
+		assert(blocks.size() > index);
 		Block<BlockSize>* b = blocks[index];
 		if (!b)
 		{

@@ -17,7 +17,7 @@ namespace Kernel::FS
 		void init(DirectoryNode_v* parent);
 		
 		public:
-		EXT2FileNode(DirectoryNode_v* parent, EXT2* fs, Utils::shared_ptr<detail::EXT2::inode_t> node, const Utils::string& name);
+		EXT2FileNode(DirectoryNode_v* parent, EXT2* fs, Utils::shared_ptr<detail::EXT2::inode_t> node, const Utils::string& name, const size_t inode_index);
 		EXT2FileNode(DirectoryNode_v* parent, EXT2* fs, detail::EXT2::dirent_t*);
 		
 		
@@ -30,6 +30,7 @@ namespace Kernel::FS
 		virtual void close() override;
 		virtual DirEnt* readDir(uint32_t) override;
 		virtual Node* findDir(const char* name) override;
+		virtual EXT2* get_filesystem() const noexcept override;
 	};
 	
 }

@@ -4,12 +4,20 @@
 #include <kernel/Filesystem/Filesystem.hh>
 #include <kernel/Security/UGO.h>
 #include <Utils/map>
+#include <Utils/vector>
 #include <Utils/shared_ptr>
 #include <Utils/weak_ptr>
+#include <Support/collections/shared_ptr_cache.hpp>
+#include <Utils/BitSet.hh>
+#include <Utils/shared_mutex>
+#include "EXT2Factory.hh"
 
 
 namespace Kernel::FS
 {
+	
+	
+	class EXT2;
 	
 	namespace detail::EXT2
 	{
@@ -291,22 +299,118 @@ namespace Kernel::FS
 			unsigned char name[];
 		};
 		
-		dirent_t* next_dirent(dirent_t* array, size_t array_size, dirent_t* current);
+		dirent_t* next_dirent(dirent_t* array, size_t array_size, dirent_t* current, bool allow_empty = false);
+		dirent_t* allocate_dirent(dirent_t* array, size_t array_size, size_t name_len, bool type_field);
 		
 		
-		
+		class block_group_t;
 		
 		
 		struct block_t
 		{
-			size_t len;
+			block_group_t* group;
+			uint16_t index : 15;
+			volatile bool modified : 1;
+			//size_t len;
 			uint8_t data[];
 			
+			block_t();
+			~block_t();
+			
 			void operator delete(void*);
+		} __attribute__((__packed__));
+		
+		
+		class block_group_t
+		{
+			public:
+			typedef Utils::shared_timed_mutex mutex_type;
+			
+			protected:
+			typedef Utils::shared_lock<mutex_type> read_lock;
+			typedef Utils::unique_lock<mutex_type> write_lock;
+			
+			const uint32_t group_index;
+			mutable mutex_type mut;
+			mutable Utils::mutex cache_m;
+			FS::EXT2* fs;
+			volatile block_group_desc_t* gd;
+			Utils::shared_ptr<block_t> block_usage_blk;
+			Utils::Bitset_Ptr<uint8_t> block_usage;
+			Utils::shared_ptr<block_t> node_usage_blk;
+			Utils::Bitset_Ptr<uint8_t> node_usage;
+			Utils::vector<bool> modified_map;
+			uint32_t blocks_per_group;
+			uint32_t nodes_per_group;
+			mutable Utils::map<uint32_t, Utils::weak_ptr<block_t>> cached_blocks;
+			Utils::map<uint32_t, Node*> nodes;
+			mutable Support::Collections::shared_ptr_cache<block_t, Utils::shared_ptr> block_ptr_cache;
+			
+			
+			Utils::shared_ptr<block_t> get_block_internal(const size_t) noexcept;
+			Utils::shared_ptr<block_t> get_block_internal_no_lock(const size_t, read_lock&) noexcept;
+			Utils::shared_ptr<block_t> get_block_internal_no_lock(size_t, write_lock&, bool no_unlock = false) noexcept;
+			Utils::shared_ptr<inode_t> get_node_internal(const size_t) noexcept;
+			Utils::shared_ptr<inode_t> get_node_internal_no_lock(const size_t, read_lock&) noexcept;
+			Utils::shared_ptr<inode_t> get_node_internal_no_lock(size_t, write_lock&, bool no_unlock = false) noexcept;
+			
+			size_t inode_block_index(const size_t) const noexcept;
+			
+			
+			
+			private:
+			volatile bool initted;
+			void init();
+			void init() const;
+			size_t free_block_no_lock() const;
+			size_t free_node_no_lock() const;
+			
+			void cache_block(const Utils::shared_ptr<block_t>&, write_lock&, bool no_unlock = false) noexcept;
+			void cache_block(const Utils::shared_ptr<block_t>&, read_lock&, bool no_unlock = false) noexcept;
+			Utils::shared_ptr<inode_t> get_node_internal_already_locked(const size_t) noexcept;
+			
+			public:
+			
+			constexpr static size_t npos = size_t(-1);
+			
+			block_group_t(FS::EXT2&, block_group_desc_t&, const uint32_t group);
+			~block_group_t();
+			
+			
+			bool node_is_free(const size_t i) const;
+			bool block_is_free(const size_t) const;
+			
+			size_t blocks_size() const noexcept;
+			size_t inodes_size() const noexcept;
+			
+			size_t free_node() const;
+			size_t free_block() const;
+			
+			size_t free_node_count() const noexcept;
+			size_t free_block_count() const noexcept;
+			
+			uint16_t directories() const noexcept;
+			
+			Utils::shared_ptr<block_t> reserve_block(size_t& index);
+			bool release_block(const size_t index);
+			Utils::shared_ptr<inode_t> reserve_node(size_t& index);
+			bool release_node(const size_t index);
+			
+			bool block_is_modified(const size_t) const;
+			bool node_is_modified(const size_t) const;
+			
+			
+			void write_back() noexcept;
+			void commit_block(block_t*) noexcept;
+			
+			Utils::shared_ptr<block_t> get_block(const size_t index, bool write = false);
+			
+			Utils::shared_ptr<inode_t> allocate_directory(size_t& index) noexcept;
+			Utils::shared_ptr<inode_t> allocate_file(size_t& index) noexcept;
+			
+			bool mark_node_modified(const size_t);
+			bool mark_block_modified(const size_t);
 		};
-		
-		
-		
 	}
 	
 	
@@ -325,7 +429,9 @@ namespace Kernel::FS
 		typedef group_index_type group_index_t;
 		typedef detail::EXT2::inode_t inode_type;
 		typedef detail::EXT2::block_t block_t;
+		typedef detail::EXT2::block_group_t block_group_t;
 		
+		EXT2Factory _factory;
 		Drivers::Disk* disk;
 		detail::EXT2::superblock_ext_t sb;
 		detail::EXT2::block_group_desc_t* bg_table;
@@ -333,6 +439,8 @@ namespace Kernel::FS
 		mutable Utils::map<block_index_t, Utils::weak_ptr<block_t>> cached_blocks;
 		size_t max_node_blocks;
 		Utils::map<inode_index_t, Node*> nodes;
+		mutable Support::Collections::shared_ptr_cache<block_t, Utils::shared_ptr> block_ptr_cache;
+		Utils::vector<Utils::shared_ptr<block_group_t>> groups;
 		
 		
 		group_index_t calc_inode_group(inode_index_t) const;
@@ -349,11 +457,16 @@ namespace Kernel::FS
 		
 		bool extended_superblock() const noexcept;
 		bool has_journal() const noexcept;
+		size_t read_block(const size_t index, uint8_t* buffer) const noexcept;
+		size_t write_block(const size_t index, const uint8_t* buffer) noexcept;
+		Utils::shared_ptr<inode_type> reserve_inode(size_t& index) noexcept;
+		Utils::shared_ptr<block_t> reserve_block(size_t& index) noexcept;
+		bool release_inode(const size_t index) noexcept;
+		bool release_block(const size_t index) noexcept;
 		
 		private:
 		Utils::shared_ptr<inode_type> __get_inode(inode_index_t) const noexcept;
 		size_t lba_from_block(block_index_t) const noexcept;
-		size_t dirent_name_len(const detail::EXT2::dirent_t*) const noexcept;
 		uint64_t inode_size(const inode_type*) const noexcept;
 		
 		public:
@@ -375,12 +488,28 @@ namespace Kernel::FS
 		Utils::shared_ptr<const detail::EXT2::inode_t> get_inode(inode_index_t) const noexcept;
 		
 		
+		Utils::shared_ptr<block_group_t> get_group(size_t i)
+		{
+			assert(i < block_group_count);
+			return groups.at(i);
+		}
+		
+		virtual EXT2Factory& factory() noexcept override
+		{
+			return _factory;
+		}
+		
+		size_t dirent_name_len(const detail::EXT2::dirent_t*) const noexcept;
+		
+		
 		static bool Format(Drivers::Disk* part);
 		
 		
 		friend class EXT2Node;
 		friend class EXT2FileNode;
 		friend class EXT2DirectoryNode;
+		friend class detail::EXT2::block_group_t;
+		friend class EXT2Factory;
 	};
 	
 	

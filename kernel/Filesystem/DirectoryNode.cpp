@@ -1,5 +1,7 @@
 #include "DirectoryNode.hh"
 #include "Path.hh"
+#include "Filesystem.hh"
+#include "NodeFactory.hh"
 
 namespace Kernel { namespace FS
 {
@@ -67,11 +69,37 @@ namespace Kernel { namespace FS
 	}
 	
 	
+	FileNode_v* DirectoryNode_v::add_file(const Utils::string& name)
+	{
+		auto fs = this->get_filesystem();
+		if (fs)
+		{
+			auto& factory = fs->factory();
+			return factory.create_file(this, name);
+		}
+		return nullptr;
+	}
+	
+    DirectoryNode_v* DirectoryNode_v::add_directory(const Utils::string& name)
+    {
+    	auto fs = this->get_filesystem();
+		if (fs)
+		{
+			auto& factory = fs->factory();
+			return factory.create_directory(this, name);
+		}
+		return nullptr;
+    }
+	
+	
 	
 	DirectoryNode::DirectoryNode(const NodeType t) : DirectoryNode_v(t)
 	{
 		
 	}
+	
+	
+	
 	
 }
 }

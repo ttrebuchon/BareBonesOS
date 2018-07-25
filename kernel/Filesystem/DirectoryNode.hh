@@ -6,7 +6,7 @@
 
 namespace Kernel { namespace FS {
 	
-	
+	class Factory;
 	
 	class DirectoryNode_v : public virtual Node
     {
@@ -14,14 +14,16 @@ namespace Kernel { namespace FS {
 
         public:
         DirectoryNode_v(const NodeType = NodeType::Directory);
-
-        virtual void addChild(Node*) = 0;
         
         virtual Node* findChild(const Utils::string& relativePath);
         
         virtual size_t size() const noexcept = 0;
         virtual Node* at(size_t index) const = 0;
         virtual Node* at(const Utils::string& name) const;
+        
+        virtual FileNode_v* add_file(const Utils::string& name);
+        virtual DirectoryNode_v* add_directory(const Utils::string& name);
+        virtual Node* add(Node*) = 0;
     };
 	
 
@@ -31,6 +33,9 @@ namespace Kernel { namespace FS {
 
         public:
         DirectoryNode(const NodeType = NodeType::Directory);
+        
+        
+        
         
         
         

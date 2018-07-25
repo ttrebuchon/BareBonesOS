@@ -24,6 +24,9 @@ namespace Kernel { namespace FS { namespace Init_RD {
         virtual Node* findDir(const char* name) override;
         
         virtual size_t size() const noexcept override;
+        
+        virtual Filesystem* get_filesystem() const noexcept override
+        { return nullptr; }
     };
 
 }

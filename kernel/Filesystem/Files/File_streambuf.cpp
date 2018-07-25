@@ -7,7 +7,7 @@ namespace Kernel { namespace FS
 	
 	File_streambuf::File_streambuf(FileNode_v* fnode) : Utils::basic_streambuf<char>(), __node(fnode), eback_pos(0), pbase_pos(0), size(0)
 	{
-		ASSERT(fnode != nullptr);
+		assert(__node);
 		size = __node->size();
 	}
 	

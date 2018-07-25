@@ -62,7 +62,7 @@ namespace Kernel { namespace FS {
 		for (unsigned int j = 0; j < count; ++j)
 		{
 			Node* entry = readRecord(ptr, &tmp);
-			dir->addChild(entry);
+			dir->add(entry);
 			ptr = tmp;
 		}
 		if (end != nullptr)

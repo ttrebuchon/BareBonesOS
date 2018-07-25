@@ -4,7 +4,7 @@ namespace Kernel::FS
 {
 	
 	
-	EXT2FileNode::EXT2FileNode(DirectoryNode_v* parent, EXT2* fs, Utils::shared_ptr<detail::EXT2::inode_t> node, const Utils::string& name) : EXT2Node(fs, node, name), Node(), FileNode()
+	EXT2FileNode::EXT2FileNode(DirectoryNode_v* parent, EXT2* fs, Utils::shared_ptr<detail::EXT2::inode_t> node, const Utils::string& name, const size_t inode_index) : EXT2Node(fs, node, name, inode_index), Node(), FileNode()
 	{
 		init(parent);
 	}
@@ -62,6 +62,11 @@ namespace Kernel::FS
 	Node* EXT2FileNode::findDir(const char* name)
 	{
 		assert(NOT_IMPLEMENTED);
+	}
+	
+	EXT2* EXT2FileNode::get_filesystem() const noexcept
+	{
+		return this->EXT2Node::fs;
 	}
 	
 }

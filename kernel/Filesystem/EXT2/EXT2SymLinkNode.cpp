@@ -128,7 +128,7 @@ namespace Kernel::FS
 	
 	
 	
-	EXT2SymLinkNode::EXT2SymLinkNode(DirectoryNode_v* parent, EXT2* fs, Utils::shared_ptr<detail::EXT2::inode_t> node, const Utils::string& name) : EXT2Node(fs, node, name), LinkNode(), _target(nullptr)
+	EXT2SymLinkNode::EXT2SymLinkNode(DirectoryNode_v* parent, EXT2* fs, Utils::shared_ptr<detail::EXT2::inode_t> node, const Utils::string& name, const size_t inode_index) : EXT2Node(fs, node, name, inode_index), LinkNode(), _target(nullptr)
 	{
 		init(parent);
 	}
@@ -186,5 +186,10 @@ namespace Kernel::FS
 			_target = fs->getNode(target_path());
 		}
 		return _target;
+	}
+	
+	EXT2* EXT2SymLinkNode::get_filesystem() const noexcept
+	{
+		return this->EXT2Node::fs;
 	}
 }

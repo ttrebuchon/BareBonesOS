@@ -23,12 +23,15 @@ namespace Kernel { namespace FS { namespace Init_RD {
         virtual void close() override;
         virtual DirEnt* readDir(uint32_t) override;
         virtual Node* findDir(const char* name) override;
-        virtual void addChild(Node*) override;
+        virtual Node* add(Node*) override;
         
         virtual size_t size() const noexcept override
         { return children.size(); }
         virtual Node* at(size_t index) const override
         { return children.at(index); }
+        
+        virtual Filesystem* get_filesystem() const noexcept override
+        { return nullptr; }
     };
 
 }

@@ -16,6 +16,8 @@ namespace Kernel { namespace FS {
 	
 	class BlockDeviceNode;
 	
+	class Filesystem;
+	
 	class Node
 	{
 		
@@ -53,6 +55,9 @@ namespace Kernel { namespace FS {
 		}
 		
 		virtual void set_parent(DirectoryNode_v*);
+		
+		virtual Filesystem* get_filesystem() const noexcept = 0;
+		
 		
 		virtual const FileNode_v* as_file() const noexcept = 0;
 		virtual FileNode_v* as_file() noexcept = 0;

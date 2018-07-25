@@ -45,6 +45,8 @@ namespace Kernel { namespace FS {
 		virtual void close() override;
 		virtual DirEnt* readDir(uint32_t) override;
 		virtual Node* findDir(const char* name) override;
+		virtual Filesystem* get_filesystem() const noexcept override
+		{ return nullptr; }
 		
 		
 		virtual const FileNode_v* as_file() const noexcept override

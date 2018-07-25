@@ -4,7 +4,7 @@
 namespace Kernel { namespace FS
 {
 	
-	FileNode_v::FileNode_v(const NodeType t) : Node(t | NodeType::File)
+	FileNode_v::FileNode_v(const NodeType t) : Node(t | NodeType::File), file(nullptr), lock_m()
 	{
 		this->_type |= (t | NodeType::File);
 	}
@@ -58,6 +58,7 @@ namespace Kernel { namespace FS
 		Utils::unique_lock<Utils::mutex> lock(lock_m, Utils::try_to_lock);
 		if (!lock.owns_lock())
 		{
+			return nullptr;
 			return ResourcePtr<FileHandle>(nullptr);
 		}
 		assert(lock.owns_lock());

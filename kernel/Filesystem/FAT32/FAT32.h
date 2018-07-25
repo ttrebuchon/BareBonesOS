@@ -6,6 +6,7 @@
 #ifdef __cplusplus
 
 #include <kernel/Filesystem/Filesystem.hh>
+#include <kernel/Filesystem/ReadOnlyFactory.hh>
 
 #endif
 
@@ -324,6 +325,7 @@ class FAT32 : public Kernel::FS::Filesystem
 	protected:
 	Drivers::Disk* disk;
 	FAT32_t fs;
+	ReadOnlyFactory _factory; // TODO
 	
 	uint32_t get_cluster_lba(uint32_t cluster) const noexcept;
 	
@@ -354,6 +356,11 @@ class FAT32 : public Kernel::FS::Filesystem
 	
 	
 	virtual Node* root() const noexcept override;
+	
+	virtual ReadOnlyFactory& factory() noexcept override
+	{
+		return _factory;
+	}
 };
 
 #endif

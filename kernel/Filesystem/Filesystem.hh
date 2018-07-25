@@ -12,6 +12,7 @@ namespace Drivers
 namespace Kernel { namespace FS {
 	
 	class Node;
+	class Factory;
 	
 	class Filesystem
 	{
@@ -29,6 +30,8 @@ namespace Kernel { namespace FS {
 		{
 			return _root;
 		}
+		
+		virtual Factory& factory() noexcept = 0;
 	};
 	
 }

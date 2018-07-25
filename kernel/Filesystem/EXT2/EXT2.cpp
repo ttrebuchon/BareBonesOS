@@ -34,19 +34,27 @@ namespace Kernel::FS
 {
 	namespace detail::EXT2
 	{
-		dirent_t* next_dirent(dirent_t* array, size_t array_size, dirent_t* current)
+		dirent_t* next_dirent(dirent_t* array, size_t array_size, dirent_t* current, bool allow_empty)
 		{
 			assert(array);
 			assert(array_size);
 			if (!current)
 			{
+				if (unlikely(allow_empty))
+				{
+					return array;
+				}
 				current = array;
 			}
 			else
 			{
+				if (unlikely(!current->entry_size))
+				{
+					return nullptr;
+				}
 				current = (dirent_t*)((uint8_t*)current + current->entry_size);
 			}
-			while (!current->inode)
+			while (!(current->inode || allow_empty))
 			{
 				if (current->entry_size == 0)
 				{
@@ -85,7 +93,17 @@ namespace Kernel::FS
 	
 	
 	
-	EXT2::EXT2(Drivers::Disk& disk, int partition) noexcept : Filesystem(), disk(&disk)
+	EXT2::EXT2(Drivers::Disk& disk, int partition) noexcept : Filesystem(),
+			_factory(this),
+			disk(&disk),
+			sb(),
+			bg_table(nullptr),
+			block_group_count(0),
+			cached_blocks(),
+			max_node_blocks(0),
+			nodes(),
+			block_ptr_cache(),
+			groups()
 	{
 		assert(!is_big_endian());
 		
@@ -115,22 +133,6 @@ namespace Kernel::FS
 		assert(res == sizeof(sb));
 		
 		assert(sb.signature == detail::EXT2::superblock_constants::ext2_signature);
-		
-		TRACE("\n\n\n\n");
-		TRACE_VAL(sb.nodes);
-		TRACE_VAL(sb.blocks);
-		TRACE_VAL(sb.su_rsv_blocks);
-		TRACE_VAL(sb.unallocated_blocks);
-		TRACE_VAL(sb.unallocated_nodes);
-		TRACE_VAL(sb.superblock_block_num);
-		TRACE_VAL(sb.blocks_per_group);
-		TRACE_VAL(sb.fragments_per_group);
-		TRACE_VAL(sb.nodes_per_group);
-		TRACE_VAL(sb.state);
-		TRACE_VAL(sb.OS_ID);
-		TRACE_VAL(sb.usr_rsv_block_ID);
-		TRACE_VAL(sb.group_rsv_block_ID);
-		TRACE("\n\n\n\n");
 		
 		const size_t block_sz = (1024 << sb.block_size_modifier);
 		
@@ -194,63 +196,36 @@ namespace Kernel::FS
 		}
 		
 		
+		// Build block groups
+		assert(block_group_count > 0);
+		groups.resize(block_group_count);
+		assert(groups.size() == block_group_count);
+		for (size_t i = 0; i < block_group_count; ++i)
+		{
+			groups[i] = Utils::shared_ptr<block_group_t>(new block_group_t(*this, bg_table[i], i));
+		}
+		
+		
+		
+		
+		
+		
+		
+		
+		
 		
 		auto root = get_inode(2);
 		assert(root);
-		_root = new EXT2DirectoryNode(nullptr, this, root, "");
+		_root = new EXT2DirectoryNode(nullptr, this, root, "", 2);
 		nodes[2] = _root;
-		TRACE_VAL(((void*)(uintptr_t)root->raw_perms));
-		TRACE_VAL(root->perms.user_read);
-		TRACE_VAL(root->perms.user_write);
-		TRACE_VAL(root->perms.user_execute);
-		TRACE_VAL(root->perms.group_read);
-		TRACE_VAL(root->perms.group_write);
-		TRACE_VAL(root->perms.group_execute);
-		TRACE_VAL(root->perms.other_read);
-		TRACE_VAL(root->perms.other_write);
-		TRACE_VAL(root->perms.other_execute);
-		TRACE_VAL(root->user_ID);
-		TRACE_VAL(root->group_ID);
-		TRACE_VAL(root->perms.sticky);
-		TRACE_VAL(root->perms.set_GID);
-		TRACE_VAL(root->perms.set_UID);
-		TRACE_VAL(root->size_low);
-		TRACE_VAL(root->sector_count);
-		/*
-		size_t root_sz = root->size_low;
-		auto dat = read_inode(root, 0, root_sz/block_size());
-		root_sz = (root_sz / block_size());
-		root_sz *= block_size();
-		
-		assert(dat);
-		
-		auto root_ents = (dirent_t*)dat;
-		TRACE("\n\n\n\n");
-		
-		
-		
-		auto ent = next_dirent(root_ents, root_sz, nullptr);
-		while (ent)
-		{
-			assert(ent);
-			
-			auto n = get_inode(ent->inode);
-			
-			
-			TRACE(ent->name);
-			TRACE(ent->inode);
-			assert((uint8_t*)ent < ((uint8_t*)root_ents + root_sz));
-			ent = next_dirent(root_ents, root_sz, ent);
-		}
-		
-		delete[] dat;*/
 	}
 	
 	EXT2::~EXT2()
 	{
-		assert(bg_table);
-		delete[] bg_table;
-		bg_table = nullptr;
+		for (auto& gr : groups)
+		{
+			gr->write_back();
+		}
 		
 		for (auto& kv : nodes)
 		{
@@ -260,6 +235,25 @@ namespace Kernel::FS
 		nodes.clear();
 		_root = nullptr;
 		cached_blocks.clear();
+		block_ptr_cache.reset();
+		
+		
+		
+		groups.clear();
+		assert(bg_table);
+		
+		
+		size_t bgdt_off = (EXT2_SUPERBLOCK_OFFSET + sizeof(sb))/block_size();
+		if ((EXT2_SUPERBLOCK_OFFSET + sizeof(sb)) % block_size())
+		{
+			++bgdt_off;
+		}
+		
+		bgdt_off *= block_size();
+		
+		auto res = disk->write(bgdt_off, block_group_count*sizeof(detail::EXT2::block_group_desc_t), (const uint8_t*)bg_table);
+		delete[] bg_table;
+		bg_table = nullptr;
 		
 		//assert(NOT_IMPLEMENTED);
 	}
@@ -336,23 +330,34 @@ namespace Kernel::FS
 	
 	auto EXT2::get_block(block_index_type n) -> Utils::shared_ptr<block_t>
 	{
-		if (cached_blocks.count(n))
+		assert(groups.size() == block_group_count);
+		assert(n / sb.blocks_per_group < groups.size());
+		auto gr = groups[n / sb.blocks_per_group];
+		assert(gr);
+		//assert(n != 70);
+		return gr->get_block(n);
+		
+		/*if (cached_blocks.count(n))
 		{
 			auto cached = cached_blocks.at(n).lock();
 			
 			if (cached)
 			{
+				block_ptr_cache.cache(cached);
 				return cached;
 			}
 		}
 		
-		static_assert(sizeof(block_t) == sizeof(size_t));
+		static_assert(sizeof(block_t) == sizeof(uint16_t) + sizeof(void*));
 		auto raw = new uint8_t[sizeof(block_t) + block_size()];
 		memset(raw, 0, sizeof(block_t) + block_size());
 		
 		block_t* block = (block_t*)raw;
+		new (block) block_t();
+		block->group = gr.get();
+		block->index = n % sb.blocks_per_group;
 		
-		block->len = block_size();
+		//block->len = block_size();
 		
 		uint8_t* cached = &block->data[0];//new uint8_t[block_size()];
 		
@@ -368,13 +373,14 @@ namespace Kernel::FS
 		//Utils::shared_ptr<block_t> block(new block_t{block_size(), cached});
 		
 		cached_blocks[n] = ptr;
-		return ptr;
+		block_ptr_cache.cache(ptr);
+		return ptr;*/
 	}
 	
 	auto EXT2::get_block(block_index_type n) const -> Utils::shared_ptr<const block_t>
 	{
 		return const_cast<EXT2*>(this)->get_block(n);
-		if (cached_blocks.count(n))
+		/*if (cached_blocks.count(n))
 		{
 			auto cached = cached_blocks.at(n).lock();
 			if (cached)
@@ -402,7 +408,7 @@ namespace Kernel::FS
 		//Utils::shared_ptr<block_t> block(new block_t{block_size(), cached});
 		
 		cached_blocks[n] = ptr;
-		return ptr;
+		return ptr;*/
 	}
 	
 	uint8_t* EXT2::read_inode(const inode_type* node, size_t first, size_t count)
@@ -613,7 +619,7 @@ namespace Kernel::FS
 		
 		if (next_n->type == EXT2_INODE_TYPE_DIR)
 		{
-			n = new EXT2DirectoryNode(parent, this, next_n, Utils::string((const char*)ent->name, dirent_name_len(ent)));
+			n = new EXT2DirectoryNode(parent, this, next_n, Utils::string((const char*)ent->name, dirent_name_len(ent)), ent->inode);
 		}
 		else if (next_n->type == EXT2_INODE_TYPE_BLOCK_DEV)
 		{
@@ -628,12 +634,12 @@ namespace Kernel::FS
 		}
 		else if (next_n->type == EXT2_INODE_TYPE_FILE)
 		{
-			n = new EXT2FileNode(parent, this, next_n, Utils::string((const char*)ent->name, dirent_name_len(ent)));
+			n = new EXT2FileNode(parent, this, next_n, Utils::string((const char*)ent->name, dirent_name_len(ent)), ent->inode);
 		}
 		else if (next_n->type == EXT2_INODE_TYPE_SYMLINK)
 		{
 			
-			n = new EXT2SymLinkNode(parent, this, next_n, Utils::string((const char*)ent->name, dirent_name_len(ent)));
+			n = new EXT2SymLinkNode(parent, this, next_n, Utils::string((const char*)ent->name, dirent_name_len(ent)), ent->inode);
 		}
 		else
 		{
@@ -663,6 +669,60 @@ namespace Kernel::FS
 			return ((sb.optional_features & detail::EXT2::superblock_constants::optional_features::has_journal) != 0);
 		}
 		return false;
+	}
+	
+	size_t EXT2::read_block(const size_t index, uint8_t* buffer) const noexcept
+	{
+		return disk->read(lba_from_block(index), block_size(), buffer);
+	}
+	
+	size_t EXT2::write_block(const size_t index, const uint8_t* buffer) noexcept
+	{
+		return disk->write(lba_from_block(index), block_size(), buffer);
+	}
+	
+	auto EXT2::reserve_inode(size_t& index) noexcept -> Utils::shared_ptr<inode_type>
+	{
+		for (auto group : groups)
+		{
+			auto node = group->reserve_node(index);
+			if (node)
+			{
+				return node;
+			}
+		}
+		return nullptr;
+	}
+	
+	auto EXT2::reserve_block(size_t& index) noexcept -> Utils::shared_ptr<block_t>
+	{
+		for (auto group : groups)
+		{
+			auto block = group->reserve_block(index);
+			if (block)
+			{
+				return block;
+			}
+		}
+		return nullptr;
+	}
+	
+	bool EXT2::release_inode(const size_t index) noexcept
+	{
+		assert(index > 0);
+		
+		auto gindex = (index - 1) % sb.nodes_per_group;
+		assert(gindex < groups.size());
+		
+		return groups[gindex]->release_node(index);
+	}
+	
+	bool EXT2::release_block(const size_t index) noexcept
+	{
+		auto gindex = (index - 1) % sb.blocks_per_group;
+		assert(gindex < groups.size());
+		
+		return groups[gindex]->release_block(index);
 	}
 	
 	
@@ -701,6 +761,11 @@ namespace Kernel::FS
 	
 	size_t EXT2::lba_from_block(block_index_t n) const noexcept
 	{
+		if (n < sb.superblock_block_num)
+		{
+			TRACE_VAL(n);
+			TRACE_VAL(sb.superblock_block_num);
+		}
 		assert(n >= sb.superblock_block_num);
 		return (n - sb.superblock_block_num)*block_size() + EXT2_SUPERBLOCK_OFFSET;
 	}
@@ -974,6 +1039,16 @@ namespace Kernel::FS
 			block_map.set(used_count++, true);
 		}
 		
+		
+		
+		// Reserve block for root
+		// directory
+		// entries ('.' and '..')
+		block_map.set(used_count, true);
+		TRACE("Block_map reserved at:");
+		TRACE_VAL(used_count);
+		
+		
 		bg_table[0].unallocated_blocks = sb.blocks_per_group - used_count;
 		bg_table[0].unallocated_inodes = sb.nodes_per_group - 1;
 		bg_table[0].directories = 1;
@@ -992,12 +1067,32 @@ namespace Kernel::FS
 				goto failure;
 			}
 			
-			res = part->write(get_block_lba(bg_table[0].inode_usage_map), val, 1);
+			{
+				size_t reserved_bytes = (reserved_nodes / 8) + ((reserved_nodes % 8) ? 1 : 0);
+				uint8_t reserved_map[reserved_bytes];
+				memset(reserved_map, 0, reserved_bytes);
+				for (size_t i = 0; i < reserved_nodes; ++i)
+				{
+					val = 1;
+					val <<= (i % 8);
+					reserved_map[i / 8] |= val;
+				}
+				
+				res = part->write(get_block_lba(bg_table[0].inode_usage_map), reserved_bytes, reserved_map);
+				assert(res == reserved_bytes);
+				if (res != reserved_bytes)
+				{
+					goto failure;
+				}
+			}
+			
+			
+			/*res = part->write(get_block_lba(bg_table[0].inode_usage_map), val, 1);
 			assert(res == 1);
 			if (res != 1)
 			{
 				goto failure;
-			}
+			}*/
 		}
 		
 		
@@ -1021,7 +1116,44 @@ namespace Kernel::FS
 		nodes_table[1].perms.group_write = 0;
 		nodes_table[1].perms.other_write = 0;
 		nodes_table[1].type = EXT2_INODE_TYPE_DIR;
-		nodes_table[1].sector_count = 0;
+		
+		assert(block_sz >= 512);
+		nodes_table[1].sector_count = block_sz/512;
+		nodes_table[1].size_low = block_sz;
+		nodes_table[1].direct[0] = used_count;
+		
+		
+		{
+			auto dirents_raw = new uint8_t[block_sz];
+			memset(dirents_raw, 0, block_sz);
+			auto dirent = (dirent_t*)dirents_raw;
+			dirent->inode = 2;
+			dirent->entry_size = 12;
+			dirent->name_len_lsb = 1;
+			dirent->name_len_msb = 0;
+			dirent->name[0] = '.';
+			dirent->name[1] = 0;
+			dirent->name[2] = 0;
+			dirent->name[3] = 0;
+			
+			dirent = (dirent_t*)(dirents_raw+12);
+			dirent->inode = 2;
+			dirent->entry_size = block_sz - 12;
+			dirent->name_len_lsb = 2;
+			dirent->name_len_msb = 0;
+			dirent->name[0] = '.';
+			dirent->name[1] = '.';
+			dirent->name[2] = 0;
+			dirent->name[3] = 0;
+			
+			res = part->write(get_block_lba(nodes_table[1].direct[0]), block_sz, dirents_raw);
+			delete[] dirents_raw;
+			assert(res == block_sz);
+			if (res != block_sz)
+			{
+				goto failure;
+			}
+		}
 		
 		
 		

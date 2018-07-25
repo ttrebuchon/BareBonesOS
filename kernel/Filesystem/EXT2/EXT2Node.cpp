@@ -3,23 +3,19 @@
 namespace Kernel::FS
 {
 	
-	EXT2Node::EXT2Node(EXT2* fs, Utils::shared_ptr<detail::EXT2::inode_t> node, const Utils::string& name) : fs(fs), node(node), inode_name(name)
+	EXT2Node::EXT2Node(EXT2* fs, Utils::shared_ptr<detail::EXT2::inode_t> node, const Utils::string& name, const size_t inode_index) : fs(fs), node(node), inode_name(name), inode_index(inode_index)
 	{
-		
+		assert(inode_index > 0);
 	}
 	
-	EXT2Node::EXT2Node(EXT2* fs, detail::EXT2::dirent_t* ent) : EXT2Node(fs, fs->get_inode(ent->inode), (const char*)ent->name)
+	EXT2Node::EXT2Node(EXT2* fs, detail::EXT2::dirent_t* ent) : EXT2Node(fs, fs->get_inode(ent->inode), (const char*)ent->name, ent->inode)
 	{
 		
 	}
 
 
 	
-	uint64_t EXT2Node::node_size() const noexcept
-	{
-		assert(node);
-		return fs->inode_size(node.get());
-	}
+	
 	
 	
 	
@@ -74,6 +70,74 @@ namespace Kernel::FS
 	void EXT2Node::close()
 	{
 		assert(NOT_IMPLEMENTED);
+	}
+	
+	uint64_t EXT2Node::node_size() const noexcept
+	{
+		assert(node);
+		assert(fs);
+		return fs->inode_size(node.get());
+	}
+	
+	bool EXT2Node::add_block(size_t block_index, size_t* placement) noexcept
+	{
+		assert(node);
+		for (size_t i = 0; i < 12; ++i)
+		{
+			if (node->direct[i] == 0)
+			{
+				node->direct[i] = block_index;
+				if (placement)
+				{
+					*placement = i;
+				}
+				node->size_low += fs->block_size();
+				return true;
+			}
+		}
+		assert(NOT_IMPLEMENTED);
+	}
+	
+	Utils::shared_ptr<detail::EXT2::block_group_t> EXT2Node::group() const noexcept
+	{
+		return fs->get_group(inode_index / fs->sb.nodes_per_group);
+	}
+	
+	Utils::shared_ptr<detail::EXT2::block_t> EXT2Node::get_block(const unsigned int index, bool write) noexcept
+	{
+		if (index < 12)
+		{
+			auto block = node->direct[index];
+			assert(block > 0);
+			if (block == 0)
+			{
+				return nullptr;
+			}
+			return group()->get_block(block, write);
+		}
+		
+		assert(NOT_IMPLEMENTED);
+	}
+	
+	size_t EXT2Node::block_count() const noexcept
+	{
+		auto n = node_size();
+		auto b = fs->block_size();
+		return (n/b) + (n % b != 0);
+	}
+	
+	size_t EXT2Node::unused_space() const noexcept
+	{
+		auto n = node_size();
+		auto b = fs->block_size();
+		if (n % b)
+		{
+			return b - (n % b);
+		}
+		else
+		{
+			return 0;
+		}
 	}
 	
 	

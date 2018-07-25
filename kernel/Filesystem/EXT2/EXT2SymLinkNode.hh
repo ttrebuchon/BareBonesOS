@@ -142,12 +142,13 @@ namespace Kernel::FS
 		void init(DirectoryNode_v* parent) noexcept;
 		
 		public:
-		EXT2SymLinkNode(DirectoryNode_v* parent, EXT2* fs, Utils::shared_ptr<detail::EXT2::inode_t> node, const Utils::string& name);
+		EXT2SymLinkNode(DirectoryNode_v* parent, EXT2* fs, Utils::shared_ptr<detail::EXT2::inode_t> node, const Utils::string& name, const size_t inode_index);
 		EXT2SymLinkNode(DirectoryNode_v* parent, EXT2* fs, detail::EXT2::dirent_t*);
 		
 		virtual Node* target() const noexcept override;
 		
 		const Utils::string target_path() const;
+		virtual EXT2* get_filesystem() const noexcept override;
 	};
 	
 }

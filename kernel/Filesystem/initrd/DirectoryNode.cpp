@@ -53,9 +53,13 @@ namespace Kernel { namespace FS { namespace Init_RD {
     }
 
 
-    void DirectoryNode::addChild(Node* child)
+    Node* DirectoryNode::add(Node* child)
     {
-        children.push_back(child);
+    	if (child)
+    	{
+    		children.push_back(child);
+    	}
+        return child;
     }
 
 

@@ -4,7 +4,7 @@
 namespace Kernel::FS
 {
 	
-	EXT2DirectoryNode::EXT2DirectoryNode(DirectoryNode* parent, EXT2* fs, Utils::shared_ptr<detail::EXT2::inode_t> node, const Utils::string& name) : EXT2Node(fs, node, name), Node(NodeType::Directory), DirectoryNode()
+	EXT2DirectoryNode::EXT2DirectoryNode(DirectoryNode* parent, EXT2* fs, Utils::shared_ptr<detail::EXT2::inode_t> node, const Utils::string& name, const size_t inode_index) : EXT2Node(fs, node, name, inode_index), Node(NodeType::Directory), DirectoryNode()
 	{
 		init(parent);
 	}
@@ -40,8 +40,8 @@ namespace Kernel::FS
 			blks = blks / blk_sz;
 		}
 		
+		
 		auto data = fs->read_inode(this->node, 0, blks);
-		//assert(data);
 		if (!data)
 		{
 			return (this->node->direct[0] == 0);
@@ -58,10 +58,20 @@ namespace Kernel::FS
 		while (current)
 		{
 			auto n = fs->parse_node(this, current);
+			if (n)
+			{
+				if (this->inode_index != 2)
+				{
+					assert(n != this);
+					assert(n != parent);
+				}
+			}
 			if (n && n != this && n != parent)
 			{
 				children.push_back(n);
 			}
+			
+			
 			
 			/*auto next_n = fs->get_inode(current->inode);
 			assert(next_n);
@@ -104,11 +114,13 @@ namespace Kernel::FS
 		has_read = true;
 		
 		
+		
+		
 		return true;
 	}
 	
 	
-	void EXT2DirectoryNode::addChild(Node*)
+	Node* EXT2DirectoryNode::add(Node*)
 	{
 		assert(NOT_IMPLEMENTED);
 	}
@@ -172,6 +184,11 @@ namespace Kernel::FS
 	Node* EXT2DirectoryNode::findDir(const char* name)
 	{
 		assert(NOT_IMPLEMENTED);
+	}
+	
+	EXT2* EXT2DirectoryNode::get_filesystem() const noexcept
+	{
+		return this->EXT2Node::fs;
 	}
 	
 	
