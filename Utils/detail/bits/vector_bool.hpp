@@ -140,6 +140,7 @@ namespace Utils
 			}
 			
 			memset(_data+_size, 0, _under_count - oldCount);
+			_size = n;
 		}
 		else if (n > 0)
 		{
@@ -234,6 +235,7 @@ namespace Utils
 	{
 		if (i < _size)
 		{
+			return (_data[i / storage_bits]) & (1 << (i % storage_bits));
 			return ((1 << (i % storage_bits)) & _data[(i / sizeof(storage_type))]) != 0;
 		}
 		

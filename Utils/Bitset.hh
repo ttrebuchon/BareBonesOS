@@ -219,10 +219,13 @@ struct Bitset_Ptr
 	
 	
 	
-	Bitset_Ptr(Type* ptr, uint32_t count, size_t bits_used = 0) : count(count), bits(ptr), _bits_used(bits_used), _bits_used_mask(0)
+	Bitset_Ptr(Type* ptr, uint32_t count, size_t bits_used = 0, bool clear_vals = true) : count(count), bits(ptr), _bits_used(bits_used), _bits_used_mask(0)
 	{
 		assert(bits_used <= sizeof(Type)*8*count);
-		setAll(false);
+		if (clear_vals)
+		{
+			setAll(false);
+		}
 		if (_bits_used == 0)
 		{
 			_bits_used = count*sizeof(Type)*8;
