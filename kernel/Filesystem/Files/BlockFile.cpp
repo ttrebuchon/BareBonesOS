@@ -84,6 +84,8 @@ namespace Kernel { namespace FS
 				}
 			}
 		}
+		
+		return 0;
 
 		// TODO: Figure out what to return
 		ASSERT(false);

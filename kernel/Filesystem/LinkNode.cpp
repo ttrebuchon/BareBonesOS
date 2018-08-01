@@ -18,6 +18,7 @@ namespace Kernel { namespace FS
 	NodeType LinkNode::type() const noexcept
 	{
 		auto t = target();
+		assert(t != this);
 		if (t)
 		{
 			return (this->_type = (t->type() | NodeType::Link));
@@ -29,6 +30,7 @@ namespace Kernel { namespace FS
 	{
 		auto t = target();
 		assert(t);
+		assert(t != this);
 		if (!t)
 		{
 			// TODO: Handle error
@@ -41,6 +43,7 @@ namespace Kernel { namespace FS
 	{
 		auto t = target();
 		assert(t);
+		assert(t != this);
 		if (!t)
 		{
 			// TODO: Handle error
@@ -53,6 +56,7 @@ namespace Kernel { namespace FS
 	{
 		auto t = target();
 		assert(t);
+		assert(t != this);
 		if (!t)
 		{
 			// TODO: Handle error
@@ -65,36 +69,13 @@ namespace Kernel { namespace FS
 	{
 		auto t = target();
 		assert(t);
+		assert(t != this);
 		if (!t)
 		{
 			// TODO: Handle error
 			return;
 		}
 		t->close();
-	}
-	
-	DirEnt* LinkNode::readDir(uint32_t n)
-	{
-		auto t = target();
-		assert(t);
-		if (!t)
-		{
-			// TODO: Handle error
-			return nullptr;
-		}
-		return t->readDir(n);
-	}
-	
-	Node* LinkNode::findDir(const char* name)
-	{
-		auto t = target();
-		assert(t);
-		if (!t)
-		{
-			// TODO: Handle error
-			return nullptr;
-		}
-		return t->findDir(name);
 	}
 	
 	
@@ -106,6 +87,7 @@ namespace Kernel { namespace FS
 	const FileNode_v* LinkNode::as_file() const noexcept
 	{
 		auto t = target();
+		assert(t != this);
 		if (t)
 		{
 			return t->as_file();
@@ -116,6 +98,7 @@ namespace Kernel { namespace FS
 	FileNode_v* LinkNode::as_file() noexcept
 	{
 		auto t = target();
+		assert(t != this);
 		if (t)
 		{
 			return t->as_file();
@@ -126,6 +109,7 @@ namespace Kernel { namespace FS
 	const DirectoryNode_v* LinkNode::as_directory() const noexcept
 	{
 		auto t = target();
+		assert(t != this);
 		if (t)
 		{
 			return t->as_directory();
@@ -136,6 +120,7 @@ namespace Kernel { namespace FS
 	DirectoryNode_v* LinkNode::as_directory() noexcept
 	{
 		auto t = target();
+		assert(t != this);
 		if (t)
 		{
 			return t->as_directory();
@@ -146,6 +131,7 @@ namespace Kernel { namespace FS
 	const BlockDeviceNode* LinkNode::as_block_device() const noexcept
 	{
 		auto t = target();
+		assert(t != this);
 		if (t)
 		{
 			return t->as_block_device();
@@ -156,6 +142,7 @@ namespace Kernel { namespace FS
 	BlockDeviceNode* LinkNode::as_block_device() noexcept
 	{
 		auto t = target();
+		assert(t != this);
 		if (t)
 		{
 			return t->as_block_device();

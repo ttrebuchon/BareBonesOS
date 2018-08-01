@@ -54,16 +54,6 @@ namespace Kernel::FS
 		EXT2Node::close();
 	}
 	
-	DirEnt* EXT2FileNode::readDir(uint32_t)
-	{
-		assert(NOT_IMPLEMENTED);
-	}
-	
-	Node* EXT2FileNode::findDir(const char* name)
-	{
-		assert(NOT_IMPLEMENTED);
-	}
-	
 	EXT2* EXT2FileNode::get_filesystem() const noexcept
 	{
 		return this->EXT2Node::fs;

@@ -3,16 +3,87 @@
 
 #include <Utils/string>
 #include <Utils/vector>
+#include "Path_Fwd.hh"
 
 namespace Kernel { namespace FS
 {
+	
+	
+	
+	template <class Char_t, class Traits, class Alloc>
+	class basic_path
+	{
+		public:
+		typedef Alloc allocator_type;
+		typedef Char_t char_type;
+		typedef Traits traits_type;
+		typedef Utils::basic_string<char_type, traits_type, allocator_type> string_type;
+		typedef char_type* cstring_type;
+		typedef const char_type* const_cstring_type;
+		typedef typename traits_type::off_type off_type;
+		
+		typedef typename string_type::size_type size_type;
+		
+		protected:
+		
+		
+		
+		template <class T>
+		using alloc_rebind = typename allocator_type::template rebind<T>::other;
+		
+		
+		allocator_type _alloc;
+		Utils::vector<string_type, alloc_rebind<string_type>> _parts;
+		mutable string_type _path;
+		mutable bool _changed;
+		
+		
+		public:
+		
+		basic_path(const string_type&);
+		explicit basic_path(const char_type*);
+		basic_path(const string_type& base, const string_type& item);
+		basic_path(const char_type* base, const char_type* item);
+		basic_path();
+		
+		basic_path(const string_type&, const allocator_type&);
+		basic_path(const char_type*, const allocator_type&);
+		basic_path(const string_type& base, const string_type& item, const allocator_type&);
+		basic_path(const char_type* base, const char_type* item, const allocator_type&);
+		basic_path(const allocator_type&);
+		
+		basic_path(const basic_path&);
+		basic_path(basic_path&&);
+		
+		
+		size_type length() const noexcept;
+		bool empty() const noexcept;
+		off_type compare(const Path_t&) const;
+		
+		const string_type& str() const noexcept;
+		const char_type* c_str() const noexcept;
+		
+		basic_path& append(const string_type&);
+		//basic_path& append(const cstring_type&);
+		
+		size_type parts_length() const noexcept;
+		const string_type& part(const size_type) const;
+		const string_type& back() const
+		{ return _parts.back(); }
+		
+		basic_path& operator=(const basic_path&);
+		basic_path& operator=(basic_path&&);
+	};
+	
+	
+	
 	class Path
 	{
 		public:
-		typedef char char_type;
-		typedef Utils::char_traits<char> traits_type;
-		typedef Utils::string string_type;
-		typedef const char* cstring_type;
+		typedef typename Path_t::char_type char_type;
+		typedef Utils::char_traits<char_type> traits_type;
+		typedef Utils::basic_string<char_type> string_type;
+		typedef const char_type* cstring_type;
 		
 		typedef typename traits_type::off_type off_type;
 		
@@ -40,59 +111,6 @@ namespace Kernel { namespace FS
 		static bool Simplify(string_type&);
 	};
 	
-	
-	template <class Alloc = Utils::allocator<typename Path::char_type>>
-	class Path_t
-	{
-		public:
-		typedef Alloc allocator_type;
-		typedef typename Path::char_type char_type;
-		typedef typename Path::traits_type traits_type;
-		typedef Utils::basic_string<char_type, traits_type, allocator_type> string_type;
-		typedef typename Path::cstring_type cstring_type;
-		typedef typename Path::off_type off_type;
-		
-		typedef typename string_type::size_type size_type;
-		
-		protected:
-		
-		
-		
-		template <class T>
-		using alloc_rebind = typename allocator_type::template rebind<T>::other;
-		
-		
-		allocator_type _alloc;
-		Utils::vector<string_type, alloc_rebind<string_type>> _parts;
-		mutable string_type _path;
-		mutable bool _changed;
-		
-		
-		public:
-		
-		Path_t(const string_type&);
-		Path_t(const cstring_type&);
-		Path_t(const string_type& base, const string_type& item);
-		Path_t(const cstring_type& base, const cstring_type& item);
-		Path_t();
-		
-		Path_t(const string_type&, const allocator_type&);
-		Path_t(const cstring_type&, const allocator_type&);
-		Path_t(const string_type& base, const string_type& item, const allocator_type&);
-		Path_t(const cstring_type& base, const cstring_type& item, const allocator_type&);
-		Path_t(const allocator_type&);
-		
-		
-		size_type length() const noexcept;
-		const string_type& str() const noexcept;
-		const cstring_type c_str() const noexcept;
-		
-		const Path_t& append(const string_type&);
-		const Path_t& append(const cstring_type&);
-		
-		size_type parts_length() const noexcept;
-		const string_type& part(const size_type) const;
-	};
 	
 }
 }

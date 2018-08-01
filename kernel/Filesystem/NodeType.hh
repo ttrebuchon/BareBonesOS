@@ -12,7 +12,10 @@ namespace Kernel { namespace FS {
 		File = 2,
 		Link = 4,
 		RAMFile = 8,
-		Block = 16,
+		Device = 16,
+		Block = 32 | Device,
+		Char = 64 | Device,
+		Pipe = 128,
 	};
 	
 	ENUM_OPS(NodeType, short);

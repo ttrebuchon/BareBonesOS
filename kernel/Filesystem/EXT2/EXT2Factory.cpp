@@ -2,6 +2,9 @@
 #include "EXT2.hh"
 #include "EXT2DirectoryNode.hh"
 #include "EXT2FileNode.hh"
+#include "../BlockDeviceNode.hh"
+#include "EXT2SymLinkNode.hh"
+#include "../Devices/DeviceTarget.hh"
 
 #define DIVU(X, Y) (((X) / (Y)) + (unlikely(((X) % (Y) == 0)) ? 0 : 1))
 
@@ -20,25 +23,33 @@ namespace Kernel::FS
 		assert(fs);
 	}
 	
-	
-	
-	DirectoryNode_v* EXT2Factory::create_directory(DirectoryNode_v* parent, const Utils::string& name) noexcept
+	EXT2DirectoryNode* EXT2Factory::cast_parent(DirectoryNode_v* parent) const noexcept
 	{
 		assert(parent);
+		#ifdef __cpp_rtti
+		return dynamic_cast<EXT2DirectoryNode*>(parent);
+		#else
 		if (!parent)
 		{
 			return nullptr;
 		}
-		#ifdef __cpp_rtti
-		auto ext2_parent = dynamic_cast<EXT2DirectoryNode*>(parent);
+		return (EXT2DirectoryNode*)parent;
+		#endif
+	}
+	
+	
+	
+	
+	
+	
+	DirectoryNode_v* EXT2Factory::create_directory(DirectoryNode_v* parent, const Utils::string& name) noexcept
+	{
+		auto ext2_parent = cast_parent(parent);
 		assert(ext2_parent);
 		if (!ext2_parent)
 		{
 			return nullptr;
 		}
-		#else
-		auto ext2_parent = (EXT2DirectoryNode*)parent;
-		#endif
 		
 		
 		
@@ -68,6 +79,8 @@ namespace Kernel::FS
 			return nullptr;
 		}
 		
+		inode->hard_links = 1;
+		
 		assert(n_index != ext2_parent->inode_index);
 		
 		auto ent = add_child_inode(ext2_parent, n_index, name);
@@ -92,21 +105,12 @@ namespace Kernel::FS
 	
 	FileNode_v* EXT2Factory::create_file(DirectoryNode_v* parent, const Utils::string& name) noexcept
 	{
-		assert(parent);
-		if (!parent)
-		{
-			return nullptr;
-		}
-		#ifdef __cpp_rtti
-		auto ext2_parent = dynamic_cast<EXT2DirectoryNode*>(parent);
+		auto ext2_parent = cast_parent(parent);
 		assert(ext2_parent);
 		if (!ext2_parent)
 		{
 			return nullptr;
 		}
-		#else
-		auto ext2_parent = (EXT2DirectoryNode*)parent;
-		#endif
 		
 		
 		
@@ -158,9 +162,168 @@ namespace Kernel::FS
 		return file_node;
 	}
 	
-	LinkNode* EXT2Factory::create_link(DirectoryNode_v* parent, const Utils::string&, Node* target) noexcept
+	LinkNode* EXT2Factory::create_link(DirectoryNode_v* parent, const Utils::string& name, const Utils::string& target) noexcept
 	{
-		assert(NOT_IMPLEMENTED);
+		auto ext2_parent = cast_parent(parent);
+		assert(ext2_parent);
+		if (!ext2_parent)
+		{
+			return nullptr;
+		}
+		
+		
+		Utils::shared_ptr<inode_type> inode = nullptr;
+		size_t n_index;
+		for (size_t i = 0; i < ext2->group_count(); ++i)
+		{
+			auto gr = ext2->get_group(i);
+			assert(gr);
+			if (!gr)
+			{
+				continue;
+			}
+			
+			inode = gr->allocate_file(n_index);
+			if (inode)
+			{
+				assert(n_index > 2);
+				assert(n_index != ext2_parent->inode_index);
+				break;
+			}
+		}
+		
+		if (!inode)
+		{
+			return nullptr;
+		}
+		
+		assert(n_index != ext2_parent->inode_index);
+		
+		inode->type = EXT2_INODE_TYPE_SYMLINK;
+		inode->size_low = 0;
+		if (target.length() <= 60)
+		{
+			strncpy(inode->data, target.c_str(), 60);
+			inode->size_low = target.length();
+			TRACE_VAL(target.c_str());
+		}
+		else
+		{
+			uint64_t res = 0;
+			__try
+			{
+				res = EXT2Node::write_blocks_to_node(ext2, inode.get(), 0, target.length(), (const uint8_t*)target.c_str());
+			}
+			__catch(...)
+			{
+				
+			}
+			if (res != target.length())
+			{
+				if (inode->size_low > 0)
+				{
+					ext2->release_inode_blocks(inode.get());
+				}
+				ext2->release_inode(n_index);
+				inode = nullptr;
+				return nullptr;
+			}
+		}
+		
+		
+		
+		auto ent = add_child_inode(ext2_parent, n_index, name);
+		if (!ent)
+		{
+			ext2->release_inode(n_index);
+			inode = nullptr;
+			return nullptr;
+		}
+		
+		auto node = ext2->parse_node(ext2_parent, ent.get());
+		assert(node);
+		assert(node->isKind(NodeType::Link));
+		auto link_node = node->as_link();
+		assert(link_node);
+		if (ext2_parent->has_read)
+		{
+			ext2_parent->children.push_back(link_node);
+		}
+		return link_node;
+	}
+	
+	BlockDeviceNode* EXT2Factory::create_block_device(DirectoryNode_v* parent, const Utils::string& name, DeviceTarget* dev) noexcept
+	{
+		auto ext2_parent = cast_parent(parent);
+		assert(ext2_parent);
+		if (!ext2_parent)
+		{
+			return nullptr;
+		}
+		
+		
+		
+		
+		Utils::shared_ptr<inode_type> inode = nullptr;
+		size_t n_index;
+		for (size_t i = 0; i < ext2->group_count(); ++i)
+		{
+			auto gr = ext2->get_group(i);
+			assert(gr);
+			if (!gr)
+			{
+				continue;
+			}
+			
+			inode = gr->allocate_file(n_index);
+			assert(likely(inode != nullptr));
+			if (unlikely(!inode))
+			{
+				continue;
+			}
+			inode->type = EXT2_INODE_TYPE_BLOCK_DEV;
+			if (inode)
+			{
+				assert(n_index > 2);
+				assert(n_index != ext2_parent->inode_index);
+				break;
+			}
+		}
+		
+		if (!inode)
+		{
+			return nullptr;
+		}
+		
+		assert(n_index != ext2_parent->inode_index);
+		
+		if (dev)
+		{
+			uint32_t major, minor;
+			if (dev->identifiers(nullptr, &major, &minor))
+			{
+				inode->direct[0] = EXT2::encode_device_signature(major, minor);
+			}
+		}
+		
+		auto ent = add_child_inode(ext2_parent, n_index, name);
+		if (!ent)
+		{
+			ext2->release_inode(n_index);
+			inode = nullptr;
+			return nullptr;
+		}
+		
+		auto node = ext2->parse_node(ext2_parent, ent.get());
+		assert(node);
+		assert(node->isKind(NodeType::Block));
+		auto block_node = node->as_block_device();
+		assert(block_node);
+		if (ext2_parent->has_read)
+		{
+			ext2_parent->children.push_back(block_node);
+		}
+		return block_node;
 	}
 	
 	
@@ -207,8 +370,8 @@ namespace Kernel::FS
 					ext2->release_block(block_index);
 					return nullptr;
 				}
+				ext2_parent->node->size_low += ext2->block_size();
 				block_index = tmp;
-				assert(block_index == 0);
 				parent_sz = ext2_parent->node_size();
 				dirent->entry_size = ext2->block_size();
 			}

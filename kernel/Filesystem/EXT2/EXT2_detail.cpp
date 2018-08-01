@@ -23,12 +23,6 @@ namespace Kernel::FS::detail::EXT2
 				{
 					group->commit_block(this);
 				}
-				else
-				{
-					assert(!modified);
-					assert(!group->block_is_modified(index));
-					TRACE_VAL(index);
-				}
 			}
 			__catch(...)
 			{
@@ -83,7 +77,6 @@ namespace Kernel::FS::detail::EXT2
 		{
 			return;
 		}
-		TRACE("INITIALIZING");
 		
 		assert(modified_map.size() == 0);
 		
@@ -109,11 +102,7 @@ namespace Kernel::FS::detail::EXT2
 		
 		node_usage_blk = get_block_internal_no_lock(gd->inode_usage_map, lock);
 		node_usage = Utils::Bitset_Ptr<uint8_t>(node_usage_blk->data, fs->block_size(), fs->sb.nodes_per_group, false);
-		assert(node_usage.get(0));
-		assert(node_usage.get(1));
 		modified_map.resize(bpg);
-		TRACE_VAL(bpg);
-		TRACE_VAL(modified_map.size());
 		assert(modified_map.size() == bpg);
 		assert(bpg > 0);
 		
@@ -121,7 +110,6 @@ namespace Kernel::FS::detail::EXT2
 		assert(modified_map.size() > 0);
 		initted = true;
 		__sync_synchronize();
-		TRACE("INITIALIZED.");
 	}
 	
 	void block_group_t::init() const
@@ -529,12 +517,12 @@ namespace Kernel::FS::detail::EXT2
 			}
 			block_usage.set(index, true);
 			modified_map[index] = true;
-			modified_map[gd->block_usage_map] = true;
+			modified_map[gd->block_usage_map - group_index*fs->sb.blocks_per_group] = true;
 			--gd->unallocated_blocks;
-			assert(gd->block_usage_map < modified_map.size());
+			assert(gd->block_usage_map < modified_map.size() + group_index*fs->sb.blocks_per_group);
 			index += group_index*fs->sb.blocks_per_group;
 			auto blk = get_block_internal_no_lock(index, lock);
-			assert(blk->index == index);
+			assert(blk->index == index % blocks_per_group);
 			assert(blk->group == this);
 			memset(blk->data, 0, fs->block_size());
 			return blk;
@@ -647,12 +635,14 @@ namespace Kernel::FS::detail::EXT2
 	}
 	
 	
-	bool block_group_t::block_is_modified(const size_t index) const
+	bool block_group_t::block_is_modified(size_t index) const
 	{
 		if (!initted)
 		{
 			return false;
 		}
+		
+		index %= blocks_per_group;
 		read_lock lock(mut);
 		assert(index < modified_map.size());
 		if (index >= modified_map.size())
@@ -687,17 +677,17 @@ namespace Kernel::FS::detail::EXT2
 	void block_group_t::commit_block(block_t* blk) noexcept
 	{
 		
-		TRACE("Committing block:");
-		TRACE_VAL(blk->index);
+		/*TRACE("Committing block:");
+		TRACE_VAL(blk->index);*/
 		assert(blk);
 		if (unlikely(!blk))
 		{
 			return;
 		}
 		
-		auto index = size_t(blk->index) + group_index*blocks_per_group;
+		auto index = size_t(blk->index);
 		
-		auto written = fs->write_block(index, blk->data);
+		auto written = fs->write_block(index + group_index*blocks_per_group, blk->data);
 		if (written != fs->block_size())
 		{
 			TRACE("Invalid block.");

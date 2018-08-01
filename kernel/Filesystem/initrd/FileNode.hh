@@ -20,8 +20,6 @@ namespace Kernel { namespace FS { namespace Init_RD {
         virtual uint64_t write(uint64_t, uint64_t, const uint8_t*) override;
         virtual void open() override;
         virtual void close() override;
-        virtual DirEnt* readDir(uint32_t) override;
-        virtual Node* findDir(const char* name) override;
         
         virtual size_t size() const noexcept override;
         

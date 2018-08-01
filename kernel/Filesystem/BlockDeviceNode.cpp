@@ -1,11 +1,12 @@
 #include "BlockDeviceNode.hh"
 #include <drivers/Disk/Disk.hh>
 #include <Utils/utility>
+#include <kernel/Filesystem/Devices/DeviceTarget.hh>
 
 
 namespace Kernel { namespace FS {
 	
-	BlockDeviceNode::BlockDeviceNode(Drivers::Disk* device, const Utils::string& name, const NodeType t) : Node(NodeType::Block | t), _device(device)
+	BlockDeviceNode::BlockDeviceNode(DeviceTarget* device, const Utils::string& name, const NodeType t) : DeviceNode(device, name, NodeType::Block | t)
 	{
 		this->_type |= (t | NodeType::Block);
 		this->_name = name;
@@ -16,7 +17,7 @@ namespace Kernel { namespace FS {
 		
 	}
 	
-	BlockDeviceNode::BlockDeviceNode(Drivers::Disk* device, const NodeType t) : BlockDeviceNode(device, "", t)
+	BlockDeviceNode::BlockDeviceNode(DeviceTarget* device, const NodeType t) : BlockDeviceNode(device, "", t)
 	{
 		
 	}
@@ -26,7 +27,7 @@ namespace Kernel { namespace FS {
 		
 	}
 	
-	BlockDeviceNode::BlockDeviceNode(Drivers::Disk* device, const Utils::string& name) : BlockDeviceNode(device, name, NodeType::Block)
+	BlockDeviceNode::BlockDeviceNode(DeviceTarget* device, const Utils::string& name) : BlockDeviceNode(device, name, NodeType::Block)
 	{
 		
 	}
@@ -36,7 +37,7 @@ namespace Kernel { namespace FS {
 		
 	}
 	
-	BlockDeviceNode::BlockDeviceNode(Drivers::Disk* device) : BlockDeviceNode(device, "")
+	BlockDeviceNode::BlockDeviceNode(DeviceTarget* device) : BlockDeviceNode(device, "")
 	{
 		
 	}
@@ -47,28 +48,19 @@ namespace Kernel { namespace FS {
 	}
 	
 	
-	
-	
-	Drivers::Disk* BlockDeviceNode::device() noexcept
+	BlockDeviceNode::BlockDeviceNode(const Utils::string& name, uint32_t major_target, uint32_t minor_target) : BlockDeviceNode(nullptr, name)
 	{
-		return _device;
+		// TODO
 	}
 	
-	const Drivers::Disk* BlockDeviceNode::device() const noexcept
+	BlockDeviceNode::BlockDeviceNode(uint32_t major_target, uint32_t minor_target) : BlockDeviceNode("", major_target, minor_target)
 	{
-		return _device;
+		
 	}
 	
-	Drivers::Disk* BlockDeviceNode::mount(Drivers::Disk* nDisk) noexcept
-	{
-		Utils::swap(nDisk, _device);
-		return nDisk;
-	}
 	
-	bool BlockDeviceNode::has_device() const noexcept
-	{
-		return (device() != nullptr);
-	}
+	
+	
 	
 	
 	uint64_t BlockDeviceNode::read(uint64_t start, uint64_t len, uint8_t* buf)
@@ -104,17 +96,6 @@ namespace Kernel { namespace FS {
 	{
 		
 	}
-	
-	DirEnt* BlockDeviceNode::readDir(uint32_t)
-	{
-		assert(NOT_IMPLEMENTED);
-	}
-	
-	Node* BlockDeviceNode::findDir(const char* name)
-	{
-		assert(NOT_IMPLEMENTED);
-	}
-	
 	
 }
 }

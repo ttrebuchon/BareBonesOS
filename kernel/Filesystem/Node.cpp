@@ -1,4 +1,5 @@
 #include "Node.hh"
+#include "DirectoryNode.hh"
 
 namespace Kernel { namespace FS {
 	
@@ -14,6 +15,11 @@ namespace Kernel { namespace FS {
 		
 	}
 	
+	Node::~Node()
+	{
+		
+	}
+	
 	
 	
 	NodeType Node::type() const noexcept
@@ -24,6 +30,17 @@ namespace Kernel { namespace FS {
 	void Node::set_parent(DirectoryNode_v* parent)
 	{
 		this->parent = parent;
+	}
+	
+	Path_t Node::get_path() const
+	{
+		Path_t p;
+		if (parent && parent != this)
+		{
+			p = parent->get_path();
+		}
+		p.append(name);
+		return p;
 	}
 }
 }

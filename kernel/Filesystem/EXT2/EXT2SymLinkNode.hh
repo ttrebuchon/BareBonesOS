@@ -134,12 +134,13 @@ namespace Kernel::FS
 		public:
 		
 		protected:
-		mutable Node* _target;
+		Path_t _path;
 		
 		//virtual void init_type() noexcept override;
 		
 		private:
 		void init(DirectoryNode_v* parent) noexcept;
+		Utils::string read_path() const;
 		
 		public:
 		EXT2SymLinkNode(DirectoryNode_v* parent, EXT2* fs, Utils::shared_ptr<detail::EXT2::inode_t> node, const Utils::string& name, const size_t inode_index);
@@ -147,7 +148,7 @@ namespace Kernel::FS
 		
 		virtual Node* target() const noexcept override;
 		
-		const Utils::string target_path() const;
+		const Path_t& target_path() const noexcept;
 		virtual EXT2* get_filesystem() const noexcept override;
 	};
 	

@@ -3,6 +3,7 @@
 
 #include <Common.h>
 #include <Utils/string>
+#include "Path_Fwd.hh"
 
 namespace Drivers
 {
@@ -13,6 +14,8 @@ namespace Kernel { namespace FS {
 	
 	class Node;
 	class Factory;
+	class DirectoryNode_v;
+	
 	
 	class Filesystem
 	{
@@ -25,11 +28,15 @@ namespace Kernel { namespace FS {
 		static Filesystem* Current;
 		
 		virtual Node* getNode(const Utils::string& path, const Utils::string& relative = Utils::string());
+		virtual Node* getNode(const Path_t& path);
 		
-		virtual Node* root() const noexcept
+		
+		virtual Node* root() const noexcept __attribute__((__always_inline__))
 		{
 			return _root;
 		}
+		
+		virtual DirectoryNode_v* rootd() const noexcept;
 		
 		virtual Factory& factory() noexcept = 0;
 	};

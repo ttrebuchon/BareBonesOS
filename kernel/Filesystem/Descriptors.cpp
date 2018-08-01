@@ -4,7 +4,7 @@
 #define DEFAULT_DESC 16
 
 
-namespace Kernel { namespace Filesystem {
+namespace Kernel { namespace FS {
 	
 	FileDescriptors* FileDescriptors::Current = nullptr;
 	

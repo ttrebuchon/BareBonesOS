@@ -71,6 +71,11 @@ namespace Kernel { namespace FS
 	
 	FileNode_v* DirectoryNode_v::add_file(const Utils::string& name)
 	{
+		assert(this->at(name) == nullptr);
+    	if (this->at(name))
+    	{
+    		return nullptr;
+    	}
 		auto fs = this->get_filesystem();
 		if (fs)
 		{
@@ -82,6 +87,11 @@ namespace Kernel { namespace FS
 	
     DirectoryNode_v* DirectoryNode_v::add_directory(const Utils::string& name)
     {
+    	assert(this->at(name) == nullptr);
+    	if (this->at(name))
+    	{
+    		return nullptr;
+    	}
     	auto fs = this->get_filesystem();
 		if (fs)
 		{
@@ -90,6 +100,91 @@ namespace Kernel { namespace FS
 		}
 		return nullptr;
     }
+    
+    BlockDeviceNode* DirectoryNode_v::add_block_device(const Utils::string& name, DeviceTarget* dev)
+    {
+    	assert(this->at(name) == nullptr);
+    	if (this->at(name))
+    	{
+    		return nullptr;
+    	}
+    	auto fs = get_filesystem();
+    	if (fs)
+    	{
+    		auto& factory = fs->factory();
+    		return factory.create_block_device(this, name, dev);
+    	}
+    	return nullptr;
+    }
+    
+    LinkNode* DirectoryNode_v::add_link(const Utils::string& name, const Node* target)
+    {
+    	assert(this->at(name) == nullptr);
+    	if (this->at(name))
+    	{
+    		return nullptr;
+    	}
+    	if (target)
+    	{
+    		auto fs = get_filesystem();
+    		if (fs)
+    		{
+    			return fs->factory().create_link(this, name, target);
+    		}
+    	}
+    }
+    
+    LinkNode* DirectoryNode_v::add_link(const Utils::string& name, const Path_t& target)
+    {
+    	return add_link(name, target.str());
+    }
+    
+    LinkNode* DirectoryNode_v::add_link(const Utils::string& name, const Utils::string& target)
+    {
+    	assert(this->at(name) == nullptr);
+    	if (this->at(name))
+    	{
+    		return nullptr;
+    	}
+    	auto fs = get_filesystem();
+    	if (fs)
+    	{
+    		return fs->factory().create_link(this, name, target);
+    	}
+    	
+    	return nullptr;
+    }
+	
+	Node* DirectoryNode_v::find_node(const Path_t& path)
+	{
+		if (path.empty())
+		{
+			return nullptr;
+		}
+		
+		auto it = this;
+		
+		for (size_t i = 0; i < path.parts_length() - 1 && it; ++i)
+		{
+			auto next = it->at(path.part(i));
+			if (next)
+			{
+				it = next->as_directory();
+			}
+			else
+			{
+				return nullptr;
+			}
+		}
+		
+		if (it)
+		{
+			return it->at(path.back());
+		}
+		
+		return nullptr;
+	}
+	
 	
 	
 	

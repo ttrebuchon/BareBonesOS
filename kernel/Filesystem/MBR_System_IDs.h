@@ -5,5 +5,6 @@
 #define MBR_SYS_NTFS 0x07
 #define MBR_SYS_LINUX_NATIVE 0x83
 #define MBR_SYS_EXT 0x83
+#define MBR_SYS_GPT 0xEE
 
 #endif

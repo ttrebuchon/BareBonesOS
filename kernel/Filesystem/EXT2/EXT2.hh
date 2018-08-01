@@ -301,6 +301,7 @@ namespace Kernel::FS
 		
 		dirent_t* next_dirent(dirent_t* array, size_t array_size, dirent_t* current, bool allow_empty = false);
 		dirent_t* allocate_dirent(dirent_t* array, size_t array_size, size_t name_len, bool type_field);
+		size_t dirent_name_len(const dirent_t*, bool dirent_type_field) noexcept;
 		
 		
 		class block_group_t;
@@ -396,7 +397,7 @@ namespace Kernel::FS
 			Utils::shared_ptr<inode_t> reserve_node(size_t& index);
 			bool release_node(const size_t index);
 			
-			bool block_is_modified(const size_t) const;
+			bool block_is_modified(size_t) const;
 			bool node_is_modified(const size_t) const;
 			
 			
@@ -455,14 +456,21 @@ namespace Kernel::FS
 		
 		Node* parse_node(DirectoryNode* parent, detail::EXT2::dirent_t*);
 		
-		bool extended_superblock() const noexcept;
-		bool has_journal() const noexcept;
 		size_t read_block(const size_t index, uint8_t* buffer) const noexcept;
 		size_t write_block(const size_t index, const uint8_t* buffer) noexcept;
 		Utils::shared_ptr<inode_type> reserve_inode(size_t& index) noexcept;
 		Utils::shared_ptr<block_t> reserve_block(size_t& index) noexcept;
 		bool release_inode(const size_t index) noexcept;
 		bool release_block(const size_t index) noexcept;
+		
+		size_t release_inode_blocks(inode_type*) noexcept;
+		
+		template <class Y>
+		size_t expand_indirect_1(Utils::shared_ptr<block_t>, Y&, size_t start = 0, size_t count = size_t(-1), bool include_nulls = true);
+		template <class Y>
+		size_t expand_indirect_2(Utils::shared_ptr<block_t>, Y&, size_t start = 0, size_t count = size_t(-1), bool include_nulls = true);
+		template <class Y>
+		size_t expand_indirect_3(Utils::shared_ptr<block_t>, Y&, size_t start = 0, size_t count = size_t(-1), bool include_nulls = true);
 		
 		private:
 		Utils::shared_ptr<inode_type> __get_inode(inode_index_t) const noexcept;
@@ -502,7 +510,17 @@ namespace Kernel::FS
 		size_t dirent_name_len(const detail::EXT2::dirent_t*) const noexcept;
 		
 		
+		
+		bool extended_superblock() const noexcept;
+		bool has_journal() const noexcept;
+		const uint8_t* filesystem_ID() const noexcept;
+		const char* volume_name() const noexcept;
+		const char* last_mount_path() const noexcept;
+		
+		
 		static bool Format(Drivers::Disk* part);
+		static bool decode_device_signature(const uint32_t, uint32_t* major, uint32_t* minor) noexcept;
+		static uint32_t encode_device_signature(const uint32_t major, const uint32_t minor) noexcept;
 		
 		
 		friend class EXT2Node;
@@ -515,5 +533,6 @@ namespace Kernel::FS
 	
 }
 
+#include "EXT2.hpp"
 
 #endif

@@ -27,12 +27,15 @@ namespace Kernel::FS
 			return nullptr;
 		}
 		
-		virtual LinkNode* create_link(DirectoryNode_v* parent, const Utils::string&, Node* target) noexcept override
+		virtual LinkNode* create_link(DirectoryNode_v* parent, const Utils::string&, const Utils::string&) noexcept override
 		{
 			return nullptr;
 		}
 		
-		
+		virtual BlockDeviceNode* create_block_device(DirectoryNode_v* parent, const Utils::string&, DeviceTarget*) noexcept override
+		{
+			return nullptr;
+		}
 	};
 	
 }

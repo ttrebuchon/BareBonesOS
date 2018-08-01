@@ -1,4 +1,5 @@
 #include "EXT2SymLinkNode.hh"
+#include <kernel/Filesystem.hh>
 
 namespace Kernel::FS
 {
@@ -128,12 +129,12 @@ namespace Kernel::FS
 	
 	
 	
-	EXT2SymLinkNode::EXT2SymLinkNode(DirectoryNode_v* parent, EXT2* fs, Utils::shared_ptr<detail::EXT2::inode_t> node, const Utils::string& name, const size_t inode_index) : EXT2Node(fs, node, name, inode_index), LinkNode(), _target(nullptr)
+	EXT2SymLinkNode::EXT2SymLinkNode(DirectoryNode_v* parent, EXT2* fs, Utils::shared_ptr<detail::EXT2::inode_t> node, const Utils::string& name, const size_t inode_index) : EXT2Node(fs, node, name, inode_index), LinkNode(), _path()
 	{
 		init(parent);
 	}
 	
-	EXT2SymLinkNode::EXT2SymLinkNode(DirectoryNode_v* parent, EXT2* fs, detail::EXT2::dirent_t* ent) : EXT2Node(fs, ent), LinkNode(), _target(nullptr)
+	EXT2SymLinkNode::EXT2SymLinkNode(DirectoryNode_v* parent, EXT2* fs, detail::EXT2::dirent_t* ent) : EXT2Node(fs, ent), LinkNode(), _path()
 	{
 		init(parent);
 	}
@@ -148,6 +149,8 @@ namespace Kernel::FS
 		}
 		
 		this->_name = this->EXT2Node::inode_name;
+		
+		_path = read_path();
 	}
 	
 	
@@ -167,11 +170,11 @@ namespace Kernel::FS
 	}*/
 	
 	
-	const Utils::string EXT2SymLinkNode::target_path() const
+	Utils::string EXT2SymLinkNode::read_path() const
 	{
 		if (node->size_low <= 60)
 		{
-			return node->data;
+			return Utils::string(node->data, node->size_low);
 		}
 		else
 		{
@@ -179,11 +182,18 @@ namespace Kernel::FS
 		}
 	}
 	
+	const Path_t& EXT2SymLinkNode::target_path() const noexcept
+	{
+		return _path;
+	}
+	
 	Node* EXT2SymLinkNode::target() const noexcept
 	{
+		auto _target = fs->getNode(target_path());
 		if (!_target)
 		{
-			_target = fs->getNode(target_path());
+			assert(parent);
+			_target = parent->find_node(target_path());
 		}
 		return _target;
 	}

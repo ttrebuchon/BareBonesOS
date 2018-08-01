@@ -58,14 +58,6 @@ namespace Kernel::FS
 		while (current)
 		{
 			auto n = fs->parse_node(this, current);
-			if (n)
-			{
-				if (this->inode_index != 2)
-				{
-					assert(n != this);
-					assert(n != parent);
-				}
-			}
 			if (n && n != this && n != parent)
 			{
 				children.push_back(n);
@@ -113,8 +105,13 @@ namespace Kernel::FS
 		
 		has_read = true;
 		
-		
-		
+		#ifdef DEBUG
+		for (auto child : children)
+		{
+			assert(child);
+			assert(((DirectoryNode_v*)this)->at(child->name) == child);
+		}
+		#endif
 		
 		return true;
 	}

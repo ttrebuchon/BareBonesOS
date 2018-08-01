@@ -28,8 +28,6 @@ namespace Kernel { namespace FS {
 		virtual uint64_t write(uint64_t, uint64_t, const uint8_t*) override;
 		virtual void open() override;
 		virtual void close() override;
-		virtual DirEnt* readDir(uint32_t) override;
-		virtual Node* findDir(const char* name) override;
 		
 		virtual const FileNode_v* as_file() const noexcept override;
 		virtual FileNode_v* as_file() noexcept override;
@@ -39,6 +37,11 @@ namespace Kernel { namespace FS {
 		
 		virtual const BlockDeviceNode* as_block_device() const noexcept override;
 		virtual BlockDeviceNode* as_block_device() noexcept override;
+		
+		virtual const LinkNode* as_link() const noexcept
+		{ return this; }
+		virtual LinkNode* as_link() noexcept
+		{ return this; }
 		
 	};
 	

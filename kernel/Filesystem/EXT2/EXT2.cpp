@@ -3,10 +3,14 @@
 #include "EXT2DirectoryNode.hh"
 #include "EXT2FileNode.hh"
 #include "EXT2SymLinkNode.hh"
+#include "EXT2BlockDevice.hh"
+#include "EXT2CharDevice.hh"
 #include <kernel/Filesystem/BlockDeviceNode.hh>
+#include <kernel/Filesystem/Devices/DeviceTarget.hh>
 #include <kernel/Filesystem/MBR.hh>
 #include <kernel/Filesystem/MBR_System_IDs.h>
 #include <Utils/BitSet.hh>
+
 
 #define EXT2_SUPERBLOCK_OFFSET (::Kernel::FS::detail::EXT2::superblock_constants::offset)
 //#define EXT2_SUPERBLOCK_OFFSET 1024
@@ -85,6 +89,30 @@ namespace Kernel::FS
 		
 		
 		
+		
+		size_t dirent_name_len(const dirent_t* ent, bool dirent_type_field) noexcept
+		{
+			assert(likely(ent != nullptr));
+			if (unlikely(!ent))
+			{
+				return 0;
+			}
+			
+			if (!dirent_type_field)
+			{
+				uint16_t len = ent->name_len_msb;
+				len = len << 8;
+				len |= ent->name_len_lsb;
+				return len;
+			}
+			else
+			{
+				return ent->name_len_lsb;
+			}
+		}
+		
+		
+		
 	}
 	
 	
@@ -131,6 +159,13 @@ namespace Kernel::FS
 		
 		auto res = disk.read(EXT2_SUPERBLOCK_OFFSET, sizeof(sb), (uint8_t*)&sb);
 		assert(res == sizeof(sb));
+		
+		if (sb.major_ver > 0)
+		{
+			TRACE_VAL(sb.major_ver);
+			TRACE_VAL(sb.minor_ver);
+			//assert(false);
+		}
 		
 		assert(sb.signature == detail::EXT2::superblock_constants::ext2_signature);
 		
@@ -216,8 +251,12 @@ namespace Kernel::FS
 		
 		auto root = get_inode(2);
 		assert(root);
-		_root = new EXT2DirectoryNode(nullptr, this, root, "", 2);
+		assert(root->type == EXT2_INODE_TYPE_DIR);
+		auto root_n = new EXT2DirectoryNode(nullptr, this, root, "", 2);
+		_root = root_n;
 		nodes[2] = _root;
+		assert(this->root() == root_n);
+		assert(this->root()->as_directory()->name.length() == 0);
 	}
 	
 	EXT2::~EXT2()
@@ -332,6 +371,10 @@ namespace Kernel::FS
 	{
 		assert(groups.size() == block_group_count);
 		assert(n / sb.blocks_per_group < groups.size());
+		if (n <= sb.superblock_block_num)
+		{
+			return nullptr;
+		}
 		auto gr = groups[n / sb.blocks_per_group];
 		assert(gr);
 		//assert(n != 70);
@@ -616,34 +659,41 @@ namespace Kernel::FS
 		}
 		
 		Utils::string nname((const char*)ent->name, dirent_name_len(ent));
+		assert(nname.c_str()[nname.length()] == '\0');
 		
 		if (next_n->type == EXT2_INODE_TYPE_DIR)
 		{
-			n = new EXT2DirectoryNode(parent, this, next_n, Utils::string((const char*)ent->name, dirent_name_len(ent)), ent->inode);
+			n = new EXT2DirectoryNode(parent, this, next_n, nname, ent->inode);
 		}
-		else if (next_n->type == EXT2_INODE_TYPE_BLOCK_DEV)
+		else if (next_n->type == EXT2_INODE_TYPE_BLOCK_DEV || next_n->type == EXT2_INODE_TYPE_CHAR_DEV)
 		{
-			n = new BlockDeviceNode(Utils::string((const char*)ent->name, dirent_name_len(ent)));
-		}
-		else if (next_n->type == EXT2_INODE_TYPE_CHAR_DEV)
-		{
-			// TODO: Write an actual character device node
-			n = new BlockDeviceNode(nname);
-			/*TRACE(nname.c_str());
-			assert(NOT_IMPLEMENTED);*/
+			uint32_t dev_id[2];
+			decode_device_signature(*(const uint32_t*)next_n->data, &dev_id[0], &dev_id[1]);
+			
+			if (next_n->type == EXT2_INODE_TYPE_BLOCK_DEV)
+			{
+				auto target = DeviceTarget::find_target(this, DeviceTargetType::Block, dev_id[0], dev_id[1]);
+				n = new EXT2BlockDeviceNode(parent, this, next_n, nname, ent->inode, target);
+			}
+			else
+			{
+				auto target = DeviceTarget::find_target(this, DeviceTargetType::Char, dev_id[0], dev_id[1]);
+				n = new EXT2CharDeviceNode(parent, this, next_n, nname, ent->inode, target);
+			}
 		}
 		else if (next_n->type == EXT2_INODE_TYPE_FILE)
 		{
-			n = new EXT2FileNode(parent, this, next_n, Utils::string((const char*)ent->name, dirent_name_len(ent)), ent->inode);
+			n = new EXT2FileNode(parent, this, next_n, nname, ent->inode);
 		}
 		else if (next_n->type == EXT2_INODE_TYPE_SYMLINK)
 		{
 			
-			n = new EXT2SymLinkNode(parent, this, next_n, Utils::string((const char*)ent->name, dirent_name_len(ent)), ent->inode);
+			n = new EXT2SymLinkNode(parent, this, next_n, nname, ent->inode);
 		}
 		else
 		{
-			TRACE((const char*)ent->name);
+			TRACE_VAL(nname.c_str());
+			//TRACE((const char*)ent->name);
 			TRACE(next_n->type);
 			assert(NOT_IMPLEMENTED);
 		}
@@ -725,6 +775,16 @@ namespace Kernel::FS
 		return groups[gindex]->release_block(index);
 	}
 	
+	size_t EXT2::release_inode_blocks(inode_type* n) noexcept
+	{
+		assert(n);
+		if (unlikely(!n))
+		{
+			return 0;
+		}
+		assert(NOT_IMPLEMENTED);
+	}
+	
 	
 	
 	
@@ -772,24 +832,14 @@ namespace Kernel::FS
 	
 	size_t EXT2::dirent_name_len(const detail::EXT2::dirent_t* ent) const noexcept
 	{
-		assert(ent);
-		if (unlikely(!ent))
-		{
-			return 0;
-		}
-		
 		if (sb.major_ver >= detail::EXT2::superblock_constants::ext_major_ver)
 		{
 			if (sb.required_features & detail::EXT2::superblock_constants::required_features::dir_entries_type_field)
 			{
-				return ent->name_len_lsb;
+				return detail::EXT2::dirent_name_len(ent, true);
 			}
 		}
-		
-		uint16_t len = ent->name_len_msb;
-		len = len << 8;
-		len |= ent->name_len_lsb;
-		return len;
+		return detail::EXT2::dirent_name_len(ent, false);
 	}
 	
 	uint64_t EXT2::inode_size(const inode_type* n) const noexcept
@@ -818,6 +868,102 @@ namespace Kernel::FS
 		return n->size_low;
 	}
 	
+	const uint8_t* EXT2::filesystem_ID() const noexcept
+	{
+		if (extended_superblock())
+		{
+			return sb.FS_ID;
+		}
+		else
+		{
+			return nullptr;
+		}
+	}
+	
+	const char* EXT2::volume_name() const noexcept
+	{
+		if (extended_superblock())
+		{
+			return (const char*)sb.volume_name;
+		}
+		else
+		{
+			return "";
+		}
+	}
+	
+	const char* EXT2::last_mount_path() const noexcept
+	{
+		if (extended_superblock())
+		{
+			return (const char*)sb.last_mount_path;
+		}
+		else
+		{
+			return "";
+		}
+	}
+	
+	
+	
+	
+	bool EXT2::decode_device_signature(const uint32_t value, uint32_t* major, uint32_t* minor) noexcept
+	{
+		if (is_big_endian())
+		{
+			// TODO
+			assert(NOT_IMPLEMENTED);
+		}
+		else
+		{
+			if (minor)
+			{
+				*minor = (value & 0xFF);
+			}
+			
+			if (major)
+			{
+				*major = (value >> 8) & 0xFF;
+			}
+			
+			return (((value >> 8) & 0xFF) != 0);
+		}
+	}
+	
+	uint32_t EXT2::encode_device_signature(const uint32_t major, const uint32_t minor) noexcept
+	{
+		if (is_big_endian())
+		{
+			// TODO
+			assert(NOT_IMPLEMENTED);
+		}
+		else
+		{
+			uint32_t value = ((major & 0xFF) << 8);
+			value |= (minor & 0xFF);
+			return value;
+		}
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	
 	
@@ -839,6 +985,7 @@ namespace Kernel::FS
 		const size_t sz = part->capacity();
 		block_group_desc_t* bg_table = nullptr;
 		superblock_ext_t sb;
+		memset(&sb, 0, sizeof(sb));
 		uint8_t* group_block_map_template = nullptr;
 		int res;
 		int used_count;
@@ -1205,6 +1352,8 @@ namespace Kernel::FS
 		}
 		return false;
 	}
+	
+	
 	
 	
 	

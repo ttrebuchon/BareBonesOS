@@ -28,8 +28,6 @@ namespace Kernel::FS
 		virtual uint64_t write(uint64_t, uint64_t, const uint8_t*) override;
 		virtual void open() override;
 		virtual void close() override;
-		virtual DirEnt* readDir(uint32_t) override;
-		virtual Node* findDir(const char* name) override;
 		virtual EXT2* get_filesystem() const noexcept override;
 	};
 	

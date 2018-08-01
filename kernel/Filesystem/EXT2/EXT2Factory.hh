@@ -35,6 +35,7 @@ namespace Kernel::FS
 		
 		
 		Utils::shared_ptr<detail::EXT2::dirent_t> add_child_inode(directory_type* parent, const size_t child, const Utils::string& name) const noexcept;
+		EXT2DirectoryNode* cast_parent(DirectoryNode_v*) const noexcept;
 		
 		
 		public:
@@ -43,7 +44,9 @@ namespace Kernel::FS
 		
 		virtual DirectoryNode_v* create_directory(DirectoryNode_v* parent, const Utils::string& name) noexcept override;
 		virtual FileNode_v* create_file(DirectoryNode_v* parent, const Utils::string& name) noexcept override;
-		virtual LinkNode* create_link(DirectoryNode_v* parent, const Utils::string&, Node* target) noexcept override;
+		virtual LinkNode* create_link(DirectoryNode_v* parent, const Utils::string&, const Utils::string& target) noexcept override;
+		virtual BlockDeviceNode* create_block_device(DirectoryNode_v* parent, const Utils::string&, DeviceTarget*) noexcept override;
+		
 	};
 }
 

@@ -51,20 +51,6 @@ namespace Kernel { namespace FS { namespace Init_RD {
 		// TODO
 		ASSERT(false);
 	}
-
-
-	DirEnt* FileNode::readDir(uint32_t)
-	{
-		// TODO
-		ASSERT(false);
-	}
-
-
-	Node* FileNode::findDir(const char* name)
-	{
-		// TODO
-		ASSERT(false);
-	}
 	
 	size_t FileNode::size() const noexcept
 	{
