@@ -4,6 +4,7 @@
 #include <Common.h>
 #include <Utils/utility>
 #include <Utils/typeindex>
+#include <Utils/tuple>
 
 namespace Support { namespace Meta
 {
@@ -822,6 +823,37 @@ namespace Support { namespace Meta
 			}
 		}
 	};
+	
+	// type_sequence_from_signature_args<Fn>::type
+	template <auto fn>
+	struct type_sequence_from_signature_args;
+	
+	namespace detail
+	{
+		template <class>
+		struct type_sequence_from_signature_args;
+		
+		template <class R, class... Args>
+		struct type_sequence_from_signature_args<R(*)(Args...)>
+		{
+			typedef type_sequence<Args...> type;
+		};
+		
+		template <class T, class R, class... Args>
+		struct type_sequence_from_signature_args<R(T::*)(Args...)>
+		{
+			typedef type_sequence<Args...> type;
+		};
+	}
+	
+	template <auto fn>
+	struct type_sequence_from_signature_args
+	{
+		typedef typename detail::type_sequence_from_signature_args<decltype(fn)>::type type;
+	};
+	
+	
+	
 	
 	
 	
