@@ -11,6 +11,7 @@
 #include "Atomicity.hh"
 #include "detail/c++config.hh"
 #include "hash"
+#include "StringFwd.hh"
 
 namespace Utils
 {
@@ -503,6 +504,13 @@ namespace Utils
 		
         void reserve(size_type = 0);
         void swap(basic_string&);
+        
+        size_type find(const basic_string&, size_type pos = 0) const;
+        size_type find(const value_type*, size_type pos, size_type count) const;
+        size_type find(const value_type*, size_type pos = 0) const;
+        size_type find(value_type, size_type pos = 0) const;
+        template <class T>
+        size_type find(const T&, size_type pos = 0) const;
         
         private:
         template <class InIt>

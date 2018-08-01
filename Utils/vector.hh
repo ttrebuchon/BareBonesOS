@@ -101,6 +101,8 @@ namespace Utils
 		// Operators
 		reference operator[](size_type i);
 		const_reference operator[](size_type) const;
+		vector& operator=(const vector&);
+		vector& operator=(vector&&) noexcept;
 		
 		
 		// Iterators

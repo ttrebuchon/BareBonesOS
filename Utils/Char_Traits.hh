@@ -56,7 +56,19 @@ namespace Utils
 			for (i = 0; s[i] != 0; ++i);
 			return i;
 		}
-		static constexpr const char_type* find(const char_type* s, size_t n, const char_type& a);
+		static constexpr const char_type* find(const char_type* s, size_t n, const char_type& a)
+		{
+			for (size_t i = 0; i < n; ++i)
+			{
+				if (s[i] == a)
+				{
+					return s + i;
+				}
+			}
+			
+			return nullptr;
+		}
+		
 		static char_type* move(char_type* s1, const char_type* s2, size_t n);
 		
 		static char_type* copy(char_type* dest, const char_type* src, size_t n)

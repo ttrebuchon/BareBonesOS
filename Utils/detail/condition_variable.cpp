@@ -1,5 +1,4 @@
 #include "condition_variable.hh"
-#include <Support/threading/LowLock.hh>
 #include <kernel/Scheduling/thread.h>
 #include <kernel/Processor.h>
 #include <Utils/detail/locks.hh>

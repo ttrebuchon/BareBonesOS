@@ -8,7 +8,7 @@ namespace Utils {
 	template <class>
 	class Allocator;
 	
-	template <class, class, class>
+	template <class Char_t, class = Char_Traits<Char_t>, class = Allocator<Char_t>>
 	class basic_string;
 	typedef basic_string<char, Char_Traits<char>, Allocator<char>> string;
 }

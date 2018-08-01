@@ -295,6 +295,20 @@ namespace Utils
 	}
 	
 	template <class T, class A>
+	auto vector<T, A>::back() -> reference
+	{
+		assert(_size > 0);
+		return _data[_size-1];
+	}
+	
+	template <class T, class A>
+	auto vector<T, A>::back() const -> const_reference
+	{
+		assert(_size > 0);
+		return _data[_size-1];
+	}
+	
+	template <class T, class A>
 	void vector<T, A>::push_back(const value_type& v)
 	{
 		ensure_room_for(1);
@@ -357,6 +371,57 @@ namespace Utils
 	{
 		return _data[i];
 	}
+	
+	template <class T, class A>
+	auto vector<T, A>::operator=(const vector& v) -> vector&
+	{
+		if (v._data)
+		{
+			clear();
+			if (alloc != v.alloc)
+			{
+				reallocate(0);
+				alloc = v.alloc;
+			}
+			
+			ensure_capacity(v.size());
+			for (size_type i = 0; i < v._size; ++i)
+			{
+				alloc.construct(_data + i, v._data[i]);
+			}
+			_size = v.size();
+			ASSERT(_cap >= v.size());
+		}
+		else
+		{
+			reallocate(0);
+			alloc = v.alloc;
+		}
+		
+		return *this;
+	}
+	
+	template <class T, class A>
+	auto vector<T, A>::operator=(vector&& other) noexcept -> vector&
+	{
+		if (_data)
+		{
+			reallocate(0);
+		}
+		
+		alloc = Utils::move(other.alloc);
+		_size = other._size;
+		_cap = other._cap;
+		_data = other._data;
+		
+		other._size = other._cap = 0;
+		other._data = nullptr;
+		
+		
+		return *this;
+	}
+	
+	
 	
 	
 	

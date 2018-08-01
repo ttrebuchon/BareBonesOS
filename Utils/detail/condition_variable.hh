@@ -2,6 +2,7 @@
 #define INCLUDED_CONDITION_VARIABLE_HH
 
 #include <Common.h>
+#include <Support/threading/LowLock.hh>
 
 namespace Utils
 {
@@ -31,7 +32,7 @@ namespace Utils
 		typedef mutex mutex_type;
 		
 		private:
-		int __lock;
+		int_lock_t __lock;
 		unsigned int __futex;
 		unsigned long long int __total_seq;
 		unsigned long long int __wakeup_seq;
@@ -65,7 +66,7 @@ namespace Utils
 		typedef M mutex_type;
 		
 		private:
-		int __lock;
+		int_lock_t __lock;
 		unsigned int __futex;
 		unsigned long long int __total_seq;
 		unsigned long long int __wakeup_seq;

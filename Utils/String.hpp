@@ -280,6 +280,59 @@ namespace Utils
 		}
 	}
 	
+	__STRTEMP__ auto basic_string<Char_t, T, Alloc>::find(const basic_string& str, size_type pos) const -> size_type
+	{
+		return find(str.c_str(), pos, str.length());
+	}
+	
+	__STRTEMP__ auto basic_string<Char_t, T, Alloc>::find(const value_type* str, size_type pos, size_type count) const -> size_type
+	{
+		if (count == 0)
+		{
+			return npos;
+		}
+		const value_type* tmp;
+		while (pos + count <= size())
+		{
+			tmp = traits_type::find(_M_data() + pos, size() - pos - count + 1, str[0]);
+			if (tmp)
+			{
+				pos = tmp - _M_data();
+				if (pos + count > size())
+				{
+					break;
+				}
+				
+				if (traits_type::compare(tmp, str, count) == 0)
+				{
+					return pos;
+				}
+				else
+				{
+					++pos;
+				}
+			}
+			else
+			{
+				break;
+			}
+		}
+		
+		return npos;
+	}
+	
+	__STRTEMP__ auto basic_string<Char_t, T, Alloc>::find(const value_type* str, size_type pos) const -> size_type
+	{
+		return find(str, pos, traits_type::length(str));
+	}
+	
+	
+	
+	
+	
+	
+	
+	
 	__STRTEMP__ auto basic_string<Char_t, T, Alloc>::operator[](size_t pos) -> value_type&
 	{
 		return _M_data()[pos];
