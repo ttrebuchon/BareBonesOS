@@ -5,25 +5,41 @@
 #include "BuddyHeap.hpp"
 #include <kernel/Memory/PageDir.hh>
 #include "SlabHeap.hh"
+#include "PageHeap.hpp"
 
 namespace Kernel::Memory
 {
 	template <class Alloc>
-	kernel_heap<Alloc>::kernel_heap(uintptr_t start, uintptr_t end, const allocator_type& alloc) : 
-		Heap(start, end, true, false, 0),
+	kernel_heap<Alloc>::kernel_heap(PageDirectory* pdir, uintptr_t start, uintptr_t end, const allocator_type& alloc) : 
+		Heap(start, end, 0, true, false),
 		page_directories_m(),
 		page_directories(alloc),
 		top(alloc, (void*)start, end-start, true, false),
+		paged(alloc, pdir, true, false),
 		heaps_m(),
 		heaps(alloc),
 		heaps_set(alloc),
 		allocator(alloc)
 	{
+		assert(pageSize() > 0);
 		initialize_default_heaps();
 	}
 	
 	template <class Alloc>
-	kernel_heap<Alloc>::kernel_heap(void* start, void* end, const allocator_type& alloc) : kernel_heap((uintptr_t)start, (uintptr_t)end, alloc)
+	kernel_heap<Alloc>::kernel_heap(PageDirectory* pdir, void* start, void* end, const allocator_type& alloc) : kernel_heap(pdir, (uintptr_t)start, (uintptr_t)end, alloc)
+	{
+		
+	}
+	
+	template <class Alloc>
+	kernel_heap<Alloc>::kernel_heap(uintptr_t start, uintptr_t end, const allocator_type& alloc) : kernel_heap(PageDirectory::Current, start, end, alloc)
+		
+	{
+		
+	}
+	
+	template <class Alloc>
+	kernel_heap<Alloc>::kernel_heap(void* start, void* end, const allocator_type& alloc) : kernel_heap(PageDirectory::Current, (uintptr_t)start, (uintptr_t)end, alloc)
 	{
 		
 	}
@@ -78,6 +94,8 @@ namespace Kernel::Memory
 				req_len = sheap_t::Size_For_Count(count);
 			}
 			
+			
+			
 			auto region = top.allocate(req_len + sizeof(sheap_t), alignof(sheap_t));
 			req_len = top.allocated_size(region) - sizeof(sheap_t);
 			assert(req_len + sizeof(sheap_t) <= len/2);
@@ -96,6 +114,123 @@ namespace Kernel::Memory
 		//assert(NOT_IMPLEMENTED);
 	}
 	
+	template <class Alloc>
+	const Heap* kernel_heap<Alloc>::heap_for(const alloc_spec_t& spec) const
+	{
+		if (unlikely(spec.size == 0))
+		{
+			return nullptr;
+		}
+		
+		if (spec.size <= smallest_size)
+		{
+			auto heap_li = heaps.at(smallest_size);
+			assert(heap_li);
+			auto heap = heap_li->entity;
+			assert(heap);
+			assert(spec.align <= alignof(void*));
+			
+			return heap;
+		}
+		else if (spec.size >= pageSize())
+		{
+			if (unlikely(spec.size % pageSize() == 0) && spec.size >= 10*pageSize())
+			{
+				return &paged;
+			}
+			else
+			{
+				return &top;
+			}
+		}
+	}
+	
+	template <class Alloc>
+	const Heap* kernel_heap<Alloc>::heap_for(void* addr) const
+	{
+		if (unlikely((uintptr_t)addr < top.startAddr() || (uintptr_t)addr >= top.endAddr()))
+		{
+			return &paged;
+		}
+		
+		
+		auto haddr = top.allocation_info(addr);
+		if (unlikely(!haddr))
+		{
+			return nullptr;
+		}
+		auto heap = reinterpret_cast<Heap*>(haddr);
+		if (likely(heaps_set.count(heap)))
+		{
+			return heap;
+		}
+		else
+		{
+			return &top;
+		}
+	}
+	
+	template <class Alloc>
+	Heap* kernel_heap<Alloc>::heap_for(const alloc_spec_t& spec)
+	{
+		if (unlikely(spec.size == 0))
+		{
+			return nullptr;
+		}
+		
+		if (spec.size <= smallest_size)
+		{
+			auto heap_li = heaps.at(smallest_size);
+			assert(heap_li);
+			auto heap = heap_li->entity;
+			assert(heap);
+			assert(spec.align <= alignof(void*));
+			
+			return heap;
+		}
+		else if (spec.size >= pageSize())
+		{
+			if (unlikely(spec.size % pageSize() == 0) && spec.size >= 10*pageSize())
+			{
+				return &paged;
+			}
+			else
+			{
+				return &top;
+			}
+		}
+	}
+	
+	template <class Alloc>
+	Heap* kernel_heap<Alloc>::heap_for(void* addr)
+	{
+		if (unlikely((uintptr_t)addr < top.startAddr() || (uintptr_t)addr >= top.endAddr()))
+		{
+			return &paged;
+		}
+		
+		
+		auto haddr = top.allocation_info(addr);
+		if (unlikely(!haddr))
+		{
+			return nullptr;
+		}
+		auto heap = reinterpret_cast<Heap*>(haddr);
+		if (likely(heaps_set.count(heap)))
+		{
+			return heap;
+		}
+		else
+		{
+			return &top;
+		}
+	}
+	
+	
+	
+	
+	
+	
 	
 	
 	
@@ -106,7 +241,17 @@ namespace Kernel::Memory
 		{
 			return nullptr;
 		}
-		else if (size <= smallest_size)
+		else
+		{
+			Utils::shared_lock<shared_mutex_type> slock(heaps_m);
+			auto heap = heap_for(alloc_spec_t(size, alignment));
+			assert(heap);
+			return heap->alloc(size, alignment);
+		}
+		
+		
+		
+		/*else if (size <= smallest_size)
 		{
 			Utils::shared_lock<shared_mutex_type> slock(heaps_m);
 			auto heap_li = heaps.at(smallest_size);
@@ -118,6 +263,15 @@ namespace Kernel::Memory
 			return heap->allocate(smallest_size, alignof(void*));
 			
 			size = smallest_size;
+		}
+		else if (size >= pageSize())
+		{
+			if (unlikely(size % pageSize() == 0))
+			{
+				auto ptr = paged.alloc(size, alignment);
+				assert(ptr);
+				return ptr;
+			}
 		}
 		
 		if (unlikely(alignment < alignof(void*)))
@@ -140,7 +294,7 @@ namespace Kernel::Memory
 		}
 		
 		
-		
+		*/
 		
 		assert(NOT_IMPLEMENTED);
 	}
@@ -155,7 +309,13 @@ namespace Kernel::Memory
 		}
 		
 		Utils::shared_lock<shared_mutex_type> slock(heaps_m);
-		auto haddr = top.allocation_info(addr);
+		
+		auto heap = heap_for(addr);
+		assert(heap);
+		heap->free(addr);
+		return;
+		
+		/*auto haddr = top.allocation_info(addr);
 		assert(haddr);
 		auto heap = reinterpret_cast<Heap*>(haddr);
 		if (likely(heaps_set.count(heap)))
@@ -176,14 +336,25 @@ namespace Kernel::Memory
 			// TODO ...
 			
 			assert(NOT_IMPLEMENTED);
-		}
+		}*/
 	}
 	
 	template <class Alloc>
 	size_t kernel_heap<Alloc>::allocated_size(void* addr) const noexcept
 	{
 		Utils::shared_lock<shared_mutex_type> slock(heaps_m);
-		auto haddr = top.allocation_info(addr);
+		
+		auto heap = heap_for(addr);
+		if (likely(heap != nullptr))
+		{
+			return heap->allocated_size(addr);
+		}
+		else
+		{
+			return 0;
+		}
+		
+		/*auto haddr = top.allocation_info(addr);
 		if (unlikely(!haddr))
 		{
 			return 0;
@@ -193,11 +364,15 @@ namespace Kernel::Memory
 		{
 			return heap->allocated_size(addr);
 		}
-		else
+		else if (((uintptr_t)addr >= top.startAddr()) && ((uintptr_t)addr < top.endAddr()))
 		{
 			return top.allocated_size(addr);
 		}
-		assert(NOT_IMPLEMENTED);
+		else
+		{
+			return paged.allocated_size(addr);
+		}
+		assert(NOT_IMPLEMENTED);*/
 	}
 }
 

@@ -11,6 +11,7 @@
 #include <Utils/map>
 #include <Utils/unordered_set>
 #include <kernel/Memory/alloc_spec.h>
+#include "PageHeap.hh"
 
 namespace Kernel::Memory
 {
@@ -44,6 +45,7 @@ namespace Kernel::Memory
 		
 		
 		BuddyHeap<allocator_type, mutex_type> top;
+		PageHeap<allocator_type, mutex_type> paged;
 		
 		
 		typedef typename Utils::map<size_t, simple_list<Heap*>*>::value_type heaps_value_type;
@@ -56,11 +58,16 @@ namespace Kernel::Memory
 		
 		
 		void initialize_default_heaps();
+		const Heap* heap_for(const alloc_spec_t&) const;
+		const Heap* heap_for(void*) const;
 		Heap* heap_for(const alloc_spec_t&);
+		Heap* heap_for(void*);
 		
 		public:
 		kernel_heap(uintptr_t start, uintptr_t end, const allocator_type& = allocator_type());
 		kernel_heap(void* start, void* end, const allocator_type& = allocator_type());
+		kernel_heap(PageDirectory*, uintptr_t start, uintptr_t end, const allocator_type& = allocator_type());
+		kernel_heap(PageDirectory*, void* start, void* end, const allocator_type& = allocator_type());
 		
 		virtual ~kernel_heap();
 		
