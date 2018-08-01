@@ -5,7 +5,16 @@ namespace Kernel { namespace Memory
 {
 	Heap::Heap(addr_t start, addr_t end, size_t pSize, bool super, bool readonly) noexcept : _startAddr(start), _endAddr(end), pSize(pSize), _supervisor(super), _readonly(readonly)
 	{
+		if (this->pSize == 0)
+		{
+			this->pSize = PAGE_SIZE;
+		}
 		
+		
+		// In case a derived class mixes
+		// up the page size and boolean
+		// argument positions
+		assert(this->pSize > 1);
 	}
 	
 	void* Heap::_realloc(void* p, size_t prev, size_t s, size_t alignment)
