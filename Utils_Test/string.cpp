@@ -69,5 +69,40 @@ TEST(String)
 	
 	
 	
+	{
+		
+		
+		string s1("Hello");
+		
+		ASSERTEQ(Utils::Char_Traits<char>::find(s1.c_str(), 5, 'H'), s1.c_str());
+		
+		
+		
+		ASSERTEQ(s1.find("H"), 0);
+		ASSERTEQ(s1.find("He"), 0);
+		ASSERTEQ(s1.find("Hel"), 0);
+		ASSERTEQ(s1.find("Hell"), 0);
+		ASSERTEQ(s1.find("Hello"), 0);
+		
+		
+		ASSERTEQ(s1.find("a"), string::npos);
+		
+		ASSERTEQ(s1.find("e"), 1);
+		ASSERTEQ(s1.find("el"), 1);
+		ASSERTEQ(s1.find("ell"), 1);
+		ASSERTEQ(s1.find("ello"), 1);
+		
+		ASSERTEQ(s1.find("l"), 2);
+		ASSERTEQ(s1.find("ll"), 2);
+		ASSERTEQ(s1.find("llo"), 2);
+		
+		ASSERTEQ(s1.find("l", 3), 3);
+		ASSERTEQ(s1.find("lo"), 3);
+		
+		ASSERTEQ(s1.find("o"), 4);
+	}
+	
+	
+	
 	static_assert(std::is_same<typename Utils::iterator_traits<int*>::iterator_category, Utils::random_access_iterator_tag>::value);
 }
