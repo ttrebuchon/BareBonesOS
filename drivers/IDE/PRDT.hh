@@ -43,7 +43,16 @@ namespace Drivers { namespace IDE {
 		
 		static PRDT* Create(addr_t* phys = nullptr)
 		{
-			auto ptr = (PRDT<N>*)kmalloc(sizeof(PRDT<N>), 1, phys);
+			static_assert(alignof(PRDT<N>) == alignof(uint32_t));
+			static_assert(alignof(PRDT<N>) > 0);
+			addr_t phys2;
+			auto ptr = (PRDT<N>*)kmalloc(sizeof(PRDT<N>), alignof(PRDT<N>), &phys2);
+			return ptr;
+			assert(ptr);
+			if (phys)
+			{
+				*phys = phys2;
+			}
 			kmemset(ptr, 0, sizeof(PRDT<N>));
 			ptr->entries[N-1].end = 1;
 			return ptr;
