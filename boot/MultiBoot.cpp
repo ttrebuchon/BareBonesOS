@@ -5,6 +5,9 @@ namespace boot
 {
 	MultiBoot* mboot = nullptr;
 	
+	#ifdef PAGE_SIZE
+	#undef PAGE_SIZE
+	#endif
 	#define PAGE_SIZE 0x1000
 	
 	
