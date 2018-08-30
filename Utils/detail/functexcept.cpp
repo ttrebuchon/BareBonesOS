@@ -20,7 +20,7 @@ namespace Utils
 	{
 		const char* get_ref_string(const string& str)
 		{
-			
+			assert(NOT_IMPLEMENTED);
 		}
 	}
 	

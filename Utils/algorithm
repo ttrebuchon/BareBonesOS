@@ -1,2 +1,3 @@
 #include "detail/bounds.hh"
 #include "detail/bits/heap.hh"
+#include "detail/min_max.hh"

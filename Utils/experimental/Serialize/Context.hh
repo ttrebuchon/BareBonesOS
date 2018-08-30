@@ -43,7 +43,9 @@ namespace serialize
 		unordered_map<type_index, Adapter<>*> adapters;
 		
 		virtual bool save_values(const reflect::Model*, list<ValueSet*>&) = 0;
-		virtual bool save(const reflect::Model*, void* obj) {}
+		virtual bool save(const reflect::Model*, void* obj) {
+			assert(NOT_IMPLEMENTED);
+			}
 		
 		bool _save(map<const reflect::Model*, list<ValueSet*>>&& _values)
 		{

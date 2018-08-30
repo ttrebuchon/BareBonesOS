@@ -107,6 +107,6 @@ namespace Utils {
 
 
 
-	template <>
+	//template <>
 	typename locale::id ctype<char>::id;
 }

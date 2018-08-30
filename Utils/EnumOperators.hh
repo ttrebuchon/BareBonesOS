@@ -63,7 +63,12 @@ constexpr inline E operator|(const E n, const E r) \
 constexpr inline E& operator&=(E& n, const E r) \
 { return n = (E)((T)n & (T)r); } \
 constexpr inline E& operator|=(E& n, const E r) \
-{ return n = (E)((T)n | (T)r); }
+{ return n = (E)((T)n | (T)r); } \
+\
+\
+\
+constexpr inline E operator~(const E e) noexcept \
+{ return (E)~((T)e); }
 
 
 

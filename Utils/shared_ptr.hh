@@ -175,5 +175,23 @@ namespace Utils
 	
 	
 	
+	
+	
+	template <class T>
+	shared_ptr<T> wrap_shared(T* ptr)
+	{
+		return shared_ptr<T>(ptr);
+	}
+	
+	template <class T>
+	shared_ptr<const T> wrap_shared(const T* ptr)
+	{
+		return shared_ptr<const T>(ptr);
+	}
+	
+	
+	
+	
+	
 }
 #endif

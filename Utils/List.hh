@@ -115,6 +115,21 @@ namespace Utils
 			{
 				return n->elem;
 			}
+			
+			const T& operator*() const
+			{
+				return n->elem;
+			}
+			
+			T* operator->()
+			{
+				return &n->elem;
+			}
+			
+			const T* operator->() const
+			{
+				return &n->elem;
+			}
 
 			friend List<T, Alloc>;
 		};
@@ -141,9 +156,14 @@ namespace Utils
 				return n != it2.n;
 			}
 
-			const T& operator*()
+			const T& operator*() const
 			{
 				return n->elem;
+			}
+			
+			const T* operator->() const
+			{
+				return &n->elem;
 			}
 
 			friend List<T, Alloc>;
