@@ -19,7 +19,7 @@ namespace Kernel::FS
 		this->_name = this->EXT2Node::inode_name;
 		
 		has_read = has_pending = false;
-		this->parent = parent;
+		this->_parent = parent;
 		
 	}
 	
@@ -54,6 +54,8 @@ namespace Kernel::FS
 		auto ents = (dirent_t*)data;
 		
 		auto current = next_dirent(ents, data_sz, nullptr);
+		
+		auto parent = get_parent();
 		
 		while (current)
 		{

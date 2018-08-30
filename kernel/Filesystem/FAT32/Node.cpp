@@ -7,7 +7,7 @@ namespace Kernel::FS
 		assert(entity);
 		assert(_parent);
 		this->_name = entity->name;
-		this->parent = _parent;
+		this->_parent = _parent;
 		
 		if (entity->ext[0] != 0)
 		{

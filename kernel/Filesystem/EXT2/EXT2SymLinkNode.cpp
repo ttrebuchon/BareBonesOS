@@ -145,7 +145,7 @@ namespace Kernel::FS
 	{
 		if (parent)
 		{
-			this->parent = parent;
+			this->_parent = parent;
 		}
 		
 		this->_name = this->EXT2Node::inode_name;
@@ -192,8 +192,9 @@ namespace Kernel::FS
 		auto _target = fs->getNode(target_path());
 		if (!_target)
 		{
-			assert(parent);
-			_target = parent->find_node(target_path());
+			auto p = get_parent();
+			assert(p);
+			_target = p->find_node(target_path());
 		}
 		return _target;
 	}

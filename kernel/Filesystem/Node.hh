@@ -18,6 +18,7 @@ namespace Kernel { namespace FS {
 	class BlockDeviceNode;
 	class CharDeviceNode;
 	class LinkNode;
+	class PipeNode;
 	
 	class Filesystem;
 	
@@ -29,7 +30,7 @@ namespace Kernel { namespace FS {
 		
 		protected:
 		mutable NodeType _type;
-		DirectoryNode_v* parent;
+		DirectoryNode_v* _parent;
 		Utils::string _name;
 		
 		Node();
@@ -72,16 +73,21 @@ namespace Kernel { namespace FS {
 		
 		virtual void set_parent(DirectoryNode_v*);
 		virtual DirectoryNode_v* get_parent() const noexcept
-		{ return parent; }
+		{ return _parent; }
 		
 		virtual Filesystem* get_filesystem() const noexcept = 0;
 		virtual Path_t get_path() const;
 		
 		
-		virtual const FileNode_v* as_file() const noexcept = 0;
-		virtual FileNode_v* as_file() noexcept = 0;
-		virtual const DirectoryNode_v* as_directory() const noexcept = 0;
-		virtual DirectoryNode_v* as_directory() noexcept = 0;
+		virtual const FileNode_v* as_file() const noexcept
+		{ return nullptr; }
+		virtual FileNode_v* as_file() noexcept
+		{ return nullptr; }
+		
+		virtual const DirectoryNode_v* as_directory() const noexcept
+		{ return nullptr; }
+		virtual DirectoryNode_v* as_directory() noexcept
+		{ return nullptr; }
 		
 		virtual const BlockDeviceNode* as_block_device() const noexcept
 		{ return nullptr; }
@@ -96,6 +102,12 @@ namespace Kernel { namespace FS {
 		virtual const LinkNode* as_link() const noexcept
 		{ return nullptr; }
 		virtual LinkNode* as_link() noexcept
+		{ return nullptr; }
+		
+		
+		virtual const PipeNode* as_pipe() const noexcept
+		{ return nullptr; }
+		virtual PipeNode* as_pipe() noexcept
 		{ return nullptr; }
 
     };

@@ -11,7 +11,7 @@ namespace Kernel::FS
 	void EXT2CharDeviceNode::init(DirectoryNode_v* parent)
 	{
 		this->_name = this->EXT2Node::inode_name;
-		this->parent = parent;
+		this->_parent = parent;
 	}
 	
 }
