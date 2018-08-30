@@ -32,11 +32,11 @@ inline void __ASSERT_TRUE() {}
 
     #endif
 
-#else
+#else // _TRACE
 
 #define TRACE(X) 
 
-#endif
+#endif // !_TRACE
 
 #ifdef __cplusplus
 }
@@ -44,7 +44,7 @@ inline void __ASSERT_TRUE() {}
 
 
 //Are testing
-#else
+#else // _TESTING
 
 
 #ifdef __cplusplus
@@ -74,18 +74,27 @@ inline void __ASSERT_TRUE() {}
 		while (false)
 		
 		
-		#define TRACE_VAL(X) do { \
+		#define __TRACEV_INNER(V, STR) do { \
 			::std::basic_stringstream<char, ::std::char_traits<char>, ::Kernel::Memory::cross_proc_allocator<char>> ss; \
-			ss << __FILE__"::" << __LINE__ << "::" << __func__ << "::" << #X << " = " << X; \
+			ss << __FILE__"::" << __LINE__ << "::" << __func__ << "::" << (STR) << " = " << (V); \
 			::std::cout << ss.str().c_str() << std::endl; \
 		} \
 		while (false)
 		
+		
+		#define TRACE_VAL(X) __TRACEV_INNER(X, #X)
+		
+		#define TRACE_VAL_HX(X) __TRACEV_INNER((void*)(uintptr_t)(X), #X)
+		
 	#else
 		
-		#define TRACE(X) (std::cout << __FILE__"::" << __LINE__ << "::" << __func__ << "::" << X << std::endl);
+		#define TRACE(X) (std::cout << __FILE__"::" << __LINE__ << "::" << __func__ << "::" << (X) << std::endl);
 		
-		#define TRACE_VAL(X) (std::cout << __FILE__"::" << __LINE__ << "::" << __func__ << "::" << #X << " = " << X << std::endl);
+		#define __TRACEV_INNER(V, STR) (std::cout << __FILE__"::" << __LINE__ << "::" << __func__ << "::" << (STR) << " = " << (V) << std::endl);
+		
+		#define TRACE_VAL(X) __TRACEV_INNER(X, #X)
+		
+		#define TRACE_VAL_HX(X) __TRACEV_INNER((void*)(uintptr_t)(X), #X)
 		
 //STACK(X)
 	
@@ -97,12 +106,13 @@ inline void __ASSERT_TRUE() {}
 
 #endif // !__cplusplus
 
-#else
+#else // _TRACE
 
 #define TRACE(X) 
 #define TRACE_VAL(X) 
+#define TRACE_VAL_HX(X)
 
-#endif
+#endif // !_TRACE
 
 
 
