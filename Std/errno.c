@@ -16,6 +16,24 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
+
+
+__thread int kerrno = 0;
+extern __thread int __libc_kerrno __attribute__ ((alias ("kerrno")));
+
+volatile int* __kerrno()
+{
+	return &kerrno;
+}
+
+
+void set_kerrno(int n)
+{
+	kerrno = n;
+}
+
+#ifndef TESTING
+
 #include <errno.h>
 #undef errno
 
@@ -35,4 +53,4 @@ void set_errno(int n)
 	errno = n;
 }
 
-
+#endif
