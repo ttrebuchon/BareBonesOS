@@ -5,11 +5,12 @@
 
 C_CODE
 
-void __assert2(const char* filename, int line, const char* function, const char* exp);
+void __assert2(const char* filename, int line, const char* function, const char* exp) __attribute__((__noreturn__));
 
 
-
-#undef assert
+#ifdef assert
+	#undef assert
+#endif
 
 #ifdef NDEBUG
 
