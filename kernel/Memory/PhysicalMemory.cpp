@@ -141,5 +141,49 @@ namespace Kernel { namespace Memory
 		
 		return b;
 	}
+	
+	bool PhysicalMemory::reserve(addr_t start, addr_t len) noexcept
+	{
+		auto fi = start / PAGE_SIZE;
+		if (len % PAGE_SIZE)
+		{
+			len /= 4096;
+			len += 1;
+		}
+		else
+		{
+			len /= 4096;
+		}
+		
+		irq_guard lock;
+		assert(under);
+		
+		for (auto it = fi; it < fi + len; ++it)
+		{
+			if (frames.get(it))
+			{
+				return false;
+			}
+		}
+		
+		changing = true;
+		
+		for (auto it = fi; it < fi + len; ++it)
+		{
+			frames.set(it, true);
+		}
+		
+		changing = false;
+		
+		return true;
+	}
+	
+	size_t PhysicalMemory::remaining() noexcept
+	{
+		irq_guard lock;
+		assert(under);
+		
+		assert(NOT_IMPLEMENTED);
+	}
 }
 }

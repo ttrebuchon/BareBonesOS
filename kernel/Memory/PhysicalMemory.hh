@@ -93,6 +93,8 @@ namespace Kernel { namespace Memory
 		
 		static bool release(addr_t addr, size_t sz) noexcept;
 		
+		static size_t remaining() noexcept;
+		
 		
 		friend class PMM;
 	};
