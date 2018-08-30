@@ -1,6 +1,10 @@
 #ifndef INCLUDED_SUPPORT_THREADING_LOWLOCK_HH
 #define INCLUDED_SUPPORT_THREADING_LOWLOCK_HH
 
+extern "C" {
+	extern int sched_yield();
+}
+
 typedef int int_lock_t;
 
 namespace Support::threading
