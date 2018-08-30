@@ -4,7 +4,6 @@
 #include <list>
 #include <set>
 
-
 TEST(kheap)
 {
 	const size_t msize = 4*1024*256;//1024;
@@ -36,7 +35,6 @@ TEST(kheap)
 			ptrs[i] = (uint64_t*)heap.allocate(sizeof(uint64_t), alignof(uint64_t));
 			assert(!allocated.count(ptrs[i]));
 			allocated.insert(ptrs[i]);
-			QA::out << ptrs[i] << std::endl;
 			assert(ptrs[i]);
 			*ptrs[i] = 0xDEADBABA;
 		}
@@ -76,12 +74,37 @@ TEST(kheap)
 		QA::out << "Ptr: " << ptr << std::endl;
 		
 		QA::out << "buf: " << buf << std::endl;
-		auto nptr = heap.allocate(msize);
+		assert(((msize/4) + 1) % 0x1000 != 0);
+		QA::out << heap.pageSize() << std::endl;
+		assert(heap.pageSize() == 0x1000);
+		auto nptr = heap.allocate((msize/4) + 1);
 		QA::out << nptr << std::endl;
 		assert(!allocated.count(nptr));
 		QA::out << "Allocated size: " << heap.allocated_size(nptr) << std::endl;
 		QA::out << "order: " << (int)detail::required_order(msize) << std::endl;
-		assert(heap.allocated_size(nptr) >= msize);
-		assert(!nptr);
+		assert(heap.allocated_size(nptr) >= ((msize/4) + 1));
+		assert(nptr);
+		
+		heap.free(nptr);
+		
+		nptr = heap.allocate(0x10000, 0x1000);
+		assert(nptr);
+		heap.free(nptr);
+		
+		auto nptr2 = heap.allocate(0x10000, 0x1000);
+		assert(nptr2);
+		assert(nptr == nptr2);
+		nptr2 = nptr2 = heap.allocate(0x10000, 0x1000);
+		assert(nptr2);
+		assert(nptr != nptr2);
+		
+		heap.free(nptr);
+		heap.free(nptr2);
+		
+		
+		
+		
+		
+		QA::out << "Destroying heap" << std::endl;
 	}
 }
