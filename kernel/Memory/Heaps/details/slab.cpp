@@ -63,7 +63,7 @@ extern "C" {
 	
 }
 
-#define MASK_N(N, index) (1 << (N - 1 - index))
+#define MASK_N(N, index) (1ul << (N - 1 - index))
 
 
 template <class T>
@@ -128,7 +128,13 @@ unsigned char* slab_allocate_n(S* slabs)
 		assert(s->free_count == N-1);
 		
 		--s->free_count;
-		s->free_mask = ~(MASK(0) | MASK(1));
+		
+		{
+			typedef decltype(s->free_mask) fm_t;
+			fm_t tmp = (fm_t)(MASK(0) | MASK(1));
+			s->free_mask = ~tmp;
+		}
+		//s->free_mask = ~(fm_t)(MASK(0) | MASK(1));
 		return ((unsigned char*)(slabs->s + index)) + (PAGE_SIZE / N);
 	}
 	

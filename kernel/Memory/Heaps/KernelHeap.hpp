@@ -199,6 +199,8 @@ namespace Kernel::Memory
 				return &top;
 			}
 		}
+		
+		assert(NOT_IMPLEMENTED);
 	}
 	
 	template <class Alloc>
