@@ -70,7 +70,7 @@ namespace Kernel { namespace FS {
 
 C_CODE
 C_namespace(Kernel)
-C_namespace(Filesystem)
+C_namespace(FS)
 
 
 
