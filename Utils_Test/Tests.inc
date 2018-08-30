@@ -30,3 +30,5 @@ MAC(slab_allocator);
 MAC(choice_alloc);
 MAC(osthread);
 MAC(kheap);
+MAC(ext2);
+MAC(ntfs);
