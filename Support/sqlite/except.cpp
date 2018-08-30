@@ -10,7 +10,7 @@ namespace Support { namespace SQLite
 	{
 		const char* get_ref_string(const Utils::string& str)
 		{
-			
+			assert(NOT_IMPLEMENTED);
 		}
 	}
 	

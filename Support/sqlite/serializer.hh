@@ -609,6 +609,8 @@ namespace Support { namespace SQLite
 			
 			typedef void(*Fn)(const_pointer, Context&);
 			//constexpr Fn f = m1.get_store();
+			
+			assert(NOT_IMPLEMENTED);
 		}
 		
 		
@@ -940,6 +942,7 @@ namespace Support { namespace SQLite
 		
 		typedef value_holder<Fn, __storing<Context, M>::template store<N>> gyrt;
 		typedef typename storing<Context, M>::Functions srcerd;
+		assert(NOT_IMPLEMENTED);
 	}
 	
 	namespace detail
