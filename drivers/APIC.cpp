@@ -71,6 +71,9 @@ namespace Drivers { namespace APIC
 		
 		delete[] madts;
 		delete rsdt;
+		
+		assert(NOT_IMPLEMENTED);
+		return -1; //?
 	}
 	
 	
