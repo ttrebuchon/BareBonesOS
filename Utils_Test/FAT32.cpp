@@ -15,7 +15,7 @@ TEST(FAT32)
 	
 	const uint32_t disk_sz = 20480;
 	
-	auto drive = QA::QADrive("SomeFile.img", disk_sz);
+	auto drive = QA::QADrive("Images/FAT32Disk.img", disk_sz);
 	assert(drive);
 	
 	unsigned char sector[512];
@@ -65,5 +65,4 @@ TEST(FAT32)
 	
 	delete drive;
 }
-
 
