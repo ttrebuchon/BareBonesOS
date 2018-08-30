@@ -43,4 +43,5 @@ int foo(auto b)
 		return foo(b);
 	}
 	return f.n;*/
+	__builtin_unreachable();
 }
