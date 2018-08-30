@@ -69,11 +69,11 @@ static void verify_read_eip()
 	Label2:
 	asm volatile ("NOP");
 	
-	if (ip+4 != k)
+	if ((uint8_t*)ip + 4 != k)
 	{
-		std::clog << "IP: " << ip+4 << "\nLabel2: " << k << std::endl;
+		std::clog << "IP: " << (uint8_t*)ip + 4 << "\nLabel2: " << k << std::endl;
 	}
-	assert(ip+4 == k);
+	assert((uint8_t*)ip+4 == k);
 	
 	
 	
@@ -84,11 +84,11 @@ static void verify_read_eip()
 	Label3:
 	asm volatile ("NOP");
 	
-	if (ip+4 != k)
+	if ((uint8_t*)ip + 4 != k)
 	{
-		std::clog << "IP: " << ip+4 << "\nLabel2: " << k << std::endl;
+		std::clog << "IP: " << (uint8_t*)ip + 4 << "\nLabel3: " << k << std::endl;
 	}
-	assert(ip+4 == k);
+	assert((uint8_t*)ip+4 == k);
 }
 
 volatile addr_t foo_i;
