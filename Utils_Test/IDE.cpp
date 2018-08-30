@@ -21,11 +21,17 @@ TEST(IDE)
 	std::cout << "Size: " << sizeof(channels) << std::endl;
 	std::cout << "Size: " << sizeof(Drivers::IDE::Device) << std::endl;
 	assert(true);
+	
 	static_assert(sizeof(Drivers::IDE::PRDT<10>) == 80);
 	
-	Drivers::IDE::PRDT<10>::Create();
+	QA::out << "Creating PRDT<10>..." << std::endl;
+	auto prdt = Drivers::IDE::PRDT<10>::Create();
+	assert(prdt);
 	
+	QA::out << "Constructing DMADrive..." << std::endl;
 	Drivers::IDE::DMADrive dr(Drivers::IDE::Channel::Primary, Drivers::IDE::Role::Master);
 	
-	assert(dr.read(0, 1024, nullptr) == -1);
+	QA::out << "Reading..." << std::endl;
+	auto res = dr.read(0, 1024, nullptr);
+	assert(res == -1);
 }
