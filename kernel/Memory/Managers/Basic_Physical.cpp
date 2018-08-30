@@ -41,9 +41,13 @@ namespace Kernel { namespace Memory
 		else
 		{
 			TRACE("Couldn't find free physical memory!");
+			TRACE_VAL(frames.size());
+			TRACE_VAL((void*)(uintptr_t)frames.size());
 			TRACE("Size: ");
 			TRACE(frames.size());
 		}
+		
+		
 		
 		assert(false);
 	}
