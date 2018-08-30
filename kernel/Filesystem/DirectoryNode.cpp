@@ -53,6 +53,16 @@ namespace Kernel { namespace FS
 		ASSERT(false);
 	}
 	
+	DirEnt* DirectoryNode_v::readDir(uint32_t)
+	{
+		assert(NOT_IMPLEMENTED);
+	}
+	
+	Node* DirectoryNode_v::findDir(const char*)
+	{
+		assert(NOT_IMPLEMENTED);
+	}
+	
 	Node* DirectoryNode_v::at(const Utils::string& str) const
 	{
 		for (size_t i = 0, s = size(); i < s; ++i)
@@ -117,6 +127,22 @@ namespace Kernel { namespace FS
     	return nullptr;
     }
     
+    CharDeviceNode* DirectoryNode_v::add_char_device(const Utils::string& name, DeviceTarget* dev)
+    {
+    	assert(this->at(name) == nullptr);
+    	if (this->at(name))
+    	{
+    		return nullptr;
+    	}
+    	auto fs = get_filesystem();
+    	if (fs)
+    	{
+    		auto& factory = fs->factory();
+    		return factory.create_char_device(this, name, dev);
+    	}
+    	return nullptr;
+    }
+    
     LinkNode* DirectoryNode_v::add_link(const Utils::string& name, const Node* target)
     {
     	assert(this->at(name) == nullptr);
@@ -132,6 +158,8 @@ namespace Kernel { namespace FS
     			return fs->factory().create_link(this, name, target);
     		}
     	}
+    	
+    	assert(NOT_IMPLEMENTED);
     }
     
     LinkNode* DirectoryNode_v::add_link(const Utils::string& name, const Path_t& target)

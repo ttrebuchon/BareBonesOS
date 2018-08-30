@@ -48,13 +48,18 @@ namespace Kernel::FS
 		{
 			return nullptr;
 		}
-		TRACE_VAL(major);
-		TRACE_VAL(minor);
+		/*TRACE_VAL(major);
+		TRACE_VAL(minor);*/
 		
 		return new PlaceholderDevice((type == DeviceTargetType::Block), major, minor);
 		
 		
 		return nullptr;
 		assert(NOT_IMPLEMENTED);
+	}
+	
+	DeviceTarget* DeviceTarget::find_target(Filesystem* fs, DeviceTargetType type, const dev_t dev) noexcept
+	{
+		return find_target(fs, type, dev.major, dev.minor);
 	}
 }

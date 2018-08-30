@@ -17,8 +17,8 @@ namespace Kernel { namespace FS {
         DirectoryNode_v(const NodeType = NodeType::Directory);
         
         virtual Node* findChild(const Utils::string& relativePath);
-        virtual DirEnt* readDir(uint32_t) = 0;
-		virtual Node* findDir(const char* name) = 0;
+        virtual DirEnt* readDir(uint32_t);
+		virtual Node* findDir(const char* name);
         
         virtual size_t size() const noexcept = 0;
         virtual Node* at(size_t index) const = 0;
@@ -27,6 +27,7 @@ namespace Kernel { namespace FS {
         virtual FileNode_v* add_file(const Utils::string& name);
         virtual DirectoryNode_v* add_directory(const Utils::string& name);
         virtual BlockDeviceNode* add_block_device(const Utils::string&, DeviceTarget* = nullptr);
+        virtual CharDeviceNode* add_char_device(const Utils::string&, DeviceTarget* = nullptr);
         virtual LinkNode* add_link(const Utils::string& name, const Node* target);
         virtual LinkNode* add_link(const Utils::string& name, const Path_t&);
         virtual LinkNode* add_link(const Utils::string& name, const Utils::string& target);

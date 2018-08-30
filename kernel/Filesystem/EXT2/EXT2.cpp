@@ -667,17 +667,17 @@ namespace Kernel::FS
 		}
 		else if (next_n->type == EXT2_INODE_TYPE_BLOCK_DEV || next_n->type == EXT2_INODE_TYPE_CHAR_DEV)
 		{
-			uint32_t dev_id[2];
-			decode_device_signature(*(const uint32_t*)next_n->data, &dev_id[0], &dev_id[1]);
+			dev_t dev_id;
+			decode_device_signature(*(const uint32_t*)next_n->data, &dev_id);
 			
 			if (next_n->type == EXT2_INODE_TYPE_BLOCK_DEV)
 			{
-				auto target = DeviceTarget::find_target(this, DeviceTargetType::Block, dev_id[0], dev_id[1]);
+				auto target = DeviceTarget::find_target(this, DeviceTargetType::Block, dev_id);
 				n = new EXT2BlockDeviceNode(parent, this, next_n, nname, ent->inode, target);
 			}
 			else
 			{
-				auto target = DeviceTarget::find_target(this, DeviceTargetType::Char, dev_id[0], dev_id[1]);
+				auto target = DeviceTarget::find_target(this, DeviceTargetType::Char, dev_id);
 				n = new EXT2CharDeviceNode(parent, this, next_n, nname, ent->inode, target);
 			}
 		}
@@ -698,7 +698,7 @@ namespace Kernel::FS
 			assert(NOT_IMPLEMENTED);
 		}
 		
-		//assert(n);
+		assert(n);
 		if (n)
 		{
 			n->set_parent(parent);
@@ -930,6 +930,18 @@ namespace Kernel::FS
 		}
 	}
 	
+	bool EXT2::decode_device_signature(const uint32_t value, dev_t* dev) noexcept
+	{
+		if (dev)
+		{
+			return decode_device_signature(value, &dev->major, &dev->minor);
+		}
+		else
+		{
+			return decode_device_signature(value, nullptr, nullptr);
+		}
+	}
+	
 	uint32_t EXT2::encode_device_signature(const uint32_t major, const uint32_t minor) noexcept
 	{
 		if (is_big_endian())
@@ -943,6 +955,11 @@ namespace Kernel::FS
 			value |= (minor & 0xFF);
 			return value;
 		}
+	}
+	
+	uint32_t EXT2::encode_device_signature(const dev_t dev) noexcept
+	{
+		return encode_device_signature(dev.major, dev.minor);
 	}
 	
 	

@@ -31,6 +31,7 @@ namespace Kernel::FS
 		
 		
 		static DeviceTarget* find_target(Filesystem*, const DeviceTargetType, const uint32_t major, const uint32_t minor) noexcept;
+		static DeviceTarget* find_target(Filesystem*, const DeviceTargetType, const dev_t sig) noexcept;
 	};
 	
 }

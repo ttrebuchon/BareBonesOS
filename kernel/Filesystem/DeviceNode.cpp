@@ -1,4 +1,5 @@
 #include "DeviceNode.hh"
+#include <Std/errno.h>
 
 namespace Kernel::FS
 {
@@ -26,11 +27,19 @@ namespace Kernel::FS
 	
 	DeviceTarget* DeviceNode::device() noexcept
 	{
+		if (!_device)
+		{
+			this->open();
+		}
 		return _device;
 	}
 	
 	const DeviceTarget* DeviceNode::device() const noexcept
 	{
+		if (!_device)
+		{
+			tset_error(EBADF, "Device has not been opened yet.");
+		}
 		return _device;
 	}
 	
