@@ -13,14 +13,14 @@ TEST(filesystem)
 	assert(r);
 	assert(r->isKind(NodeType::Directory));
 	
-	auto c0 = ((DirectoryNode*)fs->root())->at(0);
+	auto c0 = r->as_directory()->at(0);
 	assert(c0);
 	
 	assert(c0->isKind(NodeType::File));
 	
 	QA::out << c0->name.c_str() << std::endl;
 	
-	auto f0 = (FileNode*)c0;
+	auto f0 = c0->as_file();
 	assert(!f0->inUse());
 	
 	{
