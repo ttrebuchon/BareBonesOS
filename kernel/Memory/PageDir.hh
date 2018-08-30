@@ -224,6 +224,7 @@ namespace Kernel { namespace Memory {
 			void flush() const noexcept;
 
 			bool allocate(bool, bool) noexcept;
+			bool deallocate() noexcept;
 			
 			Table* table() noexcept;
 			const Table* table() const noexcept

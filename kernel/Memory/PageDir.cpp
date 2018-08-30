@@ -791,6 +791,24 @@ namespace Kernel { namespace Memory {
 		return true;
 	}
 	
+	bool PageDirectory::Page::deallocate() noexcept
+	
+	{
+		assert(page);
+		assert(present());
+		if (!present())
+		{
+			return false;
+		}
+		auto frame = (uintptr_t)this->frame();
+		page->present = 0;
+		page->frame = 0;
+		flush();
+		PhysicalMemory::release(frame, PAGE_SIZE);
+		
+		return true;
+	}
+	
 	void* PageDirectory::Page::virtual_address() const noexcept
 	{
 		auto tbl = this->table();
