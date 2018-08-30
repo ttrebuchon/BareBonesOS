@@ -30,7 +30,7 @@ namespace Kernel { namespace Memory
 			const size_t Alignment;
 			
 			virtual void* allocate(size_t, const void* hint = nullptr) = 0;
-			virtual void* deallocate(void*, size_t) = 0;
+			virtual void deallocate(void*, size_t) = 0;
 		};
 		
 		
@@ -78,9 +78,10 @@ namespace Kernel { namespace Memory
 				return alloc.allocate(count, hint);
 			}
 			
-			virtual void* deallocate(void* ptr, size_t count)
+			virtual void deallocate(void* ptr, size_t count)
 			{
 				alloc.deallocate((typename allocator_type::pointer)ptr, count);
+				//assert(NOT_IMPLEMENTED);
 			}
 		};
 		
