@@ -15,7 +15,7 @@ void* kmalloc(unsigned long size, int a, addr_t* p)
 {
 	if (a == 1)
 	{
-		a = sizeof(void*);
+		a = alignof(void*);
 	}
 	if (!kheap)
 	{

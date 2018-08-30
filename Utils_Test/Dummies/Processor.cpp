@@ -2,5 +2,8 @@
 
 namespace Kernel
 {
-	extern "C" Processor_t* current_processor = nullptr;
+	extern "C"
+	{
+		Processor_t* current_processor = nullptr;
+	}
 }
