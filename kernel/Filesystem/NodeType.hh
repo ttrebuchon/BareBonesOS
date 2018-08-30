@@ -16,6 +16,8 @@ namespace Kernel { namespace FS {
 		Block = 32 | Device,
 		Char = 64 | Device,
 		Pipe = 128,
+		Other= 256,
+		FSSpecific = 256,
 	};
 	
 	ENUM_OPS(NodeType, short);
