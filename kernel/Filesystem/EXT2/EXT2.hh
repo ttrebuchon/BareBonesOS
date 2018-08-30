@@ -11,6 +11,7 @@
 #include <Utils/BitSet.hh>
 #include <Utils/shared_mutex>
 #include "EXT2Factory.hh"
+#include <kernel/Filesystem/Devices/Signature.h>
 
 
 namespace Kernel::FS
@@ -521,6 +522,8 @@ namespace Kernel::FS
 		static bool Format(Drivers::Disk* part);
 		static bool decode_device_signature(const uint32_t, uint32_t* major, uint32_t* minor) noexcept;
 		static uint32_t encode_device_signature(const uint32_t major, const uint32_t minor) noexcept;
+		static bool decode_device_signature(const uint32_t, dev_t*) noexcept;
+		static uint32_t encode_device_signature(const dev_t) noexcept;
 		
 		
 		friend class EXT2Node;
