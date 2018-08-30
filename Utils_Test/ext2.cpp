@@ -7,22 +7,115 @@
 #include <drivers/CHS.h>
 #include <kernel/Filesystem/MBR_System_IDs.h>
 #include <drivers/Disk/MBRPartition.hh>
+#include <kernel/Filesystem/EXT2/EXT2SymLinkNode.hh>
 
 static void verify_dlx();
+static void enumerate_system(auto root, Utils::string path = Utils::string(""), bool print_folders = false);
+
+template <class Fn>
+static void enumerate_system_callback(auto root, Fn, bool folders);
 
 
+void abcdef();
+
+static void enumerate_file_disk(const char* filename);
 
 TEST(ext2)
 {
 	using namespace Kernel::FS;
 	
+	/*auto ext4 = new EXT2(*QA::QACheckReadOnlyDrive("Images/EXT2.img"));
+	assert(ext4->root());
+	assert(ext4->root()->as_directory());
+	assert(ext4->root()->as_directory()->size() > 0);
+	enumerate_system(ext4->root()->as_directory(), "", true);
+	
+	
+	return;*/
+	
+	enumerate_file_disk("Images/EXT3.img");
+	QA::out << QA::hr << QA::br;
+	enumerate_file_disk("Images/EXT2.img");
+	QA::out << QA::hr << QA::br;
+	enumerate_file_disk("Images/minibootable.img");
+	QA::out << QA::hr << QA::br;
+	
 	verify_dlx();
+	//return;
 	
 	
 	const uint32_t disk_sz = 16779264;// 20480;
-	auto drive = QA::QADrive("EXT2Disk.img", disk_sz);
+	auto drive = QA::QADrive("Images/EXT2Disk.img", disk_sz);
 	assert(drive);
 	
+	ASSERTEQ(drive->write(0, 0, drive->capacity()), drive->capacity());
+	
+	/*assert(EXT2::Format(drive));
+	{
+		auto fs1 = new EXT2(*drive);
+		auto r = fs1->root()->as_directory();
+			assert(r);
+			QA::out << "Got root." << std::endl;
+			
+			auto test = r->add_directory("Test");
+			assert(test);
+			assert(test->name == "Test");
+			assert(r != test);
+			QA::out << "Created /Test/" << std::endl;
+			ASSERTEQ(test->size(), 0);
+			ASSERTEQ(r->size(), 1);
+			
+			
+			auto test2 = test->add_directory("Test2");
+			assert(test2);
+			assert(test2->name == "Test2");
+			assert(test2 != test);
+			QA::out << "Created /Test/Test2/" << std::endl;
+			ASSERTEQ(test2->size(), 0);
+			ASSERTEQ(test->size(), 1);
+			ASSERTEQ(r->size(), 1);
+			
+			
+			auto test3 = test->add_directory("Test3");
+			assert(test3);
+			assert(test3->name == "Test3");
+			assert(test3 != test);
+			assert(test3 != test2);
+			QA::out << "Created /Test/Test2/Test3/" << std::endl;
+			
+			enumerate_system(r, "", true);
+			//assert(r->size() == 1);
+			
+			
+			//QA::out << "Root Children: " << r->size() << std::endl;
+			
+			
+			auto testf = test3->add_file("Test.txt");
+			assert(testf);
+			enumerate_system(r, "", true);
+			ASSERTEQ(r->size(), 1);
+			ASSERTEQ(test->size(), 2);
+			ASSERTEQ(test3->size(), 1);
+			QA::out << "Created Test.txt!" << std::endl;
+			
+			enumerate_system(r, "", true);
+			
+			
+			
+			auto hndl = testf->handle();
+			assert(hndl);
+			QA::out << "Got handle!" << std::endl;
+			auto f = hndl->file();
+			assert(f);
+			QA::out << "Got file!" << std::endl;
+			
+			assert(f->out.rdbuf());
+			QA::out << "Verified buffer is present." << std::endl;
+			//f->out << "Hello, world!";// << Utils::endl;
+			QA::out << "Wrote to buffer!" << std::endl;
+	}
+	delete drive;
+	return;*/
 	
 	{
 		MBR_PTable_t mbr;
@@ -103,7 +196,8 @@ TEST(ext2)
 		QA::out << "Correct p1 Size: " << (disk_sz/2)-512 << std::endl;
 		
 		
-		bool res = EXT2::Format(p1);
+		bool res;
+		res = EXT2::Format(p1);
 		assert(res);
 		res = EXT2::Format(p2);
 		assert(res);
@@ -112,13 +206,282 @@ TEST(ext2)
 		{
 			auto r = fs1->root()->as_directory();
 			assert(r);
+			QA::out << "Got root." << std::endl;
 			
-			QA::out << r->size() << std::endl;
+			//QA::out << r->size() << std::endl;
+			
+			auto test = r->add_directory("Test");
+			assert(test);
+			assert(test->name == "Test");
+			assert(r != test);
+			QA::out << "Created /Test/" << std::endl;
+			ASSERTEQ(test->size(), 0);
+			ASSERTEQ(r->size(), 1);
+			
+			
+			auto test2 = test->add_directory("Test2");
+			assert(test2);
+			assert(test2->name == "Test2");
+			assert(test2 != test);
+			QA::out << "Created /Test/Test2/" << std::endl;
+			ASSERTEQ(test2->size(), 0);
+			ASSERTEQ(test->size(), 1);
+			ASSERTEQ(r->size(), 1);
+			
+			
+			auto test3 = test->add_directory("Test3");
+			assert(test3);
+			assert(test3->name == "Test3");
+			assert(test3 != test);
+			assert(test3 != test2);
+			QA::out << "Created /Test/Test2/Test3/" << std::endl;
+			
+			enumerate_system(r, "", true);
+			//assert(r->size() == 1);
+			
+			
+			//QA::out << "Root Children: " << r->size() << std::endl;
+			
+			/*for (auto i = 0; i < r->size(); ++i)
+			{
+				QA::out << r->at(i)->name.c_str() << std::endl;
+			}*/
+			
+			
+			auto testf = test3->add_file("Test.txt");
+			assert(testf);
+			QA::out << "Created Test.txt!" << std::endl;
+			
+			ASSERTEQ(r->size(), 1);
+			ASSERTEQ(test->size(), 2);
+			ASSERTEQ(test3->size(), 1);
+			
+			enumerate_system(r, "", true);
+			
+			auto hndl = testf->handle();
+			assert(hndl);
+			QA::out << "Got handle!" << std::endl;
+			auto f = hndl->file();
+			assert(f);
+			QA::out << "Got file!" << std::endl;
+			
+			assert(f->out.rdbuf());
+			QA::out << "Verified buffer is present." << std::endl;
+			//f->out << "Hello, world!";// << Utils::endl;
+			QA::out << "Wrote to buffer!" << std::endl;
 			
 			
 		}
 		
+		QA::out << "Deleting filesystem..." << std::endl;
 		delete fs1;
+		QA::out << "Deleted filesystem." << std::endl;
+		
+		QA::out << "Creating filesystem..." << std::endl;
+		fs1 = new EXT2(*p1);
+		{
+			auto r = fs1->root()->as_directory();
+			assert(r);
+			QA::out << "Got root." << std::endl;
+			QA::out << r->size() << std::endl;
+			
+			enumerate_system(r, "/", true);
+			
+			
+			QA::out << "Root Children: " << r->size() << std::endl;
+			
+			for (auto i = 0; i < r->size(); ++i)
+			{
+				QA::out << r->at(i)->name.c_str() << std::endl;
+			}
+			
+			
+			
+			auto _test = r->at("Test");
+			assert(_test);
+			auto test = _test->as_directory();
+			assert(test);
+			
+			assert(test->size() == 2);
+			enumerate_system(r, "", true);
+			
+			assert(r != test);
+			QA::out << QA::br << "/" << r->name.c_str() << "\n/" << test->name.c_str() << std::endl;
+			ASSERTEQ(test->size(), 2);
+			auto _test2 = test->at(0);
+			assert(_test2);
+			auto test2 = _test2->as_directory();
+			assert(test2);
+			QA::out << "/" << test2->name.c_str() << std::endl;
+			assert(test2->size() == 0);
+			QA::out << QA::br;
+			enumerate_system(r, "", true);
+		}
+		
+		delete fs1;
+		fs1 = nullptr;
+		
+		QA::out << QA::br << QA::hr << std::endl;
+		
+		p1->write(0, 0, p1->capacity());
+		res = EXT2::Format(p1);
+		assert(res);
+		
+		QA::out << "Create filesystem on partition 2..." << std::endl;
+		auto fs2 = new EXT2(*p1);
+		{
+			
+				auto r = fs2->root()->as_directory();
+				assert(r);
+				QA::out << "Got root." << std::endl;
+				QA::out << "/" << r->name.c_str() << std::endl;
+			
+			
+			QA::out << "Opening linux filesystem..." << QA::br;
+			
+			auto drive = QA::QACheckReadOnlyDrive("Images/minibootable.img");
+			
+			auto linux = new EXT2(*drive);
+			QA::out << QA::br << "Linux filesystem opened." << std::endl;
+			
+			auto fn = [&](auto ldir, auto ln)
+			{
+				QA::out << std::endl;
+				DirectoryNode_v* dir = nullptr;
+				assert(ldir);
+				assert(linux);
+				assert(fs2);
+				if (ldir == linux->root())
+				{
+					QA::out << "Linux root dir." << std::endl;
+					auto root = linux->root();
+					assert(root);
+					QA::out << "/" << root->name.c_str() << std::endl;
+					assert(root->isKind(NodeType::Directory));
+					
+					
+					root = fs2->root();
+					assert(root);
+					assert(root->name.c_str() != nullptr);
+					QA::out << "/" << root->name.c_str() << std::endl;
+					assert(root->isKind(NodeType::Directory));
+					dir = root->as_directory();
+					assert(dir);
+				}
+				else
+				{
+					auto p = ldir->get_path();
+					//QA::out << "'" << p.str().c_str() << "'" << std::endl;
+					auto tmp = fs2->getNode(p.str());
+					assert(tmp);
+					dir = tmp->as_directory();
+					assert(dir);
+				}
+				QA::out << std::endl;
+				
+				QA::out << ln->get_path().str().c_str() << std::endl;
+				
+				
+				assert(dir);
+				auto n = dir->at(ln->name);
+				if (!n)
+				{
+					if (ln->isKind(NodeType::Directory, true))
+					{
+						n = dir->add_directory(ln->name);
+						assert(n);
+					}
+					else if (ln->isKind(NodeType::File, true))
+					{
+						auto lfn = ln->as_file();
+						assert(lfn);
+						n = dir->add_file(ln->name);
+						assert(n);
+						/*if (lfn->size() < 274432)
+						{*/
+						QA::out << "\tCopying file (" << lfn->size() << ")..." << std::endl;
+						auto buf = new uint8_t[lfn->size()];
+						ASSERTEQ(lfn->read(0, lfn->size(), buf), lfn->size());
+						ASSERTEQ(n->write(0, lfn->size(), buf), lfn->size());
+						delete[] buf;
+						/*}
+						else
+						{
+							QA::out << QA::br << QA::hr << std::endl << "File too big!" << std::endl << QA::hr << QA::br;
+						}*/
+					}
+					else if (ln->isKind(NodeType::Link))
+					{
+						auto lsym = ln->as_link();
+						assert(lsym);
+						
+						auto lsym_ext = (EXT2SymLinkNode*)lsym;
+						
+						QA::out << "Target: '" << lsym_ext->target_path().c_str() << "'" << std::endl;
+						
+						
+						
+						auto ltarg = lsym_ext->target();
+						if (!ltarg)
+						{
+							return;
+						}
+						
+						assert(ltarg);
+						
+						auto targ = fs2->getNode(ltarg->get_path());
+						if (!targ)
+						{
+							QA::out << "Path: " << ltarg->get_path().c_str() << std::endl;
+							assert(NOT_IMPLEMENTED);
+						}
+						
+						n = dir->add_link(ln->name, targ);
+					}
+					else if (ln->isKind(NodeType::Block, true))
+					{
+						auto bn = ln->as_block_device();
+						assert(bn);
+						n = dir->add_block_device(ln->name, bn->device());
+						assert(n);
+					}
+					else if (ln->isKind(NodeType::Char, true))
+					{
+						auto cn = ln->as_char_device();
+						assert(cn);
+						n = dir->add_char_device(ln->name, cn->device());
+						assert(n);
+					}
+					else
+					{
+						QA::out << (int)ln->type() << std::endl;
+						assert(NOT_IMPLEMENTED);
+					}
+				}
+				
+				assert(n);
+			};
+			
+			QA::out << "Enumerating linux with callback..." << std::endl;
+			enumerate_system_callback(linux->root()->as_directory(), fn, true);
+			
+			QA::out << QA::br << QA::hr << std::endl << "Enumerating linux." << std::endl;
+			enumerate_system(linux->root()->as_directory(), "", true);
+			
+			
+			QA::out << QA::hr << std::endl << "Enumerating FS2." << std::endl;
+			assert(fs2->root());
+			enumerate_system(fs2->root()->as_directory(), "", true);
+			
+			QA::out << QA::hr << QA::br << "Enumeration Complete." << std::endl;
+			
+			delete linux;
+			delete drive;
+		}
+		
+		delete fs2;
+		fs2 = nullptr;
+		
 		delete p1;
 		delete p2;
 	}
@@ -127,8 +490,9 @@ TEST(ext2)
 }
 
 
-static void enumerate_system(auto root, Utils::string path = Utils::string(""))
+static void enumerate_system(auto root, Utils::string path, bool pfolders)
 {
+	assert(root);
 	using namespace Kernel::FS;
 	for (size_t i = 0; i < root->size(); ++i)
 	{
@@ -136,10 +500,13 @@ static void enumerate_system(auto root, Utils::string path = Utils::string(""))
 		assert(n);
 		if (n->isKind(NodeType::Directory))
 		{
-			//QA::out << path.c_str() << "/" << n->name.c_str() << "/" << std::endl;
+			if (pfolders)
+			{
+				QA::out << " + " << path.c_str() << "/" << n->name.c_str() << "/" << std::endl;
+			}
 			auto dir = n->as_directory();
 			assert(dir);
-			enumerate_system(dir, path + "/" + n->name);
+			enumerate_system(dir, path + "/" + n->name, pfolders);
 		}
 	}
 	
@@ -152,7 +519,7 @@ static void enumerate_system(auto root, Utils::string path = Utils::string(""))
 			continue;
 		}
 		
-		QA::out << path.c_str() << "/" << n->name.c_str() << std::endl;
+		QA::out << " + " << path.c_str() << "/" << n->name.c_str() << std::endl;
 		
 		if (n->isKind(NodeType::File))
 		{
@@ -179,7 +546,7 @@ static void enumerate_system(auto root, Utils::string path = Utils::string(""))
 static void verify_dlx()
 {
 	using namespace Kernel::FS;
-	auto drive = QA::QADrive("minibootable.img");
+	auto drive = QA::QACheckReadOnlyDrive("Images/minibootable.img");
 	
 	assert(drive);
 	assert(drive->capacity() > 0);
@@ -213,7 +580,6 @@ static void verify_dlx()
 		QA::out << (const char*)sbex->last_mount_path << std::endl;
 		QA::out << (const char*)sbex->journal_ID << std::endl;
 	}
-	else
 	
 	
 	QA::out << (void*)(addr_t)sb->OS_ID << std::endl;
@@ -225,6 +591,7 @@ static void verify_dlx()
 	{
 		EXT2 fs(*drive);
 		auto r = fs.root();
+		assert(r);
 		
 		QA::out << "Groups: " << fs.group_count() << std::endl;
 		QA::out << "Group Size: " << fs.group_size() << std::endl;
@@ -291,8 +658,6 @@ static void verify_dlx()
 		assert(sbin_n);
 		QA::out << "Got sbin." << std::endl;
 		QA::out << (unsigned int)sbin_n->type() << std::endl;
-		/*auto bin = droot->at("bin");
-		assert(bin);*/
 		auto sbin_d = sbin_n->as_directory();
 		assert(sbin_d);
 		assert(sbin_n->isKind(NodeType::Directory));
@@ -326,7 +691,7 @@ static void verify_dlx()
 		
 		QA::out << QA::br << QA::div << std::endl << buf << QA::div << std::endl;
 		
-		auto zimg = fs.getNode("boot/zImage386")->as_file();
+		/*auto zimg = fs.getNode("boot/zImage386")->as_file();
 		assert(zimg);
 		
 		auto mnt_n = fs.getNode("/dev/hda");
@@ -342,12 +707,148 @@ static void verify_dlx()
 		
 		mnt->mount(nullptr);
 		assert(!mnt->has_device());
-		delete zimg_dev;
+		delete zimg_dev;*/
 		
 		
+		
+		auto gr = fs.get_group(0);
+		
+		for (size_t i = 0; i < gr->inodes_size(); ++i)
+		{
+			QA::out << "Node " << (i+1) << ": " << gr->node_is_free(i+1) << std::endl;
+		}
+		
+		for (size_t i = 0; i < gr->blocks_size(); ++i)
+		{
+			if (gr->block_is_free(i))
+			{
+				QA::out << "Block " << i << ": " << gr->block_is_free(i) << std::endl;
+			}
+		}
+		
+		QA::out << QA::br << "First Free Node: " << gr->free_node() << std::endl << "First Free Block: " << gr->free_block() << std::endl;
+		
+		QA::out << "Directories: " << gr->directories() << std::endl;
+		
+		/*{
+			size_t blk_index;
+			auto block = gr->reserve_block(blk_index);
+			assert(block);
+			
+			QA::out << "Index: " << blk_index << std::endl;
+			assert(gr->free_block() > blk_index);
+			
+			assert(gr->release_block(blk_index));
+			
+			assert(gr->free_block() == blk_index);
+		}*/
+		
+		QA::out << QA::br << QA::br << QA::hr << std::endl;
+		enumerate_system_callback(fs.rootd(), [](auto parent, auto node) -> void
+		{
+			if (node->isKind(NodeType::Block))
+			{
+				auto n = node->as_block_device();
+				if (!n)
+				{
+					QA::out << (int)node->type() << std::endl;
+				}
+				assert(n);
+				auto dev = n->device();
+				assert(dev);
+				bool blk = true;
+				uint32_t mj = 0, mn = 0;
+				assert(dev->identifiers(&blk, &mj, &mn));
+				QA::out << n->get_path().c_str() << "\t: (" << (blk ? "Block" : "Char") << ", " << mj << ", " << mn << ")" << std::endl;
+			}
+			else if (node->isKind(NodeType::Char))
+			{
+				auto n = node->as_char_device();
+				assert(n);
+				auto dev = n->device();
+				assert(dev);
+				bool blk = true;
+				uint32_t mj = 0, mn = 0;
+				assert(dev->identifiers(&blk, &mj, &mn));
+				QA::out << n->get_path().c_str() << "\t: (" << (blk ? "Block" : "Char") << ", " << mj << ", " << mn << ")" << std::endl;
+			}
+		}, false);
+		QA::out << QA::hr << QA::br << QA::br << std::endl;
 	}
 	
 	
+	delete drive;
+}
+
+
+
+
+template <class Fn>
+static void enumerate_system_callback(auto root, Fn fn, bool folders)
+{
+	using namespace Kernel::FS;
+	for (size_t i = 0; i < root->size(); ++i)
+	{
+		auto n = root->at(i);
+		assert(n);
+		if (n->isKind(NodeType::Directory, true))
+		{
+			if (folders)
+			{
+				fn(root, n);
+			}
+			auto dir = n->as_directory();
+			assert(dir);
+			enumerate_system_callback(dir, fn, folders);
+		}
+	}
 	
+	for (size_t i = 0; i < root->size(); ++i)
+	{
+		auto n = root->at(i);
+		assert(n);
+		if (n->isKind(NodeType::Directory, true) || n->isKind(NodeType::Link))
+		{
+			continue;
+		}
+		
+		
+		
+		fn(root, n);
+	}
+	
+	for (size_t i = 0; i < root->size(); ++i)
+	{
+		auto n = root->at(i);
+		assert(n);
+		if (!n->isKind(NodeType::Link))
+		{
+			continue;
+		}
+		
+		
+		
+		fn(root, n);
+	}
+}
+
+
+static void enumerate_file_disk(const char* filename)
+{
+	QA::out << filename << std::endl << QA::hr << std::endl;
+	auto drive = QA::QACheckReadOnlyDrive(filename);
+	auto fs = new Kernel::FS::EXT2(*drive);
+	QA::out << "Inode Size: " << fs->inode_size() << std::endl;
+	QA::out << "Has Journal? " << fs->has_journal() << std::endl;
+	QA::out << "Has Extended Superblock? " << fs->extended_superblock() << std::endl;
+	QA::out << "Volume Name: " << fs->volume_name() << std::endl;
+	QA::out << "Last Mount Path: " << fs->last_mount_path() << std::endl;
+	QA::out << QA::br;
+	
+	enumerate_system(fs->root()->as_directory(), "", true);
+	
+	
+	
+	delete fs;
 	delete drive;
 }
