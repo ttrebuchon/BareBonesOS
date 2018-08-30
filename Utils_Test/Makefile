@@ -39,6 +39,9 @@ SRC += ../kernel/Memory/Paging.cpp
 SRC += $(call GET_SRC_R,kernel/Memory/Allocators,cpp)
 #SRC += ../Std/pthread/pthread_cond_wait.cpp
 SRC += $(call GET_SRC_R,Std/pthread,cpp)
+SRC += $(call GET_SRC_R,drivers/Disk,cpp)
+SRC += ../Std/errno_cpp.cpp
+SRC += ../Std/errno.c
 
 ASM_SRC = 
 ASM_OBJS = $(ASM_SRC:.asm=.o)
@@ -90,10 +93,12 @@ BOTH_FLAGS += $(DEF_FLAGS)
 BOTH_FLAGS += -O0
 BOTH_FLAGS += -I../Libraries
 BOTH_FLAGS += -I../../CppUtilities
+BOTH_FLAGS += -Werror
 BOTH_FLAGS += #-Wfatal-errors
 BOTH_FLAGS += #-fmax-errors=5
 BOTH_FLAGS += -fmax-errors=1
 BOTH_FLAGS += -Werror=nonnull
+BOTH_FLAGS += -Werror=pragmas
 BOTH_FLAGS += -Werror=int-to-pointer-cast
 BOTH_FLAGS += -fPIC
 BOTH_FLAGS += -pie
@@ -106,7 +111,9 @@ SQLITE_FLAGS += -DSQLITE_OMIT_LOAD_EXTENSION
 SQLITE_FLAGS += #-DSQLITE_OS_OTHER=1
 SQLITE_FLAGS += -DSQLITE_TEMP_STORE=3
 
-BASE_CXXFLAGS += -std=c++17 -I.. #-ffreestanding -DDEBUG 
+BASE_CXXFLAGS += -std=c++17 -I..
+BASE_CXXFLAGS += -fconcepts
+#-ffreestanding -DDEBUG 
 #BASE_CXXFLAGS += -DINCLUDED_NEW_HH
 BASE_CXXFLAGS += $(BOTH_FLAGS)
 
