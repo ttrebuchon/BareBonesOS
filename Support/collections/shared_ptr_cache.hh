@@ -36,6 +36,7 @@ namespace Support::Collections
 		void cache(const value_type);
 		bool decache(const value_type);
 		void reset();
+		void clear() { reset(); }
 	};
 	
 }
