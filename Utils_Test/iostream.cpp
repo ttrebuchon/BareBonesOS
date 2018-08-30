@@ -5,7 +5,7 @@
 #include <sstream>
 
 //#include <Utils/String.hh>
-#include <Utils/locale>
+#include <Utils/Locale>
 #include <drivers/VGA_Stream.hh>
 
 namespace Drivers {
