@@ -24,6 +24,8 @@ namespace Kernel { namespace FS {
 		protected:
 		Node* _root;
 		
+		Filesystem() noexcept;
+		
 		public:
 		static Filesystem* Current;
 		

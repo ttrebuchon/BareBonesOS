@@ -7,6 +7,14 @@ namespace Kernel { namespace FS {
 	
 	Filesystem* Filesystem::Current = nullptr;
 	
+	
+	Filesystem::Filesystem() noexcept : _root(nullptr)
+	{
+		
+	}
+	
+	
+	
 	Node* Filesystem::getNode(const Utils::string& path, const Utils::string& relative)
 	{
 		if (path.length() <= 0)
