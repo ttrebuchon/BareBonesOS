@@ -3,6 +3,7 @@
 #include "EXT2DirectoryNode.hh"
 #include "EXT2FileNode.hh"
 #include "../BlockDeviceNode.hh"
+#include "../CharDeviceNode.hh"
 #include "EXT2SymLinkNode.hh"
 #include "../Devices/DeviceTarget.hh"
 
@@ -324,6 +325,80 @@ namespace Kernel::FS
 			ext2_parent->children.push_back(block_node);
 		}
 		return block_node;
+	}
+	
+	CharDeviceNode* EXT2Factory::create_char_device(DirectoryNode_v* parent, const Utils::string& name, DeviceTarget* dev) noexcept
+	{
+		auto ext2_parent = cast_parent(parent);
+		assert(ext2_parent);
+		if (!ext2_parent)
+		{
+			return nullptr;
+		}
+		
+		
+		
+		
+		Utils::shared_ptr<inode_type> inode = nullptr;
+		size_t n_index;
+		for (size_t i = 0; i < ext2->group_count(); ++i)
+		{
+			auto gr = ext2->get_group(i);
+			assert(gr);
+			if (!gr)
+			{
+				continue;
+			}
+			
+			inode = gr->allocate_file(n_index);
+			assert(likely(inode != nullptr));
+			if (unlikely(!inode))
+			{
+				continue;
+			}
+			inode->type = EXT2_INODE_TYPE_CHAR_DEV;
+			if (inode)
+			{
+				assert(n_index > 2);
+				assert(n_index != ext2_parent->inode_index);
+				break;
+			}
+		}
+		
+		if (!inode)
+		{
+			return nullptr;
+		}
+		
+		assert(n_index != ext2_parent->inode_index);
+		
+		if (dev)
+		{
+			uint32_t major, minor;
+			if (dev->identifiers(nullptr, &major, &minor))
+			{
+				inode->direct[0] = EXT2::encode_device_signature(major, minor);
+			}
+		}
+		
+		auto ent = add_child_inode(ext2_parent, n_index, name);
+		if (!ent)
+		{
+			ext2->release_inode(n_index);
+			inode = nullptr;
+			return nullptr;
+		}
+		
+		auto node = ext2->parse_node(ext2_parent, ent.get());
+		assert(node);
+		assert(node->isKind(NodeType::Char));
+		auto char_node = node->as_char_device();
+		assert(char_node);
+		if (ext2_parent->has_read)
+		{
+			ext2_parent->children.push_back(char_node);
+		}
+		return char_node;
 	}
 	
 	

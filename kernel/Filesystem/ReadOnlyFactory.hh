@@ -36,6 +36,11 @@ namespace Kernel::FS
 		{
 			return nullptr;
 		}
+		
+		virtual CharDeviceNode* create_char_device(DirectoryNode_v* parent, const Utils::string&, DeviceTarget*) noexcept override
+		{
+			return nullptr;
+		}
 	};
 	
 }
