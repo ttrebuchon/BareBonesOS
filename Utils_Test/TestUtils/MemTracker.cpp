@@ -49,7 +49,7 @@ using Memory = typename QA::Memory;
 		{
 			if (__print_allocs)
 			{
-				out << "Allocating " << s << std::endl;
+				out << "Allocating " << p << " {" << s << "}" << std::endl;
 			}
 			
 			if (s == 0)
@@ -97,11 +97,16 @@ using Memory = typename QA::Memory;
 	{
 		if (__initted && !meta)
 		{
-			if (!allocationMap.count(ptr))
+			if (__print_allocs)
+			{
+				out << "Freeing " << ptr << std::endl;
+			}
+			
+			/*if (!allocationMap.count(ptr))
 			{
 				out << "Releasing unallocated memory: " << ptr << std::endl;
 				//while (true) ;
-			}
+			}*/
 			allocationMap.erase(ptr);
 		}
 		
@@ -112,11 +117,16 @@ using Memory = typename QA::Memory;
 	{
 		if (__initted && !meta)
 		{
-			if (!allocationMap.count(ptr))
+			if (__print_allocs)
 			{
-				out << "Releasing unallocated memory: " << ptr << std::endl;
-				//while (true) ;
+				out << "Freeing " << ptr << std::endl;
 			}
+			
+			/*if (!allocationMap.count(ptr))
+			{
+				//out << "Releasing unallocated memory: " << ptr << std::endl;
+				//while (true) ;
+			}*/
 			allocationMap.erase(ptr);
 		}
 		
@@ -127,6 +137,11 @@ using Memory = typename QA::Memory;
 	{
 		if (__initted && !meta)
 		{
+			if (__print_allocs)
+			{
+				out << "Freeing (Array) " << ptr << std::endl;
+			}
+			
 			if (!allocationMap.count(ptr))
 			{
 				out << "Releasing unallocated memory: " << ptr << std::endl;
@@ -142,6 +157,11 @@ using Memory = typename QA::Memory;
 	{
 		if (__initted && !meta)
 		{
+			if (__print_allocs)
+			{
+				out << "Freeing (Array) " << ptr << std::endl;
+			}
+			
 			if (!allocationMap.count(ptr))
 			{
 				out << "Releasing unallocated memory: " << ptr << std::endl;
@@ -189,9 +209,43 @@ void* operator new[](size_t size)
 	return QA::Memory::AllocateArray(size);
 }
 
+void* operator new(size_t size, const std::nothrow_t&)
+{
+    return QA::Memory::Allocate(size);
+}
+
+void* operator new[](size_t size, const std::nothrow_t&)
+{
+	return QA::Memory::AllocateArray(size);
+}
+
 void* operator new(size_t size, std::align_val_t al)
 {
 	auto ptr = QA::Memory::Allocate(size);
+	assert(ptr);
+	assert((addr_t)ptr % (size_t)al == 0);
+	return ptr;
+}
+
+void* operator new[](size_t size, std::align_val_t al)
+{
+	auto ptr = QA::Memory::AllocateArray(size);
+	assert(ptr);
+	assert((addr_t)ptr % (size_t)al == 0);
+	return ptr;
+}
+
+void* operator new(size_t size, std::align_val_t al, const std::nothrow_t&)
+{
+	auto ptr = QA::Memory::Allocate(size);
+	assert(ptr);
+	assert((addr_t)ptr % (size_t)al == 0);
+	return ptr;
+}
+
+void* operator new[](size_t size, std::align_val_t al, const std::nothrow_t&)
+{
+	auto ptr = QA::Memory::AllocateArray(size);
 	assert(ptr);
 	assert((addr_t)ptr % (size_t)al == 0);
 	return ptr;
@@ -215,6 +269,11 @@ void operator delete[](void* ptr)
 void operator delete[](void* ptr, size_t s)
 {
     QA::Memory::ReleaseArray(ptr, s);
+}
+
+void operator delete(void* ptr, std::align_val_t al)
+{
+	QA::Memory::Release(ptr);
 }
 #endif
 
@@ -331,6 +390,17 @@ void operator delete[](void* ptr, size_t s)
 	}
     kfree(ptr);
 }
+
+void operator delete(void* ptr, std::align_val_t al)
+{
+	assert(ptr);
+	if (!mem_pool_initialized)
+	{
+		free(ptr);
+		return;
+	}
+    kfree(ptr);
+}
 #endif
 
 #if !defined(__USE_MEM_POOL__) && !defined(TRACK_ALLOC)
@@ -341,5 +411,11 @@ void* operator new(size_t size, std::align_val_t al)
 	assert(ptr);
 	assert((addr_t)ptr % (size_t)al == 0);
 	return ptr;
+}
+
+void operator delete(void* ptr, std::align_val_t al)
+{
+	assert(ptr);
+    free(ptr);
 }
 #endif

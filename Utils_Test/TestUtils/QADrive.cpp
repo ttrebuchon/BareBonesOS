@@ -52,15 +52,49 @@ namespace TestUtils
 		{
 			QA::out << "[" << start << ", " << (start+len) << "]" << std::endl;
 		}
-		assert(start + len < size);
+		assert(start + len <= size);
 		memcpy(buf, base_address + start, len);
 		return len;
 	}
 	
 	int QADrive::write(size_t start, size_t len, const unsigned char* buf)
 	{
-		assert(start + len < size);
+		assert(start + len <= size);
 		memcpy(base_address + start, buf, len);
+		return len;
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	QACheckReadOnlyDrive::QACheckReadOnlyDrive(const char* filename, const size_t size) : QADrive(filename, size)
+	{
+		
+	}
+	
+	
+	int QACheckReadOnlyDrive::write(size_t start, size_t len, const unsigned char* buf)
+	{
+		assert(start + len < size);
+		for (size_t i = 0; i < len; ++i)
+		{
+			if (base_address[start + i] != buf[i])
+			{
+				QA::out << "Value mismatch at " << (const void*)(uintptr_t)(start + i) << " :  " << std::endl;
+			}
+			assert(base_address[start + i] == buf[i]);
+		}
 		return len;
 	}
 }

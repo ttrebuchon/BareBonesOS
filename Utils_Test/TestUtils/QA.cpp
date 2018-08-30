@@ -73,8 +73,15 @@ void QA::MultiBoot_Init()
 	auto pgs = free_ram / PAGE_SIZE;
 	
 	auto dzero = ::open("/dev/zero", O_RDWR | O_APPEND);
+	
 	addr_t addrStart = 0xD0000000;
-	addr_t addrEnd = 0xFFFFFFFF;
+	addr_t addrEnd;
+	#ifdef __USE_MEM_POOL__
+	addrEnd = addrStart + 0x100000000 - 1;
+	#else
+	addrEnd = addrStart + 0x100000 - 1;
+	#endif
+	assert(addrEnd > addrStart);
 	size_t len = addrEnd - addrStart;
 	auto phys = ::mmap((void*)(addr_t)addrStart, len, PROT_READ | PROT_WRITE, MAP_PRIVATE, dzero, 0);
 	assert(phys != MAP_FAILED);
@@ -90,6 +97,7 @@ void QA::MultiBoot_Init()
 	
 	
 	auto mb = (multiboot*)malloc(sizeof(multiboot));
+	memset(mb, 0, sizeof(multiboot));
 	mb->flags |= (1 << 6);
 	
 	auto map = (multiboot_mmap_t*)::mmap((void*)0xC0000000, 2*sizeof(multiboot_mmap_t), PROT_READ | PROT_WRITE, MAP_PRIVATE, dzero, 0);
@@ -378,10 +386,35 @@ void QA::Processors_Init()
 	Kernel::current_processor = proc;
 }
 
+static size_t get_file_size(const char* filename)
+{
+	FILE* f = ::fopen(filename, "r");
+	assert(f);
+	size_t exist_size;
+	fseek(f, 0, SEEK_END);
+	exist_size = ftell(f);
+	fclose(f);
+	return exist_size;
+}
 
 Drivers::Disk* QA::QADrive(const char* filename, const size_t size)
 {
 	return new TestUtils::QADrive(filename, size);
+}
+
+Drivers::Disk* QA::QADrive(const char* filename)
+{
+	return QA::QADrive(filename, get_file_size(filename));
+}
+
+Drivers::Disk* QA::QACheckReadOnlyDrive(const char* filename, const size_t size)
+{
+	return new TestUtils::QACheckReadOnlyDrive(filename, size);
+}
+
+Drivers::Disk* QA::QACheckReadOnlyDrive(const char* filename)
+{
+	return QA::QACheckReadOnlyDrive(filename, get_file_size(filename));
 }
 
 

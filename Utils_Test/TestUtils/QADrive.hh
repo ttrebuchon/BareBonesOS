@@ -29,4 +29,18 @@ namespace TestUtils
 		}
 		
 	};
+	
+	class QACheckReadOnlyDrive : public QADrive
+	{
+		public:
+		
+		protected:
+		
+		
+		public:
+		QACheckReadOnlyDrive(const char* filename, const size_t size);
+		
+		virtual int write(size_t start, size_t len, const unsigned char* buf) override;
+		
+	};
 }

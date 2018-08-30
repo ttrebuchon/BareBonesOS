@@ -35,6 +35,7 @@ class QA
 	static std::ostream out;
 	
 	class Memory;
+	class Paging;
 	
 	static void Init();
 	
@@ -63,6 +64,9 @@ class QA
 	{ return PIC_timer; }
 	
 	static Drivers::Disk* QADrive(const char* file, const size_t size);
+	static Drivers::Disk* QADrive(const char* file);
+	static Drivers::Disk* QACheckReadOnlyDrive(const char* file, const size_t size);
+	static Drivers::Disk* QACheckReadOnlyDrive(const char* file);
 	
 	static void EnableMemPool() noexcept;
 	static void DisableMemPool() noexcept;
@@ -132,6 +136,12 @@ class QA
 	
 	__attribute__((__always_inline__))
 	static std::ostream& div(std::ostream& os)
+	{
+		return write_divider(os);
+	}
+	
+	__attribute__((__always_inline__))
+	static std::ostream& hr(std::ostream& os)
 	{
 		return write_divider(os);
 	}
