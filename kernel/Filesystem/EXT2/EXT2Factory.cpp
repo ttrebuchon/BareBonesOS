@@ -253,7 +253,7 @@ namespace Kernel::FS
 		return link_node;
 	}
 	
-	BlockDeviceNode* EXT2Factory::create_block_device(DirectoryNode_v* parent, const Utils::string& name, DeviceTarget* dev) noexcept
+	BlockDeviceNode* EXT2Factory::create_block_device(DirectoryNode_v* parent, const Utils::string& name, const devtarget_t& dev) noexcept
 	{
 		auto ext2_parent = cast_parent(parent);
 		assert(ext2_parent);
@@ -327,7 +327,7 @@ namespace Kernel::FS
 		return block_node;
 	}
 	
-	CharDeviceNode* EXT2Factory::create_char_device(DirectoryNode_v* parent, const Utils::string& name, DeviceTarget* dev) noexcept
+	CharDeviceNode* EXT2Factory::create_char_device(DirectoryNode_v* parent, const Utils::string& name, const devtarget_t& dev) noexcept
 	{
 		auto ext2_parent = cast_parent(parent);
 		assert(ext2_parent);

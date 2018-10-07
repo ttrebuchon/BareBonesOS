@@ -8,7 +8,7 @@
 namespace Utils
 {
 	
-	template <class T, class Alloc = Allocator<T>>
+	template <class T, class Alloc = allocator<T>>
 	class vector
 	{
 		protected:

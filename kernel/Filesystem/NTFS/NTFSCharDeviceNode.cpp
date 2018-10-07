@@ -46,8 +46,6 @@ namespace Kernel::FS
 			if (intx)
 			{
 				auto dev_id = (dev_t)intx->dev;
-				TRACE_VAL(dev_id.major);
-				TRACE_VAL(dev_id.minor);
 				auto target = DeviceTarget::find_target(volume(), DeviceTargetType::Char, dev_id);
 				_device = target;
 			}

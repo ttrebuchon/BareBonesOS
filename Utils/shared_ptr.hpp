@@ -6,6 +6,8 @@
 #include "detail/shared_ptr_control.hpp"
 #include "detail/forward.hh"
 #include <Utils/utility>
+#include "detail/bits/enable_shared_from_this.hh"
+#include "detail/bits/detect_shared_from_this.hh"
 
 namespace Utils
 {
@@ -24,34 +26,42 @@ namespace Utils
 	
 	template <class T>
 	template <class Y, class Deleter>
-	shared_ptr<T>::shared_ptr(Y* ptr, Deleter d) : ctrl(detail::shared_ptr_control::CreateControl(ptr, d)), other(nullptr)
+	shared_ptr<T>::shared_ptr(Y* ptr, Deleter d) : ctrl(detail::use_SFT<T, Y>::use(ptr)), other(nullptr)
 	{
-		
-	}
-	
-	template <class T>
-	template <class Y, class Deleter, class Alloc>
-	shared_ptr<T>::shared_ptr(Y* ptr, Deleter d, const Alloc& alloc) : ctrl(detail::shared_ptr_control::CreateControl(ptr, forward<Deleter>(d), forward<const Alloc&>(alloc))), other(nullptr)
-	{
-		
-	}
-	
-	template <class T>
-	template <class Y>
-	shared_ptr<T>::shared_ptr(const shared_ptr<Y>& other, element_type* value) noexcept : ctrl(other.ctrl), other(value)
-	{
-		if (ctrl)
+		if (!ctrl)
 		{
-			++ctrl->refcount;
-			++ctrl->usecount;
+			ctrl = detail::shared_ptr_control::CreateControl(ptr, d);
+			detail::use_SFT<T, Y>::set(ptr, ctrl);
 		}
 	}
 	
 	template <class T>
-	template <class Y, class>
-	shared_ptr<T>::shared_ptr(Y* ptr) : ctrl(detail::shared_ptr_control::CreateControl(ptr)), other(nullptr)
+	template <class Y, class Deleter, class Alloc>
+	shared_ptr<T>::shared_ptr(Y* ptr, Deleter d, const Alloc& alloc) : ctrl(detail::use_SFT<T, Y>::use(ptr)), other(nullptr)
+	{
+		if (!ctrl)
+		{
+			ctrl = detail::shared_ptr_control::CreateControl(ptr, forward<Deleter>(d), forward<const Alloc&>(alloc));
+			detail::use_SFT<T, Y>::set(ptr, ctrl);
+		}
+	}
+	
+	template <class T>
+	template <class Y>
+	shared_ptr<T>::shared_ptr(const shared_ptr<Y>& other, element_type* value) : shared_ptr(other.ctrl, value)
 	{
 		
+	}
+	
+	template <class T>
+	template <class Y, class>
+	shared_ptr<T>::shared_ptr(Y* ptr) : ctrl(detail::use_SFT<T, Y>::use(ptr)), other(nullptr)
+	{
+		if (!ctrl)
+		{
+			ctrl = detail::shared_ptr_control::CreateControl(ptr);
+			detail::use_SFT<T, Y>::set(ptr, ctrl);
+		}
 	}
 	
 	template <class T>
@@ -119,6 +129,31 @@ namespace Utils
 			++ctrl->refcount;
 			++ctrl->usecount;
 		}
+	}
+	
+	template <class T>
+	shared_ptr<T>::shared_ptr(detail::shared_ptr_control* ctrl, element_type* value) : ctrl(ctrl), other(value)
+	{
+		assert(ctrl || !value);
+		if (ctrl)
+		{
+			++ctrl->refcount;
+			++ctrl->usecount;
+		}
+	}
+	
+	template <class T>
+	template <class Y>
+	shared_ptr<T>::shared_ptr(const weak_ptr<Y>& weak) : ctrl(weak.ctrl), other(weak.ptr)
+	{
+		if (!ctrl || !other)
+		{
+			// TODO: Throw std::bad_weak_ptr
+			assert(NOT_IMPLEMENTED);
+		}
+		
+		++ctrl->refcount;
+		++ctrl->usecount;
 	}
 	
 	

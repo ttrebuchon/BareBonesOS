@@ -111,38 +111,61 @@ namespace Kernel::Memory
 			heaps_set.insert(sheap);
 		}
 		
+		
+		// Setup misc heap(s)
+		{
+			struct unit_t
+			{
+				void* data[4];
+				
+				/*bool operator==(const unit_t&) const
+				{
+					return true;
+				}
+				
+				bool operator!=(const unit_t&) const
+				{
+					return true;
+				}
+				
+				bool operator<(const unit_t&) const
+				{
+					return true;
+				}*/
+			};
+			
+			size_t sizes[2];
+			size_t aligns[2];
+			
+			
+			typedef Utils::detail::rb_tree::Node<unit_t, Utils::less<unit_t>> map_node_type;
+			
+			typedef Utils::detail::List_Node<unit_t> list_node_type;
+			
+			sizes[0] = sizeof(map_node_type);
+			aligns[0] = alignof(map_node_type);
+			sizes[1] = sizeof(list_node_type);
+			aligns[1] = alignof(list_node_type);
+			
+			
+			for (int i = 0; i < sizeof(sizes)/sizeof(size_t); ++i)
+			{
+				if (!heaps.count(sizes[i]))
+				{
+					// Re-enable after implemenying create_heap_for()
+					//create_heap_for(alloc_spec_t(sizes[i], aligns[i]), 500);
+				}
+			}
+			
+		}
+		
 		//assert(NOT_IMPLEMENTED);
 	}
 	
 	template <class Alloc>
 	const Heap* kernel_heap<Alloc>::heap_for(const alloc_spec_t& spec) const
 	{
-		if (unlikely(spec.size == 0))
-		{
-			return nullptr;
-		}
-		
-		if (spec.size <= smallest_size)
-		{
-			auto heap_li = heaps.at(smallest_size);
-			assert(heap_li);
-			auto heap = heap_li->entity;
-			assert(heap);
-			assert(spec.align <= alignof(void*));
-			
-			return heap;
-		}
-		else if (spec.size >= pageSize())
-		{
-			if (unlikely(spec.size % pageSize() == 0) && spec.size >= 10*pageSize())
-			{
-				return &paged;
-			}
-			else
-			{
-				return &top;
-			}
-		}
+		return const_cast<kernel_heap*>(this)->heap_for(spec);
 	}
 	
 	template <class Alloc>
@@ -178,6 +201,8 @@ namespace Kernel::Memory
 			return nullptr;
 		}
 		
+		simple_list<Heap*>* heap_li = nullptr;
+		
 		if (spec.size <= smallest_size)
 		{
 			auto heap_li = heaps.at(smallest_size);
@@ -199,8 +224,63 @@ namespace Kernel::Memory
 				return &top;
 			}
 		}
+		else if ((heap_li = heaps[spec.size]))
+		{
+			while (likely(heap_li != nullptr) && unlikely(!heap_li->entity))
+			{
+				heap_li = heap_li->next;
+			}
+			
+			if (likely(heap_li != nullptr))
+			{
+				return heap_li->entity;
+			}
+		}
+		else
+		{
+			__sync_fetch_and_add(&total_heap_reqs, 1);
+			Utils::lock_guard<shared_mutex_type> reqs_lock(heap_requests_m);
+			auto val = ++heap_requests[spec.size];
+			if (val >= 5 && val >= total_heap_reqs/100)
+			{
+				assert(false);
+				//return create_heap_for(spec, 100);
+			}
+		}
 		
-		assert(NOT_IMPLEMENTED);
+		
+		// No heaps found for spec:
+		auto rounded = spec.size;
+		
+		if (rounded % sizeof(void*))
+		{
+			rounded += (sizeof(void*) - (rounded % sizeof(void*)));
+		}
+		assert(rounded >= spec.size);
+		
+		if (rounded != spec.size)
+		{
+			return heap_for(alloc_spec_t(rounded, spec.align));
+		}
+		
+		for (auto& kv : heaps)
+		{
+			if (kv.first < rounded || !kv.second)
+			{
+				continue;
+			}
+			
+			auto li = kv.second;
+			assert(li->entity);
+			return li->entity;
+		}
+		
+		if (rounded >= pageSize()/2)
+		{
+			return heap_for(alloc_spec_t(pageSize(), spec.align));
+		}
+		
+		return create_heap_for(alloc_spec_t(rounded, spec.align), 500);
 	}
 	
 	template <class Alloc>
@@ -226,6 +306,20 @@ namespace Kernel::Memory
 		{
 			return &top;
 		}
+	}
+	
+	template <class Alloc>
+	Heap* kernel_heap<Alloc>::create_heap_for(const alloc_spec_t& spec, const size_t count)
+	{
+		assert(spec.size > 0);
+		assert(count > 0);
+		
+		// TODO
+		
+		
+		
+		
+		assert(NOT_IMPLEMENTED);
 	}
 	
 	

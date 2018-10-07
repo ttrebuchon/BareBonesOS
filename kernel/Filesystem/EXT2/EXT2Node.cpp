@@ -194,7 +194,8 @@ namespace Kernel::FS
 		
 		if (start + len > fs->inode_size(node.get()))
 		{
-			if (expand_to(start + len) != (start + len))
+			auto expanded = expand_to(start + len);
+			if (expanded != (start + len))
 			{
 				return 0;
 			}
@@ -202,12 +203,16 @@ namespace Kernel::FS
 		
 		auto block_sz = fs->block_size();
 		assert(block_sz);
-		
+		assert(start + len > 0);
 		auto first = start/block_sz;
-		auto last = (start + len)/block_sz;
+		auto last = (start + len - 1)/block_sz;
+		TRACE_VAL(first);
+		TRACE_VAL(last);
 		
-		auto blocks = get_file_blocks(fs, node.get(), first, last - first + 1);
+		auto blocks = get_file_blocks(fs, node.get(), first, last - first + 1, true);
 		assert(blocks.size() == (last - first + 1));
+		assert(blocks.size() > 0);
+		assert(*blocks.begin() != nullptr);
 		
 		
 		size_t block_indx = first;
@@ -216,21 +221,33 @@ namespace Kernel::FS
 		
 		if (block_off > 0)
 		{
-			memcpy((*block_it)->data + block_off, buf + block_off, (len > block_sz ? block_sz : len) - block_off);
-			block_off += (len > block_sz ? block_sz : len) - block_off;
+			assert(block_it != blocks.end());
+			assert(*block_it != nullptr);
+			assert((*block_it)->data);
+			assert((len > block_sz ? block_sz : len) >= block_off);
+			auto qty = len;
+			if (len > (block_sz - block_off))
+			{
+				qty = block_sz - block_off;
+			}
+			memcpy((*block_it)->data + block_off, buf + block_off, qty);
+			block_off += qty;
 			(*block_it)->modified = true;
 			
 			if (block_off % block_sz == 0)
 			{
 				block_off = 0;
 				block_indx += 1;
+				assert(block_it != blocks.end());
 				++block_it;
 			}
 		}
 		
-		while (block_indx+1 < last)
+		while (block_indx < last)
 		{
-			
+			TRACE_VAL(block_indx);
+			assert(block_it != blocks.end());
+			assert(*block_it != nullptr);
 			memcpy((*block_it)->data, buf + (block_indx-first)*block_sz, block_sz);
 			(*block_it)->modified = true;
 			++block_indx;
@@ -240,6 +257,8 @@ namespace Kernel::FS
 		
 		if ((len + start) % block_sz == 0)
 		{
+			assert(block_it != blocks.end());
+			assert(*block_it);
 			memcpy((*block_it)->data, buf + (block_indx-first)*block_sz, block_sz);
 			(*block_it)->modified = true;
 			++block_indx;
@@ -279,15 +298,19 @@ namespace Kernel::FS
 		}
 		
 		size_t j = 0;
-		for (size_t i = start; i < count && i < 12; ++i, ++j)
+		for (size_t i = start; j < count && i < 12; ++i)
 		{
 			if (node->direct[i])
 			{
-				blocks.push_back(ext2->get_block(node->direct[i]));
+				auto b = ext2->get_block(node->direct[i]);
+				assert(b);
+				blocks.push_back(b);
+				++j;
 			}
 			else if (!ignore_zeros)
 			{
 				blocks.push_back(nullptr);
+				++j;
 			}
 		}
 		
@@ -647,8 +670,9 @@ namespace Kernel::FS
 	
 	
 	
-	uint64_t EXT2Node::read(uint64_t start, uint64_t len, uint8_t* buf)
+	uint64_t EXT2Node::read(uint64_t start, uint64_t len, void* _buf)
 	{
+		uint8_t* buf = (uint8_t*)_buf;
 		assert(buf);
 		assert(start < node_size());
 		assert(node_size() - start >= len);
@@ -667,7 +691,9 @@ namespace Kernel::FS
 			
 		}
 		
-		auto ptr = fs->read_inode(node, nstart/fs->block_size(), nend/fs->block_size());
+		//auto ptr = fs->read_inode(node, nstart/fs->block_size(), nend/fs->block_size());
+		TRACE_VAL(node->size_low);
+		auto ptr = fs->read_inode(node, nstart/fs->block_size(), (nend/fs->block_size() - nstart/fs->block_size()));
 		assert(ptr);
 		if (!ptr)
 		{
@@ -682,9 +708,9 @@ namespace Kernel::FS
 		assert(NOT_IMPLEMENTED);
 	}
 	
-	uint64_t EXT2Node::write(uint64_t start, uint64_t len, const uint8_t* buf)
+	uint64_t EXT2Node::write(uint64_t start, uint64_t len, const void* buf)
 	{
-		return write_blocks(start, len, buf);
+		return write_blocks(start, len, (const uint8_t*)buf);
 	}
 	
 	void EXT2Node::open()

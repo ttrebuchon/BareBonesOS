@@ -86,8 +86,8 @@ namespace Kernel::FS
 		
 		
 		
-		uint64_t n_read(uint64_t start, uint64_t len, uint8_t*);
-		uint64_t n_write(uint64_t, uint64_t, const uint8_t*);
+		uint64_t n_read(uint64_t start, uint64_t len, void*);
+		uint64_t n_write(uint64_t, uint64_t, const void*);
 		size_t n_size() const noexcept;
 		virtual Node* get_inode() noexcept
 		{ return nullptr; }

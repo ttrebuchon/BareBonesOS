@@ -90,8 +90,13 @@ namespace Utils {
         
 		basic_ostream<T, Traits>& put(char_type);
 		basic_ostream<T, Traits>& write(const char_type*, streamsize);
+		pos_type tellp();
+		basic_ostream& seekp(pos_type);
+		basic_ostream& seekp(off_type, typename ios_base::seekdir);
 		basic_ostream<T, Traits>& flush();
 	};
+	
+	#define __UTILS_OSTREAM_DEFINED__
 	
 	typedef basic_ostream<char> ostream;
 	typedef basic_ostream<wchar_t> wostream;
@@ -118,6 +123,23 @@ namespace Utils {
 	{
 		return flush(os.put(os.widen('\n')));
 	}
+	
+	
+	#ifdef __UTILS_STRING_DEFINED__
+    #ifndef __UTILS_OSTREAM_STRING_DEFINED__
+    #define __UTILS_OSTREAM_STRING_DEFINED__
+    
+    template <class T, class Traits, class Alloc>
+    basic_ostream<T, Traits>& operator<<(basic_ostream<T, Traits>& os, const basic_string<T, Traits, Alloc>& str)
+    {
+    	return (os << str.c_str());
+    }
+    
+    #endif
+    #endif
+	
+	
+	
 }
 
 #ifndef TESTING

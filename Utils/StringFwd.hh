@@ -6,11 +6,11 @@ namespace Utils {
 	template <class>
 	struct Char_Traits;
 	template <class>
-	class Allocator;
+	class allocator;
 	
-	template <class Char_t, class = Char_Traits<Char_t>, class = Allocator<Char_t>>
+	template <class Char_t, class = Char_Traits<Char_t>, class = allocator<Char_t>>
 	class basic_string;
-	typedef basic_string<char, Char_Traits<char>, Allocator<char>> string;
+	typedef basic_string<char, Char_Traits<char>, allocator<char>> string;
 }
 
 #endif

@@ -6,7 +6,7 @@
 
 namespace Kernel { namespace FS {
 	
-	BlockDeviceNode::BlockDeviceNode(DeviceTarget* device, const Utils::string& name, const NodeType t) : DeviceNode(device, name, NodeType::Block | t)
+	BlockDeviceNode::BlockDeviceNode(const devtarget_t& device, const Utils::string& name, const NodeType t) : DeviceNode(device, name, NodeType::Block | t)
 	{
 		this->_type |= (t | NodeType::Block);
 		this->_name = name;
@@ -17,17 +17,17 @@ namespace Kernel { namespace FS {
 		
 	}
 	
-	BlockDeviceNode::BlockDeviceNode(DeviceTarget* device, const NodeType t) : BlockDeviceNode(device, "", t)
+	BlockDeviceNode::BlockDeviceNode(const devtarget_t& device, const NodeType t) : BlockDeviceNode(device, "", t)
 	{
 		
 	}
 	
-	BlockDeviceNode::BlockDeviceNode(const NodeType t) : BlockDeviceNode(nullptr, t)
+	BlockDeviceNode::BlockDeviceNode(const NodeType t) : BlockDeviceNode((devtarget_t)nullptr, t)
 	{
 		
 	}
 	
-	BlockDeviceNode::BlockDeviceNode(DeviceTarget* device, const Utils::string& name) : BlockDeviceNode(device, name, NodeType::Block)
+	BlockDeviceNode::BlockDeviceNode(const devtarget_t& device, const Utils::string& name) : BlockDeviceNode(device, name, NodeType::Block)
 	{
 		
 	}
@@ -37,12 +37,12 @@ namespace Kernel { namespace FS {
 		
 	}
 	
-	BlockDeviceNode::BlockDeviceNode(DeviceTarget* device) : BlockDeviceNode(device, "")
+	BlockDeviceNode::BlockDeviceNode(const devtarget_t& device) : BlockDeviceNode(device, "")
 	{
 		
 	}
 	
-	BlockDeviceNode::BlockDeviceNode() : BlockDeviceNode(nullptr)
+	BlockDeviceNode::BlockDeviceNode() : BlockDeviceNode((devtarget_t)nullptr)
 	{
 		
 	}
@@ -63,7 +63,7 @@ namespace Kernel { namespace FS {
 	
 	
 	
-	uint64_t BlockDeviceNode::read(uint64_t start, uint64_t len, uint8_t* buf)
+	uint64_t BlockDeviceNode::read(uint64_t start, uint64_t len, void* buf)
 	{
 		auto dev = device();
 		assert(dev);
@@ -72,10 +72,10 @@ namespace Kernel { namespace FS {
 			// TODO: Handle error
 			return 0;
 		}
-		return dev->read(start, len, buf);
+		return dev->read(start, len, (uint8_t*)buf);
 	}
 	
-	uint64_t BlockDeviceNode::write(uint64_t start, uint64_t len, const uint8_t* buf)
+	uint64_t BlockDeviceNode::write(uint64_t start, uint64_t len, const void* buf)
 	{
 		auto dev = device();
 		assert(dev);
@@ -84,7 +84,7 @@ namespace Kernel { namespace FS {
 			// TODO: Handle error
 			return 0;
 		}
-		return dev->write(start, len, buf);
+		return dev->write(start, len, (const uint8_t*)buf);
 	}
 	
 	void BlockDeviceNode::open()

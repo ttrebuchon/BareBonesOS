@@ -15,8 +15,8 @@ namespace Kernel::FS
 		public:
 		FAT32FileNode(FAT32&, FAT32DirEnt_t*, DirectoryNode_v* parent);
 		
-		virtual uint64_t read(uint64_t, uint64_t, uint8_t*) override;
-		virtual uint64_t write(uint64_t, uint64_t, const uint8_t*) override;
+		virtual uint64_t read(uint64_t, uint64_t, void*) override;
+		virtual uint64_t write(uint64_t, uint64_t, const void*) override;
 	};
 	
 }

@@ -13,15 +13,15 @@ namespace Kernel { namespace FS {
 	{
 		protected:
 		
-		BlockDeviceNode(DeviceTarget* device, const NodeType);
+		BlockDeviceNode(const devtarget_t& device, const NodeType);
 		BlockDeviceNode(const NodeType);
-		BlockDeviceNode(DeviceTarget* device, const Utils::string& name, const NodeType);
+		BlockDeviceNode(const devtarget_t& device, const Utils::string& name, const NodeType);
 		BlockDeviceNode(const Utils::string& name, const NodeType);
 		
 		public:
-		BlockDeviceNode(DeviceTarget* disk);
+		BlockDeviceNode(const devtarget_t& disk);
 		BlockDeviceNode();
-		BlockDeviceNode(DeviceTarget* device, const Utils::string& name);
+		BlockDeviceNode(const devtarget_t& device, const Utils::string& name);
 		BlockDeviceNode(const Utils::string& name);
 		
 		
@@ -32,8 +32,8 @@ namespace Kernel { namespace FS {
 		virtual ~BlockDeviceNode() = default;
 		
 		
-		virtual uint64_t read(uint64_t, uint64_t, uint8_t*) override;
-		virtual uint64_t write(uint64_t, uint64_t, const uint8_t*) override;
+		virtual uint64_t read(uint64_t, uint64_t, void*) override;
+		virtual uint64_t write(uint64_t, uint64_t, const void*) override;
 		virtual void open() override;
 		virtual void close() override;
 		virtual Filesystem* get_filesystem() const noexcept override

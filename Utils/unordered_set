@@ -13,7 +13,7 @@
 
 namespace Utils
 {
-	template <class T, class Hash = hash<T>, class KeyEqual = equal_to<const T>, class Alloc = Allocator<T>>
+	template <class T, class Hash = hash<T>, class KeyEqual = equal_to<const T>, class Alloc = allocator<T>>
 	class unordered_set
 	{
 		public:

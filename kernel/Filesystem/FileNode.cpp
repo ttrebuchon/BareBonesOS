@@ -36,6 +36,21 @@ namespace Kernel { namespace FS
 		ASSERT(false);
 	}
 	
+	void FileNode_v::releaseHandle(FileHandle* hndl)
+	{
+		assert(hndl->file() == file);
+		delete file;
+		file = nullptr;
+	}
+	
+	void FileNode_v::releaseHandle(ReadFileHandle* rhndl)
+	{
+		/*assert(hndl->file() == file);
+		delete file;
+		file = nullptr;*/
+		assert(NOT_IMPLEMENTED);
+	}
+	
 	
 	
 	

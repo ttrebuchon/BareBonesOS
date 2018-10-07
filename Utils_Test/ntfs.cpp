@@ -94,6 +94,9 @@ static void verify_read()
 			assert(targ->identifiers(nullptr, &sig));
 			TRACE_VAL(sig.major);
 			TRACE_VAL(sig.minor);
+			
+			/*uint8_t dat[4];
+			assert(cdev->read(0, 4, dat) == 4);*/
 		}
 		
 		
@@ -111,6 +114,7 @@ static void verify_read()
 			assert(txt->read(0, s, (uint8_t*)data) == s);
 			data[s] = '\0';
 			QA::out << "Data: \"" << data << "\"" << std::endl;
+			assert(strcmp(data, "Hello, world!\n") == 0);
 		}
 		
 		{
@@ -123,6 +127,22 @@ static void verify_read()
 			};
 			
 			enumerate_system_callback(rd, callback, true);
+		}
+		
+		{
+			auto randn = dev_d->at("random");
+			assert(randn);
+			uint16_t buf[4] = { 0, 0, 0, 0 };
+			
+			
+			auto res = randn->read(0, sizeof(buf), buf);
+			assert(res == sizeof(buf));
+			
+			assert(buf[0] != 0);
+			assert(buf[1] != 0);
+			assert(buf[2] != 0);
+			assert(buf[3] != 0);
+			
 		}
 		
 		

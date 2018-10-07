@@ -259,6 +259,52 @@ namespace Utils {
 	}
 	
 	template <class T, class Traits>
+	auto basic_ostream<T, Traits>::tellp() -> pos_type
+	{
+		sentry __cerb(*this);
+
+		if (__cerb)
+		{
+			if (!this->fail())
+			{
+				return this->rdbuf()->pubseekoff(0, ios_base::cur, ios_base::out);
+			}
+		}
+		
+		return (pos_type)-1;
+	}
+	
+	template <class T, class Traits>
+	auto basic_ostream<T, Traits>::seekp(pos_type pos) -> basic_ostream&
+	{
+		sentry __cerb(*this);
+
+		if (__cerb)
+		{
+			if (this->rdbuf()->pubseekpos(pos, ios_base::out) == (pos_type)-1)
+			{
+				this->setstate(ios_base::failbit);
+			}
+		}
+		return *this;
+	}
+	
+	template <class T, class Traits>
+	auto basic_ostream<T, Traits>::seekp(off_type off, typename ios_base::seekdir dir) -> basic_ostream&
+	{
+		sentry __cerb(*this);
+
+		if (__cerb)
+		{
+			if (this->rdbuf()->pubseekoff(off, dir, ios_base::out) == (pos_type)-1)
+			{
+				this->setstate(ios_base::failbit);
+			}
+		}
+		return *this;
+	}
+	
+	template <class T, class Traits>
 	basic_ostream<T, Traits>& basic_ostream<T, Traits>::flush()
 	{
 		sentry __cerb(*this);

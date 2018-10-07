@@ -128,7 +128,7 @@ namespace Support { namespace SQLite
 		static bool BindNull(Utils::shared_ptr<sqlite3_stmt>, int index);
 		static bool Unbind(stmt_ptr);
 		static bool ExecuteNonQuery(Utils::shared_ptr<sqlite3_stmt>);
-		static bool ExecuteNonQuery(Utils::shared_ptr<sqlite3> db, const Utils::string& query);
+		static bool ExecuteNonQuery(Utils::shared_ptr<sqlite3> db, const Utils::string& query, int* res = nullptr);
 		static int ExecuteScalarInt(Utils::shared_ptr<sqlite3_stmt>);
 		static bool StepQuery(Utils::shared_ptr<sqlite3_stmt>);
 		static bool Reset(stmt_ptr);
@@ -837,6 +837,8 @@ namespace Support { namespace SQLite
 		void register_type()
 		{
 			typedef detail::BuiltModel<T> BM;
+			TRACE("Called.");
+			TRACE_VAL(BM::name);
 			if (!type_index_by_table[BM::name])
 			{
 				type_index_by_table[BM::name] = new Utils::type_index(typeid(T));
@@ -888,6 +890,8 @@ namespace Support { namespace SQLite
 				
 				// TODO: FK
 			};
+			
+			TRACE("Evaluating for columns...");
 			BM::members.eval_for_each(evaluator, this, &columns);
 			
 			Utils::string key_base = "";
@@ -1177,6 +1181,7 @@ namespace Support { namespace SQLite
 		
 		constexpr _Context(typename detail::context_create<Impl>::result_type c, bool owned = false) : impl(Utils::forward<typename detail::context_create<Impl>::result_type>(c)), _sets(create_dbset<Types>(detail::context_create<Impl>::to_reference(impl), &_sets)...), owned(!Utils::is_pointer<Impl>::value || owned)
 		{
+			TRACE("Members initialized.");
 			auto& imp = get_imp();
 			
 			Utils::make_tuple(
@@ -1187,8 +1192,9 @@ namespace Support { namespace SQLite
 			imp.template
 			register_loading_handler<Types>(detail::inline_delegate<_Context, &_Context::entity_loading<Types>>(*this))...
 			);
-			
+			TRACE("Registering types...");
 			Utils::make_tuple(register_type<Types>()...);
+			TRACE("Types registered.");
 		}
 		
 		template <class... Args>
@@ -1235,7 +1241,9 @@ namespace Support { namespace SQLite
 		template <class T>
 		bool register_type()
 		{
+			TRACE("Registering...");
 			get_imp().template register_type<T>();
+			TRACE("Registered type in implementation.");
 			
 			typedef detail::BuiltModel<T> Model;
 			

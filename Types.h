@@ -45,4 +45,6 @@ typedef __off_t off_t;
 typedef __uid_t uid_t;
 typedef long pthread_t;
 
+typedef uid_t gsid_t;
+
 #endif

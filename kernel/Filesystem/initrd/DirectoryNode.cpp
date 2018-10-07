@@ -1,9 +1,10 @@
 #include "DirectoryNode.hh"
+#include <kernel/Filesystem/initrd.hh>
 
 namespace Kernel { namespace FS { namespace Init_RD {
 
 
-    DirectoryNode::DirectoryNode(const char* name) : FS::DirectoryNode(NodeType::Directory)
+    DirectoryNode::DirectoryNode(InitRD_FS* fs, const char* name) : FS::DirectoryNode(NodeType::Directory), fs(fs)
     {
         this->_name = name;
     }
@@ -11,14 +12,14 @@ namespace Kernel { namespace FS { namespace Init_RD {
 
 
 
-    uint64_t DirectoryNode::read(uint64_t, uint64_t, uint8_t*)
+    uint64_t DirectoryNode::read(uint64_t, uint64_t, void*)
     {
         // TODO
 		ASSERT(false);
     }
 
 
-    uint64_t DirectoryNode::write(uint64_t, uint64_t, const uint8_t*)
+    uint64_t DirectoryNode::write(uint64_t, uint64_t, const void*)
     {
         // TODO
 		ASSERT(false);
@@ -58,9 +59,60 @@ namespace Kernel { namespace FS { namespace Init_RD {
     	if (child)
     	{
     		children.push_back(child);
+    		if (child->get_filesystem() == this->get_filesystem())
+    		{
+    			auto rn = dynamic_cast<RefNode*>(child);
+    			assert(rn);
+    			rn->new_ref();
+    		}
     	}
         return child;
     }
+    
+    bool DirectoryNode::remove(Node* child)
+    {
+    	if (unlikely(!child))
+    	{
+    		return false;
+    	}
+    	
+    	auto it = children.begin();
+    	for (; it != children.end(); ++it)
+    	{
+    		if (*it == child)
+    		{
+    			break;
+    		}
+    	}
+    	
+    	if (unlikely(it == children.end()))
+    	{
+    		return false;
+    	}
+    	
+    	children.erase(it);
+    	
+    	if (child->get_filesystem() == this->get_filesystem())
+    	{
+    		auto rn = dynamic_cast<RefNode*>(child);
+    		assert(rn);
+    		if (rn->remove_ref())
+    		{
+    			delete child;
+    		}
+    	}
+    	else
+    	{
+    		assert(NOT_IMPLEMENTED);
+    	}
+    	
+    	return true;
+    }
+    
+    Filesystem* DirectoryNode::get_filesystem() const noexcept
+	{
+		return fs;
+	}
 
 
 

@@ -149,7 +149,7 @@ namespace Utils
 	
 	
 	
-	template <class Key, class T, class Selector, class Hash = hash<Key>, class Equals = equal_to<Key>, class Alloc = Allocator<T>, class Policy = detail::hash_table_policy, template <class...> class Resolution = detail::hash_table_conflict_resolution>
+	template <class Key, class T, class Selector, class Hash = hash<Key>, class Equals = equal_to<Key>, class Alloc = allocator<T>, class Policy = detail::hash_table_policy, template <class...> class Resolution = detail::hash_table_conflict_resolution>
 	class hash_table : protected Policy, protected detail::hash_table_node_allocator<Key, T, decltype(declval<Hash>()(declval<Key>())), Alloc>
 	{
 		public:

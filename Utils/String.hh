@@ -58,7 +58,14 @@ namespace Utils
             static constexpr size_type  _S_max_size = (((npos - sizeof(_Rep_base))/sizeof(Char_t)) - 1) / 4;
             static constexpr Char_t     _S_terminal = Char_t();
 
-            static size_type _S_empty_rep_storage[];
+            //static size_type _S_empty_rep_storage[];
+            typedef struct
+            {
+            	_Rep_base base;
+            	char term;
+            } empty_rep_t;
+            
+            static empty_rep_t _S_empty_rep_storage;
 
             static _Rep& _S_empty_rep()
             {
@@ -348,9 +355,11 @@ namespace Utils
         basic_string(const basic_string&, size_t pos, size_t len = npos, const Alloc& = Alloc());
 
         //CString Constructor
-        basic_string(const Char_t*, const Alloc& = Alloc());
+        basic_string(const Char_t*, const Alloc&);
+        basic_string(const Char_t*);
 
-        basic_string(const Char_t*, size_t n, const Alloc& = Alloc());
+        basic_string(const Char_t*, size_t n, const Alloc&);
+        basic_string(const Char_t*, size_t n);
 
         //Fill Constructor
         basic_string(size_t n, Char_t c, const Alloc& = Alloc());
@@ -382,7 +391,7 @@ namespace Utils
         
         basic_string& operator=(const Char_t* s)
         {
-        	return this->assign(s);
+        	return this->assign(basic_string(s, get_allocator()));
         }
         
         
@@ -498,6 +507,7 @@ namespace Utils
 		
 		size_type capacity() const
 		{
+			assert(_M_rep());
 			return _M_rep()->_M_capacity;
 		}
 		
@@ -519,8 +529,11 @@ namespace Utils
     };
     
     
+    //template <class C, class T, class A>
+    //typename basic_string<C, T, A>::size_type basic_string<C, T, A>::_Rep::_S_empty_rep_storage[] = { /*'\0'*/0, 0, 0 };
+    
     template <class C, class T, class A>
-    typename basic_string<C, T, A>::size_type basic_string<C, T, A>::_Rep::_S_empty_rep_storage[] = { '\0' };
+    typename basic_string<C, T, A>::_Rep::empty_rep_t basic_string<C, T, A>::_Rep::_S_empty_rep_storage = { { 0, 0, 0 }, '\0' };
     
     
     template <class Char_t, class T, class Alloc>
@@ -649,7 +662,7 @@ namespace Utils
     }
 
 
-    typedef basic_string<char, Char_Traits<char>, Allocator<char>> string;
+    typedef basic_string<char, Char_Traits<char>, allocator<char>> string;
     
     
     template <class>
@@ -670,6 +683,7 @@ namespace Utils
     		return detail::a_hash_func<result_type>::hash(arg.c_str(), arg.length()*sizeof (typename argument_type::value_type));
     	}
     };
+    #define __UTILS_STRING_DEFINED__
     
     string to_string(int);
     string to_string(long);
@@ -694,6 +708,19 @@ namespace Utils
     
     template <class T, class Traits, class Alloc>
     basic_istream<T, Traits>& operator>>(basic_istream<T, Traits>&, basic_string<T, Traits, Alloc>& str);
+    
+    #ifdef __UTILS_OSTREAM_DEFINED__
+    #ifndef __UTILS_OSTREAM_STRING_DEFINED__
+    #define __UTILS_OSTREAM_STRING_DEFINED__
+    
+    template <class T, class Traits, class Alloc>
+    basic_ostream<T, Traits>& operator<<(basic_ostream<T, Traits>& os, const basic_string<T, Traits, Alloc>& str)
+    {
+    	return (os << str.c_str());
+    }
+    
+    #endif
+    #endif
 
 }
 #endif

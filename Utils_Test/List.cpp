@@ -19,7 +19,7 @@ TEST(List)
 	cerr << "Test\n";
 	using namespace Utils;
 	
-	Allocator<Foo> x;
+	allocator<Foo> x;
 	auto p = x.allocate(4);
 	assert(p);
 	x.deallocate(p, 4);

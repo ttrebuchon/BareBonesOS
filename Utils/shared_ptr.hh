@@ -10,10 +10,14 @@ namespace Utils
 	namespace detail
 	{
 		class shared_ptr_control;
+		
 	}
 	
 	template <class T>
 	class weak_ptr;
+	
+	template <class T>
+	class enable_shared_from_this;
 	
 	
 	template <class T>
@@ -36,6 +40,8 @@ namespace Utils
 		shared_ptr(void*, size_t n, Deleter);
 		shared_ptr(detail::shared_ptr_control*);
 		
+		shared_ptr(detail::shared_ptr_control*, element_type*);
+		
 		public:
 		// Constructors / Destructors
 		constexpr shared_ptr() noexcept;
@@ -50,7 +56,7 @@ namespace Utils
 		shared_ptr(Y* ptr, Deleter d, const Alloc&);
 		
 		template <class Y>
-		shared_ptr(const shared_ptr<Y>&, element_type*) noexcept;
+		shared_ptr(const shared_ptr<Y>&, element_type*);
 		
 		template <class Y, typename = typename enable_if<is_convertible<T*, Y*>::value, void>::type>
 		shared_ptr(const shared_ptr<Y>&) noexcept;
@@ -124,6 +130,9 @@ namespace Utils
 		friend bool operator!=(const shared_ptr<G>&, nullptr_t) noexcept;
 		template <class G, class Y>
 		friend bool operator!=(const shared_ptr<G>&, Y* const&) noexcept;
+		
+		template <class>
+		friend class enable_shared_from_this;
 	};
 	
 	

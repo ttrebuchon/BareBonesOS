@@ -773,6 +773,7 @@ static void verify_dlx()
 				QA::out << n->get_path().c_str() << "\t: (" << (blk ? "Block" : "Char") << ", " << mj << ", " << mn << ")" << std::endl;
 			}
 		}, false);
+		
 		QA::out << QA::hr << QA::br << QA::br << std::endl;
 	}
 	

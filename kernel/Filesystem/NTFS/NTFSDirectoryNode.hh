@@ -28,12 +28,14 @@ namespace Kernel::FS
 		NTFSDirectoryNode(NTFS*, ptr<ntfs_mft_record_t>, ptr<ntfs_stdinfo_t>);
 		
 		
-		virtual uint64_t read(uint64_t start, uint64_t len, uint8_t*) override;
-		virtual uint64_t write(uint64_t, uint64_t, const uint8_t*) override;
+		virtual uint64_t read(uint64_t start, uint64_t len, void*) override;
+		virtual uint64_t write(uint64_t, uint64_t, const void*) override;
 		virtual void open() override;
 		virtual void close() override;
 		
 		virtual Node* add(Node*) override;
+		virtual bool remove(Node*) override
+		{ assert(NOT_IMPLEMENTED); }
 		virtual size_t size() const noexcept override;
         virtual Node* at(size_t index) const override;
         virtual DirectoryNode_v* get_parent() const noexcept override;

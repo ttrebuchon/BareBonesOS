@@ -73,3 +73,9 @@ constexpr inline E operator~(const E e) noexcept \
 
 
 #endif
+
+#ifndef HAS_FLAG
+
+#define HAS_FLAG(V, F) (!(((V) & (F)) != (F)))
+
+#endif

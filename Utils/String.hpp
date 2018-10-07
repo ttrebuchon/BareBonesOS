@@ -68,6 +68,11 @@ namespace Utils
 		
 	}
 	
+	__STRTEMP__ basic_string<Char_t, T, Alloc>::basic_string(const Char_t* cstr) : basic_string(cstr, Alloc())
+	{
+		
+	}
+	
 	__STRTEMP__ basic_string<Char_t, T, Alloc>::basic_string(const basic_string& str) : _M_dataplus(str._M_rep()->_M_grab(Alloc(str.get_allocator()), str.get_allocator()), str.get_allocator())
 	{
 		
@@ -104,6 +109,11 @@ namespace Utils
 	}
 	
 	__STRTEMP__ basic_string<Char_t, T, Alloc>::basic_string(const Char_t* cstring, size_t n, const Alloc& a) : _M_dataplus(_S_construct(cstring, cstring+n, a), a)
+	{
+		
+	}
+	
+	__STRTEMP__ basic_string<Char_t, T, Alloc>::basic_string(const Char_t* cstring, size_t n) : basic_string(cstring, n, Alloc())
 	{
 		
 	}
@@ -233,9 +243,11 @@ namespace Utils
 			if (len > capacity() || _M_rep()->_M_is_shared())
 			{
 				this->reserve(len);
+				assert(_M_rep()->_M_capacity >= len);
 			}
 			_M_assign(_M_data() + this->size(), n, c);
 			_M_rep()->_M_set_length_and_sharable(len);
+			assert(_M_rep()->_M_length == len);
 		}
 		return *this;
 	}
@@ -324,6 +336,20 @@ namespace Utils
 	__STRTEMP__ auto basic_string<Char_t, T, Alloc>::find(const value_type* str, size_type pos) const -> size_type
 	{
 		return find(str, pos, traits_type::length(str));
+	}
+	
+	__STRTEMP__ auto basic_string<Char_t, T, Alloc>::find(value_type c, size_type pos) const -> size_type
+	{
+		auto dat = _M_data();
+		for (; pos <= size(); ++pos)
+		{
+			if (dat[pos] == c)
+			{
+				return pos;
+			}
+		}
+		
+		return npos;
 	}
 	
 	

@@ -13,7 +13,7 @@
 
 namespace Utils
 {
-	template <class Key, class T, class Hash = hash<Key>, class KeyEqual = equal_to<Key>, class Alloc = Allocator<pair<const Key, T>>>
+	template <class Key, class T, class Hash = hash<Key>, class KeyEqual = equal_to<Key>, class Alloc = allocator<pair<const Key, T>>>
 	class unordered_map
 	{
 		public:

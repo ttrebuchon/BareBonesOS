@@ -24,7 +24,7 @@ namespace Kernel::FS
 	}
 	
 	
-	uint64_t NTFSNode::n_read(uint64_t start, uint64_t len, uint8_t* buf)
+	uint64_t NTFSNode::n_read(uint64_t start, uint64_t len, void* buf)
 	{
 		if (!len)
 		{
@@ -49,7 +49,7 @@ namespace Kernel::FS
 		}
 		
 		size_t left;
-		auto buf_end = buf + len;
+		auto buf_end = (void*)((uint8_t*)buf + len);
 		do
 		{
 			auto blk = _data->read(start, &left);
@@ -58,19 +58,19 @@ namespace Kernel::FS
 				break;
 			}
 			
-			auto sect = Utils::min<size_t>((size_t)left, (size_t)(buf_end - buf));
+			auto sect = Utils::min<size_t>((size_t)left, (size_t)((uintptr_t)buf_end - (uintptr_t)buf));
 			assert(sect);
 			
 			memcpy(buf, blk.get(), sect);
-			buf += sect;
+			buf = (uint8_t*)buf + sect;
 			start += sect;
 		}
 		while (buf < buf_end);
 		
-		return len - (buf_end - buf);
+		return len - ((uintptr_t)buf_end - (uintptr_t)buf);
 	}
 	
-	uint64_t NTFSNode::n_write(uint64_t, uint64_t, const uint8_t*)
+	uint64_t NTFSNode::n_write(uint64_t, uint64_t, const void*)
 	{
 		if (!_data)
 		{

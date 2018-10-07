@@ -77,12 +77,17 @@ namespace Utils
 			bool weakRelease();
 			
 			
-			template <class Y, class Deleter, class Alloc = Utils::Allocator<Y>>
+			template <class Y, class Deleter, class Alloc = Utils::allocator<Y>>
 			static detail::shared_ptr_control* CreateControl(Y*, Deleter, const Alloc& = Alloc());
 			/*template <class Y, class Deleter>
 			static detail::shared_ptr_control* CreateControl(Y*, Deleter);*/
 			template <class Y>
 			static detail::shared_ptr_control* CreateControl(Y*);
+			
+			/*template <class Y, class Deleter, class Alloc = Utils::Allocator<Y>>
+			static detail::shared_ptr_control* InitControl(Y*, Deleter, const Alloc& = Alloc());*/
+			template <class Y>
+			static detail::shared_ptr_control* InitControl(detail::shared_ptr_control* ctrl, Y*);
 			
 		};
 	}

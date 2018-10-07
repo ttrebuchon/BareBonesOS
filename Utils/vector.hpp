@@ -334,6 +334,24 @@ namespace Utils
 	}
 	
 	template <class T, class A>
+	auto vector<T, A>::erase(const_iterator cpos) -> iterator
+	{
+		assert(cpos != end());
+		auto off = (cpos - data());
+		auto pos = (_data + off);
+		ATraits::destroy(alloc, pos);
+		
+		for (size_type i = off+1; i < _size; ++i)
+		{
+			detail::vector_realloc_helper<T>::call(_data + i - 1, _data + i);
+			ATraits::destroy(alloc, _data + i);
+		}
+		
+		--_size;
+		return pos;
+	}
+	
+	template <class T, class A>
 	void vector<T, A>::clear() noexcept
 	{
 		if (_data)

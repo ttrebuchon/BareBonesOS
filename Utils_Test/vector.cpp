@@ -2,7 +2,7 @@
 #include "Tests.hh"
 #include <vector>
 
-template <class T, class A = Utils::Allocator<T>>
+template <class T, class A = Utils::allocator<T>>
 using uvector = Utils::vector<T, A>;
 
 

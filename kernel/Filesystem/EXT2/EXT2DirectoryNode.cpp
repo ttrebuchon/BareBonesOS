@@ -155,12 +155,12 @@ namespace Kernel::FS
 	}
 	
 		
-	uint64_t EXT2DirectoryNode::read(uint64_t start, uint64_t len, uint8_t* buf)
+	uint64_t EXT2DirectoryNode::read(uint64_t start, uint64_t len, void* buf)
 	{
 		return EXT2Node::read(start, len, buf);
 	}
 	
-	uint64_t EXT2DirectoryNode::write(uint64_t start, uint64_t len, const uint8_t* buf)
+	uint64_t EXT2DirectoryNode::write(uint64_t start, uint64_t len, const void* buf)
 	{
 		return EXT2Node::write(start, len, buf);
 	}
@@ -188,6 +188,46 @@ namespace Kernel::FS
 	EXT2* EXT2DirectoryNode::get_filesystem() const noexcept
 	{
 		return this->EXT2Node::fs;
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	node_ptr<> EXT2DirectoryNode::add2(const node_ptr<>&)
+	{
+		assert(NOT_IMPLEMENTED);
+	}
+	
+	node_ptr<> EXT2DirectoryNode::at2(size_t index) const
+	{
+		if (unlikely(!has_read))
+		{
+			auto mut_this = const_cast<EXT2DirectoryNode*>(this);
+			if (!mut_this->initial_read())
+			{
+				// TODO: Handle error
+				assert(false);
+			}
+		}
+		
+		return children2.at(index);
+	}
+	
+	node_ptr<> EXT2DirectoryNode::findDir2(const char* name)
+	{
+		assert(NOT_IMPLEMENTED);
 	}
 	
 	

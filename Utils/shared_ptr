@@ -1,2 +1,3 @@
 #include "shared_ptr.hh"
 #include "shared_ptr.hpp"
+#include "detail/bits/enable_shared_from_this.hh"

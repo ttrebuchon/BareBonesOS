@@ -33,7 +33,8 @@ extern "C"
 	// Open PATH with flags OFLAGS and
 	// mode MODE, then return a file
 	// descriptor
-	int open(const char* path, int oflags, mode_t mode);
+	//int open(const char* path, int oflags, mode_t mode);
+	int open(const char* path, int oflags, ...);
 	
 	// File control
 	int fcntl(int fd, int cmd, ...);
@@ -79,6 +80,12 @@ extern "C"
 	// SEEK_END = end + offset
 	off_t lseek(int fd, off_t offset, int whence);
 	
+	// Equivalent to
+	// open(path,
+	//    O_CREAT|O_WRONLY|O_TRUNC,
+	//    mode)
+	int creat(const char* path, mode_t mode);
+	
 	#undef SEEK_SET
 	#undef SEEK_CUR
 	#undef SEEK_END
@@ -95,18 +102,24 @@ extern "C"
 	
 	
 	
-	
+	#ifndef TESTING
 	
 	#define O_EXCL 1
 	#define O_CREAT 2
 	#define O_RDONLY 4
 	#define O_RDWR 8
 	
+	#endif
+	
 	
 	
 	
 #ifdef __cplusplus
 }
+#endif
+
+#ifdef TESTING
+#include <fcntl.h>
 #endif
 
 #endif

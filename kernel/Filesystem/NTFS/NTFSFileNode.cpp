@@ -13,12 +13,12 @@ namespace Kernel::FS
 	
 	
 	
-	uint64_t NTFSFileNode::read(uint64_t start, uint64_t len, uint8_t* buf)
+	uint64_t NTFSFileNode::read(uint64_t start, uint64_t len, void* buf)
 	{
 		return n_read(start, len, buf);
 	}
 	
-	uint64_t NTFSFileNode::write(uint64_t start, uint64_t len, const uint8_t* buf)
+	uint64_t NTFSFileNode::write(uint64_t start, uint64_t len, const void* buf)
 	{
 		return n_write(start, len, buf);
 	}

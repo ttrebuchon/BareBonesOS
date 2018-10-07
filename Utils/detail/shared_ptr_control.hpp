@@ -81,11 +81,19 @@ namespace detail
 	shared_ptr_control* shared_ptr_control::CreateControl(Y* ptr)
 	{
 		auto ctrl = new shared_ptr_control();
-		ctrl->refcount = ctrl->usecount = 1;
+		InitControl(ctrl, ptr);
 		ctrl->deleter = [](void*, void* tptr)
 		{
 			delete (Y*)tptr;
 		};
+		return ctrl;
+	}
+	
+	template <class Y>
+	shared_ptr_control* shared_ptr_control::InitControl(shared_ptr_control* ctrl, Y* ptr)
+	{
+		assert(ctrl);
+		ctrl->refcount = ctrl->usecount = 1;
 		ctrl->obj = ptr;
 		return ctrl;
 	}

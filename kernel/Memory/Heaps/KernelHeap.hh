@@ -12,6 +12,7 @@
 #include <Utils/unordered_set>
 #include <kernel/Memory/alloc_spec.h>
 #include "PageHeap.hh"
+#include <kernel/Memory/Allocators/heap_allocator.hh>
 
 namespace Kernel::Memory
 {
@@ -57,11 +58,25 @@ namespace Kernel::Memory
 		
 		
 		
+		// Counters
+		size_t allocations;
+		size_t frees;
+		size_t total_heap_reqs;
+		Utils::map<size_t, size_t, Utils::less<size_t>, alloc_rebind<typename Utils::map<size_t, size_t>::value_type>> heap_requests;
+		mutable shared_mutex_type heap_requests_m;
+		
+		
+		
+		
 		void initialize_default_heaps();
 		const Heap* heap_for(const alloc_spec_t&) const;
 		const Heap* heap_for(void*) const;
 		Heap* heap_for(const alloc_spec_t&);
 		Heap* heap_for(void*);
+		
+		template <class HeapType>
+		HeapType* create_heap_for(const alloc_spec_t&, const size_t min_count);
+		Heap* create_heap_for(const alloc_spec_t&, const size_t min_count);
 		
 		public:
 		kernel_heap(uintptr_t start, uintptr_t end, const allocator_type& = allocator_type());

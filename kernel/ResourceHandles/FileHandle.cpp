@@ -12,6 +12,6 @@ namespace Kernel
 	
 	void FileHandle::__cleanup() noexcept
 	{
-		//node->releaseHandle(this);
+		_node->releaseHandle(this);
 	}
 }

@@ -196,6 +196,10 @@ namespace Kernel { namespace Memory {
 			Page();
 			Page(_Page&, uint16_t pg_indx);
 			
+			Table* calc_table() const noexcept
+			{ return (Table*)((addr_t)this - (offsetof(Table, pages) + sizeof(Page)*page_index)); }
+			
+			
 			public:
 			
 			Page(const Page&) = delete;
@@ -226,9 +230,10 @@ namespace Kernel { namespace Memory {
 			bool allocate(bool, bool) noexcept;
 			bool deallocate() noexcept;
 			
-			Table* table() noexcept;
+			Table* table() noexcept
+			{ return calc_table(); }
 			const Table* table() const noexcept
-			{ return (Table*)((addr_t)this - (offsetof(Table, pages) + sizeof(Page)*page_index)); }
+			{ return calc_table(); }
 			
 			uint16_t index() const noexcept
 			{
@@ -291,6 +296,11 @@ namespace Kernel { namespace Memory {
 			constexpr size_t page_count() const noexcept
 			{
 				return 1024;
+			}
+			
+			__attribute__((__always_inline__)) constexpr PageDirectory* dir() const noexcept
+			{
+				return _dir;
 			}
 			
 			friend class PageDirectory;

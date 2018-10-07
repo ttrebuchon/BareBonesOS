@@ -255,8 +255,7 @@ namespace Kernel { namespace Memory
 		void deallocate(pointer p, size_type n);
 		template <class U, class... Args>
 		void construct(U* p, Args... args);
-		template <class U>
-		void destroy(U* u);
+		void destroy(pointer u);
 		
 		
 		template <class U>

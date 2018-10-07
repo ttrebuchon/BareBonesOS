@@ -30,13 +30,13 @@ namespace Kernel::FS
 		return nullptr;
 	}
 		
-	BlockDeviceNode* NTFSFactory::create_block_device(DirectoryNode_v* parent, const Utils::string&, DeviceTarget*) noexcept
+	BlockDeviceNode* NTFSFactory::create_block_device(DirectoryNode_v* parent, const Utils::string&, const devtarget_t&) noexcept
 	{
 		assert(NOT_IMPLEMENTED);
 		return nullptr;
 	}
 		
-	CharDeviceNode* NTFSFactory::create_char_device(DirectoryNode_v* parent, const Utils::string&, DeviceTarget*) noexcept
+	CharDeviceNode* NTFSFactory::create_char_device(DirectoryNode_v* parent, const Utils::string&, const devtarget_t&) noexcept
 	{
 		assert(NOT_IMPLEMENTED);
 		return nullptr;

@@ -26,6 +26,8 @@ namespace Kernel { namespace FS {
 		virtual File* initFile();
 		//virtual void releaseHandle(FileHandle*);
 		//virtual void releaseHandle(ReadFileHandle*);
+		virtual void releaseHandle(FileHandle*);
+		virtual void releaseHandle(ReadFileHandle*);
 		
 		
 		FileNode_v(const NodeType);

@@ -136,10 +136,13 @@ template <template <class...> class _Base, class T>
 int NoisyAllocator<_Base, T>::y = 0;
 
 template <class T>
-NoisyAllocator<Utils::Allocator, T> NA_foo()
+NoisyAllocator<Utils::allocator, T> NA_foo()
 {
-	return NoisyAllocator<Utils::Allocator, T>();
+	return NoisyAllocator<Utils::allocator, T>();
 }
+
+
+static void shared_from_this_test();
 
 TEST(shared_ptr)
 {
@@ -167,14 +170,14 @@ TEST(shared_ptr)
 	
 	
 	{
-		typedef NoisyAllocator<Utils::Allocator, int> NoisyAlloc;
+		typedef NoisyAllocator<Utils::allocator, int> NoisyAlloc;
 		typedef typename NoisyAlloc::template rebind<char>::other NoisyAlloc_Re;
 		//static_assert(Utils::detail::alloc_traits::copy_construct_ret<NoisyAlloc>::Instance == 0);	static_assert(Utils::detail::alloc_traits::copy_construct<NoisyAlloc, NoisyAlloc_Re>::Instance == 1);
 		static_assert(std::is_same<Utils::detail::alloc_traits::copy_construct_ret<NoisyAlloc>::type, decltype(Utils::detail::alloc_traits::copy_construct<NoisyAlloc, NoisyAlloc_Re>::call(std::declval<NoisyAlloc_Re>()))>::value);
 		
 		auto na0 = NA_foo<int>();
 		int na0_n = na0.n;
-		auto na0_0 = Utils::allocator_traits<NoisyAllocator<Utils::Allocator, int>>::copy_create(na0);
+		auto na0_0 = Utils::allocator_traits<NoisyAllocator<Utils::allocator, int>>::copy_create(na0);
 		ASSERT(na0_0.n == na0.n);
 		
 		
@@ -349,5 +352,66 @@ TEST(shared_ptr)
 		ASSERTEQ(ptr->x, 0);
 		baseCaller<Utils::shared_ptr>(ptr);
 		ASSERTEQ(ptr->x, 1);
+	}
+	
+	shared_from_this_test();
+}
+
+
+
+class TClass_1 : public Base_t, public Utils::enable_shared_from_this<TClass_1>
+{
+	public:
+	
+	virtual void foo() override
+	{
+		
+	}
+};
+
+class TClass_2 : public TClass_1, public Utils::enable_shared_from_this<TClass_2>
+{
+	public:
+	
+	virtual void foo() override
+	{
+		
+	}
+};
+
+class TClass_3 : public TClass_2
+{
+	public:
+	
+	virtual void foo() override
+	{
+		
+	}
+};
+
+class TClass_4 : public Base_t, public Utils::enable_shared_from_this<TClass_4>
+{
+	public:
+	
+	virtual void foo() override
+	{
+		
+	}
+};
+
+
+static void shared_from_this_test()
+{
+	{
+		
+		auto obj1 = Utils::make_shared<TClass_1>();
+		assert(obj1 == obj1->shared_from_this());
+		assert(obj1);
+		
+		auto obj2 = new TClass_4;
+		auto sobj2 = Utils::shared_ptr<Base_t>(obj2);
+		assert(sobj2);
+		assert(sobj2 == obj2);
+		assert(obj2->shared_from_this() == sobj2);
 	}
 }

@@ -13,15 +13,15 @@ namespace Kernel { namespace FS {
 	{
 		protected:
 		
-		CharDeviceNode(DeviceTarget* device, const NodeType);
+		CharDeviceNode(const devtarget_t& device, const NodeType);
 		CharDeviceNode(const NodeType);
-		CharDeviceNode(DeviceTarget* device, const Utils::string& name, const NodeType);
+		CharDeviceNode(const devtarget_t& device, const Utils::string& name, const NodeType);
 		CharDeviceNode(const Utils::string& name, const NodeType);
 		
 		public:
-		CharDeviceNode(DeviceTarget* disk);
+		CharDeviceNode(const devtarget_t& disk);
 		CharDeviceNode();
-		CharDeviceNode(DeviceTarget* device, const Utils::string& name);
+		CharDeviceNode(const devtarget_t& device, const Utils::string& name);
 		CharDeviceNode(const Utils::string& name);
 		
 		
@@ -32,8 +32,8 @@ namespace Kernel { namespace FS {
 		virtual ~CharDeviceNode() = default;
 		
 		
-		virtual uint64_t read(uint64_t, uint64_t, uint8_t*) override;
-		virtual uint64_t write(uint64_t, uint64_t, const uint8_t*) override;
+		virtual uint64_t read(uint64_t, uint64_t, void*) override;
+		virtual uint64_t write(uint64_t, uint64_t, const void*) override;
 		virtual void open() override;
 		virtual void close() override;
 		virtual Filesystem* get_filesystem() const noexcept override

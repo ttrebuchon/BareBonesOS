@@ -7,6 +7,11 @@ namespace Drivers
 	class Disk;
 }
 
+namespace Kernel::FS
+{
+	class Filesystem;
+}
+
 class QA
 {
 	private:
@@ -16,6 +21,7 @@ class QA
 	static void Filesystem_Init();
 	static void Paging_Init();
 	static void Processors_Init();
+	static void Drivers_Init();
 	
 	static void* phys_start;
 	static void* phys_end;
@@ -67,6 +73,13 @@ class QA
 	static Drivers::Disk* QADrive(const char* file);
 	static Drivers::Disk* QACheckReadOnlyDrive(const char* file, const size_t size);
 	static Drivers::Disk* QACheckReadOnlyDrive(const char* file);
+	static void Destroy_QADrive(Drivers::Disk*);
+	
+	static Kernel::FS::Filesystem* TempFilesystem(const char* storage_file, const size_t size);
+	static Kernel::FS::Filesystem* TempFilesystem(Drivers::Disk* disk);
+	static void Destroy_Filesystem(Kernel::FS::Filesystem*);
+	static Kernel::FS::Filesystem* MountTempFilesystem(const char* mntPath, const char* mntName, const char* diskName, const size_t diskSize, Kernel::FS::Filesystem* rootFS = nullptr);
+	static bool UnmountTempFilesystem(const char* mntPath, const char* mntName, Kernel::FS::Filesystem* fs = nullptr, Kernel::FS::Filesystem* rootFS = nullptr);
 	
 	static void EnableMemPool() noexcept;
 	static void DisableMemPool() noexcept;

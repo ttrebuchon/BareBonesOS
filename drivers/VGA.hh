@@ -15,9 +15,9 @@ namespace Utils
     struct Char_Traits;
 
     template <class>
-    class Allocator;
+    class allocator;
 
-    typedef basic_string<char, Char_Traits<char>, Allocator<char>> string;
+    typedef basic_string<char, Char_Traits<char>, allocator<char>> string;
 }
 
 

@@ -3,29 +3,29 @@
 
 namespace Kernel::FS
 {
-	DeviceNode::DeviceNode(DeviceTarget* device, const Utils::string& name, const NodeType t) : Node(t), _device(device)
+	DeviceNode::DeviceNode(const Utils::shared_ptr<DeviceTarget>& device, const Utils::string& name, const NodeType t) : Node(t), _device(device)
 	{
 		this->_name = name;
 	}
 	
-	DeviceNode::DeviceNode(DeviceTarget* device, const NodeType t) : DeviceNode(device, "", t)
+	DeviceNode::DeviceNode(const Utils::shared_ptr<DeviceTarget>& device, const NodeType t) : DeviceNode(device, "", t)
 	{
 		
 	}
 	
-	DeviceNode::DeviceNode(DeviceTarget* device, const Utils::string& name) : DeviceNode(device, name, NodeType::Unknown)
+	DeviceNode::DeviceNode(const Utils::shared_ptr<DeviceTarget>& device, const Utils::string& name) : DeviceNode(device, name, NodeType::Unknown)
 	{
 		
 	}
 	
-	DeviceNode::DeviceNode(DeviceTarget* device) : DeviceNode(device, "")
+	DeviceNode::DeviceNode(const Utils::shared_ptr<DeviceTarget>& device) : DeviceNode(device, "")
 	{
 		
 	}
 	
 	
 	
-	DeviceTarget* DeviceNode::device() noexcept
+	Utils::shared_ptr<DeviceTarget> DeviceNode::device() noexcept
 	{
 		if (!_device)
 		{
@@ -34,7 +34,7 @@ namespace Kernel::FS
 		return _device;
 	}
 	
-	const DeviceTarget* DeviceNode::device() const noexcept
+	Utils::shared_ptr<const DeviceTarget> DeviceNode::device() const noexcept
 	{
 		if (!_device)
 		{

@@ -34,12 +34,12 @@ namespace Kernel::FS
 	
 	
 	
-	uint64_t EXT2FileNode::read(uint64_t start, uint64_t len, uint8_t* buf)
+	uint64_t EXT2FileNode::read(uint64_t start, uint64_t len, void* buf)
 	{
 		return EXT2Node::read(start, len, buf);
 	}
 	
-	uint64_t EXT2FileNode::write(uint64_t start, uint64_t len, const uint8_t* buf)
+	uint64_t EXT2FileNode::write(uint64_t start, uint64_t len, const void* buf)
 	{
 		return EXT2Node::write(start, len, buf);
 	}

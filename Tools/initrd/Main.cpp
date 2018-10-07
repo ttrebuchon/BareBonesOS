@@ -5,6 +5,8 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <assert.h>
+#include "../../Libraries/json/json.hpp"
+#include <fstream>
 
 #define ROOT "FS_ROOT"
 #define OUT_IMG "initrd.img"
@@ -12,10 +14,18 @@
 class Folder;
 class File;
 
-enum FType
+enum FType : uint16_t
 {
-	F_File,
-	F_Folder
+	F_File = 0x1,
+	F_Folder = 0x2,
+	F_Special = 0x3,
+};
+
+enum SpecialType : uint16_t
+{
+	S_Invalid = 0x0,
+	S_Function = 0x1,
+	
 };
 
 class FEntry
@@ -110,6 +120,28 @@ class Folder : public FEntry
 	
 };
 
+class Special : public FEntry
+{
+	public:
+	SpecialType special_type;
+	uint32_t data_size;
+	void* data;
+	
+	
+	Special(Folder* parent, std::string name) : FEntry(parent, name), special_type(S_Invalid), data_size(0), data(nullptr)
+	{ }
+	
+	virtual FType type() const
+	{
+		return F_Special;
+	}
+	
+	virtual void stat()
+	{
+		
+	}
+};
+
 
 
 
@@ -133,18 +165,17 @@ std::string FEntry::getPath() const
 
 void traverseDir(Folder*);
 
-
 struct FRecord
 {
-	bool folder = false;
-	unsigned long span;
+	FType type;
+	uint64_t span;
 	const char* name;
-	unsigned int nameLen;
+	uint32_t nameLen;
 };
 
 struct FolderRecord : public FRecord
 {
-	unsigned int count;
+	uint32_t count;
 	FRecord** entries;
 };
 
@@ -153,9 +184,17 @@ struct FileRecord : public FRecord
 	std::string fileHandle;
 };
 
+struct SpecialRecord : public FRecord
+{
+	SpecialType kind;
+	uint32_t data_length;
+	void* data;
+};
+
 
 FolderRecord* packFolder(Folder*);
 FileRecord* packFile(File*);
+SpecialRecord* packSpecial(Special*);
 
 void writePacked(FILE*, FRecord*);
 
@@ -166,9 +205,15 @@ void writePacked(FILE*, FRecord*);
 
 
 
+nlohmann::json read_defs(const char* defs_filename)
+{
+	std::ifstream in(defs_filename);
+	std::string text = std::string(std::istream_iterator<char>(in), std::istream_iterator<char>());
+	return nlohmann::json::parse(text);
+}
 
 
-
+void insert_defs(Folder* root, nlohmann::json& defs);
 
 
 int main()
@@ -176,6 +221,9 @@ int main()
 	Folder* root = new Folder(nullptr, "");
 	root->stat();
 	traverseDir(root);
+	
+	nlohmann::json defs = read_defs("defs.json");
+	insert_defs(root, defs);
 	
 	std::list<FEntry*> entries;
 	
@@ -261,29 +309,40 @@ FolderRecord* packFolder(Folder* dir)
 	std::vector<FRecord*> children;
 	for (auto child : dir->children)
 	{
+		FRecord* rec = nullptr;
 		if (child->type() == F_Folder)
 		{
-			children.push_back(packFolder((Folder*)child));
+			rec = packFolder((Folder*)child);
 		}
 		else if (child->type() == F_File)
 		{
-			children.push_back(packFile((File*)child));
+			rec = packFile((File*)child);
+		}
+		else if (child->type() == F_Special)
+		{
+			rec = packSpecial((Special*)child);
 		}
 		else
 		{
 			std::cerr << "Unknown node type!" << std::endl;
 		}
+		
+		if (rec)
+		{
+			children.push_back(rec);
+		}
 	}
 	
 	auto rec = new FolderRecord;
-	rec->folder = true;
+	rec->type = F_Folder;
 	rec->name = dir->name.c_str();
 	rec->nameLen = dir->name.length() + 1;
-	rec->span = sizeof(unsigned long) + sizeof(unsigned int) + sizeof(int);
+	//rec->span = sizeof(unsigned long) + sizeof(unsigned int) + sizeof(FType);
+	rec->span = sizeof(rec->count);
 	rec->span += dir->name.length() + 1;
 	for (auto c : children)
 	{
-		rec->span += c->span;
+		rec->span += (c->span + sizeof(FType) + sizeof(c->span));
 	}
 	rec->entries = new FRecord*[rec->count = children.size()];
 	for (int i = 0; i < children.size(); ++i)
@@ -296,11 +355,10 @@ FolderRecord* packFolder(Folder* dir)
 FileRecord* packFile(File* file)
 {
 	auto rec = new FileRecord;
-	rec->folder = false;
+	rec->type = F_File;
 	rec->name = file->name.c_str();
 	rec->nameLen = file->name.length() + 1;
-	rec->span = sizeof(unsigned long) + sizeof(int);
-	rec->span += file->name.length() + 1;
+	rec->span = file->name.length() + 1;
 	rec->span += file->size;
 	
 	rec->fileHandle = ROOT + file->getPath();
@@ -308,27 +366,54 @@ FileRecord* packFile(File* file)
 	return rec;
 }
 
+SpecialRecord* packSpecial(Special* spec)
+{
+	SpecialRecord* rec = nullptr;
+	rec = new SpecialRecord;
+	rec->type = F_Special;
+	rec->kind = spec->special_type;
+	rec->name = spec->name.c_str();
+	rec->nameLen = spec->name.length() + 1;
+	rec->span = rec->nameLen;
+	rec->span += sizeof(spec->special_type);
+	rec->span += spec->data_size;
+	
+	rec->data_length = spec->data_size;
+	rec->data = spec->data;
+	
+	return rec;
+}
+
 
 void writeFilePacked(FILE*, FileRecord*);
 void writeFolderPacked(FILE*, FolderRecord*);
+void writeSpecialPacked(FILE*, SpecialRecord*);
 
 
 void writePacked(FILE* out, FRecord* rec)
 {
-	int fol = rec->folder;
-	::fwrite(&fol, 1, sizeof(int), out);
+	uint16_t type = rec->type;
+	::fwrite(&type, 1, sizeof(uint16_t), out);
 	::fwrite(&rec->span, 1, sizeof(rec->span), out);
 	::fwrite(rec->name, rec->nameLen, sizeof(char), out);
 	
 	
-	if (rec->folder)
+	
+	switch (rec->type)
 	{
+		case F_Folder:
 		writeFolderPacked(out, (FolderRecord*)rec);
-	}
-	else
-	{
+		break;
+		
+		case F_File:
 		writeFilePacked(out, (FileRecord*)rec);
+		break;
+		
+		case F_Special:
+		writeSpecialPacked(out, (SpecialRecord*)rec);
+		break;
 	}
+	
 }
 
 
@@ -336,7 +421,7 @@ void writeFilePacked(FILE* out, FileRecord* rec)
 {
 	FILE* in = ::fopen(rec->fileHandle.c_str(), "r");
 	
-	auto len = rec->span - sizeof(unsigned long) - rec->nameLen/* - 1*/ - sizeof(int);
+	auto len = rec->span - rec->nameLen/* - 1*/;
 	
 	auto data = malloc(len);
 	::fread(data, 1, len, in);
@@ -351,5 +436,115 @@ void writeFolderPacked(FILE* out, FolderRecord* rec)
 	for (int i = 0; i < rec->count; ++i)
 	{
 		writePacked(out, rec->entries[i]);
+	}
+}
+
+void writeSpecialPacked(FILE* out, SpecialRecord* rec)
+{
+	assert(rec->kind != S_Invalid);
+	
+	::fwrite(&rec->kind, 1, sizeof(rec->kind), out);
+	
+	auto len = rec->span - rec->nameLen - sizeof(rec->kind);
+	
+	if (rec->data)
+	{
+		::fwrite(rec->data, rec->data_length, sizeof(uint8_t), out);
+	}
+	else
+	{
+		assert(rec->data_length == 0);
+	}
+}
+
+
+void insert_def(Folder* parent, const std::string& name, nlohmann::json& def);
+
+
+void insert_defs(Folder* root, nlohmann::json& defs)
+{
+	bool found;
+	for (auto it = defs.begin(); it != defs.end(); ++it)
+	{
+		start_loop:
+		if (it->count("type"))
+		{
+			insert_def(root, it.key(), *it);
+			continue;
+		}
+		found = false;
+		for (auto f : root->children)
+		{
+			if (f->name == it.key())
+			{
+				if (f->type() == F_Folder)
+				{
+					insert_defs((Folder*)f, *it);
+					found = true;
+					break;
+				}
+				else
+				{
+					assert(false);
+				}
+			}
+		}
+		
+		if (found)
+		{
+			continue;
+		}
+		
+		new Folder(root, it.key());
+		goto start_loop;
+		
+		
+		std::cout << it.key() << std::endl;
+	}
+}
+
+
+void insert_def(Folder* parent, const std::string& name, nlohmann::json& def)
+{
+	std::cout << "Creating def " << name << "..." << std::endl;
+	if (def.at("type") == "special")
+	{
+		auto& data = def["data"];
+		auto spec = new Special(parent, name);
+		auto kind = data["kind"];
+		if (kind == "function")
+		{
+			spec->special_type = S_Function;
+			
+			auto n_data = new char[255];
+			std::string fn_name = name;
+			if (data.count("name"))
+			{
+				fn_name = data["name"];
+			}
+			
+			assert(fn_name.length() < 255);
+			assert(fn_name.length() > 0);
+			strcpy(n_data, fn_name.c_str());
+			
+			
+			spec->data = n_data;
+			spec->data_size = 255;
+			
+		}
+		else
+		{
+			std::cout << "Unknown special kind." << std::endl;
+			assert(false);
+		}
+	}
+	else if (def.at("type") == "file")
+	{
+		assert(false);
+	}
+	else
+	{
+		std::cout << "Unknown def type." << std::endl;
+		assert(false);
 	}
 }

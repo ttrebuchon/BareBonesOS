@@ -10,7 +10,7 @@
 
 namespace Utils
 {
-	template <class Key, class T, class Comp = less<Key>, class Alloc = Allocator<pair<const Key, T>>>
+	template <class Key, class T, class Comp = less<Key>, class Alloc = allocator<pair<const Key, T>>>
 	class map
 	{
 		public:

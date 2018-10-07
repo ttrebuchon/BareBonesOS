@@ -24,8 +24,8 @@ namespace Kernel::FS
 		virtual size_t size() const noexcept override;
 		
 		
-		virtual uint64_t read(uint64_t, uint64_t, uint8_t*) override;
-		virtual uint64_t write(uint64_t, uint64_t, const uint8_t*) override;
+		virtual uint64_t read(uint64_t, uint64_t, void*) override;
+		virtual uint64_t write(uint64_t, uint64_t, const void*) override;
 		virtual void open() override;
 		virtual void close() override;
 		virtual EXT2* get_filesystem() const noexcept override;

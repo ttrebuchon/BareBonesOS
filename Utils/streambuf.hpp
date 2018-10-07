@@ -36,7 +36,10 @@ namespace Utils {
 	template <class T, class Traits>
 	void basic_streambuf<T, Traits>::gbump(int n)
 	{
-		
+		if (gptr())
+		{
+			_gptr += n;
+		}
 	}
 	
 	template <class T, class Traits>
@@ -136,8 +139,7 @@ namespace Utils {
 	template <class T, class Traits>
 	typename basic_streambuf<T, Traits>::int_type basic_streambuf<T, Traits>::underflow()
 	{
-		// TODO
-		ASSERT(false);
+		return Traits::eof();
 	}
 	
 	template <class T, class Traits>
@@ -276,6 +278,84 @@ namespace Utils {
 	auto basic_streambuf<T, Traits>::sputn(const char_type* c, streamsize n) -> streamsize
 	{
 		return this->xsputn(c, n);
+	}
+	
+	
+	
+	
+	template <class T, class Traits>
+	auto basic_streambuf<T, Traits>::sgetc() -> int_type
+	{
+		auto gp = gptr();
+		if (gp)
+		{
+			if (gp < egptr())
+			{
+				return Traits::to_int_type(*gp);
+			}
+		}
+		
+		return underflow();
+	}
+	
+	template <class T, class Traits>
+	auto basic_streambuf<T, Traits>::snextc() -> int_type
+	{
+		auto n = sbumpc();
+		if (n != Traits::eof())
+		{
+			return sgetc();
+		}
+		else
+		{
+			return Traits::eof();
+		}
+	}
+	
+	template <class T, class Traits>
+	auto basic_streambuf<T, Traits>::sbumpc() -> int_type
+	{
+		auto gp = gptr();
+		if (gp)
+		{
+			if (gp < egptr())
+			{
+				auto ret = Traits::to_int_type(*gp);
+				gbump(1);
+				return ret;
+			}
+		}
+		
+		return underflow();
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	template <class T, class Traits>
+	streamsize __copy_streambufs(basic_streambuf<T, Traits>* in, basic_streambuf<T, Traits>* out)
+	{
+		streamsize ret = 0;
+		typename Traits::int_type _c = in->sgetc();
+		while (!Traits::eq_int_type(_c, Traits::eof()))
+		{
+			_c = out->sputc(Traits::to_char_type(_c));
+			if (Traits::eq_int_type(_c, Traits::eof()))
+			{
+				break;
+			}
+			++ret;
+			_c = in->snextc();
+		}
+		return ret;
 	}
 }
 

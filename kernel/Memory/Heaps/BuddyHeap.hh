@@ -122,7 +122,7 @@ namespace Kernel::Memory
 		} __attribute__((__packed__));
 		
 		
-		template <class Alloc = Utils::Allocator<tree_node>>
+		template <class Alloc = Utils::allocator<tree_node>>
 		class buddy_tree
 		{
 			public:

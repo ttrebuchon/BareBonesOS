@@ -43,8 +43,13 @@ namespace Kernel { namespace FS {
 		ASSERT(path.length() > index);
 		const char* cstr = path.c_str();*/
 		
+		auto nrelative = Path::MakeRelative(path, Path::Root);
+		if (nrelative.empty() || nrelative == ".")
+		{
+			return droot;
+		}
 		
-		return droot->findChild(Path::MakeRelative(path, Path::Root));
+		return droot->findChild(nrelative);
 	}
 	
 	Node* Filesystem::getNode(const Path_t& path)
@@ -53,6 +58,7 @@ namespace Kernel { namespace FS {
 		{
 			return nullptr;
 		}
+		
 		
 		auto root = this->root();
 		assert(root);

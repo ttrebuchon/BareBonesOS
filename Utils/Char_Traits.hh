@@ -96,7 +96,10 @@ namespace Utils
 			return 0;
 		}
 		
-		static constexpr char_type to_char_type(int_type c) noexcept;
+		static constexpr char_type to_char_type(int_type c) noexcept
+		{
+			return (char_type)c;
+		}
 		
 		static constexpr int_type to_int_type(char_type c) noexcept
 		{

@@ -10,7 +10,7 @@ C_CODE
 
 
 
-typedef struct
+typedef struct context
 {
 	stack_t stack;
 	void* ip;

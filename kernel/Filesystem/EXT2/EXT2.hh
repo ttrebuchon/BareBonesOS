@@ -12,6 +12,7 @@
 #include <Utils/shared_mutex>
 #include "EXT2Factory.hh"
 #include <kernel/Filesystem/Devices/Signature.h>
+#include <kernel/Filesystem/node_ptr.hh>
 
 
 namespace Kernel::FS
@@ -441,6 +442,7 @@ namespace Kernel::FS
 		mutable Utils::map<block_index_t, Utils::weak_ptr<block_t>> cached_blocks;
 		size_t max_node_blocks;
 		Utils::map<inode_index_t, Node*> nodes;
+		Utils::map<inode_index_t, node_ptr<>> nodes2;
 		mutable Support::Collections::shared_ptr_cache<block_t, Utils::shared_ptr> block_ptr_cache;
 		Utils::vector<Utils::shared_ptr<block_group_t>> groups;
 		
@@ -454,8 +456,11 @@ namespace Kernel::FS
 		uint8_t* read_inode(const inode_type*, size_t first_blk, size_t count);
 		uint8_t* read_inode(Utils::shared_ptr<const inode_type>, size_t first_blk, size_t count);
 		bool read_indirect(const uint32_t*, const size_t count, uint8_t* target) const;
+		uint32_t valid_block_ptrs(const uint32_t* block, const size_t start = 0) const noexcept;
+		uint32_t find_valid_block_ptrs(uint32_t* ptrs, const inode_type*, size_t count, size_t start_index = 0, bool keep_zeros = false) const noexcept;
 		
 		Node* parse_node(DirectoryNode* parent, detail::EXT2::dirent_t*);
+		node_ptr<> parse_node2(DirectoryNode* parent, detail::EXT2::dirent_t*);
 		
 		size_t read_block(const size_t index, uint8_t* buffer) const noexcept;
 		size_t write_block(const size_t index, const uint8_t* buffer) noexcept;

@@ -6,7 +6,7 @@
 
 namespace Kernel { namespace FS {
 	
-	CharDeviceNode::CharDeviceNode(DeviceTarget* device, const Utils::string& name, const NodeType t) : DeviceNode(device, name, NodeType::Char | t)
+	CharDeviceNode::CharDeviceNode(const devtarget_t& device, const Utils::string& name, const NodeType t) : DeviceNode(device, name, NodeType::Char | t)
 	{
 		this->_type |= (t | NodeType::Char);
 		this->_name = name;
@@ -17,17 +17,17 @@ namespace Kernel { namespace FS {
 		
 	}
 	
-	CharDeviceNode::CharDeviceNode(DeviceTarget* device, const NodeType t) : CharDeviceNode(device, "", t)
+	CharDeviceNode::CharDeviceNode(const devtarget_t& device, const NodeType t) : CharDeviceNode(device, "", t)
 	{
 		
 	}
 	
-	CharDeviceNode::CharDeviceNode(const NodeType t) : CharDeviceNode(nullptr, t)
+	CharDeviceNode::CharDeviceNode(const NodeType t) : CharDeviceNode((devtarget_t)nullptr, t)
 	{
 		
 	}
 	
-	CharDeviceNode::CharDeviceNode(DeviceTarget* device, const Utils::string& name) : CharDeviceNode(device, name, NodeType::Char)
+	CharDeviceNode::CharDeviceNode(const devtarget_t& device, const Utils::string& name) : CharDeviceNode(device, name, NodeType::Char)
 	{
 		
 	}
@@ -37,12 +37,12 @@ namespace Kernel { namespace FS {
 		
 	}
 	
-	CharDeviceNode::CharDeviceNode(DeviceTarget* device) : CharDeviceNode(device, "")
+	CharDeviceNode::CharDeviceNode(const devtarget_t& device) : CharDeviceNode(device, "")
 	{
 		
 	}
 	
-	CharDeviceNode::CharDeviceNode() : CharDeviceNode(nullptr)
+	CharDeviceNode::CharDeviceNode() : CharDeviceNode((devtarget_t)nullptr)
 	{
 		
 	}
@@ -63,7 +63,7 @@ namespace Kernel { namespace FS {
 	
 	
 	
-	uint64_t CharDeviceNode::read(uint64_t start, uint64_t len, uint8_t* buf)
+	uint64_t CharDeviceNode::read(uint64_t start, uint64_t len, void* buf)
 	{
 		auto dev = device();
 		assert(dev);
@@ -72,10 +72,10 @@ namespace Kernel { namespace FS {
 			// TODO: Handle error
 			return 0;
 		}
-		return dev->read(start, len, buf);
+		return dev->read(start, len, (uint8_t*)buf);
 	}
 	
-	uint64_t CharDeviceNode::write(uint64_t start, uint64_t len, const uint8_t* buf)
+	uint64_t CharDeviceNode::write(uint64_t start, uint64_t len, const void* buf)
 	{
 		auto dev = device();
 		assert(dev);
@@ -84,7 +84,7 @@ namespace Kernel { namespace FS {
 			// TODO: Handle error
 			return 0;
 		}
-		return dev->write(start, len, buf);
+		return dev->write(start, len, (const uint8_t*)buf);
 	}
 	
 	void CharDeviceNode::open()

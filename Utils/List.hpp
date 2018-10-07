@@ -168,6 +168,40 @@ namespace Utils
 	}
 	
 	template <class T, class A>
+	auto List<T, A>::insert(iterator pos, const T& item) -> iterator
+	{
+		iterator new_it;
+		if (!pos.n)
+		{
+			push_back(item);
+			new_it.n = tail;
+			return new_it;
+		}
+		
+		
+		auto ptr = nalloc.allocate(1);
+		assert(ptr);
+		assert((uintptr_t)ptr % alignof(Node) == 0);
+		nalloc.construct(ptr, item);
+		new_it.n = ptr;
+		ptr->next = pos.n;
+		ptr->prev = pos.n->prev;
+		if (head == pos.n)
+		{
+			head = ptr;
+		}
+		else
+		{
+			pos.n->prev->next = ptr;
+		}
+		pos.n->prev = ptr;
+		
+		++_size;
+		
+		return new_it;
+	}
+	
+	template <class T, class A>
 	bool List<T, A>::empty() const noexcept
 	{
 		return size() == 0;

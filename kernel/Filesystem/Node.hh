@@ -19,6 +19,7 @@ namespace Kernel { namespace FS {
 	class CharDeviceNode;
 	class LinkNode;
 	class PipeNode;
+	class FunctionNode;
 	
 	class Filesystem;
 	
@@ -48,8 +49,8 @@ namespace Kernel { namespace FS {
 		virtual NodeType type() const noexcept;
 		//const NodeType& type;
 
-		virtual uint64_t read(uint64_t start, uint64_t len, uint8_t*) = 0;
-		virtual uint64_t write(uint64_t, uint64_t, const uint8_t*) = 0;
+		virtual uint64_t read(uint64_t start, uint64_t len, void*) = 0;
+		virtual uint64_t write(uint64_t, uint64_t, const void*) = 0;
 		virtual void open() = 0;
 		virtual void close() = 0;
 		
@@ -108,6 +109,11 @@ namespace Kernel { namespace FS {
 		virtual const PipeNode* as_pipe() const noexcept
 		{ return nullptr; }
 		virtual PipeNode* as_pipe() noexcept
+		{ return nullptr; }
+		
+		virtual const FunctionNode* as_function() const noexcept
+		{ return nullptr; }
+		virtual FunctionNode* as_function() noexcept
 		{ return nullptr; }
 
     };

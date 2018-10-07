@@ -3,6 +3,7 @@
 
 #include <Common.h>
 #include "Node.hh"
+#include <Utils/shared_ptr>
 
 namespace Kernel { namespace FS {
 	
@@ -26,12 +27,15 @@ namespace Kernel { namespace FS {
         
         virtual FileNode_v* add_file(const Utils::string& name);
         virtual DirectoryNode_v* add_directory(const Utils::string& name);
-        virtual BlockDeviceNode* add_block_device(const Utils::string&, DeviceTarget* = nullptr);
-        virtual CharDeviceNode* add_char_device(const Utils::string&, DeviceTarget* = nullptr);
+        virtual BlockDeviceNode* add_block_device(const Utils::string&, const Utils::shared_ptr<DeviceTarget>& = nullptr);
+        virtual CharDeviceNode* add_char_device(const Utils::string&, const Utils::shared_ptr<DeviceTarget>& = nullptr);
         virtual LinkNode* add_link(const Utils::string& name, const Node* target);
         virtual LinkNode* add_link(const Utils::string& name, const Path_t&);
         virtual LinkNode* add_link(const Utils::string& name, const Utils::string& target);
         virtual Node* add(Node*) = 0;
+        virtual bool remove(const Utils::string& name);
+        virtual bool remove(size_t i);
+        virtual bool remove(Node*) = 0;
         
         virtual Node* find_node(const Path_t&);
     };

@@ -8,6 +8,8 @@ namespace Utils
 {
 	namespace detail
 	{
+		template <class, class, bool>
+		struct use_SFT_helper;
 		class shared_ptr_control;
 	}
 	
@@ -29,8 +31,9 @@ namespace Utils
 		
 		// Members
 		mutable detail::shared_ptr_control* ctrl;
+		T* ptr;
 		
-		void assign(detail::shared_ptr_control*);
+		void assign(detail::shared_ptr_control*, T* ptr);
 		
 		
 		public:
@@ -64,6 +67,9 @@ namespace Utils
 		
 		template <class>
 		friend class enable_shared_from_this;
+		
+		template <class, class, bool>
+		friend struct detail::use_SFT_helper;
 	};
 	
 }

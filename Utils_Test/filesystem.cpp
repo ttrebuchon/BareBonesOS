@@ -68,6 +68,7 @@ TEST(filesystem)
 	ASSERTEQ(f0->size(), 13);
 	char* buf = new char[f0->size()+1];
 	buf[f0->size()] = '\0';
+	assert(file->in.good());
 	file->in.read(buf, f0->size());
 	
 	contents = buf;

@@ -113,7 +113,7 @@ namespace Support { namespace SQLite
 		return (result == SQLITE_DONE || result == SQLITE_OK);
 	}
 	
-	bool SQLiteContext::ExecuteNonQuery(Utils::shared_ptr<sqlite3> db, const Utils::string& query)
+	bool SQLiteContext::ExecuteNonQuery(Utils::shared_ptr<sqlite3> db, const Utils::string& query, int* int_res)
 	{
 		auto callback = [](void*, auto, auto, auto) -> int
 		{
@@ -125,8 +125,18 @@ namespace Support { namespace SQLite
 		
 		#endif
 		
-		int res = sqlite3_exec(db.get(), query.c_str(), callback, nullptr, nullptr);
-		return (res == SQLITE_OK || res == SQLITE_DONE);
+		char* msg;
+		int res = sqlite3_exec(db.get(), query.c_str(), callback, nullptr, &msg);
+		if (int_res)
+		{
+			*int_res = res;
+			if (msg)
+			{
+				TRACE_VAL(msg);
+				sqlite3_free(msg);
+			}
+		}
+		return (res == SQLITE_OK || res == SQLITE_DONE || res == SQLITE_ROW);
 	}
 	
 	int SQLiteContext::ExecuteScalarInt(Utils::shared_ptr<sqlite3_stmt> stmt)
@@ -221,20 +231,24 @@ namespace Support { namespace SQLite
 	
 	SQLiteContext::SQLiteContext(const Utils::string& database) : db(nullptr)
 	{
-		sqlite3* _sqlite;
+		sqlite3* _sqlite = nullptr;
 		int res = sqlite3_open(database.c_str(), &_sqlite);
 		if (res != SQLITE_OK)
 		{
+			TRACE("Error returned.");
+			TRACE_VAL(sqlite3_errmsg(_sqlite));
 			__throw_sqlite_error(sqlite3_errmsg(_sqlite));
 			assert(NOT_IMPLEMENTED);
 		}
+		assert(_sqlite);
 		db = Utils::shared_ptr<sqlite3>(_sqlite, &sqlite_delete);
+		
+		assert(db);
 		
 		sqlite3_extended_result_codes(db.get(), 1);
 		ExecuteNonQuery(db, "PRAGMA FOREIGN_KEYS = ON;");
 		
-		
-		for (auto& table : get_tables())
+		for (const auto& table : get_tables())
 		{
 			schema& schm = schemas[table];
 			schm.name = table;
@@ -280,6 +294,10 @@ namespace Support { namespace SQLite
 		assert(res == SQLITE_OK);
 		
 		res = sqlite3_step(stmt.get());
+		if (res != SQLITE_ROW)
+		{
+			TRACE_VAL(sqlite3_errmsg(db.get()));
+		}
 		assert(res == SQLITE_ROW);
 		
 		int count = sqlite3_column_count(stmt.get());
@@ -415,6 +433,10 @@ namespace Support { namespace SQLite
 		
 		auto stmt = Prepare(db, query);
 		int res = sqlite3_step(stmt.get());
+		if (res != SQLITE_DONE)
+		{
+			TRACE_VAL(res);
+		}
 		assert(res == SQLITE_DONE);
 		
 		
@@ -552,7 +574,28 @@ namespace Support { namespace SQLite
 		
 		if (!table_exists(MetaTables::Inheritance))
 		{
-			bool res = ExecuteNonQuery(db, Utils::string("CREATE TABLE [") + MetaTables::Inheritance + "] ([base] TEXT, [derived] TEXT, [distance] INTEGER, [abstract] INTEGER, PRIMARY KEY([base], [derived]));");
+			int ires;
+			bool res = ExecuteNonQuery(db, Utils::string("CREATE TABLE [") + MetaTables::Inheritance + "] ([base] TEXT, [derived] TEXT, [distance] INTEGER, [abstract] INTEGER, PRIMARY KEY([base], [derived]));", &ires);
+			if (!res)
+			{
+				if (strcmp("not an error", error_msg()) != 0)
+				{
+					TRACE_VAL(error_msg());
+					TRACE_VAL(ires);
+					auto ext_err = sqlite3_extended_errcode(db.get());
+					if (ext_err != ires)
+					{
+						TRACE_VAL(ext_err);
+					}
+					TRACE_VAL(ext_err >> 8);
+					//assert(ext_err == SQLITE_ERROR_RETRY);
+					//assert(ext_err == (SQLITE_OK | (2 << 8)));
+				}
+				else
+				{
+					res = true;
+				}
+			}
 			assert(res);
 			
 		}

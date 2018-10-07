@@ -383,12 +383,16 @@ namespace Kernel { namespace Memory {
 		
 		return (void*)(((addr_t)pg->frame())+(((addr_t)p) & 0xfff));
 	}
+	
+	#ifndef TESTING
 
 	void PageDirectory::switch_to() noexcept
 	{
 		PageDirectory::Current = this;
 		switch_page_dir(dir_phys);
 	}
+	
+	#endif
 
 	bool PageDirectory::flush() const noexcept
 	{
@@ -730,10 +734,12 @@ namespace Kernel { namespace Memory {
 		return (void*)(((addr_t)page->frame) << 12);
 	}
 	
+	#ifndef TESTING
 	void PageDirectory::Page::frame(const void* const p) noexcept
 	{
 		page->frame = ((addr_t)p) >> 12;
 	}
+	#endif
 
 	bool PageDirectory::Page::read_write() const noexcept
 	{
@@ -760,10 +766,12 @@ namespace Kernel { namespace Memory {
 		return page->present == 1;
 	}
 	
+	#ifndef TESTING
 	void PageDirectory::Page::present(bool b) noexcept
 	{
 		page->present = b;
 	}
+	#endif
 
 	void PageDirectory::Page::flush() const noexcept
 	{
@@ -785,8 +793,10 @@ namespace Kernel { namespace Memory {
 		
 		page->rw = (is_writeable == 1) ? 1 : 0;
 		page->user = (kernel_only == 1) ? 0 : 1;
-		page->frame = index;
-		page->present = 1;
+		this->frame((void*)frame_addr);
+		//page->frame = index;
+		this->present(true);
+		//page->present = 1;
 		flush();
 		return true;
 	}
@@ -801,8 +811,10 @@ namespace Kernel { namespace Memory {
 			return false;
 		}
 		auto frame = (uintptr_t)this->frame();
-		page->present = 0;
-		page->frame = 0;
+		present(false);
+		//page->present = 0;
+		this->frame((void*)0x0);
+		//page->frame = 0;
 		flush();
 		PhysicalMemory::release(frame, PAGE_SIZE);
 		

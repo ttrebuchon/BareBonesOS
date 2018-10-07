@@ -91,5 +91,8 @@ namespace Utils {
 	
 	typedef basic_streambuf<char> streambuf;
 	typedef basic_streambuf<wchar_t> wstreambuf;
+	
+	template <class T, class Traits>
+	streamsize __copy_streambufs(basic_streambuf<T, Traits>* in, basic_streambuf<T, Traits>* out);
 }
 #endif

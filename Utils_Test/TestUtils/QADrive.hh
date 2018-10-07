@@ -1,6 +1,11 @@
 #pragma once
 #include <drivers/Disk/Disk.hh>
 
+namespace Drivers
+{
+	class Driver;
+}
+
 namespace TestUtils
 {
 	class QADrive : public Drivers::Disk
@@ -28,6 +33,8 @@ namespace TestUtils
 			return this->size;
 		}
 		
+		
+		static Drivers::Driver* Driver() noexcept;
 	};
 	
 	class QACheckReadOnlyDrive : public QADrive

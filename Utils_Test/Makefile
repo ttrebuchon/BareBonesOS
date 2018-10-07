@@ -42,6 +42,12 @@ SRC += $(call GET_SRC_R,Std/pthread,cpp)
 SRC += $(call GET_SRC_R,drivers/Disk,cpp)
 SRC += ../Std/errno_cpp.cpp
 SRC += ../Std/errno.c
+SRC += ../drivers/Driver.cpp
+SRC += $(call GET_SRC_R,kernel/Memory/Driver,cpp)
+SRC += $(call GET_SRC_R,kernel/Security,cpp)
+SRC += $(call GET_SRC_R,kernel/Shell,cpp)
+SRC += $(call GET_SRC_R,kernel/Shell,c)
+SRC += $(call GET_SRC_R,kernel/Functions,cpp)
 
 ASM_SRC = 
 ASM_OBJS = $(ASM_SRC:.asm=.o)
@@ -100,18 +106,23 @@ BOTH_FLAGS += -fmax-errors=1
 BOTH_FLAGS += -Werror=nonnull
 BOTH_FLAGS += -Werror=pragmas
 BOTH_FLAGS += -Werror=int-to-pointer-cast
+BOTH_FLAGS += -Werror=nonnull
 BOTH_FLAGS += -fPIC
 BOTH_FLAGS += -pie
 #BOTH_FLAGS += -fgnu-tm
+BOTH_FLAGS += #-DSQLITE_VFS_NATIVE_FS
 
 BOTH_FLAGS += $(SQLITE_FLAGS)
 
 SQLITE_FLAGS += -DSQLITE_THREADSAFE=0
 SQLITE_FLAGS += -DSQLITE_OMIT_LOAD_EXTENSION
-SQLITE_FLAGS += #-DSQLITE_OS_OTHER=1
+SQLITE_FLAGS += -DSQLITE_OS_OTHER=1
 SQLITE_FLAGS += -DSQLITE_TEMP_STORE=3
+SQLITE_FLAGS += #-DSQLITE_DEFAULT_FOREIGN_KEYS=1
+SQLITE_FLAGS += #-DSQLITE_USE_URI=1
 
 BASE_CXXFLAGS += -std=c++17 -I..
+BASE_CXXFLAGS += -I../../../boost
 BASE_CXXFLAGS += -fconcepts
 #-ffreestanding -DDEBUG 
 #BASE_CXXFLAGS += -DINCLUDED_NEW_HH

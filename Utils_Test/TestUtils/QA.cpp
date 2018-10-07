@@ -14,7 +14,13 @@
 #include <kernel/Memory/PageRegions/DynamicCodeRegion.hh>
 #include "QADrive.hh"
 #include <kernel/Processor.h>
+#include <drivers/Driver.hh>
+#include <kernel/Memory/Driver/Driver.hh>
+#include <map>
+#include <kernel/Filesystem.hh>
+#include <kernel/Filesystem/EXT2/EXT2.hh>
 
+static std::map<Kernel::FS::Filesystem*, Drivers::Disk*> tmp_filesystem_disks;
 
 void QA::Init()
 {
@@ -30,6 +36,8 @@ void QA::Init()
 	Paging_Init();
 	out << "Processors_Init()" << std::endl;
 	Processors_Init();
+	out << "Drivers_Init()" << std::endl;
+	Drivers_Init();
 }
 
 //static QA::_ostream _out;
@@ -83,18 +91,15 @@ void QA::MultiBoot_Init()
 	#endif
 	assert(addrEnd > addrStart);
 	size_t len = addrEnd - addrStart;
+	out << "Calling mmap..." << std::endl;
 	auto phys = ::mmap((void*)(addr_t)addrStart, len, PROT_READ | PROT_WRITE, MAP_PRIVATE, dzero, 0);
+	out << "mmap() done." << std::endl;
 	assert(phys != MAP_FAILED);
 	
 	phys_start = phys;
 	phys_end = (void*)((addr_t)phys + len);
 	
 	assert((uint32_t)(addr_t)phys == (addr_t)phys);
-	for (unsigned char* ptr = (unsigned char*)addrStart; ptr != (unsigned char*)addrEnd; ++ptr)
-	{
-		assert(*ptr == 0);
-	}
-	
 	
 	auto mb = (multiboot*)malloc(sizeof(multiboot));
 	memset(mb, 0, sizeof(multiboot));
@@ -328,6 +333,7 @@ void QA::Filesystem_Init()
 }
 
 #include <kernel/Memory/Heaps/UnifyHeap.hh>
+#include <kernel/Memory/Heaps/KernelHeap.hh>
 
 void QA::Paging_Init()
 {
@@ -343,6 +349,9 @@ void QA::Paging_Init()
 	auto seg = boot::mboot->free_segments(mmap_free);
 	assert(seg);
 	addr_t last = 0x0;
+	addr_t large_start, large_end;
+	large_start = large_end = 0;
+	out << "Setting multiboot segments..." << std::endl;
 	for (size_t i = 0; i < mmap_free; ++i)
 	{
 		assert(seg[i]->size == sizeof(multiboot_mmap_t));
@@ -360,20 +369,37 @@ void QA::Paging_Init()
 		
 		last = seg[i]->base_addr + seg[i]->len;
 		last = (last / 4096) * 4096;
+		if (large_end - large_start < seg[i]->len)
+		{
+			large_start = seg[i]->base_addr;
+			large_end = large_start + seg[i]->len;
+		}
 	}
 	
+	out << "multiboot segments set." << std::endl;
 	
 	auto cr = new PageRegions::Dynamic_Code(PageDirectory::Current);
 	PageDirectory::Regions[CODE_MEM_REGION] = cr;
 	
-	
+	out << "Setting up physical memory..." << std::endl;
 	PhysicalMemory::Use<Basic_Physical>();
+	
+	#ifdef __USE_MEM_POOL__
 	
 	extern Heap* kheap;
 	kheap = nullptr;
 	
-	auto kheap_tmp = new UnifyHeap<cross_proc_allocator<void>>(PageDirectory::Current, false, false, 4096);
+	//auto kheap_tmp = new UnifyHeap<cross_proc_allocator<void>>(PageDirectory::Current, false, false, 4096);
+	out << "Creating heap..." << std::endl;
+	auto kheap_tmp = new kernel_heap<cross_proc_allocator<void>>(PageDirectory::Current, large_start, large_end);
+	out << "Assigning heap..." << std::endl;
 	kheap = kheap_tmp;
+	out << "Heap set." << std::endl;
+	auto x = new int[48];
+	out << "Heap tested." << std::endl;
+	delete[] x;
+	
+	#endif
 	
 }
 
@@ -384,6 +410,21 @@ void QA::Processors_Init()
 	memset(proc, 0, sizeof(Kernel::Processor_t));
 	assert((addr_t)proc % alignof(Kernel::Processor_t) == 0);
 	Kernel::current_processor = proc;
+}
+
+void QA::Drivers_Init()
+{
+	using namespace Kernel::Memory;
+	using namespace Drivers;
+	auto mem_inst = MemoryDriver::instance();
+	assert(mem_inst);
+	auto res = DriverManager::register_char_driver(MemoryDriver::Major, mem_inst);
+	assert(res > 0);
+	
+	auto qa_driver = TestUtils::QADrive::Driver();
+	assert(qa_driver);
+	res = DriverManager::register_block_driver(qa_driver->major(), qa_driver);
+	assert(res > 0);
 }
 
 static size_t get_file_size(const char* filename)
@@ -415,6 +456,209 @@ Drivers::Disk* QA::QACheckReadOnlyDrive(const char* filename, const size_t size)
 Drivers::Disk* QA::QACheckReadOnlyDrive(const char* filename)
 {
 	return QA::QACheckReadOnlyDrive(filename, get_file_size(filename));
+}
+
+void QA::Destroy_QADrive(Drivers::Disk* disk)
+{
+	if (disk)
+	{
+		delete disk;
+	}
+}
+
+Kernel::FS::Filesystem* QA::TempFilesystem(const char* storage_file, const size_t size)
+{
+	using namespace Kernel::FS;
+	auto drive = QA::QADrive(storage_file, size);
+	assert(drive);
+	if (!drive)
+	{
+		return nullptr;
+	}
+	auto fs = TempFilesystem(drive);
+	if (!fs)
+	{
+		Destroy_QADrive(drive);
+		return nullptr;
+	}
+	
+	tmp_filesystem_disks[fs] = drive;
+	
+	return fs;
+}
+
+Kernel::FS::Filesystem* QA::TempFilesystem(Drivers::Disk* drive)
+{
+	using namespace Kernel::FS;
+	assert(drive);
+	if (!EXT2::Format(drive))
+	{
+		return nullptr;
+	}
+	auto fs = new EXT2(*drive);
+	assert(fs);
+	
+	return fs;
+}
+
+void QA::Destroy_Filesystem(Kernel::FS::Filesystem* fs)
+{
+	assert(fs);
+	Drivers::Disk* disk = nullptr;
+	if (tmp_filesystem_disks.count(fs))
+	{
+		disk = tmp_filesystem_disks[fs];
+		assert(disk);
+		tmp_filesystem_disks.erase(fs);
+	}
+	
+	delete fs;
+	if (disk)
+	{
+		Destroy_QADrive(disk);
+	}
+}
+
+Kernel::FS::Filesystem* QA::MountTempFilesystem(const char* mntPath, const char* mntName, const char* diskName, const size_t diskSize, Kernel::FS::Filesystem* rootFS)
+{
+	using namespace Kernel::FS;
+	Filesystem* fs = nullptr;
+	Node* parent = nullptr;
+	DirectoryNode_v* parent_d = nullptr;
+	Node* fs_root = nullptr;
+	LinkNode* link = nullptr;
+	
+	if (!rootFS)
+	{
+		rootFS = Filesystem::Current;
+	}
+	
+	if (!rootFS)
+	{
+		goto error;
+	}
+	
+	parent = rootFS->getNode(mntPath);
+	if (parent)
+	{
+		parent_d = parent->as_directory();
+	}
+	
+	if (!parent_d)
+	{
+		goto error;
+	}
+	
+	
+	
+	fs = TempFilesystem(diskName, diskSize);
+	assert(fs);
+	if (!fs)
+	{
+		goto error;
+	}
+	
+	fs_root = fs->root();
+	if (!fs_root)
+	{
+		goto error;
+	}
+	
+	link = parent_d->add_link(mntName, fs_root);
+	assert(link);
+	if (!link)
+	{
+		goto error;
+	}
+	
+	
+	return fs;
+	
+	error:
+	if (fs)
+	{
+		Destroy_Filesystem(fs);
+		fs = nullptr;
+	}
+	return nullptr;
+}
+
+bool QA::UnmountTempFilesystem(const char* mntPath, const char* mntName, Kernel::FS::Filesystem* fs, Kernel::FS::Filesystem* rootFS)
+{
+	using namespace Kernel::FS;
+	Node* parent = nullptr;
+	DirectoryNode_v* parent_d = nullptr;
+	Node* fs_root = nullptr;
+	LinkNode* link = nullptr;
+	Node* n_link = nullptr;
+	
+	if (!rootFS)
+	{
+		rootFS = Filesystem::Current;
+	}
+	
+	if (!rootFS)
+	{
+		return false;
+	}
+	
+	
+	parent = rootFS->getNode(mntPath);
+	if (parent)
+	{
+		parent_d = parent->as_directory();
+	}
+	
+	if (!parent_d)
+	{
+		return false;
+	}
+	
+	n_link = parent_d->at(mntName);
+	if (n_link)
+	{
+		link = n_link->as_link();
+	}
+	
+	if (!link)
+	{
+		return false;
+	}
+	
+	if (!link->isKind(NodeType::Directory))
+	{
+		return false;
+	}
+	
+	fs_root = link->as_directory();
+	if (!fs_root)
+	{
+		return false;
+	}
+	
+	if (!fs)
+	{
+		fs = fs_root->get_filesystem();
+		if (fs == rootFS)
+		{
+			return false;
+		}
+	}
+	
+	if (!fs)
+	{
+		return false;
+	}
+	
+	if (!parent_d->remove(link))
+	{
+		return false;
+	}
+	
+	link = nullptr;
+	Destroy_Filesystem(fs);
+	
+	return true;
 }
 
 

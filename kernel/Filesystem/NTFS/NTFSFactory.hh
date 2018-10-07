@@ -29,9 +29,9 @@ namespace Kernel::FS
 		
 		virtual LinkNode* create_link(DirectoryNode_v* parent, const Utils::string&, const Utils::string&) noexcept override;
 		
-		virtual BlockDeviceNode* create_block_device(DirectoryNode_v* parent, const Utils::string&, DeviceTarget*) noexcept override;
+		virtual BlockDeviceNode* create_block_device(DirectoryNode_v* parent, const Utils::string&, const devtarget_t&) noexcept override;
 		
-		virtual CharDeviceNode* create_char_device(DirectoryNode_v* parent, const Utils::string&, DeviceTarget*) noexcept override;
+		virtual CharDeviceNode* create_char_device(DirectoryNode_v* parent, const Utils::string&, const devtarget_t&) noexcept override;
 		
 		
 		friend class NTFS;

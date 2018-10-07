@@ -10,7 +10,7 @@ namespace Kernel::FS
 	}
 	
 	
-	uint64_t FAT32FileNode::read(uint64_t off, uint64_t len, uint8_t* buf)
+	uint64_t FAT32FileNode::read(uint64_t off, uint64_t len, void* buf)
 	{
 		if (len == 0)
 		{
@@ -32,7 +32,7 @@ namespace Kernel::FS
 		
 		
 		uint64_t cluster_index = off / clu_sz;
-		uint8_t* buf_it = buf;
+		uint8_t* buf_it = (uint8_t*)buf;
 		if (off % clu_sz)
 		{
 			uint8_t tmp[clu_sz];
@@ -75,7 +75,7 @@ namespace Kernel::FS
 	}
 	
 	
-	uint64_t FAT32FileNode::write(uint64_t, uint64_t, const uint8_t*)
+	uint64_t FAT32FileNode::write(uint64_t, uint64_t, const void*)
 	{
 		assert(NOT_IMPLEMENTED);
 	}

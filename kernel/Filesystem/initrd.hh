@@ -4,7 +4,7 @@
 #include <Common.h>
 #include "Filesystem.hh"
 #include "initrd/DirectoryNode.hh"
-#include "ReadOnlyFactory.hh"
+#include "initrd/Factory.hh"
 
 namespace Kernel { namespace FS {
 	
@@ -26,7 +26,7 @@ namespace Kernel { namespace FS {
 		private:
 		Init_RD::DirectoryNode* _root;
 		void* _base;
-		ReadOnlyFactory _factory;
+		Init_RD::Factory _factory;
 		
 		
 		public:
@@ -37,7 +37,7 @@ namespace Kernel { namespace FS {
 			return _root;
 		}
 		
-		virtual ReadOnlyFactory& factory() noexcept override
+		virtual Init_RD::Factory& factory() noexcept override
 		{
 			return _factory;
 		}

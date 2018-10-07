@@ -36,9 +36,14 @@ namespace Kernel { namespace FS
 		Utils::vector<string_type, alloc_rebind<string_type>> _parts;
 		mutable string_type _path;
 		mutable bool _changed;
+		bool _is_absolute;
+		
+		void _M_init_split(const string_type& path);
+		string_type _M_combine() const;
 		
 		
 		public:
+		constexpr static size_type npos = string_type::npos;
 		
 		basic_path(const string_type&);
 		explicit basic_path(const char_type*);
@@ -60,16 +65,25 @@ namespace Kernel { namespace FS
 		bool empty() const noexcept;
 		off_type compare(const Path_t&) const;
 		
+		basic_path subpath(const size_type start, const size_type len = npos) const;
+		
 		const string_type& str() const noexcept;
 		const char_type* c_str() const noexcept;
+		constexpr bool is_absolute() const noexcept
+		{ return _is_absolute; }
 		
 		basic_path& append(const string_type&);
 		//basic_path& append(const cstring_type&);
 		
 		size_type parts_length() const noexcept;
+		size_type parts_size() const noexcept
+		{ return parts_length(); }
 		const string_type& part(const size_type) const;
 		const string_type& back() const
 		{ return _parts.back(); }
+		
+		constexpr const allocator_type& get_allocator() const noexcept
+		{ return _alloc; }
 		
 		basic_path& operator=(const basic_path&);
 		basic_path& operator=(basic_path&&);

@@ -6,57 +6,83 @@
 
 namespace Utils
 {
+	namespace detail
+	{
+		template <class, class, bool>
+		struct use_SFT_helper;
+	}
 	
 	template <class T>
 	class enable_shared_from_this
 	{
 		private:
-		mutable weak_ptr<T> weak_this;
+		mutable weak_ptr<T> refer;
 		
 		protected:
-		constexpr enable_shared_from_this()
+		constexpr enable_shared_from_this() : refer()
 		{
 			
 		}
 		
-		enable_shared_from_this(const enable_shared_from_this&)
-		{}
+		enable_shared_from_this(const enable_shared_from_this& o) : refer()
+		{
+			
+		}
 		
 		enable_shared_from_this& operator=(const enable_shared_from_this&)
 		{ return *this; }
 		
-		~enable_shared_from_this() {}
+		~enable_shared_from_this()
+		{
+			
+		}
 		
 		public:
 		
 		
 		shared_ptr<T> shared_from_this()
 		{
-			return shared_ptr<T>(this->weak_this);
+			return Utils::shared_ptr<T>(refer);
+			/*if (ctrl)
+			{
+				return shared_ptr<T>(ctrl, ptr);
+			}
+			else
+			{
+				// TODO: Throw or abort
+				assert(NOT_IMPLEMENTED);
+			}*/
 		}
 		
 		shared_ptr<const T> shared_from_this() const
 		{
-			return shared_ptr<const T>(this->weak_this);
+			return Utils::shared_ptr<T>(refer);
+			/*if (ctrl)
+			{
+				return shared_ptr<T>(ctrl, ptr);
+			}
+			else
+			{
+				// TODO: Throw or abort
+				assert(NOT_IMPLEMENTED);
+			}*/
 		}
 		
 		private:
 		
 		template <class T1>
-		void weak_assign(const detail::shared_ptr_control* ctrl)
+		void weak_assign(detail::shared_ptr_control* ctrl, T1* ptr)
 		{
-			weak_this.assign(ctrl);
+			refer.assign(ctrl, ptr);
 		}
 		
 		
-		template <class T1>
-		friend void __enable_shared_from_this_helper(const detail::shared_ptr_control* ctrl, const enable_shared_from_this* sft, const T1* ptr)
-		{
-			if (sft)
-			{
-				sft->weak_assign(/*const_cast<T1*>(ptr),*/ ctrl);
-			}
-		}
+		
+		template <class>
+		friend class shared_ptr;
+		
+		template <class, class, bool>
+		friend struct detail::use_SFT_helper;
 	};
 	
 }

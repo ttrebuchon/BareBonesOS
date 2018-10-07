@@ -28,8 +28,8 @@ namespace FS
 		public:
 		
 		
-		virtual uint64_t read(uint64_t start, uint64_t len, uint8_t*) override;
-		virtual uint64_t write(uint64_t, uint64_t, const uint8_t*) override;
+		virtual uint64_t read(uint64_t start, uint64_t len, void*) override;
+		virtual uint64_t write(uint64_t, uint64_t, const void*) override;
 		virtual void open() override {};
 		virtual void close() override {};
 		

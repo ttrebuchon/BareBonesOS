@@ -18,6 +18,7 @@ namespace Kernel { namespace FS {
 		Pipe = 128,
 		Other= 256,
 		FSSpecific = 256,
+		Function = 512,
 	};
 	
 	ENUM_OPS(NodeType, short);

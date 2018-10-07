@@ -26,7 +26,7 @@ namespace Kernel { namespace FS
 		return this->_type;
 	}
 	
-	uint64_t LinkNode::read(uint64_t start, uint64_t len, uint8_t* buf)
+	uint64_t LinkNode::read(uint64_t start, uint64_t len, void* buf)
 	{
 		auto t = target();
 		assert(t);
@@ -39,7 +39,7 @@ namespace Kernel { namespace FS
 		return t->read(start, len, buf);
 	}
 	
-	uint64_t LinkNode::write(uint64_t start, uint64_t len, const uint8_t* buf)
+	uint64_t LinkNode::write(uint64_t start, uint64_t len, const void* buf)
 	{
 		auto t = target();
 		assert(t);

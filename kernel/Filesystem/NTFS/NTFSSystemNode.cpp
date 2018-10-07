@@ -15,13 +15,13 @@ namespace Kernel::FS
 	
 	
 	
-	uint64_t NTFSSystemNode::read(uint64_t start, uint64_t len, uint8_t*)
+	uint64_t NTFSSystemNode::read(uint64_t start, uint64_t len, void*)
 	{
 		tset_error(EOPNOTSUPP, "Cannot raw read from NTFS system node.");
 		return 0;
 	}
 	
-	uint64_t NTFSSystemNode::write(uint64_t, uint64_t, const uint8_t*)
+	uint64_t NTFSSystemNode::write(uint64_t, uint64_t, const void*)
 	{
 		tset_error(EOPNOTSUPP, "Cannot raw write to NTFS system node.");
 		return 0;

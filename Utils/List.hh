@@ -73,7 +73,7 @@ namespace Utils
 		
 	}
 	
-	template <class T, class Alloc = Allocator<T>>
+	template <class T, class Alloc = allocator<T>>
 	class List
 	{
 		protected:
@@ -199,6 +199,7 @@ namespace Utils
 		size_type size() const noexcept;
 		void clear();
 		iterator erase(iterator);
+		iterator insert(iterator pos, const T&);
 		[[nodiscard]] bool empty() const noexcept;
 		reference front();
 		const_reference front() const;
@@ -224,7 +225,7 @@ namespace Utils
 		}
 	};
 	
-	template <class T, class A = Allocator<T>>
+	template <class T, class A = allocator<T>>
 	using list = List<T, A>;
 	
 }

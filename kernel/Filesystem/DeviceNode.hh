@@ -3,7 +3,7 @@
 
 #include <Common.h>
 #include "Node.hh"
-
+#include "Devices/DeviceTarget.hh"
 
 
 
@@ -16,13 +16,13 @@ namespace Kernel { namespace FS {
 	class DeviceNode : public virtual Node
 	{
 		protected:
-		DeviceTarget* _device;
+		Utils::shared_ptr<DeviceTarget> _device;
 		
 		
-		DeviceNode(DeviceTarget* device, const Utils::string& name, const NodeType);
-		DeviceNode(DeviceTarget* dev, const NodeType);
-		DeviceNode(DeviceTarget* device, const Utils::string& name);
-		DeviceNode(DeviceTarget* dev);
+		DeviceNode(const Utils::shared_ptr<DeviceTarget>& device, const Utils::string& name, const NodeType);
+		DeviceNode(const Utils::shared_ptr<DeviceTarget>& dev, const NodeType);
+		DeviceNode(const Utils::shared_ptr<DeviceTarget>& device, const Utils::string& name);
+		DeviceNode(const Utils::shared_ptr<DeviceTarget>& dev);
 		
 		
 		public:
@@ -31,8 +31,8 @@ namespace Kernel { namespace FS {
 		virtual ~DeviceNode() = default;
 		
 		
-		virtual DeviceTarget* device() noexcept;
-		virtual const DeviceTarget* device() const noexcept;
+		virtual Utils::shared_ptr<DeviceTarget> device() noexcept;
+		virtual Utils::shared_ptr<const DeviceTarget> device() const noexcept;
 		virtual bool has_device() const noexcept;
 		
 		

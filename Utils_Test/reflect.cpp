@@ -712,6 +712,12 @@ TEST(reflect)
 	*/
 	#if __cplusplus >= 201703L
 	{
+		#ifndef SQLITE_VFS_NATIVE_FS
+		auto db_fs = QA::MountTempFilesystem("/", "DBs", "images/SQLiteDisk.img", 8192*1024);
+		assert(db_fs);
+		#endif
+		
+		
 	static_assert(Utils::is_same<decltype(&test_class::x), typename Support::SQLite::Member_Pointer<int, test_class>::type>::value);
 	
 	
@@ -733,6 +739,11 @@ TEST(reflect)
 	Utils::make_tuple(4, Support::SQLite::Member_Ptr<&test_class::x>::Member("x"));
 	
 	second_test();
+	
+	#ifndef SQLITE_VFS_NATIVE_FS
+	bool umount_res = QA::UnmountTempFilesystem("/", "DBs", db_fs);
+	assert(umount_res);
+	#endif
 	}
 	#endif
 	
@@ -761,6 +772,7 @@ TEST(reflect)
 	/*assert(test_class::counter() == 0);*/
 	
 	std::clog << __func__ << " Returning...\n";
+	assert(false);
 }
 
 
@@ -943,12 +955,11 @@ void testt()
 	
 	
 	
-	
 	SQLiteContext* sqlcontext = new SQLiteContext(sqlite_out_db);
 	
 	Context<SQLiteContext*, test_class, test_comp_class, poly_test_class, poly_test_class_base, poly_test_class2, poly_test_class3> context(sqlcontext, true);
 	
-	
+	assert(false);
 	
 	assert(context.owns_implementation());
 	
@@ -980,6 +991,7 @@ void testt()
 		std::cout << "Error Message: '" << sqlcontext->error_msg() << std::endl;
 	}
 	assert(res);
+	assert(false);
 	
 	
 	test_comp_class tcc_ex;

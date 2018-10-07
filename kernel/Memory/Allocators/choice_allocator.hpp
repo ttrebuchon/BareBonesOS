@@ -121,11 +121,12 @@ namespace Kernel { namespace Memory
 	}
 	
 	template <class T, class A>
-	template <class U>
-	void choice_allocator<T, A>::destroy(U* ptr)
+	void choice_allocator<T, A>::destroy(pointer ptr)
 	{
-		backup.template destroy<U>(ptr);
+		ptr->~T();
 	}
+	
+	
 	
 	
 	template <class T, class A>

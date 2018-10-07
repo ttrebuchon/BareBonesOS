@@ -4,6 +4,9 @@
 #include <kernel/Filesystem/BlockDeviceNode.hh>
 #include <kernel/Filesystem/CharDeviceNode.hh>
 #include <kernel/Filesystem/LinkNode.hh>
+#include <kernel/Filesystem/NamedPipe.hh>
+#include <kernel/Filesystem/FunctionNode.hh>
 #include <kernel/Filesystem/File.hh>
 #include <kernel/Filesystem/MBR.hh>
 #include <kernel/Filesystem/Devices/DeviceTarget.hh>
+#include <kernel/Filesystem/node_ptr.hh>

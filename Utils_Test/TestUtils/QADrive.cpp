@@ -3,6 +3,7 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 #include "QA.hh"
+#include <drivers/Driver.hh>
 
 namespace TestUtils
 {
@@ -96,5 +97,48 @@ namespace TestUtils
 			assert(base_address[start + i] == buf[i]);
 		}
 		return len;
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	using namespace Drivers;
+	
+	class QADriver : public Driver
+	{
+		public:
+		
+		virtual driver_t devices() const noexcept
+		{
+			assert(NOT_IMPLEMENTED);
+		}
+		
+		virtual Device* device(const driver_t) const noexcept
+		{
+			assert(NOT_IMPLEMENTED);
+		}
+		
+		virtual driver_t major() const noexcept
+		{
+			return 384;
+		}
+	};
+	
+	
+	
+	
+	
+	
+	
+	static QADriver qa_driver;
+	Driver* QADrive::Driver() noexcept
+	{
+		// TODO
+		return &qa_driver;
 	}
 }

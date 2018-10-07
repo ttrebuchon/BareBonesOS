@@ -469,6 +469,42 @@ namespace Kernel::FS
 		size_t n = 0;
 		size_t s = first;
 		size_t i = 0;
+		size_t block_count;
+		
+		TRACE_VAL(first);
+		TRACE_VAL(count);
+		uint32_t ptrs[count+first];
+		if (find_valid_block_ptrs(ptrs, node, count + first) < count)
+		{
+			delete[] buffer;
+			return nullptr;
+		}
+		else
+		{
+			for (size_t g = 0; g < count+first; ++g)
+			{
+				TRACE_VAL(g);
+				TRACE_VAL(ptrs[g]);
+			}
+			TRACE("\n\n");
+			for (size_t j = first; j < count+first; ++j)
+			{
+				TRACE_VAL(ptrs[j]);
+				assert(ptrs[j] > 0);
+				auto blk = get_block(ptrs[j]);
+				assert(blk);
+				if (!blk)
+				{
+					delete[] buffer;
+					return nullptr;
+				}
+				const uint8_t* res = blk->data;
+				memcpy(buffer + (j-first)*block_size(), res, block_size());
+			}
+			return buffer;
+		}
+		
+		
 		if (first < 12)
 		{
 			n = 12 - first;
@@ -629,6 +665,7 @@ namespace Kernel::FS
 		
 		for (size_t i = 0; i < count; ++i)
 		{
+			assert(ptrs[i] > 0);
 			auto sres = get_block(ptrs[i]);
 			assert(sres);
 			if (!sres)
@@ -640,6 +677,147 @@ namespace Kernel::FS
 		}
 		
 		return true;
+	}
+	
+	uint32_t EXT2::valid_block_ptrs(const uint32_t* block, const size_t start) const noexcept
+	{
+		assert(block);
+		const size_t n = block_size()/sizeof(uint32_t);
+		size_t k = 0;
+		for (size_t j = start; j < n; ++j)
+		{
+			if (block[j] > 0)
+			{
+				++k;
+			}
+		}
+		return k;
+	}
+	
+	uint32_t EXT2::find_valid_block_ptrs(uint32_t* ptrs, const inode_type* node, size_t count, size_t start_index, bool keep_zeros) const noexcept
+	{
+		assert(ptrs);
+		assert(node);
+		
+		size_t write_index = 0;
+		size_t total_index = 0;
+		const size_t ptr_per_blk = block_size()/sizeof(uint32_t);
+		size_t i; // Generic index
+		
+		
+		memset(ptrs, 0, sizeof(uint32_t)*count);
+		
+		for (i = 0; i < 12 && write_index < count; ++i)
+		{
+			if (node->direct[i] > 0 || keep_zeros)
+			{
+				if (total_index >= start_index)
+				{
+					ptrs[write_index] = node->direct[i];
+					++write_index;
+				}
+				++total_index;
+			}
+		}
+		
+		if (write_index >= count)
+		{
+			return write_index;
+		}
+		
+		if (node->indirect_1 > 0)
+		{
+			auto indirect1 = get_block(node->indirect_1);
+			const uint32_t* data = (const uint32_t*)indirect1->data;
+			for (i = 0; i < ptr_per_blk && write_index < count; ++i)
+			{
+				if (data[i] > 0 || keep_zeros)
+				{
+					if (total_index >= start_index)
+					{
+						ptrs[write_index] = data[i];
+						++write_index;
+					}
+					++total_index;
+				}
+			}
+		}
+		
+		if (write_index >= count)
+		{
+			return write_index;
+		}
+		
+		if (node->indirect_2 > 0)
+		{
+			auto indirect2 = get_block(node->indirect_2);
+			const uint32_t* data2 = (const uint32_t*)indirect2->data;
+			for (size_t j = 0; j < ptr_per_blk && write_index < count; ++j)
+			{
+				if (data2[j] > 0)
+				{
+					auto indirect1 = get_block(data2[j]);
+					const uint32_t* data = (const uint32_t*)indirect1->data;
+					
+					for (i = 0; i < ptr_per_blk && write_index < count; ++i)
+					{
+						if (data[i] > 0 || keep_zeros)
+						{
+							if (total_index >= start_index)
+							{
+								ptrs[write_index] = data[i];
+								++write_index;
+							}
+							++total_index;
+						}
+					}
+				}
+			}
+		}
+		
+		if (write_index >= count)
+		{
+			return write_index;
+		}
+		
+		if (node->indirect_3 > 0)
+		{
+			auto indirect3 = get_block(node->indirect_3);
+			const uint32_t* data3 = (const uint32_t*)indirect3->data;
+			for (size_t k = 0; k < ptr_per_blk && write_index < count; ++k)
+			{
+				if (data3[k] > 0)
+				{
+					auto indirect2 = get_block(data3[k]);
+					const uint32_t* data2 = (const uint32_t*)indirect2->data;
+					
+					for (size_t j = 0; j < ptr_per_blk && write_index < count; ++j)
+					{
+						if (data2[j] > 0)
+						{
+							auto indirect1 = get_block(data2[j]);
+							const uint32_t* data = (const uint32_t*)indirect1->data;
+							
+							for (i = 0; i < ptr_per_blk && write_index < count; ++i)
+							{
+								if (data[i] > 0 || keep_zeros)
+								{
+									if (total_index >= start_index)
+									{
+										ptrs[write_index] = data[i];
+										++write_index;
+									}
+									++total_index;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		
+		return write_index;
 	}
 	
 	Node* EXT2::parse_node(DirectoryNode* parent, detail::EXT2::dirent_t* ent)
@@ -705,6 +883,76 @@ namespace Kernel::FS
 		}
 		nodes[ent->inode] = n;
 		return n;
+	}
+	
+	node_ptr<> EXT2::parse_node2(DirectoryNode* parent, detail::EXT2::dirent_t* ent)
+	{
+		assert(ent);
+		node_ptr<> np = nodes2[ent->inode];
+		if (np)
+		{
+			return np;
+		}
+		
+		auto next_n = get_inode(ent->inode);
+		assert(next_n);
+		if (!next_n)
+		{
+			return nullptr;
+		}
+		
+		Utils::string nname((const char*)ent->name, dirent_name_len(ent));
+		assert(nname.c_str()[nname.length()] == '\0');
+		
+		Node* n = nullptr;
+		if (next_n->type == EXT2_INODE_TYPE_DIR)
+		{
+			n = new EXT2DirectoryNode(parent, this, next_n, nname, ent->inode);
+		}
+		else if (next_n->type == EXT2_INODE_TYPE_BLOCK_DEV || next_n->type == EXT2_INODE_TYPE_CHAR_DEV)
+		{
+			dev_t dev_id;
+			decode_device_signature(*(const uint32_t*)next_n->data, &dev_id);
+			
+			if (next_n->type == EXT2_INODE_TYPE_BLOCK_DEV)
+			{
+				auto target = DeviceTarget::find_target(this, DeviceTargetType::Block, dev_id);
+				n = new EXT2BlockDeviceNode(parent, this, next_n, nname, ent->inode, target);
+			}
+			else
+			{
+				auto target = DeviceTarget::find_target(this, DeviceTargetType::Char, dev_id);
+				n = new EXT2CharDeviceNode(parent, this, next_n, nname, ent->inode, target);
+			}
+		}
+		else if (next_n->type == EXT2_INODE_TYPE_FILE)
+		{
+			n = new EXT2FileNode(parent, this, next_n, nname, ent->inode);
+		}
+		else if (next_n->type == EXT2_INODE_TYPE_SYMLINK)
+		{
+			
+			n = new EXT2SymLinkNode(parent, this, next_n, nname, ent->inode);
+		}
+		else
+		{
+			TRACE_VAL(nname.c_str());
+			//TRACE((const char*)ent->name);
+			TRACE(next_n->type);
+			assert(NOT_IMPLEMENTED);
+		}
+		
+		
+		
+		assert(n);
+		if (n)
+		{
+			n->set_parent(parent);
+		}
+		np = node_ptr<>(Utils::shared_ptr<Node>(n));
+		
+		nodes2[ent->inode] = np;
+		return np;
 	}
 	
 	bool EXT2::extended_superblock() const noexcept

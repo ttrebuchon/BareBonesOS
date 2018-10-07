@@ -4,6 +4,7 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <boot/MultiBoot.hh>
+#include <kernel/Memory/PageDir.hh>
 
 
 
@@ -58,13 +59,13 @@ void QA::Paging::Initialize() noexcept
 
 using Paging = QA::Paging;
 
-bool Paging::map(void* linear, void* phys) noexcept
+bool Paging::map(const void* linear, const void* phys) noexcept
 {
 	linear = (void*)(((uintptr_t)linear / 4096)*4096);
 	phys = (void*)(((uintptr_t)phys / 4096)*4096);
 	
 	
-	auto map_res = ::mmap(linear, 4096, PROT_READ | PROT_WRITE, MAP_PRIVATE, phys_fd, (size_t)phys);
+	auto map_res = ::mmap((void*)linear, 4096, PROT_READ | PROT_WRITE, MAP_PRIVATE, phys_fd, (size_t)phys);
 	
 	return (map_res != MAP_FAILED);
 }
@@ -105,4 +106,78 @@ bool Paging::unmap(void* linear) noexcept
 	linear = (void*)(((uintptr_t)linear / 4096)*4096);
 	auto res = ::munmap(linear, 4096);
 	return (res == 0);
+}
+
+
+
+
+namespace Kernel::Memory
+{
+	void PageDirectory::Page::frame(const void* const p) noexcept
+	{
+		if (present() && table()->dir() == PageDirectory::Current)
+		{
+			TRACE("Mapping...");
+			Paging::unmap(virtual_address());
+			if (p)
+			{
+				Paging::map(virtual_address(), p);
+			}
+		}
+		page->frame = ((addr_t)p) >> 12;
+		
+	}
+	
+	
+	void PageDirectory::switch_to() noexcept
+	{
+		auto old = PageDirectory::Current;
+		if (old == this)
+		{
+			return;
+		}
+		
+		PageDirectory::Current = this;
+		
+		for (int i = 0; i < 1024; ++i)
+		{
+			auto tbl = this->table(i);
+			if (!tbl)
+			{
+				continue;
+			}
+			for (int j = 0; j < 1024; ++j)
+			{
+				auto pg = &tbl->at(j);
+				if (pg)
+				{
+					if (pg->present())
+					{
+						pg->present(true);
+					}
+				}
+			}
+		}
+	}
+	
+	void PageDirectory::Page::present(bool b) noexcept
+	{
+		assert(table());
+		assert(table()->dir());
+		if (table()->dir() == PageDirectory::Current)
+		{
+			if (!b)
+			{
+				if (virtual_address() && frame())
+				{
+					Paging::unmap(virtual_address());
+				}
+			}
+			else if (virtual_address() && frame())
+			{
+				Paging::map(virtual_address(), frame());
+			}
+		}
+		page->present = b;
+	}
 }

@@ -1,15 +1,16 @@
 #include "FileNode.hh"
+#include <kernel/Filesystem/initrd.hh>
 
 namespace Kernel { namespace FS { namespace Init_RD {
 	
 
 
-	FileNode::FileNode(const char* name, void* data, uint64_t size) noexcept : FS::FileNode(NodeType::RAMFile), _size(size), _data(data)
+	FileNode::FileNode(InitRD_FS* fs, const char* name, void* data, uint64_t size) noexcept : FS::FileNode(NodeType::RAMFile), fs(fs), _size(size), _data(data)
 	{
 		this->_name = name;
 	}
 
-	uint64_t FileNode::read(uint64_t pos, uint64_t len, uint8_t* buf)
+	uint64_t FileNode::read(uint64_t pos, uint64_t len, void* buf)
 	{
 		assert(buf);
 		if (pos >= this->size())
@@ -24,7 +25,7 @@ namespace Kernel { namespace FS { namespace Init_RD {
 		}
 		
 		memcpy(buf, _data, adj_len);
-		memset(buf + adj_len, 0, len - adj_len);
+		memset(((uint8_t*)buf) + adj_len, 0, len - adj_len);
 		return len;
 		
 		// TODO
@@ -32,7 +33,7 @@ namespace Kernel { namespace FS { namespace Init_RD {
 	}
 
 
-	uint64_t FileNode::write(uint64_t, uint64_t, const uint8_t*)
+	uint64_t FileNode::write(uint64_t, uint64_t, const void*)
 	{
 		// TODO
 		ASSERT(false);
@@ -55,6 +56,11 @@ namespace Kernel { namespace FS { namespace Init_RD {
 	size_t FileNode::size() const noexcept
 	{
 		return _size;
+	}
+	
+	Filesystem* FileNode::get_filesystem() const noexcept
+	{
+		return fs;
 	}
 
 

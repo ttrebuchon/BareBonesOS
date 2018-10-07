@@ -43,7 +43,7 @@ class QA::Paging final
 	
 	public:
 	
-	static bool map(void* linear, void* phys) noexcept;
+	static bool map(const void* linear, const void* phys) noexcept;
 	
 	static bool map(void* linear, void* phys, size_t length) noexcept;
 	

@@ -111,7 +111,7 @@ namespace Kernel { namespace FS
 		return nullptr;
     }
     
-    BlockDeviceNode* DirectoryNode_v::add_block_device(const Utils::string& name, DeviceTarget* dev)
+    BlockDeviceNode* DirectoryNode_v::add_block_device(const Utils::string& name, const Utils::shared_ptr<DeviceTarget>& dev)
     {
     	assert(this->at(name) == nullptr);
     	if (this->at(name))
@@ -127,7 +127,7 @@ namespace Kernel { namespace FS
     	return nullptr;
     }
     
-    CharDeviceNode* DirectoryNode_v::add_char_device(const Utils::string& name, DeviceTarget* dev)
+    CharDeviceNode* DirectoryNode_v::add_char_device(const Utils::string& name, const Utils::shared_ptr<DeviceTarget>& dev)
     {
     	assert(this->at(name) == nullptr);
     	if (this->at(name))
@@ -181,6 +181,32 @@ namespace Kernel { namespace FS
     	}
     	
     	return nullptr;
+    }
+    
+    bool DirectoryNode_v::remove(const Utils::string& name)
+    {
+    	auto n = this->at(name);
+    	if (n)
+    	{
+    		return this->remove(n);
+    	}
+    	else
+    	{
+    		return false;
+    	}
+    }
+    
+    bool DirectoryNode_v::remove(size_t i)
+    {
+    	auto n = this->at(i);
+    	if (n)
+    	{
+    		return this->remove(n);
+    	}
+    	else
+    	{
+    		return false;
+    	}
     }
 	
 	Node* DirectoryNode_v::find_node(const Path_t& path)

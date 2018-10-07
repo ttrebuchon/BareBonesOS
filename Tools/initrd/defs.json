@@ -1,0 +1,35 @@
+{
+    "bin": {
+        "ls": {
+            "type": "special",
+            "data": {
+                "kind": "function"
+            }
+        },
+        "cat": {
+        	"type": "special",
+        	"data": {
+        		"kind": "function",
+        		"name": "cat"
+        	}
+        },
+        "cd": {
+        	"type": "special",
+        	"data": {
+        		"kind": "function"
+        	}
+        },
+        "echo": {
+        	"type": "special",
+        	"data": {
+        		"kind": "function"
+        	}
+        },
+        "pwd": {
+        	"type": "special",
+        	"data": {
+        		"kind": "function"
+        	}
+        }
+    }
+}

@@ -19,7 +19,7 @@ namespace Kernel::FS
 		
 		public:
 		
-		EXT2CharDeviceNode(DirectoryNode_v* parent, EXT2* fs, Utils::shared_ptr<detail::EXT2::inode_t> node, const Utils::string& name, const size_t inode_index, DeviceTarget*);
+		EXT2CharDeviceNode(DirectoryNode_v* parent, EXT2* fs, Utils::shared_ptr<detail::EXT2::inode_t> node, const Utils::string& name, const size_t inode_index, const devtarget_t&);
 	};
 	
 	

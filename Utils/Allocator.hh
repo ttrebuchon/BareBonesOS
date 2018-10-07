@@ -9,10 +9,10 @@
 namespace Utils
 {
 	template <class T>
-	class Allocator;
+	class allocator;
 	
 	template <>
-	class Allocator<void>
+	class allocator<void>
 	{
 		public:
 		typedef void			   value_type;
@@ -22,14 +22,14 @@ namespace Utils
 		template <class U>
 		struct rebind
 		{
-			typedef Allocator<U> other;
+			typedef allocator<U> other;
 		};
 	};
 	
 	
 	
 	template <>
-	class Allocator<const void>
+	class allocator<const void>
 	{
 		public:
 		typedef const void* pointer;
@@ -39,7 +39,7 @@ namespace Utils
 		template <class U>
 		struct rebind
 		{
-			typedef Allocator<U> other;
+			typedef allocator<U> other;
 		};
 	};
 	
@@ -47,7 +47,7 @@ namespace Utils
 	
 	
 	template <class T>
-	class Allocator
+	class allocator
 	{
 		public:
 		typedef T			   value_type;
@@ -58,67 +58,71 @@ namespace Utils
 		typedef decltype(sizeof(0))		  size_type;
 		typedef ptrdiff_t	   difference_type;
 		typedef true_type	   propagate_on_container_move_assignment;
-		typedef true_type	   is_always_equal;
+		//typedef true_type	   is_always_equal;
 		
 
 		template <class U>
 		struct rebind
 		{
-			typedef Allocator<U> other;
+			typedef allocator<U> other;
 		};
 		
 		
-		constexpr Allocator() noexcept {}
-		constexpr Allocator(const Allocator&) noexcept {}
+		__attribute__ ((__visibility__("hidden"), __always_inline__)) allocator() {}
 		template <class U>
-		constexpr Allocator(const Allocator<U>&) noexcept {}
-		
-		~Allocator() = default;
+		__attribute__ ((__visibility__("hidden"), __always_inline__)) allocator(const allocator<U>&) {}
 		
 		
 		
 		
 		pointer address(reference x) const noexcept
 		{
+			assert(false);
 			return &x;
 		}
 		
 		const_pointer address(const_reference x) const noexcept
 		{
+			assert(false);
 			return &x;
 		}
 		
-		pointer allocate(size_type n, Allocator<void>::const_pointer hint = 0)
+		__attribute__ ((__visibility__("hidden"), __always_inline__)) pointer allocate(size_type n, allocator<void>::const_pointer hint = 0)
 		{
-			return (pointer)operator new(sizeof(T)*n, (std::align_val_t)alignof(T));
+			return static_cast<pointer>(::operator new(sizeof(T)*n));
+			//return (pointer)operator new(sizeof(T)*n, (std::align_val_t)alignof(T));
 		}
 		
-		void deallocate(pointer p, size_type n)
+		__attribute__ ((__visibility__("hidden"), __always_inline__)) void deallocate(pointer p, size_type n)
 		{
 			::operator delete((void*)p);
 		}
 		
 		template <class U, class... Args>
-		void construct(U* p, Args&&... args)
+		__attribute__ ((__visibility__("hidden"), __always_inline__)) void construct(U* p, Args&&... args)
 		{
 			::new ((void*)p) U(Utils::forward<Args>(args)...);
 		}
 		
-		template <class U>
-		void destroy(U* u)
+		__attribute__ ((__visibility__("hidden"), __always_inline__)) void destroy(pointer p)
 		{
-			u->~U();
+			p->~T();
+		}
+		
+		size_type max_size() const noexcept
+		{
+			return size_type(~0)/sizeof(T);
 		}
 	};
 	
-	template <class T>
-	bool operator==(const Allocator<T>& a1, const Allocator<T>& a2)
+	template <class T, class U>
+	bool operator==(const allocator<T>& a1, const allocator<U>& a2)
 	{
 		return true;
 	}
 	
-	template <class T>
-	bool operator!=(const Allocator<T>& a1, const Allocator<T>& a2)
+	template <class T, class U>
+	bool operator!=(const allocator<T>& a1, const allocator<U>& a2)
 	{
 		return false;
 	}
@@ -187,7 +191,7 @@ namespace Utils
 	
 	
 	template <class T>
-	class Allocator<const T>
+	class allocator<const T>
 	{
 		public:
 		typedef const T value_type;
@@ -198,32 +202,30 @@ namespace Utils
 		typedef decltype(sizeof(0))		  size_type;
 		typedef ptrdiff_t	   difference_type;
 		typedef true_type	   propagate_on_container_move_assignment;
-		typedef true_type	   is_always_equal;
+		//typedef true_type	   is_always_equal;
 		
 
 		template <class U>
 		struct rebind
 		{
-			typedef Allocator<U> other;
+			typedef allocator<U> other;
 		};
 		
 		
-		constexpr Allocator() noexcept {}
-		constexpr Allocator(const Allocator&) noexcept {}
+		allocator() {}
 		template <class U>
-		constexpr Allocator(const Allocator<U>&) noexcept {}
-		
-		~Allocator() = default;
+		allocator(const allocator<U>&) {}
 		
 		
 		
 		
-		pointer address(reference x) const noexcept
+		const_pointer address(const_reference x) const noexcept
 		{
+			assert(false);
 			return &x;
 		}
 		
-		pointer allocate(size_type n, Allocator<void>::const_pointer hint = 0)
+		pointer allocate(size_type n, allocator<void>::const_pointer hint = 0)
 		{
 			return static_cast<pointer>(::operator new(n*sizeof(T)));
 		}
@@ -239,20 +241,16 @@ namespace Utils
 			::new ((void*)p) U(Utils::forward<Args>(args)...);
 		}
 		
-		template <class U>
-		void destroy(U* u)
+		void destroy(pointer p)
 		{
-			u->~U();
+			p->~T();
+		}
+		
+		size_type max_size() const
+		{
+			return size_type(~0) / sizeof(T);
 		}
 	};
-	
-	
-	
-	
-	
-	
-	template <class T>
-	using allocator = Allocator<T>;
 	
 	
 	template <class Alloc, class T>
