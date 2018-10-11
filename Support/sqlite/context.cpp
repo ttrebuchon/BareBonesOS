@@ -320,9 +320,12 @@ namespace Support { namespace SQLite
 		int res;
 		Utils::string column = "";
 		assert(column == "");
-		Utils::string query = "PRAGMA table_info(";
+		Utils::string query = "SELECT * FROM pragma_table_info('";
 		query += table;
-		query += ")";
+		query += "')";
+		/*Utils::string query = "PRAGMA table_info(";
+		query += table;
+		query += ")";*/
 		auto callback = [](void* str, int count, char** results, char** colNames) -> int
 		{
 			assert(count == 6);
@@ -355,9 +358,6 @@ namespace Support { namespace SQLite
 	
 	void SQLiteContext::build_table(const Utils::string& name, Utils::list<column_def>& columns, const Utils::string& key_base, bool is_abstract)
 	{
-		// TODO
-		//assert(NOT_IMPLEMENTED);
-		
 		Utils::map<Utils::string, column_def*> column_map;
 		
 		for (auto& c : columns)
@@ -430,7 +430,6 @@ namespace Support { namespace SQLite
 		query += ")";
 		
 		
-		
 		auto stmt = Prepare(db, query);
 		int res = sqlite3_step(stmt.get());
 		if (res != SQLITE_DONE)
@@ -438,7 +437,7 @@ namespace Support { namespace SQLite
 			TRACE_VAL(res);
 		}
 		assert(res == SQLITE_DONE);
-		
+		assert(table_exists(name));
 		
 		
 		schema& schm = schemas[name];

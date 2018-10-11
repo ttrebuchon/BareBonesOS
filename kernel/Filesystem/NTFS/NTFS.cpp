@@ -843,19 +843,23 @@ namespace Kernel::FS
 			return false;
 		}
 		
-		auto root = 
+		
+		auto raw_root = 
 		#ifdef __cpp_rtti2
 		dynamic_cast
 		#else
 		static_cast
 		#endif
 		<NTFSDirectoryNode*>(r.get());
-		assert(root);
-		if (!root)
+		assert(raw_root);
+		if (!raw_root)
 		{
 			return false;
 		}
-		ntfs->_root = root;
+		
+		auto root = Utils::shared_ptr<NTFSDirectoryNode>(r, raw_root);
+		
+		ntfs->_root = node_ptr<>(root);
 		
 		return true;
 	}

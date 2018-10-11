@@ -4,13 +4,18 @@ namespace Kernel::FS
 {
 	
 	
-	EXT2FileNode::EXT2FileNode(DirectoryNode_v* parent, EXT2* fs, Utils::shared_ptr<detail::EXT2::inode_t> node, const Utils::string& name, const size_t inode_index) : EXT2Node(fs, node, name, inode_index), Node(), FileNode()
+	EXT2FileNode::EXT2FileNode(DirectoryNode_v* parent, EXT2* fs, Utils::shared_ptr<detail::EXT2::inode_t> node, const Utils::string& name, const size_t inode_index) : EXT2Node(fs, node, name, inode_index), FileNode()
 	{
 		init(parent);
 	}
-	EXT2FileNode::EXT2FileNode(DirectoryNode_v* parent, EXT2* fs, detail::EXT2::dirent_t* ent) : EXT2Node(fs, ent), Node(), FileNode()
+	EXT2FileNode::EXT2FileNode(DirectoryNode_v* parent, EXT2* fs, detail::EXT2::dirent_t* ent) : EXT2Node(fs, ent), FileNode()
 	{
 		init(parent);
+	}
+	
+	EXT2FileNode::~EXT2FileNode()
+	{
+		
 	}
 	
 	

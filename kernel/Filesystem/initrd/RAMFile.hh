@@ -15,6 +15,7 @@ namespace Init_RD {
     {
         protected:
         size_t _size;
+        size_t _capacity;
         uint8_t* _data;
         InitRD_FS* fs;
         
@@ -31,6 +32,7 @@ namespace Init_RD {
         virtual void close() override;
         
         virtual size_t size() const noexcept override;
+        size_t capacity() const noexcept;
         
         virtual Filesystem* get_filesystem() const noexcept override;
     };

@@ -4,7 +4,7 @@
 namespace Kernel::FS
 {
 	
-	LinkNode* Factory::create_link(DirectoryNode_v* parent, const Utils::string& name, const Node* target) noexcept
+	node_ptr<LinkNode> Factory::create_link(DirectoryNode_v* parent, const Utils::string& name, const node_ptr<const Node>& target) noexcept
 	{
 		if (!parent || !target)
 		{

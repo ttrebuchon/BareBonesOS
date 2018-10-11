@@ -7,6 +7,7 @@
 namespace Kernel::FS
 {
 	class DirectoryNode_v;
+	
 }
 #include <Utils/iostream_fwd.hh>
 #endif
@@ -15,9 +16,12 @@ START_NS(Kernel)
 C_CODE
 
 
+
+
 typedef
 IF_CPP_ELSE(FS::DirectoryNode_v*, void*)
 cwd_type;
+
 
 
 typedef struct sys_function

@@ -326,12 +326,17 @@ namespace Kernel::FS::detail::EXT2
 	{
 		if (nindex == 0 || ((nindex-1) / inodes_size() != group_index))
 		{
-			TRACE_VAL(nindex);
-			assert(false);
 			return npos;
 		}
 		
 		return (((nindex-1) % inodes_size())*fs->inode_size())/fs->block_size() + gd->inode_table;
+	}
+	
+	uint32_t block_group_t::relative_inode_usage_index() const noexcept
+	{
+		assert(blocks_per_group > 0);
+		assert(gd->inode_usage_map / blocks_per_group == group_index);
+		return gd->inode_usage_map % blocks_per_group;
 	}
 	
 	
@@ -588,9 +593,9 @@ namespace Kernel::FS::detail::EXT2
 			{
 				modified_map[inode_block] = true;
 			}
-			modified_map[gd->inode_usage_map] = true;
+			assert(relative_inode_usage_index() < modified_map.size());
+			modified_map[relative_inode_usage_index()] = true;
 			--gd->unallocated_inodes;
-			assert(gd->inode_usage_map < modified_map.size());
 			index += (group_index*fs->sb.nodes_per_group);
 			return get_node_internal_no_lock(index, lock);
 		}
@@ -616,20 +621,26 @@ namespace Kernel::FS::detail::EXT2
 		
 		write_lock lock(mut);
 		
-		if (!node_usage.get(index-1))
+		assert(nodes_per_group > 0);
+		auto rindex = (index-1) % nodes_per_group;
+		
+		if (!node_usage.get(rindex))
 		{
+			assert(false);
 			return false;
 		}
 		
-		node_usage.set(index-1, false);
+		node_usage.set(rindex, false);
 		++gd->unallocated_inodes;
-		auto inode_block = inode_block_index(index);
+		auto inode_block = inode_block_index(index) % blocks_per_group;
 		if (inode_block != npos)
 		{
+			assert(modified_map.size() > inode_block);
 			modified_map[inode_block] = true;
 		}
+		assert(modified_map.size() > relative_inode_usage_index());
 		
-		modified_map[gd->inode_usage_map] = true;
+		modified_map[relative_inode_usage_index()] = true;
 		
 		return true;
 	}
@@ -755,6 +766,11 @@ namespace Kernel::FS::detail::EXT2
 		memset(rsv->data, 0, 60);
 		
 		return rsv;
+	}
+	
+	bool block_group_t::deallocate_inode(uint32_t inode)
+	{
+		assert(NOT_IMPLEMENTED);
 	}
 	
 	

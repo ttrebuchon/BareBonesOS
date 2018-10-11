@@ -13,7 +13,7 @@ namespace Kernel { namespace FS {
 	class DeviceTarget;
 	
 	
-	class DeviceNode : public virtual Node
+	class DeviceNode : public Node
 	{
 		protected:
 		Utils::shared_ptr<DeviceTarget> _device;

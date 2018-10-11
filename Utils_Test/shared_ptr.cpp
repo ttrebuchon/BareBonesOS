@@ -160,7 +160,33 @@ TEST(shared_ptr)
 		assert(ptr.use_count() == 0);
 	}
 	}
-	assert(Foo_t::callers.size() == 3);
+	assert(Foo_t::callers.size() == 0);
+	Foo_t::callers.clear();
+	assert(Foo_t::callers.size() == 0);
+	
+	
+	{
+		int* test_int = new int(4);
+	{
+		Utils::shared_ptr<int> ptr;
+	{
+		Utils::shared_ptr<int> ptr1(test_int, foo<0>);
+		Utils::shared_ptr<int> ptr2(test_int, foo<1>);
+		Utils::shared_ptr<int> ptr3(test_int, foo<2>);
+		Utils::shared_ptr<int> ptr4(ptr2);
+		Utils::shared_ptr<int> ptr5(nullptr);
+		ptr = Utils::shared_ptr<int>(ptr2);
+		assert(ptr == test_int);
+		assert(ptr);
+		
+		// ptr, ptr2, ptr4 all refer to the
+		// same control
+		ASSERTEQ(ptr.use_count(), 3);
+	}
+	}
+	delete test_int;
+	}
+	ASSERTEQ(Foo_t::callers.size(), 3);
 	assert(Foo_t::callers[0] == 2);
 	assert(Foo_t::callers[1] == 0);
 	assert(Foo_t::callers[2] == 1);
@@ -179,20 +205,28 @@ TEST(shared_ptr)
 		int na0_n = na0.n;
 		auto na0_0 = Utils::allocator_traits<NoisyAllocator<Utils::allocator, int>>::copy_create(na0);
 		ASSERT(na0_0.n == na0.n);
+	
 		
 		
 		Utils::shared_ptr<int> ptr;
 	{
+		int* test_int = new int(4);
+	{
 		NoisyAlloc na(-1);
-		Utils::shared_ptr<int> ptr1((int*)nullptr, foo<0>, na);
-		Utils::shared_ptr<int> ptr2((int*)nullptr, foo<1>);
-		Utils::shared_ptr<int> ptr3((int*)nullptr, foo<2>);
+		Utils::shared_ptr<int> ptr1(test_int, foo<0>, na);
+		Utils::shared_ptr<int> ptr2(test_int, foo<1>);
+		Utils::shared_ptr<int> ptr3(test_int, foo<2>);
 		Utils::shared_ptr<int> ptr4(ptr2);
 		Utils::shared_ptr<int> ptr5(nullptr);
 		ptr = Utils::shared_ptr<int>(ptr2);
-		assert(ptr == nullptr);
-		assert(!ptr);
-		assert(ptr.use_count() == 0);
+		assert(ptr == test_int);
+		assert(ptr);
+		
+		// ptr, ptr2, ptr4 all refer to the
+		// same control
+		ASSERTEQ(ptr.use_count(), 3);
+	}
+		delete test_int;
 	}
 	}
 	assert(Foo_t::callers.size() == 3);

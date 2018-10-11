@@ -13,22 +13,22 @@ namespace Utils
 {
 	
 	template <class T>
-	constexpr shared_ptr<T>::shared_ptr() noexcept : ctrl(nullptr), other(nullptr)
+	constexpr shared_ptr<T>::shared_ptr() noexcept : ctrl(nullptr), obj(nullptr)
 	{
 		
 	}
 	
 	template <class T>
-	constexpr shared_ptr<T>::shared_ptr(nullptr_t n) noexcept : ctrl(n), other(n)
+	constexpr shared_ptr<T>::shared_ptr(nullptr_t n) noexcept : ctrl(n), obj(n)
 	{
 		
 	}
 	
 	template <class T>
 	template <class Y, class Deleter>
-	shared_ptr<T>::shared_ptr(Y* ptr, Deleter d) : ctrl(detail::use_SFT<T, Y>::use(ptr)), other(nullptr)
+	shared_ptr<T>::shared_ptr(Y* ptr, Deleter d) : ctrl(detail::use_SFT<T, Y>::use(ptr)), obj(ptr)
 	{
-		if (!ctrl)
+		if (!ctrl && ptr)
 		{
 			ctrl = detail::shared_ptr_control::CreateControl(ptr, d);
 			detail::use_SFT<T, Y>::set(ptr, ctrl);
@@ -37,9 +37,9 @@ namespace Utils
 	
 	template <class T>
 	template <class Y, class Deleter, class Alloc>
-	shared_ptr<T>::shared_ptr(Y* ptr, Deleter d, const Alloc& alloc) : ctrl(detail::use_SFT<T, Y>::use(ptr)), other(nullptr)
+	shared_ptr<T>::shared_ptr(Y* ptr, Deleter d, const Alloc& alloc) : ctrl(detail::use_SFT<T, Y>::use(ptr)), obj(ptr)
 	{
-		if (!ctrl)
+		if (!ctrl && ptr)
 		{
 			ctrl = detail::shared_ptr_control::CreateControl(ptr, forward<Deleter>(d), forward<const Alloc&>(alloc));
 			detail::use_SFT<T, Y>::set(ptr, ctrl);
@@ -55,29 +55,18 @@ namespace Utils
 	
 	template <class T>
 	template <class Y, class>
-	shared_ptr<T>::shared_ptr(Y* ptr) : ctrl(detail::use_SFT<T, Y>::use(ptr)), other(nullptr)
+	shared_ptr<T>::shared_ptr(Y* ptr) : ctrl(detail::use_SFT<T, Y>::use(ptr)), obj(ptr)
 	{
 		if (!ctrl)
 		{
-			ctrl = detail::shared_ptr_control::CreateControl(ptr);
+			ctrl = detail::shared_ptr_control::CreateControl((T*)ptr);
 			detail::use_SFT<T, Y>::set(ptr, ctrl);
 		}
 	}
 	
 	template <class T>
 	template <class Y, class>
-	shared_ptr<T>::shared_ptr(const shared_ptr<Y>& r) noexcept : ctrl(r.ctrl), other(r.other)
-	{
-		//T* x = get();
-		//x = r.get();
-		
-		
-		++ctrl->refcount;
-		++ctrl->usecount;
-	}
-	
-	template <class T>
-	shared_ptr<T>::shared_ptr(const shared_ptr& r) noexcept : ctrl(r.ctrl), other(r.other)
+	shared_ptr<T>::shared_ptr(const shared_ptr<Y>& r) noexcept : ctrl(r.ctrl), obj(r.get())
 	{
 		if (ctrl)
 		{
@@ -87,23 +76,31 @@ namespace Utils
 	}
 	
 	template <class T>
-	shared_ptr<T>::shared_ptr(shared_ptr&& r) noexcept : ctrl(r.ctrl), other(r.other)
+	shared_ptr<T>::shared_ptr(const shared_ptr& r) noexcept : ctrl(r.ctrl), obj(r.obj)
+	{
+		if (ctrl)
+		{
+			++ctrl->refcount;
+			++ctrl->usecount;
+		}
+	}
+	
+	template <class T>
+	shared_ptr<T>::shared_ptr(shared_ptr&& r) noexcept : ctrl(r.ctrl), obj(r.obj)
 	{
 		r.ctrl = nullptr;
-		r.other = nullptr;
+		r.obj = nullptr;
 	}
 	
 	template <class T>
 	template <class Y, class>
-	shared_ptr<T>::shared_ptr(shared_ptr<Y>&& r) noexcept : ctrl(r.ctrl), other(r.other)
+	shared_ptr<T>::shared_ptr(shared_ptr<Y>&& r) noexcept : ctrl(r.ctrl), obj(r.obj)
 	{
 		r.ctrl = nullptr;
-		r.other = nullptr;
-		/*++ctrl->refcount;
-		++ctrl->usecount;*/
+		r.obj = nullptr;
 	}
 	
-	template <class T>
+	/*template <class T>
 	template <class Deleter>
 	shared_ptr<T>::shared_ptr(void* raw, size_t nbytes, Deleter d) : ctrl(nullptr), other(nullptr)
 	{
@@ -119,11 +116,12 @@ namespace Utils
 		ctrl->deleter = detail::shared_ptr_control::template Destructor<T, Deleter>::call;
 		
 		ctrl->obj = rawObj;
-	}
+	}*/
 	
 	template <class T>
-	shared_ptr<T>::shared_ptr(detail::shared_ptr_control* ctrl) : ctrl(ctrl), other(nullptr)
+	shared_ptr<T>::shared_ptr(detail::shared_ptr_control* ctrl) : ctrl(ctrl), obj(nullptr)
 	{
+		assert(NOT_IMPLEMENTED);
 		if (ctrl)
 		{
 			++ctrl->refcount;
@@ -132,7 +130,7 @@ namespace Utils
 	}
 	
 	template <class T>
-	shared_ptr<T>::shared_ptr(detail::shared_ptr_control* ctrl, element_type* value) : ctrl(ctrl), other(value)
+	shared_ptr<T>::shared_ptr(detail::shared_ptr_control* ctrl, element_type* value) : ctrl(ctrl), obj(value)
 	{
 		assert(ctrl || !value);
 		if (ctrl)
@@ -144,9 +142,9 @@ namespace Utils
 	
 	template <class T>
 	template <class Y>
-	shared_ptr<T>::shared_ptr(const weak_ptr<Y>& weak) : ctrl(weak.ctrl), other(weak.ptr)
+	shared_ptr<T>::shared_ptr(const weak_ptr<Y>& weak) : ctrl(weak.ctrl), obj(weak.ptr)
 	{
-		if (!ctrl || !other)
+		if (!ctrl || !obj)
 		{
 			// TODO: Throw std::bad_weak_ptr
 			assert(NOT_IMPLEMENTED);
@@ -171,13 +169,9 @@ namespace Utils
 	
 	
 	template <class T>
-	typename shared_ptr<T>::ptr_type shared_ptr<T>::get() const noexcept
+	constexpr typename shared_ptr<T>::ptr_type shared_ptr<T>::get() const noexcept
 	{
-		if (unlikely(other != nullptr))
-		{
-			return other;
-		}
-		return (ctrl != nullptr ? (T*)ctrl->obj : nullptr);
+		return obj;
 	}
 	
 	template <class T>
@@ -187,18 +181,11 @@ namespace Utils
 		{
 			if (!ctrl->strongRelease())
 			{
-				if (ctrl->dealloc)
-				{
-					ctrl->dealloc(ctrl->dealloc_object, ctrl);
-				}
-				else
-				{
-					delete ctrl;
-				}
+				detail::shared_ptr_control::Release(ctrl);
 			}
 		}
 		ctrl = nullptr;
-		other = nullptr;
+		obj = nullptr;
 	}
 	
 	template <class T>
@@ -206,10 +193,7 @@ namespace Utils
 	{
 		if (ctrl != nullptr)
 		{
-			if (ctrl->obj != nullptr)
-			{
-				return ctrl->usecount;
-			}
+			return ctrl->usecount;
 		}
 		return 0;
 	}
@@ -227,12 +211,12 @@ namespace Utils
 		}
 		reset();
 		ctrl = ctrl2;
-		other = r.other;
+		obj = r.obj;
 		return *this;
 	}
 	
 	template <class T>
-	shared_ptr<T>::operator bool() const noexcept
+	constexpr shared_ptr<T>::operator bool() const noexcept
 	{
 		return get() != nullptr;
 	}

@@ -206,8 +206,7 @@ namespace Kernel::FS
 		assert(start + len > 0);
 		auto first = start/block_sz;
 		auto last = (start + len - 1)/block_sz;
-		TRACE_VAL(first);
-		TRACE_VAL(last);
+		size_t written = 0;
 		
 		auto blocks = get_file_blocks(fs, node.get(), first, last - first + 1, true);
 		assert(blocks.size() == (last - first + 1));
@@ -224,34 +223,55 @@ namespace Kernel::FS
 			assert(block_it != blocks.end());
 			assert(*block_it != nullptr);
 			assert((*block_it)->data);
-			assert((len > block_sz ? block_sz : len) >= block_off);
+			assert(block_sz > block_off);
+			//assert((len > block_sz ? block_sz : len) >= block_off);
 			auto qty = len;
 			if (len > (block_sz - block_off))
 			{
 				qty = block_sz - block_off;
 			}
-			memcpy((*block_it)->data + block_off, buf + block_off, qty);
+			memcpy((*block_it)->data + block_off, buf/* + block_off*/, qty);
 			block_off += qty;
 			(*block_it)->modified = true;
+			written += qty;
 			
-			if (block_off % block_sz == 0)
-			{
-				block_off = 0;
-				block_indx += 1;
-				assert(block_it != blocks.end());
-				++block_it;
-			}
+			block_off = 0;
+			block_indx += 1;
+			assert(block_it != blocks.end());
+			++block_it;
 		}
 		
-		while (block_indx < last)
+		while (written < len)
 		{
-			TRACE_VAL(block_indx);
 			assert(block_it != blocks.end());
 			assert(*block_it != nullptr);
-			memcpy((*block_it)->data, buf + (block_indx-first)*block_sz, block_sz);
+			size_t qty = block_sz;
+			if (qty > (len - written))
+			{
+				qty = len - written;
+			}
+			memcpy((*block_it)->data, buf + written, qty);
 			(*block_it)->modified = true;
 			++block_indx;
 			++block_it;
+			written += qty;
+		}
+		
+		assert(written == len);
+		return written;
+		
+		/*while (block_indx < last)
+		{
+			TRACE_VAL(block_indx);
+			assert(written < len);
+			assert(block_it != blocks.end());
+			assert(*block_it != nullptr);
+			//memcpy((*block_it)->data, buf + (block_indx-first)*block_sz, block_sz);
+			memcpy((*block_it)->data, buf + written, block_sz);
+			(*block_it)->modified = true;
+			++block_indx;
+			++block_it;
+			written += block_sz;
 		}
 		
 		
@@ -284,7 +304,7 @@ namespace Kernel::FS
 			}
 			
 			return len;
-		}
+		}*/
 	}
 	
 	Utils::list<Utils::shared_ptr<detail::EXT2::block_t>> EXT2Node::get_file_blocks(EXT2* ext2, const detail::EXT2::inode_t* node, size_t start, size_t count, bool ignore_zeros)
@@ -476,6 +496,131 @@ namespace Kernel::FS
 		}
 		
 		assert(NOT_IMPLEMENTED);
+	}
+	
+	Utils::list<uint32_t> EXT2Node::get_file_block_indexes(EXT2* ext2, const detail::EXT2::inode_t* node, size_t start, size_t count, bool ignore_zeros)
+	{
+		Utils::list<uint32_t> blocks;
+		
+		assert(start + count >= start);
+		if (count == 0)
+		{
+			return blocks;
+		}
+		
+		size_t j = 0;
+		for (size_t i = start; j < count && i < 12; ++i)
+		{
+			if (node->direct[i])
+			{
+				blocks.push_back(node->direct[i]);
+				++j;
+			}
+			else if (!ignore_zeros)
+			{
+				blocks.push_back(0);
+				++j;
+			}
+		}
+		
+		count -= j;
+		if (start >= 12)
+		{
+			start -= 12;
+		}
+		else
+		{
+			start = 0;
+		}
+		
+		if (count == 0)
+		{
+			return blocks;
+		}
+		
+		const auto ptr_per_block = ext2->block_size()/sizeof(uint32_t);
+		
+		if (likely(start < ptr_per_block))
+		{
+			if (node->indirect_1)
+			{
+				j = ext2->expand_indirect_1_indexes(ext2->get_block(node->indirect_1), blocks, start, count, !ignore_zeros);
+			}
+			else if (!ignore_zeros)
+			{
+				j = 0;
+				for (size_t k = start; k < ptr_per_block && k < count + start; ++k)
+				{
+					blocks.push_back(0);
+					++j;
+				}
+			}
+			
+			count -= j;
+			start = 0;
+		}
+		else
+		{
+			start -= ptr_per_block;
+		}
+		
+		if (likely(count == 0))
+		{
+			return blocks;
+		}
+		
+		if (start < ptr_per_block*ptr_per_block)
+		{
+			if (node->indirect_2)
+			{
+				j = ext2->expand_indirect_2_indexes(ext2->get_block(node->indirect_2), blocks, start, count, !ignore_zeros);
+			}
+			else if (!ignore_zeros)
+			{
+				j = 0;
+				for (size_t k = start; k < ptr_per_block*ptr_per_block && k < count + start; ++k)
+				{
+					blocks.push_back(0);
+					++j;
+				}
+			}
+			count -= j;
+			start = 0;
+		}
+		else
+		{
+			start -= ptr_per_block*ptr_per_block;
+		}
+		
+		if (count == 0)
+		{
+			return blocks;
+		}
+		
+		if (start < ptr_per_block*ptr_per_block*ptr_per_block)
+		{
+			if (node->indirect_3)
+			{
+				j = ext2->expand_indirect_3_indexes(ext2->get_block(node->indirect_3), blocks, start, count, !ignore_zeros);
+			}
+			else if (!ignore_zeros)
+			{
+				j = 0;
+				for (size_t k = start; k < ptr_per_block*ptr_per_block*ptr_per_block && k < count + start; ++k)
+				{
+					blocks.push_back(0);
+					++j;
+				}
+			}
+			count -= j;
+			start = 0;
+		}
+		else
+		{
+			start -= ptr_per_block*ptr_per_block*ptr_per_block;
+		}
+		
+		return blocks;
 	}
 	
 	bool EXT2Node::add_block_to_node(EXT2* ext2, detail::EXT2::inode_t* node, size_t block_index, size_t* placement) noexcept
@@ -692,7 +837,6 @@ namespace Kernel::FS
 		}
 		
 		//auto ptr = fs->read_inode(node, nstart/fs->block_size(), nend/fs->block_size());
-		TRACE_VAL(node->size_low);
 		auto ptr = fs->read_inode(node, nstart/fs->block_size(), (nend/fs->block_size() - nstart/fs->block_size()));
 		assert(ptr);
 		if (!ptr)
@@ -775,6 +919,149 @@ namespace Kernel::FS
 		{
 			return 0;
 		}
+	}
+	
+	uint16_t EXT2Node::dec_hard_links()
+	{
+		assert(node);
+		return node->hard_links -= (node->hard_links > 0 ? 1 : 0);
+	}
+	
+	uint16_t EXT2Node::inc_hard_links()
+	{
+		assert(node);
+		// Overflow check
+		assert(node->hard_links + 1 > node->hard_links);
+		return ++node->hard_links;
+	}
+	
+	uint16_t EXT2Node::hard_links() const noexcept
+	{
+		assert(node);
+		return node->hard_links;
+	}
+	
+	Utils::list<uint32_t> EXT2Node::get_file_block_indexes(size_t start, size_t count, bool ignore_zeros) const
+	{
+		return EXT2Node::get_file_block_indexes(fs, node.get(), start, count, ignore_zeros);
+	}
+	
+	uint32_t EXT2Node::release_reserved_blocks()
+	{
+		uint32_t freed = 0;
+		auto block_indexes = get_file_block_indexes(0, block_count(), true);
+		for (const auto block : block_indexes)
+		{
+			assert(block != 0);
+			if (fs->release_block(block))
+			{
+				++freed;
+			}
+			else
+			{
+				break;
+			}
+		}
+		
+		if (freed != block_indexes.size())
+		{
+			assert(NOT_IMPLEMENTED);/*
+			bool status;
+			uint32_t i = 0;
+			for (auto it = block_indexes.begin(); it != block_indexes.end() && i < freed; ++i, ++it)
+			{
+				status = fs->reserve_specific_block(*it);
+				assert(status);
+			}
+			freed = 0;*/
+		}
+		else
+		{
+			Utils::list<uint32_t> indirect_indxs;
+			const auto ptr_per_blk = fs->block_size() / sizeof(uint32_t);
+			if (node->indirect_3)
+			{
+				auto blk_1 = fs->get_block(node->indirect_3);
+				assert(blk_1);
+				auto dat_1 = (const uint32_t*)blk_1->data;
+				
+				for (auto k = 0; k < ptr_per_blk; ++k)
+				{
+					if (dat_1[k] == 0)
+					{
+						continue;
+					}
+					
+					auto blk_2 = fs->get_block(dat_1[k]);
+					assert(blk_2);
+					
+					auto dat_2 = (const uint32_t*)blk_2->data;
+					
+					for (auto j = 0; j < ptr_per_blk; ++j)
+					{
+						if (dat_2[j] == 0)
+						{
+							continue;
+						}
+						
+						indirect_indxs.push_back(dat_2[j]);
+					}
+					indirect_indxs.push_back(dat_1[k]);
+				}
+				
+				
+				indirect_indxs.push_back(node->indirect_3);
+			}
+			
+			
+			if (node->indirect_2)
+			{
+				auto blk_1 = fs->get_block(node->indirect_2);
+				assert(blk_1);
+				auto dat_1 = (const uint32_t*)blk_1->data;
+				
+				for (auto k = 0; k < ptr_per_blk; ++k)
+				{
+					if (dat_1[k] == 0)
+					{
+						continue;
+					}
+					indirect_indxs.push_back(dat_1[k]);
+				}
+				
+				
+				indirect_indxs.push_back(node->indirect_2);
+			}
+			
+			if (node->indirect_1)
+			{
+				indirect_indxs.push_back(node->indirect_1);
+			}
+			
+			for (const auto indx : indirect_indxs)
+			{
+				assert(indx != 0);
+				if (fs->release_block(indx))
+				{
+					++freed;
+				}
+				else
+				{
+					assert(NOT_IMPLEMENTED);
+				}
+			}
+			
+			for (auto i = 0; i < 12; ++i)
+			{
+				node->direct[i] = 0;
+			}
+			node->indirect_1 = 0;
+			node->indirect_2 = 0;
+			node->indirect_3 = 0;
+			node->size_low = 0;
+		}
+		
+		return freed;
 	}
 	
 	

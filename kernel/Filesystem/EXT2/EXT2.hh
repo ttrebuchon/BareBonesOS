@@ -358,6 +358,7 @@ namespace Kernel::FS
 			Utils::shared_ptr<inode_t> get_node_internal_no_lock(size_t, write_lock&, bool no_unlock = false) noexcept;
 			
 			size_t inode_block_index(const size_t) const noexcept;
+			uint32_t relative_inode_usage_index() const noexcept;
 			
 			
 			
@@ -410,6 +411,7 @@ namespace Kernel::FS
 			
 			Utils::shared_ptr<inode_t> allocate_directory(size_t& index) noexcept;
 			Utils::shared_ptr<inode_t> allocate_file(size_t& index) noexcept;
+			bool deallocate_inode(uint32_t inode);
 			
 			bool mark_node_modified(const size_t);
 			bool mark_block_modified(const size_t);
@@ -441,8 +443,7 @@ namespace Kernel::FS
 		group_index_t block_group_count;
 		mutable Utils::map<block_index_t, Utils::weak_ptr<block_t>> cached_blocks;
 		size_t max_node_blocks;
-		Utils::map<inode_index_t, Node*> nodes;
-		Utils::map<inode_index_t, node_ptr<>> nodes2;
+		Utils::map<inode_index_t, node_ptr<>> nodes;
 		mutable Support::Collections::shared_ptr_cache<block_t, Utils::shared_ptr> block_ptr_cache;
 		Utils::vector<Utils::shared_ptr<block_group_t>> groups;
 		
@@ -459,15 +460,16 @@ namespace Kernel::FS
 		uint32_t valid_block_ptrs(const uint32_t* block, const size_t start = 0) const noexcept;
 		uint32_t find_valid_block_ptrs(uint32_t* ptrs, const inode_type*, size_t count, size_t start_index = 0, bool keep_zeros = false) const noexcept;
 		
-		Node* parse_node(DirectoryNode* parent, detail::EXT2::dirent_t*);
-		node_ptr<> parse_node2(DirectoryNode* parent, detail::EXT2::dirent_t*);
+		node_ptr<> parse_node(DirectoryNode* parent, detail::EXT2::dirent_t*);
 		
 		size_t read_block(const size_t index, uint8_t* buffer) const noexcept;
 		size_t write_block(const size_t index, const uint8_t* buffer) noexcept;
 		Utils::shared_ptr<inode_type> reserve_inode(size_t& index) noexcept;
 		Utils::shared_ptr<block_t> reserve_block(size_t& index) noexcept;
+		Utils::shared_ptr<block_t> reserve_specific_block(size_t index) noexcept;
 		bool release_inode(const size_t index) noexcept;
 		bool release_block(const size_t index) noexcept;
+		bool release_node(const node_ptr<>&);
 		
 		size_t release_inode_blocks(inode_type*) noexcept;
 		
@@ -477,6 +479,13 @@ namespace Kernel::FS
 		size_t expand_indirect_2(Utils::shared_ptr<block_t>, Y&, size_t start = 0, size_t count = size_t(-1), bool include_nulls = true);
 		template <class Y>
 		size_t expand_indirect_3(Utils::shared_ptr<block_t>, Y&, size_t start = 0, size_t count = size_t(-1), bool include_nulls = true);
+		
+		template <class Y>
+		size_t expand_indirect_1_indexes(Utils::shared_ptr<block_t>, Y&, size_t start = 0, size_t count = size_t(-1), bool include_nulls = true);
+		template <class Y>
+		size_t expand_indirect_2_indexes(Utils::shared_ptr<block_t>, Y&, size_t start = 0, size_t count = size_t(-1), bool include_zeros = true);
+		template <class Y>
+		size_t expand_indirect_3_indexes(Utils::shared_ptr<block_t>, Y&, size_t start = 0, size_t count = size_t(-1), bool include_zeros = true);
 		
 		private:
 		Utils::shared_ptr<inode_type> __get_inode(inode_index_t) const noexcept;
@@ -529,6 +538,9 @@ namespace Kernel::FS
 		static uint32_t encode_device_signature(const uint32_t major, const uint32_t minor) noexcept;
 		static bool decode_device_signature(const uint32_t, dev_t*) noexcept;
 		static uint32_t encode_device_signature(const dev_t) noexcept;
+		
+		
+		static Utils::shared_ptr<class EXT2Node> cast_EXT2Node(const node_ptr<>&);
 		
 		
 		friend class EXT2Node;

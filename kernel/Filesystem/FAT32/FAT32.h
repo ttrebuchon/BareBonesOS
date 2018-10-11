@@ -355,7 +355,7 @@ class FAT32 : public Kernel::FS::Filesystem
 	uint32_t next_free_cluster(uint32_t start_index = 0) const;
 	
 	
-	virtual Node* root() const noexcept override;
+	virtual node_ptr<> root() const noexcept override;
 	
 	virtual ReadOnlyFactory& factory() noexcept override
 	{

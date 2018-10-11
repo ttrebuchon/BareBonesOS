@@ -37,11 +37,11 @@ namespace Kernel::FS
 				{
 					NTFSNode* n = nullptr;
 					#ifdef __cpp_rtti
-					n = dynamic_cast<NTFSNode*>(node);
+					n = dynamic_cast<NTFSNode*>(node.get());
 					if (n)
 					{
 					#else
-					n = (NTFSSystemNode*)node;
+					n = (NTFSSystemNode*)node.get();
 					#endif
 					
 					if (n->volume() == this->volume())
@@ -97,7 +97,7 @@ namespace Kernel::FS
 		return NTFSDirectoryNode::size() - sys_node_count;
 	}
 	
-	Node* NTFSRootDirectoryNode::at(size_t index) const
+	node_ptr<> NTFSRootDirectoryNode::at(size_t index) const
 	{
 		return NTFSDirectoryNode::at(index+sys_node_count);
 	}

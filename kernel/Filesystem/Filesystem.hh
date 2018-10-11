@@ -4,6 +4,7 @@
 #include <Common.h>
 #include <Utils/string>
 #include "Path_Fwd.hh"
+#include "node_ptr.hh"
 
 namespace Drivers
 {
@@ -19,26 +20,36 @@ namespace Kernel { namespace FS {
 	
 	class Filesystem
 	{
+		public:
+		typedef node_ptr<> node_type;
+		typedef const node_ptr<>& ref_node_type;
+		
+		
 		private:
+		template <class T>
+		using ptr_type = node_ptr<T>;
+		
+		template <class T>
+		using rptr_type = const node_ptr<T>&;
 		
 		protected:
-		Node* _root;
+		node_type _root;
 		
 		Filesystem() noexcept;
 		
 		public:
 		static Filesystem* Current;
 		
-		virtual Node* getNode(const Utils::string& path, const Utils::string& relative = Utils::string());
-		virtual Node* getNode(const Path_t& path);
+		virtual node_type getNode(const Utils::string& path, const Utils::string& relative = Utils::string());
+		virtual node_type getNode(const Path_t& path);
 		
 		
-		virtual Node* root() const noexcept __attribute__((__always_inline__))
+		virtual node_type root() const noexcept __attribute__((__always_inline__))
 		{
 			return _root;
 		}
 		
-		virtual DirectoryNode_v* rootd() const noexcept;
+		virtual ptr_type<DirectoryNode_v> rootd() const noexcept;
 		
 		virtual Factory& factory() noexcept = 0;
 	};

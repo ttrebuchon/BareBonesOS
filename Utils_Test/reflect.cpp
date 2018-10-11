@@ -772,7 +772,6 @@ TEST(reflect)
 	/*assert(test_class::counter() == 0);*/
 	
 	std::clog << __func__ << " Returning...\n";
-	assert(false);
 }
 
 
@@ -952,14 +951,12 @@ void testt()
 	
 	
 	
-	
-	
+	try
+	{
 	
 	SQLiteContext* sqlcontext = new SQLiteContext(sqlite_out_db);
 	
 	Context<SQLiteContext*, test_class, test_comp_class, poly_test_class, poly_test_class_base, poly_test_class2, poly_test_class3> context(sqlcontext, true);
-	
-	assert(false);
 	
 	assert(context.owns_implementation());
 	
@@ -991,7 +988,6 @@ void testt()
 		std::cout << "Error Message: '" << sqlcontext->error_msg() << std::endl;
 	}
 	assert(res);
-	assert(false);
 	
 	
 	test_comp_class tcc_ex;
@@ -1148,7 +1144,6 @@ void testt()
 	
 	static_assert(Meta::type_sequence<int, poly_test_class, poly_test_class_base, poly_test_class2, int>::index_of_type_index(typeid(int)) == 0);
 	
-	//assert(false);
 	
 	__try
 	{
@@ -1499,6 +1494,23 @@ void testt()
 		sqlcontext->clear_queries();
 	}
 	#endif
+	
+	}
+	catch (Utils::exception& ex)
+	{
+		TRACE("Exception caught!");
+		QA::out << ex.what() << std::endl;
+	}
+	catch (std::exception& ex)
+	{
+		TRACE("Exception caught!");
+		QA::out << ex.what() << std::endl;
+	}
+	catch (...)
+	{
+		QA::out << "Exception caught!" << std::endl;
+		assert(false);
+	}
 	
 	std::clog << "Exiting test...\n";
 }

@@ -254,6 +254,10 @@ extern "C" {
 	
 	static int fileControl(sqlite3_file* pFile, int op, void* pArg)
 	{
+		if (op == SQLITE_FCNTL_PRAGMA)
+		{
+			return SQLITE_NOTFOUND;
+		}
 		return SQLITE_OK;
 	}
 	
@@ -557,7 +561,7 @@ extern "C" {
 	struct File
 	{
 		sqlite3_file base;
-		Kernel::FS::FileNode_v* node;
+		Kernel::FS::node_ptr<Kernel::FS::FileNode_v> node;
 		Kernel::ResourcePtr<Kernel::FileHandle> hndl;
 		
 		/*char* aBuffer;
@@ -577,33 +581,33 @@ extern "C" {
 	}
 	
 	
-	static Kernel::FS::FileNode_v* find_file(const char* zName, bool create)
+	static Kernel::FS::node_ptr<Kernel::FS::FileNode_v> find_file(const char* zName, bool create)
 	{
+		using namespace Kernel::FS;
 		auto fs = Kernel::FS::Filesystem::Current;
 		assert(fs);
 		auto node = fs->getNode(zName);
-		Kernel::FS::FileNode_v* fnode = nullptr;
+		node_ptr<FileNode_v> fnode = nullptr;
 		if (node)
 		{
-			fnode = node->as_file();
+			fnode = node.as_file();
 		}
 		
 		if (!node && create)
 		{
-			TRACE_VAL(zName);
 			Kernel::FS::Path_t path(zName);
 			if (path.parts_length() == 1)
 			{
 				if (!path.part(0).empty())
 				{
-					fnode = fs->root()->as_directory()->add_file(path.part(0));
+					fnode = fs->root().as_directory()->add_file(path.part(0));
 				}
 			}
 			else if (path.parts_length() > 0)
 			{
 				auto parent_path = path.subpath(0, path.parts_length() - 1);
 				auto n_parent = fs->getNode(parent_path);
-				auto parent = (n_parent ? n_parent->as_directory() : nullptr);
+				auto parent = n_parent.as_directory();
 				if (parent && !path.back().empty())
 				{
 					fnode = parent->add_file(path.back());
@@ -623,43 +627,14 @@ extern "C" {
 		
 		assert(p->node);
 		
-		/*TRACE("Writing!");
-		TRACE_VAL(p->node->name.c_str());
-		TRACE_VAL(offset);
-		TRACE_VAL(size);
-		TRACE_VAL(p->node->size());*/
 		uint64_t cast_size = size;
 		assert(cast_size == size);
 		
 		auto written = p->node->write(offset, cast_size, zBuf);
-		//TRACE_VAL(p->node->size());
 		
 		assert(written == size);
-		uint8_t read_buf[size];
-		assert(p->node->read(offset, cast_size, read_buf) == cast_size);
-		if (memcmp(read_buf, zBuf, size) != 0)
-		{
-			TRACE_VAL(offset);
-			TRACE_VAL(size);
-		}
-		assert(memcmp(read_buf, zBuf, size) == 0);
 		
-		//TRACE_VAL(written);
 		return written;
-		
-		/*realOff = lseek(p->fd, offset, SEEK_SET);
-		if (realOff != offset)
-		{
-			return SQLITE_IOERR_WRITE;
-		}
-		
-		nWrite = write(p->fd, zBuf, size);
-		if (nWrite != size)
-		{
-			return SQLITE_IOERR_WRITE;
-		}
-		
-		return SQLITE_OK;*/
 	}
 	
 	static int flushBuffer(File* p)
@@ -678,12 +653,9 @@ extern "C" {
 		verify_file(pFile);
 		int rc;
 		File* p = (File*)pFile;
-		TRACE_VAL(p->node->name.c_str());
 		rc = flushBuffer(p);
 		p->hndl = nullptr;
 		p->node = nullptr;
-		//sqlite3_free(p->aBuffer);
-		//::close(p->fd);
 		return rc;
 	}
 	
@@ -693,20 +665,11 @@ extern "C" {
 		File* p = (File*)pFile;
 		int rc;
 		
-		/*rc = flushBuffer(p);
-		if (rc != SQLITE_OK)
-		{
-			return rc;
-		}*/
 		if (!p->node)
 		{
 			assert(false);
 			return SQLITE_IOERR_READ;
 		}
-		
-		/*TRACE(p->node->name.c_str());
-		TRACE_VAL(off);
-		TRACE_VAL(size);*/
 		
 		if (p->node->size() < (off + size))
 		{
@@ -717,7 +680,6 @@ extern "C" {
 			}
 			
 			memset((uint8_t*)zBuf + read, 0, size - read);
-			TRACE("SHORT READ.");
 			return SQLITE_IOERR_SHORT_READ;
 		}
 		
@@ -737,7 +699,6 @@ extern "C" {
 		else if (nRead >= 0)
 		{
 			memset(((uint8_t*)zBuf) + nRead, 0, size - nRead);
-			TRACE("SHORT READ.");
 			return SQLITE_IOERR_SHORT_READ;
 		}
 		
@@ -874,6 +835,10 @@ extern "C" {
 	static int fileControl(sqlite3_file* pFile, int op, void* pArg)
 	{
 		verify_file(pFile);
+		if (op == SQLITE_FCNTL_PRAGMA)
+		{
+			return SQLITE_NOTFOUND;
+		}
 		return SQLITE_OK;
 	}
 	
@@ -948,7 +913,8 @@ extern "C" {
 		}*/
 		
 		::memset(p, 0, sizeof(File));
-		TRACE_VAL(zName);
+		new (p) File();
+		//TRACE_VAL(zName);
 		bool allow_create = ((flags & SQLITE_OPEN_CREATE) == SQLITE_OPEN_CREATE);
 		auto fnode = find_file(zName, allow_create);
 		/*auto fs = Kernel::FS::Filesystem::Current;
@@ -1006,7 +972,7 @@ extern "C" {
 	
 	static int fileDelete(sqlite3_vfs* pVfs, const char* zPath, int dirSync)
 	{
-		TRACE_VAL(zPath);
+		//TRACE_VAL(zPath);
 		
 		auto n = find_file(zPath, false);
 		//return ((n != nullptr) ? SQLITE_OK : SQLITE_IOERR_DELETE);
@@ -1015,7 +981,9 @@ extern "C" {
 			auto p = n->get_parent();
 			if (p)
 			{
+				assert(n.get_shared().use_count() > 1);
 				p->remove(n);
+				n = nullptr;
 			}
 		}
 		
@@ -1080,7 +1048,6 @@ extern "C" {
 	
 	static int access(sqlite3_vfs *pVfs, const char* path, int flags, int* pResOut)
 	{
-		TRACE_VAL(path);
 		int rc;
 		int eAccess = F_OK;
 		
@@ -1102,7 +1069,6 @@ extern "C" {
 			auto fnode = node->as_file();
 			if (fnode)
 			{
-				TRACE("File exists.");
 				rc = 0;
 			}
 			else
@@ -1117,7 +1083,6 @@ extern "C" {
 		
 		if (rc == -1)
 		{
-			TRACE("File does not exist.");
 			errno = EACCES;
 		}
 		

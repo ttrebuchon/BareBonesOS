@@ -66,8 +66,8 @@ namespace Kernel
 	
 	
 	
-	
-	static int ls_dir(cwd_type dir, Utils::ostream& out)
+	template <class DT>
+	static int ls_dir(DT dir, Utils::ostream& out)
 	{
 		assert(dir);
 		// TODO
@@ -91,11 +91,12 @@ namespace Kernel
 		if (argc > 1)
 		{
 			
+			using namespace FS;
 			auto fs = FS::Filesystem::Current;
 			assert(fs);
 			int res = 0;
-			FS::Node* n = nullptr;
-			FS::DirectoryNode_v* dir = nullptr;
+			node_ptr<> n = nullptr;
+			node_ptr<DirectoryNode_v> dir = nullptr;
 			for (int i = 1; i < argc && res == 0; ++i)
 			{
 				
@@ -119,7 +120,7 @@ namespace Kernel
 				
 				
 				assert(n);
-				dir = n->as_directory();
+				dir = n.as_directory();
 				if (!dir)
 				{
 					const char* LS_NOT_DIR = "Is not a directory.";
@@ -193,7 +194,7 @@ namespace Kernel
 			return 0;
 		}
 		
-		FS::Node* node = nullptr;
+		FS::node_ptr<> node = nullptr;
 		
 		if (FS::Path::IsAbsolute(target))
 		{
@@ -222,7 +223,7 @@ namespace Kernel
 			return ENOTDIR;
 		}
 			
-		proc->fs_context.cwd = node->as_directory();
+		proc->fs_context.cwd = node.as_directory().get();
 		return 0;
 	}
 	

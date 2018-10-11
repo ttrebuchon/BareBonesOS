@@ -4,17 +4,38 @@
 #include <fcntl.h>
 #include "QA.hh"
 #include <drivers/Driver.hh>
+#include <sys/stat.h>
 
 namespace TestUtils
 {
 	
 	QADrive::QADrive(const char* filename, const size_t size) : size(size % sector_size == 0 ? size : ((size / sector_size + 1)*sector_size)), sector_count(this->size / sector_size), base_address(nullptr), fd(-1)
 	{
-		FILE* f = ::fopen(filename, "a+b");
-		assert(f);
 		size_t exist_size;
+		fd = ::open(filename, O_RDWR | O_APPEND | O_CREAT);
+		assert(fd >= 0);
+		exist_size = ::lseek(fd, 0, SEEK_END);
+		if (exist_size < this->size)
+		{
+			if (::ftruncate(fd, this->size) != 0)
+			{
+				assert(false);
+			}
+		}
+		lseek(fd, 0, SEEK_SET);
+		
+		/*FILE* f = ::fopen(filename, "a+b");
+		assert(f);
 		fseek(f, 0, SEEK_END);
 		exist_size = ftell(f);
+		if (exist_size < this->size)
+		{
+			fseek(f, 0, SEEK_BEG);
+			if (::truncate(filename, this->size) != 0)
+			{
+				assert(false);
+			}
+		}
 		fclose(f);
 		f = nullptr;
 		if (exist_size < this->size)
@@ -31,7 +52,7 @@ namespace TestUtils
 			f = nullptr;
 		}
 		fd = ::open(filename, O_RDWR | O_APPEND | O_CREAT);
-		assert(fd >= 0);
+		assert(fd >= 0);*/
 		void* phys = ::mmap(0, this->size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 		assert(phys != MAP_FAILED);
 		assert(phys != nullptr);

@@ -15,7 +15,7 @@ namespace Kernel { namespace FS {
 	
 	
 	
-	Node* Filesystem::getNode(const Utils::string& path, const Utils::string& relative)
+	typename Filesystem::node_type Filesystem::getNode(const Utils::string& path, const Utils::string& relative)
 	{
 		if (path.length() <= 0)
 		{
@@ -37,7 +37,7 @@ namespace Kernel { namespace FS {
 		ASSERT(root);
 		ASSERT(root->isKind(NodeType::Directory));
 		
-		const auto droot = root->as_directory();
+		const auto droot = root.as_directory();
 		
 		/*auto index = Path::IndexForRelativeToRoot(path);
 		ASSERT(path.length() > index);
@@ -52,7 +52,7 @@ namespace Kernel { namespace FS {
 		return droot->findChild(nrelative);
 	}
 	
-	Node* Filesystem::getNode(const Path_t& path)
+	typename Filesystem::node_type Filesystem::getNode(const Path_t& path)
 	{
 		if (path.empty())
 		{
@@ -62,7 +62,7 @@ namespace Kernel { namespace FS {
 		
 		auto root = this->root();
 		assert(root);
-		auto it = root->as_directory();
+		auto it = root.as_directory();
 		const auto droot = it;
 		assert(droot);
 		
@@ -71,7 +71,7 @@ namespace Kernel { namespace FS {
 			auto next = it->at(path.part(i));
 			if (next)
 			{
-				it = next->as_directory();
+				it = next.as_directory();
 			}
 			else
 			{
@@ -87,17 +87,9 @@ namespace Kernel { namespace FS {
 		return nullptr;
 	}
 	
-	DirectoryNode_v* Filesystem::rootd() const noexcept
+	node_ptr<DirectoryNode_v> Filesystem::rootd() const noexcept
 	{
-		auto r = root();
-		if (r)
-		{
-			return r->as_directory();
-		}
-		else
-		{
-			return nullptr;
-		}
+		return root().as_directory();
 	}
 	
 }

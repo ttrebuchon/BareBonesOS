@@ -7,7 +7,7 @@
 
 namespace Kernel { namespace FS {
 	
-	class FunctionNode : public virtual Node
+	class FunctionNode : public Node
 	{
 		protected:
 		

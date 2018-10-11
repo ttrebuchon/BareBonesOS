@@ -42,11 +42,11 @@ namespace Kernel::FS
 		EXT2Factory(EXT2*);
 		
 		
-		virtual DirectoryNode_v* create_directory(DirectoryNode_v* parent, const Utils::string& name) noexcept override;
-		virtual FileNode_v* create_file(DirectoryNode_v* parent, const Utils::string& name) noexcept override;
-		virtual LinkNode* create_link(DirectoryNode_v* parent, const Utils::string&, const Utils::string& target) noexcept override;
-		virtual BlockDeviceNode* create_block_device(DirectoryNode_v* parent, const Utils::string&, const devtarget_t&) noexcept override;
-		virtual CharDeviceNode* create_char_device(DirectoryNode_v* parent, const Utils::string&, const devtarget_t&) noexcept override;
+		virtual node_ptr<DirectoryNode_v> create_directory(DirectoryNode_v* parent, const Utils::string& name) noexcept override;
+		virtual node_ptr<FileNode_v> create_file(DirectoryNode_v* parent, const Utils::string& name) noexcept override;
+		virtual node_ptr<LinkNode> create_link(DirectoryNode_v* parent, const Utils::string&, const Utils::string& target) noexcept override;
+		virtual node_ptr<BlockDeviceNode> create_block_device(DirectoryNode_v* parent, const Utils::string&, const devtarget_t&) noexcept override;
+		virtual node_ptr<CharDeviceNode> create_char_device(DirectoryNode_v* parent, const Utils::string&, const devtarget_t&) noexcept override;
 		
 	};
 }

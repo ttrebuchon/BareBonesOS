@@ -81,6 +81,8 @@ class QA
 	static Kernel::FS::Filesystem* MountTempFilesystem(const char* mntPath, const char* mntName, const char* diskName, const size_t diskSize, Kernel::FS::Filesystem* rootFS = nullptr);
 	static bool UnmountTempFilesystem(const char* mntPath, const char* mntName, Kernel::FS::Filesystem* fs = nullptr, Kernel::FS::Filesystem* rootFS = nullptr);
 	
+	static bool NativeFileMap(const char* path, const char* native, bool delete_if_exists = false);
+	
 	static void EnableMemPool() noexcept;
 	static void DisableMemPool() noexcept;
 	static bool MemPoolEnabled() noexcept;

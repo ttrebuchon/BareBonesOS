@@ -3,6 +3,7 @@
 
 #include "EXT2Node.hh"
 #include <kernel/Filesystem/LinkNode.hh>
+#include <kernel/Filesystem/node_ptr.hh>
 
 namespace Kernel::FS
 {
@@ -146,7 +147,7 @@ namespace Kernel::FS
 		EXT2SymLinkNode(DirectoryNode_v* parent, EXT2* fs, Utils::shared_ptr<detail::EXT2::inode_t> node, const Utils::string& name, const size_t inode_index);
 		EXT2SymLinkNode(DirectoryNode_v* parent, EXT2* fs, detail::EXT2::dirent_t*);
 		
-		virtual Node* target() const noexcept override;
+		virtual node_ptr<> target() const noexcept override;
 		
 		const Path_t& target_path() const noexcept;
 		virtual EXT2* get_filesystem() const noexcept override;

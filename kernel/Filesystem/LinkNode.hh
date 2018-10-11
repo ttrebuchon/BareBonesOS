@@ -3,13 +3,14 @@
 
 #include <Common.h>
 #include "Node.hh"
+#include "node_ptr.hh"
 
 
 namespace Kernel { namespace FS {
 	
 	
 	
-	class LinkNode : public virtual Node
+	class LinkNode : public Node
 	{
 		protected:
 		
@@ -20,7 +21,7 @@ namespace Kernel { namespace FS {
 		LinkNode();
 		virtual ~LinkNode() = default;
 		
-		virtual Node* target() const noexcept = 0;
+		virtual node_ptr<> target() const noexcept = 0;
 		
 		virtual NodeType type() const noexcept override;
 		

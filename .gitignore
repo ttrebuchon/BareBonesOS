@@ -15,6 +15,7 @@
 initrd.img
 dummy.img
 *.img
+**/*.img
 
 # Precompiled Headers
 *.gch
@@ -43,6 +44,8 @@ dummy.img
 # Project Output
 *.iso
 *.bin
+*.sqlite*
+**/*.sqlite*
 
 #IDE Settings
 .c4droid
@@ -53,6 +56,7 @@ Barebones.code-workspace
 
 #Non-Committed Libraries
 Libraries/sqlite3**
+Libraries/json/**
 
 #Logs
 bochsout.txt

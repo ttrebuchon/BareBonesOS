@@ -26,9 +26,9 @@ TEST(ext2)
 	
 	/*auto ext4 = new EXT2(*QA::QACheckReadOnlyDrive("Images/EXT2.img"));
 	assert(ext4->root());
-	assert(ext4->root()->as_directory());
-	assert(ext4->root()->as_directory()->size() > 0);
-	enumerate_system(ext4->root()->as_directory(), "", true);
+	assert(ext4->root().as_directory());
+	assert(ext4->root().as_directory()->size() > 0);
+	enumerate_system(ext4->root().as_directory(), "", true);
 	
 	
 	return;*/
@@ -53,7 +53,7 @@ TEST(ext2)
 	/*assert(EXT2::Format(drive));
 	{
 		auto fs1 = new EXT2(*drive);
-		auto r = fs1->root()->as_directory();
+		auto r = fs1->root().as_directory();
 			assert(r);
 			QA::out << "Got root." << std::endl;
 			
@@ -204,7 +204,7 @@ TEST(ext2)
 		
 		auto fs1 = new EXT2(*p1);
 		{
-			auto r = fs1->root()->as_directory();
+			auto r = fs1->root().as_directory();
 			assert(r);
 			QA::out << "Got root." << std::endl;
 			
@@ -225,6 +225,11 @@ TEST(ext2)
 			assert(test2 != test);
 			QA::out << "Created /Test/Test2/" << std::endl;
 			ASSERTEQ(test2->size(), 0);
+			for (size_t i = 0; i < test->size(); ++i)
+			{
+				assert(test->at(i));
+				QA::out << test->at(i)->name.c_str() << std::endl;
+			}
 			ASSERTEQ(test->size(), 1);
 			ASSERTEQ(r->size(), 1);
 			
@@ -280,7 +285,7 @@ TEST(ext2)
 		QA::out << "Creating filesystem..." << std::endl;
 		fs1 = new EXT2(*p1);
 		{
-			auto r = fs1->root()->as_directory();
+			auto r = fs1->root().as_directory();
 			assert(r);
 			QA::out << "Got root." << std::endl;
 			QA::out << r->size() << std::endl;
@@ -299,7 +304,7 @@ TEST(ext2)
 			
 			auto _test = r->at("Test");
 			assert(_test);
-			auto test = _test->as_directory();
+			auto test = _test.as_directory();
 			assert(test);
 			
 			assert(test->size() == 2);
@@ -310,7 +315,7 @@ TEST(ext2)
 			ASSERTEQ(test->size(), 2);
 			auto _test2 = test->at(0);
 			assert(_test2);
-			auto test2 = _test2->as_directory();
+			auto test2 = _test2.as_directory();
 			assert(test2);
 			QA::out << "/" << test2->name.c_str() << std::endl;
 			assert(test2->size() == 0);
@@ -331,7 +336,7 @@ TEST(ext2)
 		auto fs2 = new EXT2(*p1);
 		{
 			
-				auto r = fs2->root()->as_directory();
+				auto r = fs2->root().as_directory();
 				assert(r);
 				QA::out << "Got root." << std::endl;
 				QA::out << "/" << r->name.c_str() << std::endl;
@@ -347,7 +352,7 @@ TEST(ext2)
 			auto fn = [&](auto ldir, auto ln)
 			{
 				QA::out << std::endl;
-				DirectoryNode_v* dir = nullptr;
+				node_ptr<DirectoryNode_v> dir = nullptr;
 				assert(ldir);
 				assert(linux);
 				assert(fs2);
@@ -365,7 +370,7 @@ TEST(ext2)
 					assert(root->name.c_str() != nullptr);
 					QA::out << "/" << root->name.c_str() << std::endl;
 					assert(root->isKind(NodeType::Directory));
-					dir = root->as_directory();
+					dir = root.as_directory();
 					assert(dir);
 				}
 				else
@@ -374,7 +379,7 @@ TEST(ext2)
 					//QA::out << "'" << p.str().c_str() << "'" << std::endl;
 					auto tmp = fs2->getNode(p.str());
 					assert(tmp);
-					dir = tmp->as_directory();
+					dir = tmp.as_directory();
 					assert(dir);
 				}
 				QA::out << std::endl;
@@ -393,7 +398,7 @@ TEST(ext2)
 					}
 					else if (ln->isKind(NodeType::File, true))
 					{
-						auto lfn = ln->as_file();
+						auto lfn = ln.as_file();
 						assert(lfn);
 						n = dir->add_file(ln->name);
 						assert(n);
@@ -412,10 +417,11 @@ TEST(ext2)
 					}
 					else if (ln->isKind(NodeType::Link))
 					{
-						auto lsym = ln->as_link();
+						auto lsym = ln.as_link();
 						assert(lsym);
 						
-						auto lsym_ext = (EXT2SymLinkNode*)lsym;
+						auto lsym_ext = lsym.template cast<EXT2SymLinkNode>();
+						//auto lsym_ext = (node_ptr<EXT2SymLinkNode>)lsym;
 						
 						QA::out << "Target: '" << lsym_ext->target_path().c_str() << "'" << std::endl;
 						
@@ -440,14 +446,14 @@ TEST(ext2)
 					}
 					else if (ln->isKind(NodeType::Block, true))
 					{
-						auto bn = ln->as_block_device();
+						auto bn = ln.as_block_device();
 						assert(bn);
 						n = dir->add_block_device(ln->name, bn->device());
 						assert(n);
 					}
 					else if (ln->isKind(NodeType::Char, true))
 					{
-						auto cn = ln->as_char_device();
+						auto cn = ln.as_char_device();
 						assert(cn);
 						n = dir->add_char_device(ln->name, cn->device());
 						assert(n);
@@ -463,15 +469,15 @@ TEST(ext2)
 			};
 			
 			QA::out << "Enumerating linux with callback..." << std::endl;
-			enumerate_system_callback(linux->root()->as_directory(), fn, true);
+			enumerate_system_callback(linux->root().as_directory(), fn, true);
 			
 			QA::out << QA::br << QA::hr << std::endl << "Enumerating linux." << std::endl;
-			enumerate_system(linux->root()->as_directory(), "", true);
+			enumerate_system(linux->root().as_directory(), "", true);
 			
 			
 			QA::out << QA::hr << std::endl << "Enumerating FS2." << std::endl;
 			assert(fs2->root());
-			enumerate_system(fs2->root()->as_directory(), "", true);
+			enumerate_system(fs2->root().as_directory(), "", true);
 			
 			QA::out << QA::hr << QA::br << "Enumeration Complete." << std::endl;
 			
@@ -504,7 +510,7 @@ static void enumerate_system(auto root, Utils::string path, bool pfolders)
 			{
 				QA::out << " + " << path.c_str() << "/" << n->name.c_str() << "/" << std::endl;
 			}
-			auto dir = n->as_directory();
+			auto dir = n.as_directory();
 			assert(dir);
 			enumerate_system(dir, path + "/" + n->name, pfolders);
 		}
@@ -523,7 +529,7 @@ static void enumerate_system(auto root, Utils::string path, bool pfolders)
 		
 		if (n->isKind(NodeType::File))
 		{
-			auto fn = n->as_file();
+			auto fn = n.as_file();
 			assert(fn);
 			uint8_t sig[4];
 			if (fn->size() > 4)
@@ -612,7 +618,7 @@ static void verify_dlx()
 		auto root = fs.root();
 		assert(root);
 		assert(root->isKind(NodeType::Directory));
-		auto droot = root->as_directory();
+		auto droot = root.as_directory();
 		
 		QA::out << "Root Directory Items: " << droot->size() << std::endl;
 		
@@ -633,7 +639,7 @@ static void verify_dlx()
 			{
 				if (child->name != "." && child->name != "..")
 				{
-					some_child = child->as_directory();
+					some_child = child.as_directory();
 					break;
 				}
 			}
@@ -642,7 +648,7 @@ static void verify_dlx()
 		
 		assert(some_child);
 		
-		some_child = droot->at("mnt")->as_directory();
+		some_child = droot->at("mnt").as_directory();
 		assert(some_child);
 		
 		for (size_t i = 0; i < some_child->size(); ++i)
@@ -658,10 +664,10 @@ static void verify_dlx()
 		assert(sbin_n);
 		QA::out << "Got sbin." << std::endl;
 		QA::out << (unsigned int)sbin_n->type() << std::endl;
-		auto sbin_d = sbin_n->as_directory();
+		auto sbin_d = sbin_n.as_directory();
 		assert(sbin_d);
 		assert(sbin_n->isKind(NodeType::Directory));
-		auto sbin = sbin_n->as_directory();
+		auto sbin = sbin_n.as_directory();
 		assert(sbin);
 		QA::out << "Got sbin as directory." << std::endl;
 		{
@@ -681,7 +687,7 @@ static void verify_dlx()
 		auto lilo_conf = fs.getNode("etc/lilo.conf");
 		assert(lilo_conf);
 		assert(lilo_conf->isKind(NodeType::File));
-		auto lcf = lilo_conf->as_file();
+		auto lcf = lilo_conf.as_file();
 		assert(lcf);
 		
 		uint8_t buf[lcf->size() + 1];
@@ -691,12 +697,12 @@ static void verify_dlx()
 		
 		QA::out << QA::br << QA::div << std::endl << buf << QA::div << std::endl;
 		
-		/*auto zimg = fs.getNode("boot/zImage386")->as_file();
+		/*auto zimg = fs.getNode("boot/zImage386").as_file();
 		assert(zimg);
 		
 		auto mnt_n = fs.getNode("/dev/hda");
 		assert(mnt_n);
-		auto mnt = mnt_n->as_block_device();
+		auto mnt = mnt_n.as_block_device();
 		assert(mnt);
 		assert(!mnt->has_device());
 		auto zimg_dev = new DeviceFileAdapter(zimg);
@@ -748,7 +754,7 @@ static void verify_dlx()
 		{
 			if (node->isKind(NodeType::Block))
 			{
-				auto n = node->as_block_device();
+				auto n = node.as_block_device();
 				if (!n)
 				{
 					QA::out << (int)node->type() << std::endl;
@@ -763,7 +769,7 @@ static void verify_dlx()
 			}
 			else if (node->isKind(NodeType::Char))
 			{
-				auto n = node->as_char_device();
+				auto n = node.as_char_device();
 				assert(n);
 				auto dev = n->device();
 				assert(dev);
@@ -798,7 +804,7 @@ static void enumerate_system_callback(auto root, Fn fn, bool folders)
 			{
 				fn(root, n);
 			}
-			auto dir = n->as_directory();
+			auto dir = n.as_directory();
 			assert(dir);
 			enumerate_system_callback(dir, fn, folders);
 		}
@@ -846,7 +852,7 @@ static void enumerate_file_disk(const char* filename)
 	QA::out << "Last Mount Path: " << fs->last_mount_path() << std::endl;
 	QA::out << QA::br;
 	
-	enumerate_system(fs->root()->as_directory(), "", true);
+	enumerate_system(fs->root().as_directory(), "", true);
 	
 	
 	

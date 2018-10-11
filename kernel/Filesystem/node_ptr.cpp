@@ -31,6 +31,12 @@ namespace Kernel { namespace FS {
 	
 	
 	
+	node_ptr<Node>::operator node_ptr<const Node>() const
+	{
+		return node_ptr<const Node>(Utils::shared_ptr<const Node>(_node, _node.get()));
+	}
+	
+	
 	
 	node_ptr<FileNode_v> node_ptr<Node>::as_file() const noexcept
 	{
@@ -271,68 +277,44 @@ namespace Kernel { namespace FS {
 	}
 	
 	
-	static void foo(const node_ptr<>& ptr)
+	
+	
+	
+	
+	
+	
+	node_ptr<const Node>::node_ptr() : node_ptr(nullptr)
 	{
-		auto lnk = ptr.as_link();
-		if (lnk)
-		{
-			TRACE("Is a link.");
-		}
 		
-		if (lnk == ptr)
-		{
-			TRACE("Is sane");
-		}
+	}
+	
+	node_ptr<const Node>::node_ptr(decltype(nullptr) p) : _node(p)
+	{
 		
-		auto fi = lnk.as_file();
-		if (fi)
-		{
-			TRACE("Is a file.");
-		}
-		else if (fi == nullptr)
-		{
-			TRACE("Not a file.");
-		}
-		else if (fi != nullptr)
-		{
-			TRACE("What?!");
-		}
+	}
+	
+	node_ptr<const Node>::node_ptr(const spointer_type& ptr) : _node(ptr)
+	{
 		
-		if (fi == ptr)
-		{
-			TRACE("Is sane.");
-		}
+	}
+	
+	node_ptr<const Node>::node_ptr(const node_ptr& other) : _node(other._node)
+	{
+		
+	}
+	
+	node_ptr<const Node>::node_ptr(node_ptr&& other) : _node(Utils::move(other._node))
+	{
+		
 	}
 	
 	
-	void test_node_ptr()
+	
+	
+	node_ptr<const Node>::operator node_ptr<>() const
 	{
-		auto fs = Filesystem::Current;
-		auto _r = fs->root();
-		auto sr = Utils::shared_ptr<Node>(_r, [](auto r)
-		{
-			
-		});
-		
-		node_ptr<> r(sr);
-		assert(r);
-		assert(r != nullptr);
-		auto rd = r.as_directory();
-		assert(rd);
-		assert(rd != nullptr);
-		assert(rd == r);
-		
-		node_ptr<> null;
-		assert(!null);
-		
-		assert(null != r);
-		assert(r != null);
-		assert(!(r != rd));
-		assert(rd != null);
-		assert(null != rd);
-		
-		auto null_f = null.as_file().as_link().as_directory().as_pipe().as_file();
-		assert(null_f == null);
+		return node_ptr<>(Utils::shared_ptr<Node>(_node, const_cast<Node*>(_node.get())));
 	}
+	
 }
 }

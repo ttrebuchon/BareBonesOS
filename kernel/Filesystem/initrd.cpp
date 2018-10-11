@@ -9,17 +9,17 @@ namespace Kernel { namespace FS {
 	
 	
 	
-	Node* readRecord(InitRD_FS*, void* addr, void**);
-	Node* readFolder(InitRD_FS*, void*, void**);
-	Node* readFile(InitRD_FS*, void*, void**);
-	Node* readSpecial(InitRD_FS*, void*, void**);
+	node_ptr<> readRecord(InitRD_FS*, void* addr, void**);
+	node_ptr<> readFolder(InitRD_FS*, void*, void**);
+	node_ptr<> readFile(InitRD_FS*, void*, void**);
+	node_ptr<> readSpecial(InitRD_FS*, void*, void**);
 	
-	Node* init_initrd(InitRD_FS* fs, void* addr)
+	node_ptr<> init_initrd(InitRD_FS* fs, void* addr)
 	{
 		return readRecord(fs, addr, nullptr);
 	}
 	
-	Node* readRecord(InitRD_FS* fs, void* addr, void** end)
+	node_ptr<> readRecord(InitRD_FS* fs, void* addr, void** end)
 	{
 		using namespace Init_RD;
 		FType type = *(FType*)addr;
@@ -46,7 +46,7 @@ namespace Kernel { namespace FS {
 		}
 	}
 	
-	Node* readFile(InitRD_FS* fs, void* addr, void** endAddr)
+	node_ptr<> readFile(InitRD_FS* fs, void* addr, void** endAddr)
 	{
 		uint64_t span = *(uint64_t*)addr;
 		char* recordName = (char*)((uint64_t*)addr + 1);// + sizeof(unsigned long);
@@ -59,12 +59,12 @@ namespace Kernel { namespace FS {
 			*endAddr = (char*)data + size;
 		}
 
-		auto file = new Init_RD::FileNode(fs, recordName, data, size);
+		node_ptr<> file = Utils::shared_ptr<FS::Node>(new Init_RD::FileNode(fs, recordName, data, size));
 		
 		return file;
 	}
 	
-	Node* readFolder(InitRD_FS* fs, void* addr, void** end)
+	node_ptr<> readFolder(InitRD_FS* fs, void* addr, void** end)
 	{
 		uint64_t span = *(uint64_t*)addr;
 		char* recordName = (char*)addr + sizeof(span);
@@ -74,15 +74,15 @@ namespace Kernel { namespace FS {
 		uint32_t count = *(uint32_t*)data;
 		void* entries = (char*)data + sizeof(count);
 
-		auto dir = new Init_RD::DirectoryNode(fs, recordName);
+		auto dir = node_ptr<FS::DirectoryNode_v>(Utils::shared_ptr<FS::DirectoryNode_v>(new Init_RD::DirectoryNode(fs, recordName)));
 		
 		void* ptr = entries;
 		void* tmp;
 		for (unsigned int j = 0; j < count; ++j)
 		{
-			Node* entry = readRecord(fs, ptr, &tmp);
+			node_ptr<> entry = readRecord(fs, ptr, &tmp);
 			dir->add(entry);
-			entry->set_parent(dir);
+			entry->set_parent(dir.get());
 			ptr = tmp;
 		}
 		if (end != nullptr)
@@ -92,7 +92,7 @@ namespace Kernel { namespace FS {
 		return dir;
 	}
 	
-	Node* readSpecial(InitRD_FS* fs, void* addr, void** endAddr)
+	node_ptr<> readSpecial(InitRD_FS* fs, void* addr, void** endAddr)
 	{
 		using namespace Init_RD;
 		SpecialType type = S_Invalid;
@@ -112,14 +112,22 @@ namespace Kernel { namespace FS {
 			*endAddr = (char*)data + size;
 		}
 		
+		FS::Node* n = nullptr;
+		
 		switch (type)
 		{
 			case S_Function:
 			assert(size == 255);
-			return new Init_RD::FunctionNode(fs, recordName, data, size);
+			n = new Init_RD::FunctionNode(fs, recordName, data, size);
+			break;
 			
 			case S_Invalid:
 			return nullptr;
+		}
+		
+		if (n)
+		{
+			return node_ptr<>(Utils::shared_ptr<FS::Node>(n));
 		}
 		
 		TRACE_VAL((size_t)type);
@@ -137,7 +145,7 @@ namespace Kernel { namespace FS {
 		auto r = init_initrd(this, base);
 		assert(r);
 		assert(r->isKind(NodeType::Directory));
-		_root = (Init_RD::DirectoryNode*)r->as_directory();
+		_root = r.as_directory();
 		//_root = (Init_RD::DirectoryNode*)r;
 	}
 }

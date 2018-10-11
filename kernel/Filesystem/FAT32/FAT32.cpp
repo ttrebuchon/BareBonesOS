@@ -281,7 +281,7 @@ namespace Kernel { namespace FS
 		return (uint32_t)-1;
 	}
 	
-	Node* FAT32::root() const noexcept
+	node_ptr<> FAT32::root() const noexcept
 	{
 		if (!_root)
 		{

@@ -66,14 +66,7 @@ namespace Utils
 		{
 			if (!ctrl->weakRelease())
 			{
-				if (ctrl->dealloc)
-				{
-					ctrl->dealloc(ctrl->dealloc_object, ctrl);
-				}
-				else
-				{
-					delete ctrl;
-				}
+				detail::shared_ptr_control::Release(ctrl);
 			}
 		}
 		ctrl = nullptr;
@@ -84,10 +77,7 @@ namespace Utils
 	{
 		if (ctrl != nullptr)
 		{
-			if (ctrl->obj != nullptr)
-			{
-				return ctrl->usecount;
-			}
+			return ctrl->usecount;
 		}
 		return 0;
 	}

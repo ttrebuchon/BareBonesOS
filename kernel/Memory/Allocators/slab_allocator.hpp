@@ -16,8 +16,8 @@ namespace Kernel { namespace Memory
 		assert(mem);
 		
 		auto h = halloc.allocate(1);
+		assert(h);
 		halloc.construct(h, alloc, mem, pool_sz, kernel_mem, read_only, pg_sz);
-		
 		heap = Utils::shared_ptr<heap_type>(h, [=](auto _obj) -> void
 		{
 			#ifdef __cpp_rtti
@@ -33,7 +33,6 @@ namespace Kernel { namespace Memory
 			auto ralloc2 = ralloc;
 			ralloc2.deallocate(mem, pool_sz);
 		});
-		
 		assert(heap);
 	}
 	

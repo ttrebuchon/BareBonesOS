@@ -17,14 +17,14 @@ namespace Kernel { namespace FS {
 	
 	
 	
-	Node* init_initrd(void* addr);
+	node_ptr<> init_initrd(void* addr);
 	
 	class InitRD_FS : public Filesystem::Filesystem
 	{
 		public:
 		
 		private:
-		Init_RD::DirectoryNode* _root;
+		node_ptr<FS::DirectoryNode_v> _root;
 		void* _base;
 		Init_RD::Factory _factory;
 		
@@ -32,7 +32,7 @@ namespace Kernel { namespace FS {
 		public:
 		InitRD_FS(void* base);
 		
-		virtual Init_RD::DirectoryNode* root() const noexcept override
+		virtual node_ptr<> root() const noexcept override
 		{
 			return _root;
 		}
@@ -41,6 +41,10 @@ namespace Kernel { namespace FS {
 		{
 			return _factory;
 		}
+		
+		#ifdef TESTING
+		node_ptr<FileNode_v> create_native_file(const Utils::string& path, const Utils::string& native);
+		#endif
 	};
 	
 	

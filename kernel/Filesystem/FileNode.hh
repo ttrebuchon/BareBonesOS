@@ -16,7 +16,7 @@ namespace Kernel { namespace FS {
 	class File;
 	
 	
-	class FileNode_v : public virtual Node
+	class FileNode_v : public Node
 	{
 		protected:
 		typedef File* FilePtr;

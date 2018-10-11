@@ -43,7 +43,7 @@ namespace Kernel::FS
 	
 	
 	
-	DirectoryNode_v* EXT2Factory::create_directory(DirectoryNode_v* parent, const Utils::string& name) noexcept
+	node_ptr<DirectoryNode_v> EXT2Factory::create_directory(DirectoryNode_v* parent, const Utils::string& name) noexcept
 	{
 		auto ext2_parent = cast_parent(parent);
 		assert(ext2_parent);
@@ -95,16 +95,16 @@ namespace Kernel::FS
 		auto node = ext2->parse_node(ext2_parent, ent.get());
 		assert(node);
 		assert(node->isKind(NodeType::Directory));
-		auto dir_node = node->as_directory();
+		auto dir_node = node.as_directory();
 		assert(dir_node);
-		if (ext2_parent->has_read)
+		/*if (ext2_parent->has_read)
 		{
 			ext2_parent->children.push_back(dir_node);
-		}
+		}*/
 		return dir_node;
 	}
 	
-	FileNode_v* EXT2Factory::create_file(DirectoryNode_v* parent, const Utils::string& name) noexcept
+	node_ptr<FileNode_v> EXT2Factory::create_file(DirectoryNode_v* parent, const Utils::string& name) noexcept
 	{
 		auto ext2_parent = cast_parent(parent);
 		assert(ext2_parent);
@@ -154,16 +154,16 @@ namespace Kernel::FS
 		auto node = ext2->parse_node(ext2_parent, ent.get());
 		assert(node);
 		assert(node->isKind(NodeType::File));
-		auto file_node = node->as_file();
+		auto file_node = node.as_file();
 		assert(file_node);
-		if (ext2_parent->has_read)
+		/*if (ext2_parent->has_read)
 		{
 			ext2_parent->children.push_back(file_node);
-		}
+		}*/
 		return file_node;
 	}
 	
-	LinkNode* EXT2Factory::create_link(DirectoryNode_v* parent, const Utils::string& name, const Utils::string& target) noexcept
+	node_ptr<LinkNode> EXT2Factory::create_link(DirectoryNode_v* parent, const Utils::string& name, const Utils::string& target) noexcept
 	{
 		auto ext2_parent = cast_parent(parent);
 		assert(ext2_parent);
@@ -244,16 +244,16 @@ namespace Kernel::FS
 		auto node = ext2->parse_node(ext2_parent, ent.get());
 		assert(node);
 		assert(node->isKind(NodeType::Link));
-		auto link_node = node->as_link();
+		auto link_node = node.as_link();
 		assert(link_node);
-		if (ext2_parent->has_read)
+		/*if (ext2_parent->has_read)
 		{
 			ext2_parent->children.push_back(link_node);
-		}
+		}*/
 		return link_node;
 	}
 	
-	BlockDeviceNode* EXT2Factory::create_block_device(DirectoryNode_v* parent, const Utils::string& name, const devtarget_t& dev) noexcept
+	node_ptr<BlockDeviceNode> EXT2Factory::create_block_device(DirectoryNode_v* parent, const Utils::string& name, const devtarget_t& dev) noexcept
 	{
 		auto ext2_parent = cast_parent(parent);
 		assert(ext2_parent);
@@ -318,16 +318,16 @@ namespace Kernel::FS
 		auto node = ext2->parse_node(ext2_parent, ent.get());
 		assert(node);
 		assert(node->isKind(NodeType::Block));
-		auto block_node = node->as_block_device();
+		auto block_node = node.as_block_device();
 		assert(block_node);
-		if (ext2_parent->has_read)
+		/*if (ext2_parent->has_read)
 		{
 			ext2_parent->children.push_back(block_node);
-		}
+		}*/
 		return block_node;
 	}
 	
-	CharDeviceNode* EXT2Factory::create_char_device(DirectoryNode_v* parent, const Utils::string& name, const devtarget_t& dev) noexcept
+	node_ptr<CharDeviceNode> EXT2Factory::create_char_device(DirectoryNode_v* parent, const Utils::string& name, const devtarget_t& dev) noexcept
 	{
 		auto ext2_parent = cast_parent(parent);
 		assert(ext2_parent);
@@ -392,12 +392,12 @@ namespace Kernel::FS
 		auto node = ext2->parse_node(ext2_parent, ent.get());
 		assert(node);
 		assert(node->isKind(NodeType::Char));
-		auto char_node = node->as_char_device();
+		auto char_node = node.as_char_device();
 		assert(char_node);
-		if (ext2_parent->has_read)
+		/*if (ext2_parent->has_read)
 		{
 			ext2_parent->children.push_back(char_node);
-		}
+		}*/
 		return char_node;
 	}
 	

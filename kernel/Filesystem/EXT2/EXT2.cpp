@@ -253,10 +253,13 @@ namespace Kernel::FS
 		assert(root);
 		assert(root->type == EXT2_INODE_TYPE_DIR);
 		auto root_n = new EXT2DirectoryNode(nullptr, this, root, "", 2);
-		_root = root_n;
+		_root = node_ptr<DirectoryNode_v>(Utils::shared_ptr<DirectoryNode_v>(root_n));
+		assert(_root.get() == root_n);
+		assert(_root == (DirectoryNode_v*)root_n);
+		assert(_root == root_n);
 		nodes[2] = _root;
 		assert(this->root() == root_n);
-		assert(this->root()->as_directory()->name.length() == 0);
+		assert(this->root().as_directory()->name.length() == 0);
 	}
 	
 	EXT2::~EXT2()
@@ -268,7 +271,10 @@ namespace Kernel::FS
 		
 		for (auto& kv : nodes)
 		{
-			delete kv.second;
+			if (kv.second)
+			{
+				kv.second->set_parent(nullptr);
+			}
 		}
 		
 		nodes.clear();
@@ -471,8 +477,6 @@ namespace Kernel::FS
 		size_t i = 0;
 		size_t block_count;
 		
-		TRACE_VAL(first);
-		TRACE_VAL(count);
 		uint32_t ptrs[count+first];
 		if (find_valid_block_ptrs(ptrs, node, count + first) < count)
 		{
@@ -481,15 +485,8 @@ namespace Kernel::FS
 		}
 		else
 		{
-			for (size_t g = 0; g < count+first; ++g)
-			{
-				TRACE_VAL(g);
-				TRACE_VAL(ptrs[g]);
-			}
-			TRACE("\n\n");
 			for (size_t j = first; j < count+first; ++j)
 			{
-				TRACE_VAL(ptrs[j]);
 				assert(ptrs[j] > 0);
 				auto blk = get_block(ptrs[j]);
 				assert(blk);
@@ -820,75 +817,10 @@ namespace Kernel::FS
 		return write_index;
 	}
 	
-	Node* EXT2::parse_node(DirectoryNode* parent, detail::EXT2::dirent_t* ent)
+	node_ptr<> EXT2::parse_node(DirectoryNode* parent, detail::EXT2::dirent_t* ent)
 	{
 		assert(ent);
-		Node* n = nodes[ent->inode];
-		if (n)
-		{
-			return n;
-		}
-		
-		auto next_n = get_inode(ent->inode);
-		assert(next_n);
-		if (!next_n)
-		{
-			return nullptr;
-		}
-		
-		Utils::string nname((const char*)ent->name, dirent_name_len(ent));
-		assert(nname.c_str()[nname.length()] == '\0');
-		
-		if (next_n->type == EXT2_INODE_TYPE_DIR)
-		{
-			n = new EXT2DirectoryNode(parent, this, next_n, nname, ent->inode);
-		}
-		else if (next_n->type == EXT2_INODE_TYPE_BLOCK_DEV || next_n->type == EXT2_INODE_TYPE_CHAR_DEV)
-		{
-			dev_t dev_id;
-			decode_device_signature(*(const uint32_t*)next_n->data, &dev_id);
-			
-			if (next_n->type == EXT2_INODE_TYPE_BLOCK_DEV)
-			{
-				auto target = DeviceTarget::find_target(this, DeviceTargetType::Block, dev_id);
-				n = new EXT2BlockDeviceNode(parent, this, next_n, nname, ent->inode, target);
-			}
-			else
-			{
-				auto target = DeviceTarget::find_target(this, DeviceTargetType::Char, dev_id);
-				n = new EXT2CharDeviceNode(parent, this, next_n, nname, ent->inode, target);
-			}
-		}
-		else if (next_n->type == EXT2_INODE_TYPE_FILE)
-		{
-			n = new EXT2FileNode(parent, this, next_n, nname, ent->inode);
-		}
-		else if (next_n->type == EXT2_INODE_TYPE_SYMLINK)
-		{
-			
-			n = new EXT2SymLinkNode(parent, this, next_n, nname, ent->inode);
-		}
-		else
-		{
-			TRACE_VAL(nname.c_str());
-			//TRACE((const char*)ent->name);
-			TRACE(next_n->type);
-			assert(NOT_IMPLEMENTED);
-		}
-		
-		assert(n);
-		if (n)
-		{
-			n->set_parent(parent);
-		}
-		nodes[ent->inode] = n;
-		return n;
-	}
-	
-	node_ptr<> EXT2::parse_node2(DirectoryNode* parent, detail::EXT2::dirent_t* ent)
-	{
-		assert(ent);
-		node_ptr<> np = nodes2[ent->inode];
+		node_ptr<> np = nodes[ent->inode];
 		if (np)
 		{
 			return np;
@@ -951,7 +883,7 @@ namespace Kernel::FS
 		}
 		np = node_ptr<>(Utils::shared_ptr<Node>(n));
 		
-		nodes2[ent->inode] = np;
+		nodes[ent->inode] = np;
 		return np;
 	}
 	
@@ -1009,7 +941,7 @@ namespace Kernel::FS
 	{
 		assert(index > 0);
 		
-		auto gindex = (index - 1) % sb.nodes_per_group;
+		auto gindex = (index - 1) / sb.nodes_per_group;
 		assert(gindex < groups.size());
 		
 		return groups[gindex]->release_node(index);
@@ -1017,10 +949,51 @@ namespace Kernel::FS
 	
 	bool EXT2::release_block(const size_t index) noexcept
 	{
-		auto gindex = (index - 1) % sb.blocks_per_group;
+		auto gindex = (index - 1) / sb.blocks_per_group;
 		assert(gindex < groups.size());
 		
 		return groups[gindex]->release_block(index);
+	}
+	
+	bool EXT2::release_node(const node_ptr<>& n)
+	{
+		if (unlikely(this != n->get_filesystem()))
+		{
+			assert(this == n->get_filesystem());
+			return false;
+		}
+		
+		auto ext2n = cast_EXT2Node(n);
+		if (!ext2n)
+		{
+			return false;
+		}
+		
+		if (ext2n->dec_hard_links() > 0)
+		{
+			return true;
+		}
+		
+		auto inode = ext2n->get_ext2_inode();
+		if (ext2n->release_reserved_blocks() <= 0)
+		{
+			TRACE("Failed to release inode blocks.");
+			ext2n->inc_hard_links();
+			return false;
+		}
+		
+		if (!release_inode(inode))
+		{
+			TRACE("Failed to release inode.");
+			ext2n->inc_hard_links();
+			return false;
+		}
+		else
+		{
+			assert(this->nodes.count(inode));
+			this->nodes.erase(inode);
+			return true;
+		}
 	}
 	
 	size_t EXT2::release_inode_blocks(inode_type* n) noexcept
@@ -1208,6 +1181,55 @@ namespace Kernel::FS
 	uint32_t EXT2::encode_device_signature(const dev_t dev) noexcept
 	{
 		return encode_device_signature(dev.major, dev.minor);
+	}
+	
+	Utils::shared_ptr<EXT2Node> EXT2::cast_EXT2Node(const node_ptr<>& n)
+	{
+		assert(n);
+		if (unlikely(!n))
+		{
+			return nullptr;
+		}
+		
+		EXT2Node* ex_node = nullptr;
+			
+		if (n->isKind(NodeType::Link))
+		{
+			ex_node = (EXT2SymLinkNode*)(n.as_link().get());
+			goto found_ex_node;
+		}
+			
+		{
+				
+			auto type = n->type();
+			type &= (NodeType::Directory | NodeType::File | NodeType::Link | NodeType::Block | NodeType::Char | NodeType::Pipe | NodeType::Function);
+			
+			switch (type)
+			{
+				case NodeType::Directory:
+					ex_node = (EXT2DirectoryNode*)n.get()->as_directory();
+					break;
+				
+				case NodeType::File:
+					ex_node = (EXT2FileNode*)n.get()->as_file();
+					break;
+					
+					// TODO
+				default:
+					assert(NOT_IMPLEMENTED);
+			}
+		}
+		
+			
+		found_ex_node:
+		
+		assert(ex_node);
+		if (!ex_node)
+		{
+			return nullptr;
+		}
+		
+		return Utils::shared_ptr<EXT2Node>(n.get_shared(), ex_node);
 	}
 	
 	

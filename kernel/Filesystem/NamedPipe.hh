@@ -13,7 +13,7 @@ namespace FS
 {
 	
 	
-	class PipeNode : public virtual Node
+	class PipeNode : public Node
 	{
 		public:
 		typedef Pipe pipe_type;

@@ -33,11 +33,11 @@ namespace Utils
 		
 		// Members
 		mutable detail::shared_ptr_control* ctrl;
-		mutable element_type* other;
+		mutable element_type* obj;
 		
 		//Private Constructors
-		template <class Deleter>
-		shared_ptr(void*, size_t n, Deleter);
+		/*template <class Deleter>
+		shared_ptr(void*, size_t n, Deleter);*/
 		shared_ptr(detail::shared_ptr_control*);
 		
 		shared_ptr(detail::shared_ptr_control*, element_type*);
@@ -72,7 +72,7 @@ namespace Utils
 		~shared_ptr();
 		
 		// Methods
-		ptr_type get() const noexcept;
+		constexpr ptr_type get() const noexcept;
 		void reset();
 		void swap(shared_ptr&) noexcept;
 		long use_count() const noexcept;
@@ -82,7 +82,7 @@ namespace Utils
 		// Operators
 		ref_type operator*() const noexcept;
 		ptr_type operator->() const noexcept;
-		operator bool() const noexcept;
+		constexpr operator bool() const noexcept;
 		shared_ptr& operator=(const shared_ptr&) noexcept;
 		ref_type operator[](ptrdiff_t) const;
 		template <class Y>
@@ -98,6 +98,7 @@ namespace Utils
 			}
 			reset();
 			ctrl = ctrl2;
+			obj = r.obj;
 			return *this;
 		}
 		

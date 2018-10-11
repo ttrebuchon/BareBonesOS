@@ -74,9 +74,22 @@ namespace Kernel { namespace FS {
 		node_ptr(const spointer_type&);
 		node_ptr(const node_ptr&);
 		node_ptr(node_ptr&&);
+		template <class Y, typename = typename Utils::enable_if<Utils::is_convertible<pointer_type, Y*>::value, void>::type>
+		node_ptr(const node_ptr<Y>& other) : node_ptr(other.template cast<Node>())
+		{
+			
+		}
 		
 		
-		operator bool() const noexcept __attribute__((always_inline))
+		
+		constexpr pointer_type get() const noexcept
+		{ return _node.get(); }
+		
+		constexpr const spointer_type& get_shared() const noexcept
+		{ return _node; }
+		
+		
+		constexpr operator bool() const noexcept __attribute__((always_inline))
 		{
 			return (bool)_node;
 		}
@@ -98,6 +111,8 @@ namespace Kernel { namespace FS {
 			return *this;
 		}
 		
+		operator node_ptr<const Node>() const;
+		
 		node_ptr<FileNode_v> as_file() const noexcept;
 		node_ptr<DirectoryNode_v> as_directory() const noexcept;
 		node_ptr<BlockDeviceNode> as_block_device() const noexcept;
@@ -117,6 +132,8 @@ namespace Kernel { namespace FS {
 		{ return _node.get() == rhs._node.get(); }
 		bool __attribute__((always_inline)) operator==(decltype(nullptr)) const noexcept
 		{ return _node == nullptr; }
+		constexpr bool operator==(const Node* rhs) const noexcept
+		{ return get() == rhs; }
 		bool __attribute__((always_inline)) operator!=(const node_ptr& rhs) const noexcept
 		{ return _node.get() != rhs._node.get(); }
 		template <class Y>
@@ -124,6 +141,8 @@ namespace Kernel { namespace FS {
 		{ return _node.get() != rhs._node.get(); }
 		bool __attribute__((always_inline)) operator!=(decltype(nullptr)) const noexcept
 		{ return _node != nullptr; }
+		constexpr bool operator!=(const Node* rhs) const noexcept
+		{ return get() != rhs; }
 		bool __attribute__((always_inline)) operator<(const node_ptr& rhs) const noexcept
 		{ return _node.get() < rhs._node.get(); }
 		template <class Y>
@@ -179,7 +198,17 @@ namespace Kernel { namespace FS {
 		node_ptr(const node_ptr&);
 		node_ptr(node_ptr&&);
 		
-		operator bool() const noexcept
+		
+		
+		
+		constexpr pointer_type get() const noexcept
+		{ return _node.get(); }
+		
+		constexpr const spointer_type& get_shared() const noexcept
+		{ return _node; }
+		
+		
+		constexpr operator bool() const noexcept
 		{
 			return (bool)_node;
 		}
@@ -188,6 +217,11 @@ namespace Kernel { namespace FS {
 		{
 			return _node.operator->();
 		}
+		
+		node_ptr& operator=(const node_ptr&);
+		node_ptr& operator=(node_ptr&&);
+		
+		explicit operator node_ptr<>() const;
 		
 		
 		node_ptr<const FileNode_v> as_file() const noexcept;
@@ -209,6 +243,8 @@ namespace Kernel { namespace FS {
 		{ return _node.get() == rhs._node.get(); }
 		bool __attribute__((always_inline)) operator==(decltype(nullptr)) const noexcept
 		{ return _node == nullptr; }
+		constexpr bool operator==(const Node* rhs) const noexcept
+		{ return get() == rhs; }
 		bool __attribute__((always_inline)) operator!=(const node_ptr& rhs) const noexcept
 		{ return _node.get() != rhs._node.get(); }
 		template <class Y>
@@ -216,6 +252,8 @@ namespace Kernel { namespace FS {
 		{ return _node.get() != rhs._node.get(); }
 		bool __attribute__((always_inline)) operator!=(decltype(nullptr)) const noexcept
 		{ return _node != nullptr; }
+		constexpr bool operator!=(const Node* rhs) const noexcept
+		{ return get() != rhs; }
 		bool __attribute__((always_inline)) operator<(const node_ptr& rhs) const noexcept
 		{ return _node.get() < rhs._node.get(); }
 		template <class Y>
@@ -276,7 +314,14 @@ namespace Kernel { namespace FS {
 		node_ptr(node_ptr&&);
 		
 		
-		operator bool() const noexcept
+		constexpr pointer_type get() const noexcept
+		{ return _node.get(); }
+		
+		constexpr const spointer_type& get_shared() const noexcept
+		{ return _node; }
+		
+		
+		constexpr operator bool() const noexcept
 		{
 			return (bool)_node;
 		}
@@ -285,6 +330,36 @@ namespace Kernel { namespace FS {
 		{
 			return _node.operator->();
 		}
+		
+		node_ptr& operator=(const node_ptr&);
+		node_ptr& operator=(node_ptr&&);
+		
+		operator node_ptr<>() const;
+		
+		template <class Y>
+		node_ptr<Y> cast() const
+		{
+			return node_ptr<Y>(Utils::shared_ptr<Y>(_node, (Y*)_node.get()));
+		}
+		
+		template <class Y>
+		node_ptr<Y> dyn_cast() const
+		{
+			auto yptr = dynamic_cast<Y*>(_node.get());
+			if (yptr)
+			{
+				return node_ptr<Y>(Utils::shared_ptr<Y>(_node, yptr));
+			}
+			else
+			{
+				return nullptr;
+			}
+		}
+		
+		
+		
+		
+		
 		
 		node_ptr<const_mod<FileNode_v>> as_file() const noexcept;
 		node_ptr<const_mod<DirectoryNode_v>> as_directory() const noexcept;
@@ -301,6 +376,7 @@ namespace Kernel { namespace FS {
 		template <class Y>
 		bool operator==(const node_ptr<Y>&) const noexcept;
 		bool operator==(decltype(nullptr)) const noexcept;
+		bool operator==(const T*) const noexcept;
 		bool operator!=(const node_ptr& rhs) const noexcept;
 		template <class Y>
 		bool operator!=(const node_ptr<Y>&) const noexcept;

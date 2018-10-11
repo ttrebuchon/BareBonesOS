@@ -4,6 +4,7 @@
 #include <Common.h>
 #include <kernel/Filesystem/LinkNode.hh>
 #include "RefNode.hh"
+#include <kernel/Filesystem/node_ptr.hh>
 
 namespace Kernel { namespace FS {
 
@@ -15,16 +16,16 @@ namespace Init_RD {
     {
         protected:
         InitRD_FS* fs;
-        FS::Node* _target;
+        node_ptr<> _target;
         
         
         public:
-        LinkNode(InitRD_FS*, const char* name, FS::Node* target);
+        LinkNode(InitRD_FS*, const char* name, const node_ptr<>& target);
         
         ~LinkNode() = default;
 
 
-        virtual Node* target() const noexcept override
+        virtual node_ptr<> target() const noexcept override
         { return _target; }
         
         virtual Filesystem* get_filesystem() const noexcept override;

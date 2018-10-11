@@ -38,7 +38,7 @@ namespace Kernel::FS
 		
 		
 		virtual size_t size() const noexcept override;
-        virtual Node* at(size_t index) const override;
+        virtual node_ptr<> at(size_t index) const override;
         virtual DirectoryNode_v* get_parent() const noexcept override;
         virtual Path_t get_path() const override;
 		

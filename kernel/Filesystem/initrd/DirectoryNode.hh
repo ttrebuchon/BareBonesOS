@@ -19,8 +19,9 @@ namespace Init_RD {
         
         
         public:
-        Utils::vector<Node*> children;
+        Utils::vector<node_ptr<>> children;
         DirectoryNode(InitRD_FS*, const char* name);
+        ~DirectoryNode();
 
 
         virtual uint64_t read(uint64_t, uint64_t, void*) override;
@@ -28,13 +29,13 @@ namespace Init_RD {
         virtual void open() override;
         virtual void close() override;
         virtual DirEnt* readDir(uint32_t) override;
-        virtual Node* findDir(const char* name) override;
-        virtual Node* add(Node*) override;
-        virtual bool remove(Node*) override;
+        virtual node_ptr<> findDir(const char* name) override;
+        virtual node_ptr<Node> add(const node_ptr<>&) override;
+        virtual bool remove(const node_ptr<>&) override;
         
         virtual size_t size() const noexcept override
         { return children.size(); }
-        virtual Node* at(size_t index) const override
+        virtual node_ptr<> at(size_t index) const override
         { return children.at(index); }
         
         virtual Filesystem* get_filesystem() const noexcept override;

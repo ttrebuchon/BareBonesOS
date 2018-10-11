@@ -40,6 +40,23 @@ namespace Utils
 		};
 		
 		
+		namespace helpers
+		{
+			template <class T>
+			struct reference_or_void
+			{
+				typedef T& type;
+				typedef const T& const_type;
+			};
+			
+			template <>
+			struct reference_or_void<void>
+			{
+				typedef void type;
+				typedef void const_type;
+			};
+		}
+		
 		
 		
 		template <class A, class T = void>
@@ -54,7 +71,7 @@ namespace Utils
 		template <class A>
 		struct reference<A, void>
 		{
-			typedef typename A::value_type& type;
+			typedef typename helpers::reference_or_void<typename A::value_type>::type type;
 		};
 		
 		
@@ -71,7 +88,7 @@ namespace Utils
 		template <class A>
 		struct const_reference<A, void>
 		{
-			typedef const typename A::value_type& type;
+			typedef typename helpers::reference_or_void<typename A::value_type>::const_type type;
 		};
 		
 		

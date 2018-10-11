@@ -187,7 +187,7 @@ namespace Kernel::FS
 		return _path;
 	}
 	
-	Node* EXT2SymLinkNode::target() const noexcept
+	node_ptr<> EXT2SymLinkNode::target() const noexcept
 	{
 		auto _target = fs->getNode(target_path());
 		if (!_target)

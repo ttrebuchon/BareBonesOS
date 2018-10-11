@@ -5,7 +5,7 @@ namespace Kernel { namespace FS { namespace Init_RD {
 	
 
 
-	RAMFileNode::RAMFileNode(InitRD_FS* fs, const char* name) noexcept : FS::FileNode(NodeType::RAMFile), fs(fs), _size(0), _data(nullptr)
+	RAMFileNode::RAMFileNode(InitRD_FS* fs, const char* name) noexcept : FS::FileNode(NodeType::RAMFile), fs(fs), _size(0), _capacity(0), _data(nullptr)
 	{
 		this->_name = name;
 	}
@@ -17,6 +17,7 @@ namespace Kernel { namespace FS { namespace Init_RD {
 			delete[] _data;
 			_data = nullptr;
 			_size = 0;
+			_capacity = 0;
 		}
 	}
 	
@@ -27,15 +28,22 @@ namespace Kernel { namespace FS { namespace Init_RD {
 			_data = new uint8_t[nSize];
 			memset(_data, 0, nSize);
 			_size = nSize;
+			_capacity = nSize;
 		}
 		else if (nSize > size())
 		{
-			auto nData = new uint8_t[nSize];
-			memset(nData, 0, nSize);
+			auto nCap = capacity()*2;
+			if (nCap < nSize)
+			{
+				nCap = nSize;
+			}
+			auto nData = new uint8_t[nCap];
+			memset(nData, 0, nCap);
 			memcpy(nData, _data, size());
 			delete[] _data;
 			_data = nData;
 			_size = nSize;
+			_capacity = nCap;
 		}
 		else if (nSize < size())
 		{
@@ -80,8 +88,17 @@ namespace Kernel { namespace FS { namespace Init_RD {
 		
 		if (pos + len > this->size())
 		{
-			resize(pos + len);
+			if (pos + len > this->capacity())
+			{
+				resize(pos + len);
+			}
+			else
+			{
+				_size = (pos + len);
+			}
 		}
+		
+		//TRACE_VAL(capacity());
 		
 		memcpy(_data + pos, buf, len);
 		return len;
@@ -104,6 +121,11 @@ namespace Kernel { namespace FS { namespace Init_RD {
 	size_t RAMFileNode::size() const noexcept
 	{
 		return _size;
+	}
+	
+	size_t RAMFileNode::capacity() const noexcept
+	{
+		return _capacity;
 	}
 	
 	Filesystem* RAMFileNode::get_filesystem() const noexcept

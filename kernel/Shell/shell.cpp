@@ -145,7 +145,7 @@ namespace Kernel
 			}
 		}*/
 		
-		FS::Node* target = nullptr;
+		FS::node_ptr<> target = nullptr;
 		
 		typedef FS::basic_path<typename string_type::value_type, typename string_type::traits_type, typename string_type::allocator_type> path_type;
 		
@@ -224,13 +224,13 @@ namespace Kernel
 		
 		if (!cmd->continuation)
 		{
-			return execute_simple(target, cmd, in, out);
+			return execute_simple(target.get(), cmd, in, out);
 			
 		}
 		else
 		{
 			auto out1 = create_sbuf();
-			execute_simple(target, cmd, in, out1);
+			execute_simple(target.get(), cmd, in, out1);
 			redirect_sbuf(out1);
 			auto res = execute_cmd(&cmd->continuation->command, out1, out);
 			dispose_sbuf(out1);

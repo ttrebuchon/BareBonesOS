@@ -224,7 +224,7 @@ namespace Kernel { namespace FS
 			}
 			for (size_t i = 0; i < count; ++i)
 			{
-				_parts.push_back(string_type(segs[i], _alloc));
+				append(string_type(segs[i], _alloc));
 			}
 			
 			if (segs)
@@ -332,11 +332,11 @@ namespace Kernel { namespace FS
 			accum += '/';
 		}
 		accum += _parts[0];
-		bool hasSlash = true;
-		/*if (accum.length() > 0)
+		bool hasSlash = false;
+		if (accum.length() > 0)
 		{
 			hasSlash = accum[accum.length()-1] == '/';
-		}*/
+		}
 		
 		for (size_t i = 1; i < count; ++i)
 		{

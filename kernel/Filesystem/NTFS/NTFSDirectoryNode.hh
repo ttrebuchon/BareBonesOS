@@ -14,7 +14,7 @@ namespace Kernel::FS
 		public:
 		
 		protected:
-		Utils::vector<Node*> children;
+		Utils::vector<node_ptr<>> children;
 		bool has_read : 1;
 		bool has_pending : 1;
 		virtual bool init();
@@ -33,11 +33,11 @@ namespace Kernel::FS
 		virtual void open() override;
 		virtual void close() override;
 		
-		virtual Node* add(Node*) override;
-		virtual bool remove(Node*) override
+		virtual node_ptr<> add(const node_ptr<>&) override;
+		virtual bool remove(const node_ptr<>&) override
 		{ assert(NOT_IMPLEMENTED); }
 		virtual size_t size() const noexcept override;
-        virtual Node* at(size_t index) const override;
+        virtual node_ptr<> at(size_t index) const override;
         virtual DirectoryNode_v* get_parent() const noexcept override;
 		
 		virtual Filesystem* get_filesystem() const noexcept override;

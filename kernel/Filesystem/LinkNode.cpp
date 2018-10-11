@@ -21,6 +21,8 @@ namespace Kernel { namespace FS
 		assert(t != this);
 		if (t)
 		{
+			// '=' instead of '==' is on
+			// purpose
 			return (this->_type = (t->type() | NodeType::Link));
 		}
 		return this->_type;

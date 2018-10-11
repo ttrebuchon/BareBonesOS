@@ -12,12 +12,52 @@ namespace Kernel { namespace FS {
 	}
 	
 	template <class T>
+	node_ptr<T>::node_ptr(decltype(nullptr)) : node_ptr()
+	{
+		
+	}
+	
+	template <class T>
 	node_ptr<T>::node_ptr(const spointer_type& ptr) : _node(ptr)
 	{
 		
 	}
 	
+	template <class T>
+	node_ptr<T>::node_ptr(const node_ptr& other) : node_ptr(other._node)
+	{
+		
+	}
 	
+	template <class T>
+	node_ptr<T>::node_ptr(node_ptr&& other) : _node(Utils::move(other._node))
+	{
+		
+	}
+	
+	
+	
+	
+	
+	template <class T>
+	node_ptr<T>& node_ptr<T>::operator=(const node_ptr& rhs)
+	{
+		_node = rhs._node;
+		return *this;
+	}
+	
+	template <class T>
+	node_ptr<T>& node_ptr<T>::operator=(node_ptr&& rhs)
+	{
+		_node = Utils::move(rhs._node);
+		return *this;
+	}
+	
+	template <class T>
+	node_ptr<T>::operator node_ptr<>() const
+	{
+		return this->template cast<Node>();
+	}
 	
 	
 	
@@ -56,8 +96,6 @@ namespace Kernel { namespace FS {
 		return node_ptr<ntype>();
 	}
 	
-	
-
 	template <class T>
 	node_ptr<typename detail::node_ptr::apply_const_if_const<T, BlockDeviceNode>::type> node_ptr<T>::as_block_device() const noexcept
 	{

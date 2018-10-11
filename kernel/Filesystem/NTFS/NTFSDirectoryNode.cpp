@@ -306,13 +306,17 @@ namespace Kernel::FS
 				assert(NOT_IMPLEMENTED);
 			}
 			
-			auto inode = nnode->get_inode();
-			if (!inode)
+			
+			auto raw_inode = nnode->get_inode();
+			if (!raw_inode)
 			{
 				TRACE_VAL(mref);
 				assert(NOT_IMPLEMENTED);
 			}
-			children.push_back(inode);
+			
+			
+			
+			children.push_back(node_ptr<>(Utils::shared_ptr<Node>(nnode, raw_inode)));
 		}
 		
 		
@@ -357,7 +361,7 @@ namespace Kernel::FS
 	}
 	
 		
-	Node* NTFSDirectoryNode::add(Node*)
+	node_ptr<> NTFSDirectoryNode::add(const node_ptr<>&)
 	{
 		if (!has_read)
 		{
@@ -375,7 +379,7 @@ namespace Kernel::FS
 		return children.size();
 	}
 	
-	Node* NTFSDirectoryNode::at(size_t index) const
+	node_ptr<> NTFSDirectoryNode::at(size_t index) const
 	{
 		if (!has_read)
 		{

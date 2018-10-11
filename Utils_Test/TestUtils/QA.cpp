@@ -523,10 +523,10 @@ Kernel::FS::Filesystem* QA::MountTempFilesystem(const char* mntPath, const char*
 {
 	using namespace Kernel::FS;
 	Filesystem* fs = nullptr;
-	Node* parent = nullptr;
-	DirectoryNode_v* parent_d = nullptr;
-	Node* fs_root = nullptr;
-	LinkNode* link = nullptr;
+	node_ptr<> parent = nullptr;
+	node_ptr<DirectoryNode_v> parent_d = nullptr;
+	node_ptr<> fs_root = nullptr;
+	node_ptr<LinkNode> link = nullptr;
 	
 	if (!rootFS)
 	{
@@ -541,7 +541,7 @@ Kernel::FS::Filesystem* QA::MountTempFilesystem(const char* mntPath, const char*
 	parent = rootFS->getNode(mntPath);
 	if (parent)
 	{
-		parent_d = parent->as_directory();
+		parent_d = parent.as_directory();
 	}
 	
 	if (!parent_d)
@@ -563,6 +563,7 @@ Kernel::FS::Filesystem* QA::MountTempFilesystem(const char* mntPath, const char*
 	{
 		goto error;
 	}
+	
 	
 	link = parent_d->add_link(mntName, fs_root);
 	assert(link);
@@ -586,11 +587,11 @@ Kernel::FS::Filesystem* QA::MountTempFilesystem(const char* mntPath, const char*
 bool QA::UnmountTempFilesystem(const char* mntPath, const char* mntName, Kernel::FS::Filesystem* fs, Kernel::FS::Filesystem* rootFS)
 {
 	using namespace Kernel::FS;
-	Node* parent = nullptr;
-	DirectoryNode_v* parent_d = nullptr;
-	Node* fs_root = nullptr;
-	LinkNode* link = nullptr;
-	Node* n_link = nullptr;
+	node_ptr<DirectoryNode_v> parent = nullptr;
+	node_ptr<> fs_root = nullptr;
+	node_ptr<LinkNode> link = nullptr;
+	node_ptr<> n_link = nullptr;
+	
 	
 	if (!rootFS)
 	{
@@ -603,22 +604,14 @@ bool QA::UnmountTempFilesystem(const char* mntPath, const char* mntName, Kernel:
 	}
 	
 	
-	parent = rootFS->getNode(mntPath);
-	if (parent)
-	{
-		parent_d = parent->as_directory();
-	}
+	parent = rootFS->getNode(mntPath).as_directory();
 	
-	if (!parent_d)
+	if (!parent)
 	{
 		return false;
 	}
 	
-	n_link = parent_d->at(mntName);
-	if (n_link)
-	{
-		link = n_link->as_link();
-	}
+	link = parent->at(mntName).as_link();
 	
 	if (!link)
 	{
@@ -630,7 +623,7 @@ bool QA::UnmountTempFilesystem(const char* mntPath, const char* mntName, Kernel:
 		return false;
 	}
 	
-	fs_root = link->as_directory();
+	fs_root = link.as_directory();
 	if (!fs_root)
 	{
 		return false;
@@ -650,7 +643,7 @@ bool QA::UnmountTempFilesystem(const char* mntPath, const char* mntName, Kernel:
 		return false;
 	}
 	
-	if (!parent_d->remove(link))
+	if (!parent->remove(link))
 	{
 		return false;
 	}

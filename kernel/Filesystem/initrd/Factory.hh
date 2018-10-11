@@ -22,10 +22,10 @@ namespace Init_RD {
     		
     	}
         
-        virtual FileNode_v* create_file(DirectoryNode_v* parent, const Utils::string& name) noexcept override;
+        virtual node_ptr<FileNode_v> create_file(DirectoryNode_v* parent, const Utils::string& name) noexcept override;
         
-        virtual LinkNode* create_link(DirectoryNode_v* parent, const Utils::string&, const Node* target) noexcept;
-        virtual LinkNode* create_link(DirectoryNode_v* parent, const Utils::string& name, const Utils::string& target) noexcept override;
+        virtual node_ptr<FS::LinkNode> create_link(DirectoryNode_v* parent, const Utils::string&, const node_ptr<const Node>& target) noexcept;
+        virtual node_ptr<FS::LinkNode> create_link(DirectoryNode_v* parent, const Utils::string& name, const Utils::string& target) noexcept override;
         
     };
 

@@ -3,7 +3,7 @@
 
 namespace Utils { namespace detail
 {
-	shared_ptr_control::shared_ptr_control() : refcount(0), usecount(0), obj(nullptr), deleter_obj(nullptr), deleter(nullptr), dealloc_object(nullptr), dealloc(nullptr)
+	shared_ptr_control::shared_ptr_control() : refcount(0), usecount(0), data(nullptr), deleter(nullptr), deallocator(nullptr)
 	{
 		
 	}
@@ -12,8 +12,8 @@ namespace Utils { namespace detail
 	{
 		if (--usecount == 0)
 		{
-			deleter(deleter_obj, obj);
-			obj = nullptr;
+			assert(deleter);
+			deleter(data);
 		}
 		
 		return (--refcount != 0);
