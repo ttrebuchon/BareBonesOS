@@ -7,6 +7,7 @@
 #include <assert.h>
 #include "../../Libraries/json/json.hpp"
 #include <fstream>
+#include <fcntl.h>
 
 #define ROOT "FS_ROOT"
 #define OUT_IMG "initrd.img"
@@ -215,9 +216,12 @@ nlohmann::json read_defs(const char* defs_filename)
 
 void insert_defs(Folder* root, nlohmann::json& defs);
 
+static void create_split_terminator_file(const char* filepath, const char* half1, const char* half2);
+
 
 int main()
 {
+	create_split_terminator_file(ROOT"/Split.txt", "Hello,", " world!");
 	Folder* root = new Folder(nullptr, "");
 	root->stat();
 	traverseDir(root);
@@ -235,7 +239,7 @@ int main()
 		if (ent->type() == F_File)
 		{
 			std::cout << " -- " << ((File*)ent)->size;
-			assert(((File*)ent)->size == 13);
+			//assert(((File*)ent)->size == 13);
 		}
 		std::cout << "\n";
 	}
@@ -547,4 +551,16 @@ void insert_def(Folder* parent, const std::string& name, nlohmann::json& def)
 		std::cout << "Unknown def type." << std::endl;
 		assert(false);
 	}
+}
+
+static void create_split_terminator_file(const char* filepath, const char* half1, const char* half2)
+{
+	::unlink(filepath);
+	auto fd = ::open(filepath, O_CREAT | O_RDWR);
+	assert(fd >= 0);
+	char term = '\0';
+	write(fd, half1, strlen(half1));
+	write(fd, &term, 1);
+	write(fd, half2, strlen(half2));
+	::close(fd);
 }
