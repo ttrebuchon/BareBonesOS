@@ -453,6 +453,8 @@ namespace Utils
         	return *this;
         }
         
+        basic_string& erase(size_type index = 0, size_type count = npos);
+        
         basic_string& append(const basic_string&);
         basic_string& append(const basic_string&, size_type pos, size_type num);
         basic_string& append(const Char_t*, size_type len);

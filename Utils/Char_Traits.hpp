@@ -47,7 +47,38 @@ namespace Utils
 			return i;
 		}
 		static constexpr const char_type* find(const char_type* s, size_t n, const char_type& a);
-		static char_type* move(char_type* s1, const char_type* s2, size_t n);
+		static char_type* move(char_type* s1, const char_type* s2, size_t n)
+		{
+			if (s1 + n < s2 || s2 + n < s1)
+			{
+				for (size_t i = 0; i < n; ++i)
+				{
+					s1[i] = s2[i];
+				}
+				return s1;
+			}
+			
+			if (s1 < s2)
+			{
+				for (size_t i = 0; i < n; ++i)
+				{
+					s1[i] = s2[i];
+				}
+			}
+			else if (s2 < s1)
+			{
+				for (size_t i = n-1; i > 0; --i)
+				{
+					s1[i] = s2[i];
+				}
+				if (likely(n > 0))
+				{
+					s1[0] = s2[0];
+				}
+			}
+			
+			return s1;
+		}
 		
 		static char_type* copy(char_type* dest, const char_type* src, size_t n)
 		{

@@ -157,6 +157,40 @@ namespace Utils
 		return r;
 	}
 	
+	__STRTEMP__ void basic_string<Char_t, T, Alloc>::_M_mutate(size_type pos, size_type len1, size_type len2)
+	{
+		const auto osize = this->size();
+		const auto nsize = osize + len2 - len1;
+		const auto qty = osize - pos - len1;
+		
+		
+		
+		if (nsize > capacity() || _M_rep()->_M_is_shared())
+		{
+			auto a = get_allocator();
+			auto r = _Rep::_S_create(nsize, capacity(), a);
+			
+			if (pos)
+			{
+				_M_copy(r->_M_refdata(), _M_data(), pos);
+			}
+			
+			if (qty)
+			{
+				_M_copy(r->_M_refdata() + pos + len2, _M_data() + pos + len1, qty);
+			}
+			
+			_M_rep()->_M_dispose(a);
+			_M_data(r->_M_refdata());
+		}
+		else if (qty && len1 != len2)
+		{
+			_M_move(_M_data() + pos + len2, _M_data() + pos + len1, qty);
+		}
+		
+		_M_rep()->_M_set_length_and_sharable(nsize);
+	}
+	
 	
 	
 	
@@ -186,6 +220,13 @@ namespace Utils
 	}
 	
 	
+	
+	
+	__STRTEMP__ basic_string<Char_t, T, Alloc>& basic_string<Char_t, T, Alloc>::erase(size_type index, size_type count)
+	{
+		_M_mutate(_M_check(index, "basic_string::erase"), _M_limit(index, count), size_type(0));
+		return *this;
+	}
 	
 	
 	__STRTEMP__ basic_string<Char_t, T, Alloc>& basic_string<Char_t, T, Alloc>::append(const Char_t* s, size_type n)
