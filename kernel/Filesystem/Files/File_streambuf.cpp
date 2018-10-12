@@ -1,6 +1,7 @@
 #include "File_streambuf.hh"
 #include "BlockFile.hh"
 #include "../FileNode.hh"
+#include "buffer_file_streambuf.hh"
 
 namespace Kernel { namespace FS
 {
@@ -58,7 +59,7 @@ namespace Kernel { namespace FS
 		
 		unsigned char* seqStart;
 		size_t rem;
-		auto addr = addrForPos(pos, (which & ios_base::in != 0), &rem, &seqStart);
+		auto addr = addrForPos(pos, ((which & ios_base::in) != 0), &rem, &seqStart);
 		ASSERT(addr != nullptr);
 		if (which & ios_base::out)
 		{
@@ -122,7 +123,7 @@ namespace Kernel { namespace FS
 		size_t rem;
 		auto addr = addrForPos(inPos(), true, &rem, &seqBegin);
 		eback_pos = basePosForPos(inPos());
-		ASSERT(addr);
+		//ASSERT(addr);
 		if (!addr)
 		{
 			return traits_type::eof();
@@ -207,6 +208,7 @@ namespace Kernel { namespace FS
 	
 	File_streambuf* File_streambuf::GetForNode(FileNode_v* fnode)
 	{
+		return new buffer_file_streambuf(fnode);
 		// TODO
 		return new BlockFile(fnode);
 	}
