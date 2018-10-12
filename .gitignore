@@ -65,3 +65,4 @@ Utils_Test/QA_Out.txt
 
 #Misc
 Utils_Test/PreProcTest.cxx
+Tools/initrd/FS_ROOT/Split.txt
