@@ -608,10 +608,23 @@ namespace Kernel
 					str = funcs->exec_str(fn, argc, argv, get_cwd(), in, get_pinfo(), &ret.exit_code);
 				}
 				
+				for (size_t i = 0; i < str.length(); ++i)
+				{
+					if (str[i] == '\0')
+					{
+						auto l1 = str.length();
+						str = str.erase(i, 1);
+						--i;
+						assert(str.length() == (l1-1));
+					}
+				}
+				
 				if (!str.empty())
 				{
 					str += "\n";
 				}
+				
+				
 				auto output_alloc = get_allocator_for<char>();
 				auto output_len = str.length();
 				ret.output = output_alloc.allocate(output_len + 1);

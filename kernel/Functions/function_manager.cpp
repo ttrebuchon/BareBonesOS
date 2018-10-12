@@ -322,6 +322,7 @@ namespace Kernel
 				*result_code = ret;
 			}
 		}
+		
 		return sbuf.str();
 	}
 	

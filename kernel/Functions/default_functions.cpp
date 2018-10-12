@@ -253,21 +253,112 @@ namespace Kernel
 		return 0;
 	}
 	
+	static int cat_file(const char* file, cwd_type cwd, Utils::ostream& out, bool* any_written);
+	
 	static int cat(int argc, const char** argv, cwd_type cwd, Utils::istream& in, Utils::ostream& out)
 	{
 		if (argc > 1)
 		{
+			int res = 0;
+			bool need_ln = false;
 			for (int i = 1; i < argc; ++i)
 			{
-				// TODO
-				assert(NOT_IMPLEMENTED);
+				assert(argv[i]);
+				if (need_ln)
+				{
+					out << "\n";
+				}
+				auto tmp = cat_file(argv[i], cwd, out, &need_ln);
+				if (res == 0 && tmp != 0)
+				{
+					res = tmp;
+				}
 			}
+			return res;
 		}
 		else
 		{
 			in >> out.rdbuf();
 		}
 		return 0;
+	}
+	
+	static int cat_file(const char* file, cwd_type cwd, Utils::ostream& out, bool* any_written)
+	{
+		using namespace FS;
+		assert(cwd);
+		int res = 0;
+		if (any_written)
+		{
+			*any_written = false;
+		}
+		auto n = cwd->findChild(file);
+		if (!n)
+		{
+			const char* CAT_NO_ENT = "No such file or directory.";
+			res = ENOENT;
+			set_error(res, CAT_NO_ENT);
+			out << CAT_NO_ENT;
+			if (any_written)
+			{
+				*any_written = true;
+			}
+			return res;
+		}
+		else
+		{
+			if (n->isKind(NodeType::Directory))
+			{
+				const char* CAT_IS_DIR = "cat: Is a directory..";
+				res = EISDIR;
+				set_error(res, CAT_IS_DIR);
+				out << CAT_IS_DIR;
+				if (any_written)
+				{
+					*any_written = true;
+				}
+				return res;
+			}
+			else if (n->isKind(NodeType::File))
+			{
+				auto f = n.as_file();
+				assert(f);
+				
+				auto hndl = f->handle();
+				assert(hndl);
+				
+				auto file = hndl->file();
+				assert(file);
+				
+				file->in >> out.rdbuf();
+				if (any_written && f->size() > 0)
+				{
+					*any_written = true;
+				}
+				
+			}
+			else if (n->isKind(NodeType::Device))
+			{
+				node_ptr<DeviceNode> d = nullptr;
+				d = n.as_block_device().template cast<DeviceNode>();
+				if (!d)
+				{
+					d = n.as_char_device().template cast<DeviceNode>();
+				}
+				
+				assert(d);
+				
+				// TODO
+				assert(NOT_IMPLEMENTED);
+			}
+			else
+			{
+				// TODO
+				assert(NOT_IMPLEMENTED);
+			}
+		}
+		
+		return res;
 	}
 	
 	

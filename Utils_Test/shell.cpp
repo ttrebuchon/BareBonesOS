@@ -113,7 +113,7 @@ TEST(shell)
 	assert(FS::Filesystem::Current);
 	auto shell = mod->start(uid_t(0), FS::Filesystem::Current/*->root()->as_directory()*/);
 	
-	assert(FS::Filesystem::Current->root()->as_directory()->at("var")->get_parent());
+	assert(FS::Filesystem::Current->root().as_directory()->at("var")->get_parent());
 	
 	
 	//auto shell = mod->start(uid_t(0), fs->root()->as_directory());
@@ -179,32 +179,29 @@ static void test_shell_obj(Kernel::Shell* shell)
 	set_prefix(shell);
 	QA::out << prefix << "ls" << std::endl;
 	QA::out << res.output << std::flush;
-	set_prefix(shell);
-	QA::out << prefix << std::flush;
-	
 	shell->dispose_result(&res);
 	
-	std::string in;
-	std::getline(std::cin, in);
 	
-	if (in != "exit")
+	
+	std::string in;
+	while (true)
 	{
-	do
-	{
-		//QA::out << in << std::endl;
+		in = "";
+		while (in == "")
+		{
+			set_prefix(shell);
+			QA::out << prefix << std::flush;
+			std::getline(std::cin, in);
+		}
+		if (in == "exit")
+		{
+			break;
+		}
 		res = shell->execute_cmd(in.c_str());
-		//assert(res.exit_code == 0);
 		assert(Kernel::shell_result_is_good(&res));
 		QA::out << res.output << std::flush;
 		shell->dispose_result(&res);
-		set_prefix(shell);
-		QA::out << prefix << std::flush;
-		std::getline(std::cin, in);
-	}
-	while (in != "exit");
 	}
 	
 	QA::out << std::endl;
-	
-	//assert(Kernel::shell_result_is_bad(&res));
 }
