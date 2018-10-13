@@ -61,6 +61,8 @@ namespace Utils
 		// Operators
 		weak_ptr& operator=(const weak_ptr&);
 		
+		template <class>
+		friend class weak_ptr;
 		
 		template <class>
 		friend class shared_ptr;

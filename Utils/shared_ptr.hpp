@@ -26,23 +26,37 @@ namespace Utils
 	
 	template <class T>
 	template <class Y, class Deleter>
-	shared_ptr<T>::shared_ptr(Y* ptr, Deleter d) : ctrl(detail::use_SFT<T, Y>::use(ptr)), obj(ptr)
+	shared_ptr<T>::shared_ptr(Y* ptr, Deleter d) : ctrl(nullptr), obj(nullptr)
 	{
-		if (!ctrl && ptr)
+		if (!ptr)
 		{
-			ctrl = detail::shared_ptr_control::CreateControl(ptr, d);
-			detail::use_SFT<T, Y>::set(ptr, ctrl);
+			return;
+		}
+		
+		if (!shared_from_this_helper_get(ptr, ptr))
+		{
+			ctrl = detail::shared_ptr_control::CreateControl(ptr, forward<Deleter>(d));
+			obj = ptr;
+			shared_from_this_helper_set(ctrl, ptr, ptr);
+			
 		}
 	}
 	
 	template <class T>
 	template <class Y, class Deleter, class Alloc>
-	shared_ptr<T>::shared_ptr(Y* ptr, Deleter d, const Alloc& alloc) : ctrl(detail::use_SFT<T, Y>::use(ptr)), obj(ptr)
+	shared_ptr<T>::shared_ptr(Y* ptr, Deleter d, const Alloc& alloc) : ctrl(nullptr), obj(nullptr)
 	{
-		if (!ctrl && ptr)
+		if (!ptr)
+		{
+			return;
+		}
+		
+		if (!shared_from_this_helper_get(ptr, ptr))
 		{
 			ctrl = detail::shared_ptr_control::CreateControl(ptr, forward<Deleter>(d), forward<const Alloc&>(alloc));
-			detail::use_SFT<T, Y>::set(ptr, ctrl);
+			obj = ptr;
+			shared_from_this_helper_set(ctrl, ptr, ptr);
+			
 		}
 	}
 	
@@ -55,12 +69,14 @@ namespace Utils
 	
 	template <class T>
 	template <class Y, class>
-	shared_ptr<T>::shared_ptr(Y* ptr) : ctrl(detail::use_SFT<T, Y>::use(ptr)), obj(ptr)
+	shared_ptr<T>::shared_ptr(Y* ptr) : ctrl(nullptr), obj(nullptr)
 	{
-		if (!ctrl)
+		if (!shared_from_this_helper_get(ptr, ptr))
 		{
 			ctrl = detail::shared_ptr_control::CreateControl((T*)ptr);
-			detail::use_SFT<T, Y>::set(ptr, ctrl);
+			obj = ptr;
+			shared_from_this_helper_set(ctrl, ptr, ptr);
+			
 		}
 	}
 	
@@ -132,6 +148,11 @@ namespace Utils
 	template <class T>
 	shared_ptr<T>::shared_ptr(detail::shared_ptr_control* ctrl, element_type* value) : ctrl(ctrl), obj(value)
 	{
+		if (!ctrl)
+		{
+			assert(!value);
+			value = nullptr;
+		}
 		assert(ctrl || !value);
 		if (ctrl)
 		{
@@ -140,12 +161,46 @@ namespace Utils
 		}
 	}
 	
+	
+	template <class T>
+	template <class SFT, class Y>
+	bool shared_ptr<T>::shared_from_this_helper_set(detail::shared_ptr_control* _ctrl, enable_shared_from_this<SFT>* sft, Y* ptr)
+	{
+		static_assert(detail::use_SFT<SFT, Y>::has_SFT);
+		detail::use_SFT<SFT, Y>::set(ptr, _ctrl);
+		return true;
+	}
+	
+	template <class T>
+	template <class SFT, class Y>
+	bool shared_ptr<T>::shared_from_this_helper_get(enable_shared_from_this<SFT>* sft, Y* ptr)
+	{
+		static_assert(detail::use_SFT<SFT, Y>::has_SFT);
+		ctrl = detail::use_SFT<SFT, Y>::use(ptr);
+		if (ctrl != nullptr)
+		{
+			++ctrl->refcount;
+			++ctrl->usecount;
+			obj = ptr;
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	
+	
+	
+	
 	template <class T>
 	template <class Y>
 	shared_ptr<T>::shared_ptr(const weak_ptr<Y>& weak) : ctrl(weak.ctrl), obj(weak.ptr)
 	{
 		if (!ctrl || !obj)
 		{
+			TRACE_VAL(ctrl);
+			TRACE_VAL((void*)obj);
 			// TODO: Throw std::bad_weak_ptr
 			assert(NOT_IMPLEMENTED);
 		}

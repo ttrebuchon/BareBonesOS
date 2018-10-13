@@ -68,6 +68,16 @@ namespace Utils
 			}*/
 		}
 		
+		weak_ptr<T> weak_from_this()
+		{
+			return refer;
+		}
+		
+		weak_ptr<const T> weak_from_this() const
+		{
+			return refer;
+		}
+		
 		private:
 		
 		template <class T1>
@@ -86,5 +96,7 @@ namespace Utils
 	};
 	
 }
+
+#include <Utils/weak_ptr.hpp>
 
 #endif

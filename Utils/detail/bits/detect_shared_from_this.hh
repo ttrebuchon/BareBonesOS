@@ -70,6 +70,7 @@ namespace Utils::detail
 	template <class T, class Y>
 	struct use_SFT_helper<T, Y, false>
 	{
+		constexpr static bool has_SFT = true;
 		constexpr static shared_ptr_control* use(Y*) noexcept
 		{
 			return nullptr;
@@ -84,6 +85,8 @@ namespace Utils::detail
 	template <class T, class Y>
 	struct use_SFT_helper<T, Y, true>
 	{
+		constexpr static bool has_SFT = true;
+		
 		typedef typename Utils::remove_pointer<typename detect_shared_from_this<T, Y>::type>::type type;
 		static shared_ptr_control* use(Y* ptr) noexcept
 		{

@@ -42,6 +42,18 @@ namespace Utils
 		
 		shared_ptr(detail::shared_ptr_control*, element_type*);
 		
+		template <class SFT, class Y>
+		bool shared_from_this_helper_set(detail::shared_ptr_control*, enable_shared_from_this<SFT>*, Y*);
+		
+		bool shared_from_this_helper_set(detail::shared_ptr_control*, ...)
+		{ return false; }
+		
+		template <class SFT, class Y>
+		bool shared_from_this_helper_get(enable_shared_from_this<SFT>*, Y*);
+		
+		bool shared_from_this_helper_get(...)
+		{ return false; }
+		
 		public:
 		// Constructors / Destructors
 		constexpr shared_ptr() noexcept;

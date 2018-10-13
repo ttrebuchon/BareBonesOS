@@ -21,6 +21,15 @@ namespace Utils
 	}
 	
 	template <class T>
+	weak_ptr<T>::weak_ptr(const weak_ptr& other) noexcept : ctrl(other.ctrl), ptr(other.ptr)
+	{
+		if (ctrl)
+		{
+			++ctrl->refcount;
+		}
+	}
+	
+	template <class T>
 	template <class Y>
 	weak_ptr<T>::weak_ptr(const shared_ptr<Y>& r) noexcept : ctrl(r.ctrl), ptr(r.get())
 	{
@@ -30,6 +39,30 @@ namespace Utils
 		}
 	}
 	
+	template <class T>
+	template <class Y>
+	weak_ptr<T>::weak_ptr(const weak_ptr<Y>& other) noexcept : ctrl(other.ctrl), ptr(other.ptr)
+	{
+		if (ctrl)
+		{
+			++ctrl->refcount;
+		}
+	}
+	
+	template <class T>
+	weak_ptr<T>::weak_ptr(weak_ptr&& other) noexcept : ctrl(other.ctrl), ptr(other.ptr)
+	{
+		other.ctrl = nullptr;
+		other.ptr = nullptr;
+	}
+	
+	template <class T>
+	template <class Y>
+	weak_ptr<T>::weak_ptr(weak_ptr<Y>&& other) noexcept : ctrl(other.ctrl), ptr(other.ptr)
+	{
+		other.ctrl = nullptr;
+		other.ptr = nullptr;
+	}
 	
 	
 	template <class T>
