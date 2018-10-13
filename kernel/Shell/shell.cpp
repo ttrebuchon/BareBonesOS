@@ -170,8 +170,7 @@ namespace Kernel
 			}
 			else
 			{
-				// TODO
-				assert(NOT_IMPLEMENTED);
+				target = dir->findChild(base_path);
 			}
 		}
 		
