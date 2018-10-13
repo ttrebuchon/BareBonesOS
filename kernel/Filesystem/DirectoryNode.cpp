@@ -58,12 +58,60 @@ namespace Kernel { namespace FS
 	{
 		ASSERT(!Path::IsAbsolute(path));
 		
-		Path_t p(path);
-		
-		node_ptr<> n = nullptr;
+		return this->findChild(Path_t(path));
+	}
+	
+	node_ptr<> DirectoryNode_v::findChild(const Path_t& p)
+	{
+		node_ptr<> n = this->node_ptr_from_this();
+		assert(n);
 		size_t i = 0;
-		node_ptr<DirectoryNode_v> next;
-		if (p.parts_length() > 0)
+		node_ptr<DirectoryNode_v> next = n.as_directory();
+		assert(next);
+		
+		for (i = 0; i < p.parts_length() && next; ++i)
+		{
+			auto& part = p.part(i);
+			assert(part.length() > 0);
+			if (part == ".")
+			{
+				continue;
+			}
+			else if (part == "..")
+			{
+				auto parent = next->get_parent();
+				if (parent)
+				{
+					n = parent->node_ptr_from_this();
+				}
+				else
+				{
+					n = nullptr;
+				}
+			}
+			else if (part == "")
+			{
+				continue;
+			}
+			else
+			{
+				n = next->at(part);
+			}
+			
+			
+			if (n)
+			{
+				next = n.as_directory();
+			}
+			else
+			{
+				next = nullptr;
+			}
+		}
+		
+		
+		
+		/*if (p.parts_length() > 0)
 		{
 			n = this->at(p.part(0));
 			next = n.as_directory();
@@ -74,6 +122,11 @@ namespace Kernel { namespace FS
 		while (next && i < p.parts_length())
 		{
 			auto& part = p.part(i);
+			if (part == ".")
+			{
+				++i;
+				continue;
+			}
 			n = next->at(part);
 			if (n)
 			{
@@ -84,8 +137,9 @@ namespace Kernel { namespace FS
 				next = nullptr;
 			}
 			++i;
-		}
+		}*/
 		
+		assert(i <= p.parts_length());
 		if (i == p.parts_length())
 		{
 			return n;

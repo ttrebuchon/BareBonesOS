@@ -1,5 +1,6 @@
 #include "Node.hh"
 #include "DirectoryNode.hh"
+#include <Utils/weak_ptr>
 
 namespace Kernel { namespace FS {
 	
@@ -43,6 +44,32 @@ namespace Kernel { namespace FS {
 		}
 		p.append(name);
 		return p;
+	}
+	
+	node_ptr<> Node::node_ptr_from_this()
+	{
+		if (this)
+		{
+			auto sptr = this->weak_from_this().lock();
+			if (sptr)
+			{
+				return node_ptr<>(sptr);
+			}
+		}
+		return nullptr;
+	}
+	
+	node_ptr<const Node> Node::node_ptr_from_this() const
+	{
+		if (this)
+		{
+			auto sptr = this->weak_from_this().lock();
+			if (sptr)
+			{
+				return node_ptr<const Node>(sptr);
+			}
+		}
+		return nullptr;
 	}
 }
 }

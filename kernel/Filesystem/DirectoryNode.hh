@@ -19,6 +19,7 @@ namespace Kernel { namespace FS {
 		DirectoryNode_v(const NodeType = NodeType::Directory);
 		
 		virtual node_ptr<> findChild(const Utils::string& relativePath);
+		virtual node_ptr<> findChild(const Path_t& relativePath);
 		virtual DirEnt* readDir(uint32_t);
 		virtual node_ptr<> findDir(const char*);
 		
