@@ -1,8 +1,9 @@
+#include "Node.hh"
+
 #ifndef INCLUDED_FILESYSTEM_NODE_PTR_HH
 #define INCLUDED_FILESYSTEM_NODE_PTR_HH
 
 #include <Common.h>
-#include "Node.hh"
 #include <Utils/shared_ptr>
 
 namespace Kernel { namespace FS {
@@ -403,9 +404,20 @@ namespace Kernel { namespace FS {
 		friend class node_ptr;
 
 	};
-
-
-
+	
+	template <class T>
+	node_ptr<T> node_ptr_from_node(T* ptr)
+	{
+		if (ptr)
+		{
+			auto sptr = ptr->weak_from_this().lock();
+			if (sptr)
+			{
+				return node_ptr<T>(sptr);
+			}
+		}
+		return nullptr;
+	}
 
 }
 }

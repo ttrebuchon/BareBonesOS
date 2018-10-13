@@ -5,6 +5,8 @@
 #include "NodeType.hh"
 #include <Utils/string>
 #include "Path.hh"
+#include <Utils/shared_ptr>
+#include "node_ptr.hh"
 
 namespace Kernel { namespace FS {
 	
@@ -23,7 +25,7 @@ namespace Kernel { namespace FS {
 	
 	class Filesystem;
 	
-	class Node
+	class Node : public Utils::enable_shared_from_this<Node>
 	{
 		
 		private:
@@ -78,6 +80,9 @@ namespace Kernel { namespace FS {
 		
 		virtual Filesystem* get_filesystem() const noexcept = 0;
 		virtual Path_t get_path() const;
+		
+		node_ptr<> node_ptr_from_this();
+		node_ptr<const Node> node_ptr_from_this() const;
 		
 		
 		virtual const FileNode_v* as_file() const noexcept
