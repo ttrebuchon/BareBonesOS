@@ -309,7 +309,7 @@ namespace Kernel
     		conts %= *(cont);
     		
     		
-    		start = (command >> *lit(' ') >> conts);
+    		start = (*lit(' ') >> command >> *lit(' ') >> conts);
     	}
     	
     	input_parser(const input_parser& other) : input_parser(other.command.alloc)
