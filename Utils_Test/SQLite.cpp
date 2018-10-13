@@ -42,9 +42,12 @@ TEST(SQLite)
 	QA::out << "Temp Filesystem Mounted." << std::endl;
 	
 	assert(QA::NativeFileMap("DB.sqlite", "DBs/NativeMapped2.sqlite", true));
+	QA::out << "Native Mapped File Mounted." << std::endl;
 	#endif
 	
-	auto test_file = Kernel::FS::Filesystem::Current->getNode("/DBs")->as_directory()->add_file("Test.txt");
+	auto test_file_dir = Kernel::FS::Filesystem::Current->getNode("/DBs").as_directory();
+	assert(test_file_dir);
+	auto test_file = test_file_dir->add_file("Test.txt");
 	assert(test_file);
 	const char* test_string = "Hello, world!";
 	auto test_len = strlen(test_string);
