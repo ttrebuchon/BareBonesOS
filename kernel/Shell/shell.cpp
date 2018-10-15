@@ -10,10 +10,18 @@
 #include <kernel/Filesystem/initrd/FunctionNode.hh>
 #include <kernel/Functions/function_manager.hh>
 #include <Support/vector_streambuf.hh>
+#include "environment.hh"
+
+
+
+
+#define SET_CMD_STRING "SET"
+
+
 
 namespace Kernel
 {
-	Shell::Shell(const allocator_type& alloc, process_t* process, Shell_StartOpts opts) : process(process), alloc(alloc), path_segments(alloc), _path_string(), fs_ctx(nullptr), proc_info(nullptr), fs_ctx_allocated(false), run_in_process(false), proc_info_allocated(false)
+	Shell::Shell(const allocator_type& alloc, process_t* process, Shell_StartOpts opts) : process(process), alloc(alloc), path_segments(alloc), _path_string(), fs_ctx(nullptr), proc_info(nullptr), fs_ctx_allocated(false), run_in_process(false), proc_info_allocated(false), funcs(nullptr), env(alloc)
 	{
 		if (!process && HAS_FLAG(opts, SHELL_START_ALLOC_PROCESS))
 		{
@@ -105,6 +113,17 @@ namespace Kernel
 	auto Shell::execute_cmd(command_type* cmd, sbuf_type* in, sbuf_type* out) -> result_type
 	{
 		assert(cmd);
+		
+		
+		{
+			result_type result;
+			if (execute_if_special_case(cmd, &result, in, out))
+			{
+				return result;
+			}
+		}
+		
+		
 		auto& base = cmd->command;
 		
 		auto dir = this->get_cwd();
@@ -221,24 +240,7 @@ namespace Kernel
 		found_target:
 		assert(target);
 		
-		if (!cmd->continuation)
-		{
-			return execute_simple(target.get(), cmd, in, out);
-			
-		}
-		else
-		{
-			auto out1 = create_sbuf();
-			execute_simple(target.get(), cmd, in, out1);
-			redirect_sbuf(out1);
-			auto res = execute_cmd(&cmd->continuation->command, out1, out);
-			dispose_sbuf(out1);
-			return res;
-		}
-		
-		
-		// TODO
-		assert(NOT_IMPLEMENTED);
+		return execute(target.get(), cmd, in, out);
 	}
 	
 	auto Shell::execute_cmd(const char* cmd_text) -> result_type
@@ -323,6 +325,26 @@ namespace Kernel
 		}*/
 	}
 	
+	void Shell::set_env_var(const string_type& var, const string_type& value)
+	{
+		assert(!var.empty());
+		env.vars[var] = value;
+	}
+	
+	auto Shell::get_env_var(const string_type& var) const -> string_type
+	{
+		if (env.vars.count(var))
+		{
+			return env.vars.at(var);
+		}
+		else
+		{
+			return string_type();
+		}
+	}
+	
+	
+	
 	void Shell::dispose_result(result_type* result)
 	{
 		assert(result);
@@ -352,7 +374,7 @@ namespace Kernel
 	
 	bool Shell::parse_internal(command_type* cmd, const char* txt)
 	{
-		return detail::shell::shell_input_parse(txt, txt + strlen(txt), alloc, cmd);
+		return detail::shell::shell_input_parse(txt, txt + strlen(txt), alloc, &env, cmd);
 		
 	}
 	
@@ -505,6 +527,60 @@ namespace Kernel
 		// TODO
 		assert(NOT_IMPLEMENTED);
 	}*/
+	
+	bool Shell::execute_if_special_case(command_type* cmd, result_type* result, sbuf_type* in, sbuf_type* out)
+	{
+		assert(cmd);
+		if (!cmd)
+		{
+			return false;
+		}
+		
+		if (cmd->command == SET_CMD_STRING)
+		{
+			if (result)
+			{
+				*result = execute_set_cmd(cmd, in, out);
+			}
+			else
+			{
+				execute_set_cmd(cmd, in, out);
+			}
+			
+			return true;
+		}
+		/*else if (...)
+		{
+			// ...
+		}*/
+		
+		
+		return false;
+	}
+	
+	auto Shell::execute(FS::Node* target, command_type* cmd, sbuf_type* in, sbuf_type* out) -> result_type
+	{
+		assert(cmd);
+		if (!cmd)
+		{
+			return get_error_result(EINVAL, "Command passed to Shell::execute is nullptr.");
+		}
+		
+		if (!cmd->continuation)
+		{
+			return execute_simple(target, cmd, in, out);
+			
+		}
+		else
+		{
+			auto out1 = create_sbuf();
+			execute_simple(target, cmd, in, out1);
+			redirect_sbuf(out1);
+			auto res = execute_cmd(&cmd->continuation->command, out1, out);
+			dispose_sbuf(out1);
+			return res;
+		}
+	}
 	
 	auto Shell::execute_simple(FS::Node* node, command_type* cmd, sbuf_type* in, sbuf_type* out) -> result_type
 	{
@@ -734,5 +810,45 @@ namespace Kernel
 	{
 		assert(sb);
 		dispose(sb);
+	}
+	
+	
+	
+	
+	auto Shell::execute_set_cmd(command_type* cmd, sbuf_type* in, sbuf_type* out) -> result_type
+	{
+		assert(cmd);
+		result_type result;
+		
+		if (cmd->args.size() >= 1)
+		{
+			if (!cmd->args[0].empty())
+			{
+				if (cmd->args.size() >= 2)
+				{
+					env.vars[cmd->args[0]] = cmd->args[1];
+				}
+				else if (env.vars.count(cmd->args[0]))
+				{
+					env.vars.erase(cmd->args[0]);
+				}
+				
+				goto success;
+			}
+		}
+			
+		
+		
+		bad_args:
+		
+		// TODO
+		assert(NOT_IMPLEMENTED);
+		return result;
+		
+		success:
+		result.exit_code = 0;
+		result.state = SHELL_RESULT_STATE_DONE;
+		result.output = nullptr;
+		return result;
 	}
 }

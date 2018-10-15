@@ -7,6 +7,7 @@
 #include <Utils/vector>
 #include <Utils/string>
 #include <Utils/EnumOperators.hh>
+#include "environment.hh"
 
 namespace Utils
 {
@@ -53,14 +54,24 @@ namespace Kernel
 	{
 		public:
 		typedef Memory::virtual_allocator<uint8_t> allocator_type;
-		typedef shell_result_t result_type;
-		typedef detail::shell::Command command_type;
-		//typedef Utils::basic_string<char, Utils::Char_Traits<char>, typename allocator_type::template rebind<char>::other> string_type;
-		typedef Utils::string string_type;
+		
 		
 		private:
 		template <class T>
 		using allocator_type_rebind = typename allocator_type::template rebind<T>::other;
+		
+		public:
+		
+		
+		typedef shell_result_t result_type;
+		typedef detail::shell::Command command_type;
+		//typedef Utils::basic_string<char, Utils::Char_Traits<char>, typename allocator_type::template rebind<char>::other> string_type;
+		typedef Utils::string string_type;
+		typedef basic_environment_variables<allocator_type> env_type;
+		
+		
+		
+		private:
 		
 		typedef Utils::basic_streambuf<char, Utils::Char_Traits<char>> sbuf_type;
 		
@@ -78,6 +89,7 @@ namespace Kernel
 			bool proc_info_allocated : 1;
 		} __attribute__((__packed__));
 		class sys_functions* funcs;
+		env_type env;
 		
 		
 		
@@ -98,6 +110,8 @@ namespace Kernel
 		//result_type execute_simple(FS::Node*, command_type*);
 		//result_type execute_simple_in_process(FS::Node*, command_type*, int argc, const char** argv);
 		
+		bool execute_if_special_case(command_type*, result_type*, sbuf_type* in, sbuf_type* out);
+		result_type execute(FS::Node* target, command_type*, sbuf_type* in, sbuf_type* out);
 		result_type execute_simple(FS::Node*, command_type*, sbuf_type* in, sbuf_type* out);
 		result_type execute_simple_in_process(FS::Node*, command_type*, int argc, const char** argv, sbuf_type* in, sbuf_type* out);
 		
@@ -158,6 +172,9 @@ namespace Kernel
 		{ return (i < path_segments.size() ? &path_segments.at(i) : nullptr); }
 		constexpr size_t path_segments_count() const noexcept
 		{ return path_segments.size(); }
+		void set_env_var(const string_type& var, const string_type& value);
+		string_type get_env_var(const string_type& var) const;
+		
 		
 		FS::DirectoryNode_v* get_cwd() const;
 		
@@ -165,6 +182,10 @@ namespace Kernel
 		void dispose_result_output(char*);
 		
 		friend class ShellModule;
+		
+		
+		private:
+		result_type execute_set_cmd(command_type*, sbuf_type* in, sbuf_type* out);
 	};
 	
 }

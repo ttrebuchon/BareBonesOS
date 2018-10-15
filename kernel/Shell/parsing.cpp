@@ -13,12 +13,14 @@
 #include <list>
 #include <Utils/string>
 #include <Utils/list>
+#include "environment.hh"
 
 
 using namespace boost::spirit;
 
 namespace Kernel
 {
+	typedef basic_environment_variables<Memory::virtual_allocator<uint8_t>> env_type;
 	typedef std::char_traits<char> ctraits;
 	
 	
@@ -167,6 +169,49 @@ namespace Kernel
 		
 	};
 	
+	
+	struct arg_printer
+	{
+		template <class... T>
+		void operator()(T...)
+		{
+			TRACE(".");
+		}
+	};
+	
+	template <class T>
+	class variant_printer : public boost::static_visitor<T>
+	{
+		public:
+		T operator()(T t)
+		{
+			TRACE_VAL(t);
+			return t;
+		}
+		
+		T operator()(auto y)
+		{
+			TRACE(".");
+			return T();
+		}
+	};
+	
+	class variant_string : public boost::static_visitor<std::string>
+	{
+		public:
+		std::string operator()(const std::string& s) const
+		{
+			return s;
+		}
+		
+		std::string operator()(const auto& y) const
+		{
+			std::string s(y.data(), y.data() + y.size());
+			return s;
+		}
+	};
+	
+	
     
     template <class It, class A>
     struct cmd_parser : qi::grammar<It, command_t<A>()>
@@ -176,6 +221,7 @@ namespace Kernel
     	typedef command_t<A> command_type;
     	A alloc;
     	char_alloc_type char_alloc;
+    	env_type* env;
     	
     	qi::rule<It, command_type()> start;
     	qi::rule<It, string_type()> base_cmd;
@@ -186,9 +232,9 @@ namespace Kernel
     	qi::rule<It, string_type()> single_quoted_string;
     	qi::rule<It, string_type()> single_word;
     	qi::rule<It, char()> reserved_chars;
+    	qi::rule<It, string_type()> variable;
     	
-    	
-    	cmd_parser(const A& alloc) : cmd_parser::base_type(start), alloc(alloc), char_alloc(alloc)
+    	cmd_parser(const A& alloc, env_type* env) : cmd_parser::base_type(start), alloc(alloc), char_alloc(alloc), env(env)
     	{
     		using qi::int_;
     		using qi::double_;
@@ -202,8 +248,9 @@ namespace Kernel
     		//quoted_string %= make_quote_rule('"', char_alloc);
     		single_quoted_string = make_quote_rule('\'', char_alloc);
     		
-    		init_reserved();
     		init_single_word();
+    		init_variable();
+    		init_reserved();
     		init_base_cmd();
     		init_arg();
     		
@@ -233,7 +280,7 @@ namespace Kernel
     		using qi::lexeme;
     		using qi::lit;
     		
-    		auto disallowed = (reserved_chars | ' ' | '"' | '\'');
+    		auto disallowed = (reserved_chars | ' ' | '"' | '\'' | '=');
     		
     		
     		//single_word %= /*lexeme[*/' ' >> +(char_ - ' ' - reserved_chars)/*]*/;
@@ -262,9 +309,37 @@ namespace Kernel
     		
     		
     		
-    		arg %= (quoted_string | single_quoted_string | single_word);
+    		arg %= (variable | (quoted_string | single_quoted_string | single_word));
     		
     		args %= *(arg);
+    	}
+    	
+    	void init_variable()
+    	{
+    		using qi::int_;
+    		using qi::double_;
+    		using qi::lit;
+    		using qi::lexeme;
+    		using ascii::char_;
+    		
+    		auto e = this->env;
+    		
+    		auto fn = [e](auto variant, auto& context, auto... x)
+    		{
+    			using boost::phoenix::at_c;
+    			if (e)
+    			{
+    				auto str = boost::apply_visitor(variant_string(), variant);
+    				if (e->vars.count(str.c_str()))
+    				{
+    					at_c<0>(context.attributes) = e->vars.at(str.c_str()).c_str();
+    					return;
+    				}
+    			}
+    			at_c<0>(context.attributes) = "";
+    		};
+    		
+    		variable = (((lit('$') >> lit('{') >> +(char_ - lit('}')) >> lit('}')) | (lit('$') >> single_word))[fn]);
     	}
     	
     	static qi::rule<It, std::string()> make_quote_rule(char c, char_alloc_type& ca)
@@ -288,7 +363,7 @@ namespace Kernel
     	typedef parsed_command_t<A> parsed_type;
     	typedef command_continuation_t<A> cont_type;
     	
-    	input_parser(const A& a) : input_parser::base_type(start), command(a)
+    	input_parser(const A& a, env_type* env) : input_parser::base_type(start), command(a, env), env(env)
     	{
     		using qi::int_;
     		using qi::double_;
@@ -326,6 +401,9 @@ namespace Kernel
     	qi::rule<It, string_type()> cont_symbol;
     	qi::rule<It, cont_type()> cont;
     	qi::rule<It, void()> spaces;
+    	
+    	
+    	env_type* env;
     };
     
     
@@ -407,7 +485,7 @@ namespace Kernel
 	
 	
 	template <class It, class A>
-	bool parse_ns(It begin, It end, const A& alloc, parsed_command_t<A>& parsed, bool* returned_true = nullptr)
+	bool parse_ns(It begin, It end, const A& alloc, env_type* env, parsed_command_t<A>& parsed, bool* returned_true = nullptr)
 	{
 		using qi::double_;
 		using qi::phrase_parse;
@@ -420,7 +498,7 @@ namespace Kernel
 		
 		
 		//parsed_command_t<A> parsed(alloc);
-		input_parser<It, A> p(alloc);
+		input_parser<It, A> p(alloc, env);
 		
 		res = qi::parse(begin, end, p, parsed);
 		
@@ -453,7 +531,7 @@ namespace Kernel
 	namespace detail::shell
 	{
 	
-	bool shell_input_parse(const char* start, const char* end, const Kernel::Memory::virtual_allocator<uint8_t>& _alloc, Command* cmd)
+	bool shell_input_parse(const char* start, const char* end, const Kernel::Memory::virtual_allocator<uint8_t>& _alloc, env_type* env, Command* cmd)
 	{
 		typedef std::allocator<void> alloc_type;
 		typedef Memory::virtual_allocator<uint8_t> allocator_type;
@@ -462,7 +540,7 @@ namespace Kernel
 		allocator_type alloc(_alloc);
 		parsed_command_t<alloc_type> parsed;
 		
-		auto res = parse_ns(start, end, a, parsed);
+		auto res = parse_ns(start, end, a, env, parsed);
 		if (res && cmd)
 		{
 			cmd->command = parsed.cmd.command.c_str();
