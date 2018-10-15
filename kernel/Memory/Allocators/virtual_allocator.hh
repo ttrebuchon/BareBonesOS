@@ -168,7 +168,10 @@ namespace Kernel::Memory
 		}
 		
 		template <class Y>
-		virtual_allocator(virtual_allocator<Y>&&);
+		virtual_allocator(virtual_allocator<Y>&& other) : inner(Utils::move(other.inner))
+		{
+			
+		}
 		
 		virtual_allocator& operator=(const virtual_allocator& a)
 		{
