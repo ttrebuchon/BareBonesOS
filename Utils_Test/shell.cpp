@@ -153,6 +153,9 @@ static void test_shell_obj(Kernel::Shell* shell)
 	//auto res = shell->execute_cmd("cat file.txt test2 'test3 test4' | cat 'hello world' file5.txt");
 	//auto res = shell->execute_cmd("cat file.txt test2 'test3 test4' \"test5 test6     test7\"        test8 || cat arg1 arg2 arg3 'compound args1' & ls *.txt | echo");
 	
+	shell->set_env_var("XYZ", "Hello,");
+	shell->set_env_var("ABC", "world!");
+	assert((shell->get_env_var("XYZ") + " " + shell->get_env_var("ABC")) == "Hello, world!");
 	
 	auto res = shell->execute_cmd("ls");
 	//auto res = shell->execute_cmd("cat file.txt test2 'test3 test4' \"test5 test6     test7\"        test8");
@@ -199,7 +202,10 @@ static void test_shell_obj(Kernel::Shell* shell)
 		}
 		res = shell->execute_cmd(in.c_str());
 		assert(Kernel::shell_result_is_good(&res));
-		QA::out << res.output << std::flush;
+		if (res.output)
+		{
+			QA::out << res.output << std::flush;
+		}
 		shell->dispose_result(&res);
 	}
 	
