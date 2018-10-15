@@ -378,8 +378,8 @@ namespace rb_tree
 		if (left)
 		{
 			((Self*)left)->destroyChildren(na, a);
-			a.destroy(&((Self*)left)->value);
-			na.destroy(left);
+			allocator_traits<Alloc>::destroy(a, &((Self*)left)->value);
+			allocator_traits<NAlloc>::destroy(na, left);
 			na.deallocate((Self*)left, 1);
 			left = nullptr;
 		}
@@ -387,8 +387,8 @@ namespace rb_tree
 		if (right)
 		{
 			((Self*)right)->destroyChildren(na, a);
-			a.destroy(&((Self*)right)->value);
-			na.destroy(right);
+			allocator_traits<Alloc>::destroy(a, &((Self*)right)->value);
+			allocator_traits<NAlloc>::destroy(na, right);
 			na.deallocate((Self*)right, 1);
 			right = nullptr;
 		}
@@ -400,8 +400,8 @@ namespace rb_tree
 	{
 		Node* ptr = na.allocate(1);
 		static_assert(sizeof(*na.allocate(1)) == sizeof(Node));
-		nalloc.construct((NodeBase*)ptr);
-		alloc.construct(&ptr->value, this->value);
+		new (ptr) NodeBase();
+		new (&ptr->value) T(this->value);
 		
 		ptr->size = size;
 		ptr->color = color;
@@ -462,7 +462,7 @@ namespace rb_tree
 	RBTree<T, Comp, Alloc>::RBTree(const allocator_type& a, const node_allocator_type& na, const Comp& cmp) : _header(nullptr), comp(cmp), alloc(a), nalloc(na), leftmost(nullptr)
 	{
 		_header = nalloc.allocate(1);
-		nalloc.construct(_header);
+		new (_header) NodeBase();
 		_header->left = _header;
 		_header->right = _header;
 	}
@@ -479,7 +479,7 @@ namespace rb_tree
 		_Node_Alloc na(nalloc);
 		
 		_header = nalloc.allocate(1);
-		nalloc.construct(_header);
+		new (_header) NodeBase();
 		_header->left = _header;
 		_header->right = _header;
 		
@@ -503,7 +503,7 @@ namespace rb_tree
 		{
 			destroy(alloc);
 		}
-		nalloc.destroy(_header);
+		allocator_traits<node_allocator_type>::destroy(nalloc, _header);
 		nalloc.deallocate(_header, 1);
 	}
 	
@@ -680,12 +680,13 @@ namespace rb_tree
 	auto RBTree<T, Comp, Alloc>::create(_Node* parent, _Node*& branch, Args&&... args) -> _Node*
 	{
 		typedef typename node_allocator_type:: template rebind<_Node>::other _Node_Alloc;
-		_Node_Alloc na;
+		_Node_Alloc na(nalloc);
 		branch = na.allocate(1);
 		ASSERT(branch != nullptr);
-		nalloc.construct((NodeBase*)branch);
+		new ((NodeBase*)branch) NodeBase();
 		ASSERT(branch != nullptr);
 		alloc.construct(&branch->value, forward<Args>(args)...);
+		//new (&branch->value) T(forward<Args>(args)...);
 		ASSERT(branch != nullptr);
 		
 		branch->parent = parent;
@@ -769,8 +770,9 @@ namespace rb_tree
 		if (root())
 		{
 			root()->destroyChildren(nalloc, a);
-			a.destroy(&root()->value);
-			nalloc.destroy((NodeBase*)root());
+			allocator_traits<allocator_type>::destroy(a, &root()->value);
+			allocator_traits<node_allocator_type>::destroy(nalloc, (NodeBase*)root());
+			
 			nalloc.deallocate(root(), 1);
 			root() = nullptr;
 			leftmost = nullptr;

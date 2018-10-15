@@ -236,6 +236,25 @@ namespace Utils
 			}
 		};
 		
+		
+		template <class Alloc, class T, class = void>
+		struct destroy_helper
+		{
+			static void call(Alloc& a, T* t)
+			{
+				t->~T();
+			}
+		};
+		
+		template <class Alloc, class T>
+		struct destroy_helper<Alloc, T, void_t<decltype(declval<Alloc>().destroy(declval<T*>()))>>
+		{
+			static void call(Alloc& a, T* t)
+			{
+				a.destroy(t);
+			}
+		};
+		
 	}
 	}
 	
@@ -270,7 +289,7 @@ namespace Utils
 		template <class T>
 		static void destroy(allocator_type& alloc, T* p)
 		{
-			alloc.destroy(p);
+			detail::alloc_traits::destroy_helper<A, T>::call(alloc, p);
 		}
 		
 		static void deallocate(allocator_type& alloc, pointer p, size_t n)

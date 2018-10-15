@@ -64,7 +64,7 @@ namespace Utils
 			tree->destroy(p);
 			
 			typedef typename Alloc::template rebind<Tree_t>::other TAlloc;
-			TAlloc ta;
+			TAlloc ta(alloc);
 			Allocator_Traits<TAlloc>::destroy(ta, tree);
 			Allocator_Traits<TAlloc>::deallocate(ta, tree, 1);
 		}
