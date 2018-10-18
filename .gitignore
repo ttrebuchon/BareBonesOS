@@ -57,6 +57,7 @@ Barebones.code-workspace
 #Non-Committed Libraries
 Libraries/sqlite3**
 Libraries/json/**
+Libraries/boost/**
 
 #Logs
 bochsout.txt
@@ -66,3 +67,4 @@ Utils_Test/QA_Out.txt
 #Misc
 Utils_Test/PreProcTest.cxx
 Tools/initrd/FS_ROOT/Split.txt
+Utils_Test/tmp/**.*
