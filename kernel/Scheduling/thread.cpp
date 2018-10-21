@@ -15,6 +15,7 @@ extern "C" {
 	#define THREAD_STATUS_WAITING 4
 	
 	
+	
 	typedef struct thread_data
 	{
 		Utils::map<int, void*> values;
@@ -27,6 +28,7 @@ extern "C" {
 	
 	
 	static pthread_t tid_counter = 0;
+	static pthread_t pid_counter __attribute__((section("k_globals"))) = 1;
 	
 	Utils::map<pthread_t, __thread_t*>* get_threadmap_for_current_process();
 	
@@ -269,6 +271,11 @@ extern "C" {
 	static pthread_t get_inc_tid()
 	{
 		return tid_counter++;
+	}
+	
+	pthread_t get_inc_pid()
+	{
+		return pid_counter++;
 	}
 
 	
@@ -580,6 +587,10 @@ extern "C" int sched_yield()
 	__thread_t* next = nullptr;
 	{
 	Interrupts::irq_guard lock;
+	if (runlist.empty())
+	{
+		return 0;
+	}
 	assert(thread_it != runlist.end());
 	auto old = *thread_it;
 	++thread_it;

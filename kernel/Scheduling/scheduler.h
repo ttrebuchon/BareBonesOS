@@ -40,21 +40,31 @@ class Scheduler
 	typename detail::scheduler_list<__thread_t*>::iterator thread_it;
 	Utils::map<pthread_t, __thread_t*> waiting_threads;
 	detail::scheduler_list<pthread_t> threads_to_reap;
+	pthread_t pid_counter;
 	
 	public:
+	Scheduler();
 	//Memory::cross_proc_allocator<__thread> thread_alloc;
 	
 	
 	__thread_t* current_thread() const noexcept;
 	
-	__attribute__((__always_inline__))
-	pthread_t current_thread_id() const noexcept
+	//__attribute__((__always_inline__))
+	pthread_t current_thread_id() const noexcept;/*
 	{
 		auto t = current_thread();
 		assert(t);
 		return t->id;
-	}
+	}*/
+	
+	int register_process(struct process*);
+	
+	
+	
+	static Scheduler* Current;
 };
+
+Scheduler* get_scheduler();
 
 
 #endif
