@@ -15,9 +15,8 @@ SRC += ../kernel/Interrupts/irq_guard.cpp
 SRC += ../kernel/Interrupts/Interrupts_cpp.cpp
 SRC += ../boot/MultiBoot.cpp
 SRC += $(call GET_SRC,kernel/Memory/Managers)
-SRC += ../kernel/Scheduling/context.cpp
+SRC += $(call GET_SRC_R,kernel/Scheduling,cpp)
 SRC += $(call GET_SRC_R,Utils,cpp)
-SRC += ../kernel/scheduling/thread.cpp
 SRC += ../kernel/Timer_c.cpp
 SRC += $(call GET_SRC_R,Support/threading,cpp)
 SRC += ../drivers/CPUID.cpp
@@ -43,6 +42,7 @@ SRC += $(call GET_SRC_R,kernel/Security,cpp)
 SRC += $(call GET_SRC_R,kernel/Shell,cpp)
 SRC += $(call GET_SRC_R,kernel/Shell,c)
 SRC += $(call GET_SRC_R,kernel/Functions,cpp)
+SRC += ../kernel/Memory/alloc_spec.cpp
 
 ASM_SRC = 
 ASM_OBJS = $(ASM_SRC:.asm=.o)
@@ -117,7 +117,7 @@ SQLITE_FLAGS += #-DSQLITE_DEFAULT_FOREIGN_KEYS=1
 SQLITE_FLAGS += #-DSQLITE_USE_URI=1
 
 BASE_CXXFLAGS += -std=c++17 -I..
-BASE_CXXFLAGS += -I../../../boost
+#BASE_CXXFLAGS += -I../../../boost
 BASE_CXXFLAGS += -fconcepts
 #-ffreestanding -DDEBUG 
 #BASE_CXXFLAGS += -DINCLUDED_NEW_HH
