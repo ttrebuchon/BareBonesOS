@@ -1,0 +1,184 @@
+#ifndef INCLUDED_UTILS_UNLOCK
+#define INCLUDED_UTILS_UNLOCK
+
+namespace Utils
+{
+	template <class M>
+	class unique_unlock
+	{
+		public:
+		typedef M mutex_type;
+		
+		private:
+		mutex_type* _m;
+		bool _owns;
+		
+		public:
+		
+		
+		unique_unlock() noexcept;
+		unique_unlock(unique_unlock&&) noexcept;
+		explicit unique_unlock(mutex_type&);
+		unique_unlock(mutex_type&, try_to_lock_t);
+		unique_unlock(mutex_type&, adopt_lock_t);
+		unique_unlock(mutex_type&, defer_lock_t) noexcept;
+		
+		template <class Rep, class Period>
+		unique_unlock(mutex_type&, const Utils::chrono::duration<Rep, Period>& timeout);
+		
+		template <class Clock, class Dur>
+		unique_unlock(mutex_type&, const Utils::chrono::time_point<Clock, Dur>& timeout_point);
+		
+		~unique_unlock();
+		
+		
+		void lock();
+		bool try_lock();
+		template <class Rep, class Period>
+		bool try_lock_for(const chrono::duration<Rep, Period>& timeout);
+		template <class Clock, class Duration>
+		bool try_lock_until(const chrono::time_point<Clock, Duration>& timeout_time);
+		void unlock();
+		void swap(unique_unlock& other) noexcept;
+		mutex_type* release() noexcept;
+		mutex_type* mutex() const noexcept;
+		
+		
+		__attribute__((always_inline))
+		bool owns_lock() const noexcept
+		{ return _owns; }
+		
+		
+		
+		// Operators
+		unique_unlock& operator=(unique_unlock&&);
+		
+		__attribute__((always_inline))
+		explicit operator bool() const noexcept
+		{ return owns_lock(); }
+		
+	};
+	
+	
+	
+	
+	
+	template <class M>
+	unique_unlock<M>::unique_unlock() noexcept : _m(nullptr), _owns(false) 
+	{
+		
+	}
+	
+	template <class M>
+	unique_unlock<M>::unique_unlock(unique_unlock&& u) noexcept : _m(u._m), _owns(u._owns) 
+	{
+		u._m = nullptr;
+		u._owns = false;
+	}
+	
+	template <class M>
+	unique_unlock<M>::unique_unlock(mutex_type& m) : _m(&m), _owns(true)
+	{
+		_m->unlock();
+	}
+	
+	template <class M>
+	unique_unlock<M>::unique_unlock(mutex_type& m, try_to_lock_t) : _m(&m), _owns(false)
+	{
+		m.unlock();
+		_owns = true;
+	}
+	
+	template <class M>
+	unique_unlock<M>::unique_unlock(mutex_type& m, adopt_lock_t) : _m(&m), _owns(true)
+	{
+		
+	}
+	
+	template <class M>
+	unique_unlock<M>::unique_unlock(mutex_type& m, defer_lock_t) noexcept : _m(&m), _owns(false)
+	{
+		
+	}
+	
+	template <class M>
+	unique_unlock<M>::~unique_unlock()
+	{
+		if (_owns)
+		{
+			this->unlock();
+		}
+	}
+	
+	
+	
+	
+	template <class M>
+	void unique_unlock<M>::lock()
+	{
+		assert(_m);
+		_m->unlock();
+		_owns = true;
+	}
+	
+	template <class M>
+	bool unique_unlock<M>::try_lock()
+	{
+		assert(_m);
+		_m->unlock();
+		_owns = true;
+	}
+	
+	template <class M>
+	template <class Rep, class Period>
+	bool unique_unlock<M>::try_lock_for(const chrono::duration<Rep, Period>& timeout)
+	{
+		assert(_m);
+		_m->unlock();
+		_owns = true;
+		return true;
+	}
+	
+	template <class M>
+	template <class Clock, class Duration>
+	bool unique_unlock<M>::try_lock_until(const chrono::time_point<Clock, Duration>& timeout_time)
+	{
+		assert(_m);
+		_m->unlock();
+		_owns = true;
+		return true;
+	}
+	
+	template <class M>
+	void unique_unlock<M>::unlock()
+	{
+		assert(_m);
+		_m->lock();
+		_owns = false;
+	}
+	
+	template <class M>
+	void unique_unlock<M>::swap(unique_unlock& other) noexcept
+	{
+		swap(_m, other._m);
+		swap(_owns, other._owns);
+	}
+	
+	template <class M>
+	auto unique_unlock<M>::release() noexcept -> mutex_type*
+	{
+		auto old = _m;
+		_m = nullptr;
+		_owns = false;
+		return old;
+	}
+	
+	template <class M>
+	auto unique_unlock<M>::mutex() const noexcept -> mutex_type*
+	{
+		return _m;
+	}
+	
+}
+
+#endif
