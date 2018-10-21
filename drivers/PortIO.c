@@ -1,5 +1,6 @@
 #include "PortIO.h"
 
+#ifndef TESTING
 
 
 unsigned char port_byte_in(const unsigned short port)
@@ -52,3 +53,5 @@ void insm(unsigned short port, void* addr, uint32_t bytes)
 {
 	asm volatile("rep insb" : "+D"(addr), "+c"(bytes) : "d"(port) : "memory");
 }
+
+#endif
