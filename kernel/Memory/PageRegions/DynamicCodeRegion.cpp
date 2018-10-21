@@ -16,6 +16,7 @@ namespace Kernel::Memory::PageRegions
 	
 	uint8_t* Dynamic_Code::allocate(size_t size, size_t alignment)
 	{
+		assert(_heap);
 		return (uint8_t*)_heap->alloc(size, alignment);
 	}
 	
