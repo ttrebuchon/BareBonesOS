@@ -1,7 +1,8 @@
 #include "command.hh"
 #include "parsing.hh"
-#include <boost/spirit/include/qi.hpp>
+
 #include <string>
+#include <boost/spirit/include/qi.hpp>
 #include <boost/fusion/adapted/struct/adapt_struct.hpp>
 #include <boost/fusion/include/adapt_struct.hpp>
 #include <boost/utility/identity_type.hpp>
@@ -39,7 +40,7 @@ namespace Kernel
 	template <class A>
 	struct command_t
 	{
-		typedef std::basic_string<char, ctraits, typename A::template rebind<char>::other> string_type;
+		typedef parser_string<A> string_type;
 		
 		typedef typename A::template rebind<string_type>::other string_alllcator_type;
 		
@@ -66,7 +67,7 @@ namespace Kernel
 	template <class A>
 	struct command_continuation_t
 	{
-		typedef std::basic_string<char, ctraits, typename A::template rebind<char>::other> string_type;
+		typedef parser_string<A> string_type;
 		
 		string_type type;
 		command_t<A> cmd;
@@ -196,17 +197,21 @@ namespace Kernel
 		}
 	};
 	
+	template <class A>
 	class variant_string : public boost::static_visitor<std::string>
 	{
 		public:
-		std::string operator()(const std::string& s) const
+		typedef parser_string<A> string_type;
+		
+		
+		string_type operator()(const string_type& s) const
 		{
 			return s;
 		}
 		
-		std::string operator()(const auto& y) const
+		string_type operator()(const auto& y) const
 		{
-			std::string s(y.data(), y.data() + y.size());
+			string_type s(y.data(), y.data() + y.size());
 			return s;
 		}
 	};
@@ -217,7 +222,7 @@ namespace Kernel
     struct cmd_parser : qi::grammar<It, command_t<A>()>
     {
     	typedef typename A::template rebind<char>::other char_alloc_type;
-    	typedef std::basic_string<char, ctraits, char_alloc_type> string_type;
+    	typedef parser_string<A> string_type;
     	typedef command_t<A> command_type;
     	A alloc;
     	char_alloc_type char_alloc;
@@ -226,7 +231,7 @@ namespace Kernel
     	qi::rule<It, command_type()> start;
     	qi::rule<It, string_type()> base_cmd;
     	qi::rule<It, string_type()> arg;
-    	qi::rule<It, std::vector<string_type, a_rebind<A, string_type>>()> args;
+    	qi::rule<It, parser_container<string_type, A>()> args;
     	qi::rule<It, command_type()> command;
     	qi::rule<It, string_type()> quoted_string;
     	qi::rule<It, string_type()> single_quoted_string;
@@ -329,7 +334,7 @@ namespace Kernel
     			using boost::phoenix::at_c;
     			if (e)
     			{
-    				auto str = boost::apply_visitor(variant_string(), variant);
+    				auto str = boost::apply_visitor(variant_string<A>(), variant);
     				if (e->vars.count(str.c_str()))
     				{
     					at_c<0>(context.attributes) = e->vars.at(str.c_str()).c_str();
@@ -342,12 +347,12 @@ namespace Kernel
     		variable = (((lit('$') >> lit('{') >> +(char_ - lit('}')) >> lit('}')) | (lit('$') >> single_word))[fn]);
     	}
     	
-    	static qi::rule<It, std::string()> make_quote_rule(char c, char_alloc_type& ca)
+    	static qi::rule<It, string_type()> make_quote_rule(char c, char_alloc_type& ca)
     	{
     		using qi::lexeme;
     		using ascii::char_;
     		
-    		qi::rule<It, std::string()> r;
+    		qi::rule<It, string_type()> r;
     		r = lexeme[lit(c) >> *(char_ - c) >> lit(c)];
     		return r;
     	}
@@ -358,7 +363,7 @@ namespace Kernel
     template <class It, class A>
     struct input_parser : qi::grammar<It, parsed_command_t<A>()>
     {
-    	typedef std::basic_string<char, ctraits, typename A::template rebind<char>::other> string_type;
+    	typedef parser_string<A> string_type;
     	typedef command_t<A> command_type;
     	typedef parsed_command_t<A> parsed_type;
     	typedef command_continuation_t<A> cont_type;
@@ -397,7 +402,7 @@ namespace Kernel
     	cmd_parser<It, A> command;
     	
     	qi::rule<It, cont_type()> pipe;
-    	qi::rule<It, std::vector<cont_type>()> conts;
+    	qi::rule<It, parser_container<cont_type, A>()> conts;
     	qi::rule<It, string_type()> cont_symbol;
     	qi::rule<It, cont_type()> cont;
     	qi::rule<It, void()> spaces;
@@ -654,7 +659,6 @@ namespace Kernel
 			std::vector<std::string> nparts;
 			
 			res = parse_path(start, end, nparts);
-			TRACE("PARSED.");
 			if (res)
 			{
 				for (const auto& str : nparts)
