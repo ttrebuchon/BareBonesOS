@@ -84,6 +84,7 @@ namespace Kernel
 		struct {
 			struct filesystem_context* fs_ctx;
 			struct process_info* proc_info;
+			bool proc_allocated : 1;
 			bool fs_ctx_allocated : 1;
 			bool run_in_process : 1;
 			bool proc_info_allocated : 1;
@@ -94,7 +95,7 @@ namespace Kernel
 		
 		
 		
-		Shell(const allocator_type&, struct process* process, Shell_StartOpts opts);
+		Shell(uid_t uid, const allocator_type&, struct process* process, Shell_StartOpts opts);
 		~Shell();
 		
 		

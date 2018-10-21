@@ -34,11 +34,17 @@ namespace Kernel
 			return nullptr;
 		}
 		
-		// TODO: Create process
+		
+		/* // TODO: Create process
 		process_t* proc = nullptr;
+		if (create_new_process_uid(&proc, usr) != 0)
+		{
+			shell_alloc.deallocate(shell, 1);
+			return nullptr;
+		}*/
 		
 		
-		new (shell) Shell(alloc, proc, default_opts);
+		new (shell) Shell(usr, alloc, nullptr, default_opts | SHELL_START_ALLOC_PROCESS);
 		
 		return shell;
 	}
@@ -78,12 +84,20 @@ namespace Kernel
 		
 		// TODO: Create process
 		process_t* proc = nullptr;
+		struct filesystem_context fs_context;
+		fs_context.cwd = cwd;
+		fs_context.fs = fs;
+		if (create_new_process_uid_fs(&proc, usr, &fs_context) != 0)
+		{
+			shell_alloc.deallocate(shell, 1);
+			return nullptr;
+		}
 		
-		new (shell) Shell(alloc, proc, default_opts | SHELL_START_WAIT_CWD);
+		new (shell) Shell(usr, alloc, proc, default_opts/* | SHELL_START_WAIT_CWD*/);
 		
 		assert(shell->fs_ctx);
-		shell->set_cwd(cwd);
-		shell->set_root_filesystem(fs);
+		/*shell->set_cwd(cwd);
+		shell->set_root_filesystem(fs);*/
 		
 		return shell;
 	}
@@ -114,7 +128,10 @@ namespace Kernel
 		
 		shell->~Shell();
 		
-		// TODO: Process cleanup
+		if (shell->process)
+		{
+			destroy_process(shell->process);
+		}
 		
 		shell_alloc.deallocate(shell, 1);
 		

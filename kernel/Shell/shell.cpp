@@ -21,11 +21,15 @@
 
 namespace Kernel
 {
-	Shell::Shell(const allocator_type& alloc, process_t* process, Shell_StartOpts opts) : process(process), alloc(alloc), path_segments(alloc), _path_string(), fs_ctx(nullptr), proc_info(nullptr), fs_ctx_allocated(false), run_in_process(false), proc_info_allocated(false), funcs(nullptr), env(alloc)
+	Shell::Shell(uid_t uid, const allocator_type& alloc, process_t* process, Shell_StartOpts opts) : process(process), alloc(alloc), path_segments(alloc), _path_string(), fs_ctx(nullptr), proc_info(nullptr), proc_allocated(false), fs_ctx_allocated(false), run_in_process(false), proc_info_allocated(false), funcs(nullptr), env(alloc)
 	{
 		if (!process && HAS_FLAG(opts, SHELL_START_ALLOC_PROCESS))
 		{
-			assert(NOT_IMPLEMENTED);
+			if (create_new_process_uid(&process, uid) == 0)
+			{
+				this->process = process;
+				proc_allocated = true;
+			}
 		}
 		else if (!process && HAS_FLAG(opts, SHELL_START_ALLOC_PROCESS_INFO))
 		{
@@ -35,7 +39,7 @@ namespace Kernel
 		
 		if (process && !(opts & SHELL_START_ALLOC_FS_CONTEXT))
 		{
-			fs_ctx = &process->fs_context;
+			fs_ctx = &process->info.fs_context;
 		}
 		else if (get_pinfo() && !(opts & SHELL_START_ALLOC_FS_CONTEXT))
 		{
@@ -67,6 +71,12 @@ namespace Kernel
 	
 	Shell::~Shell()
 	{
+		if (proc_allocated)
+		{
+			destroy_process(process);
+			process = nullptr;
+		}
+		
 		if (fs_ctx_allocated)
 		{
 			assert(fs_ctx);
