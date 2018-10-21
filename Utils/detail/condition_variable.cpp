@@ -69,6 +69,11 @@ namespace Utils
 		
 		low_lock(__lock);
 		auto thread = Kernel::current_processor->current_thread;
+		if (!thread)
+		{
+			low_unlock(__lock);
+			return;
+		}
 		assert(thread);
 		
 		assert(thread);
