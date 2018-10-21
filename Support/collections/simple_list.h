@@ -39,6 +39,126 @@ struct list_node_t<T*>
 static_assert(alignof(list_node_t<void*>) == alignof(c_list_node_t));
 static_assert(sizeof(list_node_t<void*>) == sizeof(c_list_node_t));
 
+template <class T>
+list_node_t<T*>* simple_list_remove_nulls(list_node_t<T*>* first)
+{
+	auto it = first;
+	list_node_t<T*>* prev = nullptr;
+	while (it)
+	{
+		if (!it->entity)
+		{
+			auto next = it->next;
+			if (it == first)
+			{
+				first = next;
+			}
+			else if (prev)
+			{
+				prev->next = next;
+			}
+			
+			delete it;
+			it = next;
+		}
+		else
+		{
+			prev = it;
+			it = it->next;
+		}
+	}
+	
+	return first;
+}
+
+template <class T, class Alloc>
+list_node_t<T*>* simple_list_remove_nulls(list_node_t<T*>* first, const Alloc& _alloc = Alloc())
+{
+	Alloc alloc(_alloc);
+	auto it = first;
+	list_node_t<T*>* prev = nullptr;
+	while (it)
+	{
+		if (!it->entity)
+		{
+			auto next = it->next;
+			if (it == first)
+			{
+				first = next;
+			}
+			else if (prev)
+			{
+				prev->next = next;
+			}
+			
+			alloc.destroy(it);
+			alloc.deallocate(it, 1);
+			it = next;
+		}
+		else
+		{
+			prev = it;
+			it = it->next;
+		}
+	}
+	
+	return first;
+}
+
+
+template <class T>
+list_node_t<T>* simple_list_last(list_node_t<T>* n)
+{
+	while (n && n->next)
+	{
+		n = n->next;
+	}
+	return n;
+}
+
+template <class T>
+list_node_t<T>* simple_list_remove(list_node_t<T>* first, list_node_t<T>* target)
+{
+	assert(first);
+	assert(target);
+	if (!first)
+	{
+		return nullptr;
+	}
+	else if (!target)
+	{
+		return first;
+	}
+	
+	
+	if (target == first)
+	{
+		auto n = target->next;
+		target->next = nullptr;
+		return n;
+	}
+	
+	list_node_t<T>* it = first;
+	list_node_t<T>* prev = nullptr;
+	
+	while (it)
+	{
+		if (it != target)
+		{
+			prev = it;
+			it = it->next;
+		}
+		else
+		{
+			prev->next = it->next;
+			it->next = nullptr;
+			break;
+		}
+	}
+	
+	return first;
+}
+
 #endif // __cplusplus
 
 
