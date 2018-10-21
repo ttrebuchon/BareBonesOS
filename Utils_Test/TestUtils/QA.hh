@@ -91,6 +91,9 @@ class QA
 	static void EnablePrintAllocs();
 	static void DisablePrintAllocs();
 	
+	
+	static void SetupFolders();
+	
 	private:
 	template <class... Types>
 	static const char* get_types_string()

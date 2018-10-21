@@ -33,6 +33,7 @@ TEST(queue);
 TEST(PhysicalMemory);
 TEST(context);*/
 TEST(mutex);
+TEST(context);
 
 //TEST(concurrent_circular_list); <- In Progress
 
@@ -103,13 +104,12 @@ class MI_Printer
 };
 
 void run_immediate_test();
-static void setup_folders();
 
 
 int main()
 {
 	run_immediate_test();
-	setup_folders();
+	QA::SetupFolders();
 	
 	QA::Init();
 	std::cout << "QA Initialized." << std::endl;
@@ -129,8 +129,10 @@ int main()
 	
 	#define MAC(X) RUN(X)
 	#define CMAC(X) RUNC(X)
-	
+	QA::DisableMemPool();
 	RUN_NO_TRACK_ALLOC(mutex);
+	RUN_NO_TRACK_ALLOC(context);
+	QA::EnableMemPool();
 	//RUN_NO_TRACK_ALLOC(concurrent_circular_list);
 	#include "Tests.inc"
 	
@@ -217,42 +219,3 @@ void checkMemoryTrack()
 	#endif
 }
 
-#include <sys/stat.h>
-#include <errno.h>
-
-static void create_folder(const char* name)
-{
-	if (mkdir(name, 0777) != 0)
-	{
-		std::cerr << "[" << __func__ << "] " << strerror(errno) << std::endl;
-			exit(EXIT_FAILURE);
-	}
-}
-
-static void create_folder_if_not_exists(const char* name)
-{
-	struct stat st;
-	if (stat(name, &st) != 0)
-	{
-		if (errno == ENOENT)
-		{
-			create_folder(name);
-		}
-		else
-		{
-			std::cerr << "[" << __func__ << "] " << strerror(errno) << std::endl;
-			exit(EXIT_FAILURE);
-		}
-	}
-	else if (!S_ISDIR(st.st_mode))
-	{
-		std::cerr << "There is already a FILE present called '" << name << "'" << std::endl;
-		exit(0);
-	}
-}
-
-static void setup_folders()
-{
-	create_folder_if_not_exists("Images");
-	create_folder_if_not_exists("DBs");
-}
