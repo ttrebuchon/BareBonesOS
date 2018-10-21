@@ -1,0 +1,41 @@
+#ifndef INCLUDED_UTILS_IOSFWD
+#define INCLUDED_UTILS_IOSFWD
+
+
+namespace Utils
+{
+	template <class T>
+	class allocator;
+	
+	template <class>
+	struct Char_Traits;
+	
+	template <class T>
+	using char_traits = Char_Traits<T>;
+	
+	
+	template <class, class>
+	class basic_ios;
+	
+	template <class, class>
+	class basic_streambuf;
+	
+	template <class, class>
+	class basic_ostream;
+	
+	template <class, class>
+	class basic_istream;
+	
+	template <class, class>
+	class basic_iostream;
+	
+	
+	typedef basic_ios<char, char_traits<char>> ios;
+	typedef basic_streambuf<char, char_traits<char>> streambuf;
+	typedef basic_ostream<char, char_traits<char>> ostream;
+	typedef basic_istream<char, char_traits<char>> istream;
+	typedef basic_iostream<char, char_traits<char>> iostream;
+}
+
+
+#endif
