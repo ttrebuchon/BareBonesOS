@@ -58,7 +58,7 @@ namespace Utils
 		typedef T element_type;
 		typedef Deleter deleter_type;
 		
-		//private:
+		private:
 		pointer obj;
 		Deleter del;
 		
