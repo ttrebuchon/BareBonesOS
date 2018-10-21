@@ -21,7 +21,7 @@ namespace Utils
 		
 		private:
 		
-	};
+	} __attribute__((__packed__));
 	
 	template <class T>
 	struct default_delete<T[]>
@@ -42,7 +42,7 @@ namespace Utils
 			static_assert(sizeof(T) > 0, "Cannot delete incomplete type");
 			delete[] t;
 		}
-	};
+	} __attribute__((__packed__));
 }
 
 #endif
