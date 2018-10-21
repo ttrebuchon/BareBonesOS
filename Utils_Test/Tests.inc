@@ -1,4 +1,4 @@
-MAC(context);
+//MAC(context);
 MAC(List);
 CMAC(Bitset);
 MAC(Bitset);
@@ -29,7 +29,7 @@ MAC(buddy);
 MAC(slab_allocator);
 MAC(choice_alloc);
 MAC(osthread);
-MAC(kheap);
+//MAC(kheap);
 MAC(ext2);
 MAC(ntfs);
 MAC(shell);
