@@ -134,6 +134,10 @@ namespace Kernel::Memory::buddy_heap_detail
 			}
 			else if (likely(n->order > order))
 			{
+				assert(!n->is_leaf());
+				assert(n->left);
+				assert(n->right);
+				
 				if (n->left && !n->left->full)
 				{
 					auto result = allocate_node_recurse(n->left, order);
@@ -142,7 +146,7 @@ namespace Kernel::Memory::buddy_heap_detail
 						return result;
 					}
 				}
-				else if (n->right && !n->right->full)
+				if (n->right && !n->right->full)
 				{
 					auto result = allocate_node_recurse(n->right, order);
 					if (result)
@@ -150,6 +154,8 @@ namespace Kernel::Memory::buddy_heap_detail
 						return result;
 					}
 				}
+				assert(n->left);
+				assert(n->right);
 			}
 			
 			return nullptr;

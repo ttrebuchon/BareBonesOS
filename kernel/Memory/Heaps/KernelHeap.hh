@@ -69,14 +69,17 @@ namespace Kernel::Memory
 		
 		
 		void initialize_default_heaps();
-		const Heap* heap_for(const alloc_spec_t&) const;
-		const Heap* heap_for(void*) const;
-		Heap* heap_for(const alloc_spec_t&);
-		Heap* heap_for(void*);
+		const Heap* heap_for(const alloc_spec_t&, Utils::shared_lock<shared_mutex_type>& lock, simple_list<Heap*>** = nullptr) const;
+		const Heap* heap_for(void*, Utils::shared_lock<shared_mutex_type>& lock) const;
+		Heap* heap_for(const alloc_spec_t&, Utils::shared_lock<shared_mutex_type>& lock, simple_list<Heap*>** = nullptr);
+		Heap* heap_for(void*, Utils::shared_lock<shared_mutex_type>& lock);
 		
 		template <class HeapType>
-		HeapType* create_heap_for(const alloc_spec_t&, const size_t min_count);
-		Heap* create_heap_for(const alloc_spec_t&, const size_t min_count);
+		HeapType* create_heap_for(const alloc_spec_t&, const size_t min_count, Utils::shared_lock<shared_mutex_type>& lock);
+		Heap* create_heap_for(const alloc_spec_t&, const size_t min_count, Utils::shared_lock<shared_mutex_type>& lock);
+		Heap* create_heap_for(const alloc_spec_t&, const size_t min_count, Utils::unique_lock<shared_mutex_type>& lock);
+		
+		Heap* heap_is_full(Heap*, Utils::shared_lock<shared_mutex_type>& lock, simple_list<Heap*>** list = nullptr);
 		
 		public:
 		kernel_heap(uintptr_t start, uintptr_t end, const allocator_type& = allocator_type());

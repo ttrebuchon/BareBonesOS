@@ -22,6 +22,8 @@ typedef struct alloc_spec
 }
 alloc_spec_t;
 
+extern size_t alloc_spec_req_size(alloc_spec_t, size_t count);
+
 
 
 C_END

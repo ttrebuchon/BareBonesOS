@@ -5,7 +5,9 @@
 #include "BuddyHeap.hpp"
 #include <kernel/Memory/PageDir.hh>
 #include "SlabHeap.hh"
+#include "Untyped_SlabHeap.hh"
 #include "PageHeap.hpp"
+#include <Utils/unlock>
 
 namespace Kernel::Memory
 {
@@ -79,15 +81,17 @@ namespace Kernel::Memory
 		auto smallest_a = top.smallest_alloc();
 		auto len = top.endAddr() - top.startAddr();
 		
+		const size_t quad_word_ratio = 4;
+		
 		// Setup quad-word heap
 		{
 			typedef SlabHeap_N<sizeof(void*)*4, alignof(void*), allocator_type> sheap_t;
-			size_t req_len = len / 2;
+			size_t req_len = len / quad_word_ratio;
 			auto count = sheap_t::Available_Count(req_len);
 			req_len = sheap_t::Size_For_Count(count);
 			
 			
-			while (req_len + sizeof(sheap_t) > len/2)
+			while (req_len + sizeof(sheap_t) > len/quad_word_ratio)
 			{
 				count -= 10;
 				assert(count > 0);
@@ -98,7 +102,7 @@ namespace Kernel::Memory
 			
 			auto region = top.allocate(req_len + sizeof(sheap_t), alignof(sheap_t));
 			req_len = top.allocated_size(region) - sizeof(sheap_t);
-			assert(req_len + sizeof(sheap_t) <= len/2);
+			assert(req_len + sizeof(sheap_t) <= len/quad_word_ratio);
 			count = sheap_t::Available_Count(req_len - sizeof(sheap_t));
 			
 			auto sheap = new (region) sheap_t(allocator, (void*)((uintptr_t)region + sizeof(sheap_t)), req_len, true, false, pageSize());
@@ -163,13 +167,13 @@ namespace Kernel::Memory
 	}
 	
 	template <class Alloc>
-	const Heap* kernel_heap<Alloc>::heap_for(const alloc_spec_t& spec) const
+	const Heap* kernel_heap<Alloc>::heap_for(const alloc_spec_t& spec, Utils::shared_lock<shared_mutex_type>& lock, simple_list<Heap*>** list) const
 	{
-		return const_cast<kernel_heap*>(this)->heap_for(spec);
+		return const_cast<kernel_heap*>(this)->heap_for(spec, lock, list);
 	}
 	
 	template <class Alloc>
-	const Heap* kernel_heap<Alloc>::heap_for(void* addr) const
+	const Heap* kernel_heap<Alloc>::heap_for(void* addr, Utils::shared_lock<shared_mutex_type>& lock) const
 	{
 		if (unlikely((uintptr_t)addr < top.startAddr() || (uintptr_t)addr >= top.endAddr()))
 		{
@@ -194,8 +198,9 @@ namespace Kernel::Memory
 	}
 	
 	template <class Alloc>
-	Heap* kernel_heap<Alloc>::heap_for(const alloc_spec_t& spec)
+	Heap* kernel_heap<Alloc>::heap_for(const alloc_spec_t& spec, Utils::shared_lock<shared_mutex_type>& lock, simple_list<Heap*>** list)
 	{
+		assert(lock.owns_lock());
 		if (unlikely(spec.size == 0))
 		{
 			return nullptr;
@@ -205,11 +210,16 @@ namespace Kernel::Memory
 		
 		if (spec.size <= smallest_size)
 		{
-			auto heap_li = heaps.at(smallest_size);
+			heap_li = heaps.at(smallest_size);
+			if (list)
+			{
+				*list = heap_li;
+			}
 			assert(heap_li);
 			auto heap = heap_li->entity;
 			assert(heap);
 			assert(spec.align <= alignof(void*));
+			
 			
 			return heap;
 		}
@@ -217,14 +227,24 @@ namespace Kernel::Memory
 		{
 			if (unlikely(spec.size % pageSize() == 0) && spec.size >= 10*pageSize())
 			{
+				if (list)
+				{
+					*list = nullptr;
+				}
 				return &paged;
 			}
 			else
 			{
+				TRACE("Returning top heap...");
+				TRACE_VAL(spec.size);
+				if (list)
+				{
+					*list = nullptr;
+				}
 				return &top;
 			}
 		}
-		else if ((heap_li = heaps[spec.size]))
+		else if (heaps.count(spec.size) > 0 && ((heap_li = heaps.at(spec.size))) != nullptr)// ((heap_li = heaps[spec.size]))
 		{
 			while (likely(heap_li != nullptr) && unlikely(!heap_li->entity))
 			{
@@ -233,18 +253,36 @@ namespace Kernel::Memory
 			
 			if (likely(heap_li != nullptr))
 			{
+				if (list)
+				{
+					*list = heap_li;
+				}
 				return heap_li->entity;
 			}
 		}
 		else
 		{
+			size_t requested_val;
 			__sync_fetch_and_add(&total_heap_reqs, 1);
-			Utils::lock_guard<shared_mutex_type> reqs_lock(heap_requests_m);
-			auto val = ++heap_requests[spec.size];
-			if (val >= 5 && val >= total_heap_reqs/100)
 			{
-				assert(false);
-				//return create_heap_for(spec, 100);
+			Utils::unique_unlock<Utils::shared_lock<shared_mutex_type>> unlock(lock);
+			{
+			Utils::lock_guard<shared_mutex_type> reqs_lock(heap_requests_m);
+			requested_val = ++heap_requests[spec.size];
+			}
+			}
+			if (requested_val >= 5 && requested_val >= total_heap_reqs/100)
+			{
+				TRACE("Creating custom heap...");
+				TRACE_VAL(spec.size);
+				TRACE_VAL(spec.align);
+				
+				auto new_heap = create_heap_for(spec, 100, lock);
+				if (list)
+				{
+					*list = heaps.at(spec.size);
+				}
+				return new_heap;
 			}
 		}
 		
@@ -260,7 +298,7 @@ namespace Kernel::Memory
 		
 		if (rounded != spec.size)
 		{
-			return heap_for(alloc_spec_t(rounded, spec.align));
+			return heap_for(alloc_spec_t(rounded, spec.align), lock, list);
 		}
 		
 		for (auto& kv : heaps)
@@ -272,19 +310,30 @@ namespace Kernel::Memory
 			
 			auto li = kv.second;
 			assert(li->entity);
+			if (list)
+			{
+				*list = li;
+			}
 			return li->entity;
 		}
 		
 		if (rounded >= pageSize()/2)
 		{
-			return heap_for(alloc_spec_t(pageSize(), spec.align));
+			return heap_for(alloc_spec_t(pageSize(), spec.align), lock, list);
 		}
 		
-		return create_heap_for(alloc_spec_t(rounded, spec.align), 500);
+		TRACE_VAL(spec.size);
+		assert(lock.owns_lock());
+		auto new_heap = create_heap_for(alloc_spec_t(rounded, spec.align), 500, lock);
+		if (list)
+		{
+			*list = heaps.at(spec.size);
+		}
+		return new_heap;
 	}
 	
 	template <class Alloc>
-	Heap* kernel_heap<Alloc>::heap_for(void* addr)
+	Heap* kernel_heap<Alloc>::heap_for(void* addr, Utils::shared_lock<shared_mutex_type>& lock)
 	{
 		if (unlikely((uintptr_t)addr < top.startAddr() || (uintptr_t)addr >= top.endAddr()))
 		{
@@ -309,17 +358,130 @@ namespace Kernel::Memory
 	}
 	
 	template <class Alloc>
-	Heap* kernel_heap<Alloc>::create_heap_for(const alloc_spec_t& spec, const size_t count)
+	Heap* kernel_heap<Alloc>::create_heap_for(const alloc_spec_t& spec, const size_t min_count, Utils::unique_lock<shared_mutex_type>& lock)
+	{
+		assert(spec.size > 0);
+		assert(min_count > 0);
+		
+		assert(lock.owns_lock());
+		Heap* result = nullptr;
+		auto smallest_a = top.smallest_alloc();
+		auto len = spec.size*min_count;
+		if (len < smallest_a)
+		{
+			len = smallest_a;
+		}
+		
+		// Setup heap
+		typedef Untyped_SlabHeap<allocator_type> sheap_t;
+		auto count = sheap_t::Available_Count(spec, len);
+		auto req_len = sheap_t::Size_For_Count(spec, count);
+			
+			
+		while (req_len + sizeof(sheap_t) > len)
+		{
+			count -= 10;
+			assert(count > 0);
+			req_len = sheap_t::Size_For_Count(spec, count);
+		}
+		
+		
+		
+		auto region = top.allocate(req_len + sizeof(sheap_t), alignof(sheap_t));
+		req_len = top.allocated_size(region) - sizeof(sheap_t);
+		count = sheap_t::Available_Count(spec, req_len - sizeof(sheap_t));
+		
+		auto sheap = new (region) sheap_t(spec, allocator, (void*)((uintptr_t)region + sizeof(sheap_t)), req_len, true, false, pageSize());
+		assert(sheap);
+		list_alloc_type<Heap*> lalloc;
+		auto list = lalloc.allocate(1);
+		lalloc.construct(list);
+		list->entity = sheap;
+		auto olist = heaps[spec.size];
+		if (olist)
+		{
+			list->next = olist;
+		}
+		heaps[spec.size] = list;
+		heaps_set.insert(sheap);
+		
+		result = sheap;
+		return result;
+	}
+	
+	template <class Alloc>
+	Heap* kernel_heap<Alloc>::create_heap_for(const alloc_spec_t& spec, const size_t count, Utils::shared_lock<shared_mutex_type>& lock)
 	{
 		assert(spec.size > 0);
 		assert(count > 0);
 		
-		// TODO
+		assert(lock.owns_lock());
+		Utils::unique_unlock<Utils::shared_lock<shared_mutex_type>> unlock(lock);
+		Utils::unique_lock<shared_mutex_type> wlock(heaps_m);
+		return create_heap_for(spec, count, wlock);
+	}
+	
+	template <class Alloc>
+	Heap* kernel_heap<Alloc>::heap_is_full(Heap* heap, Utils::shared_lock<shared_mutex_type>& rlock, simple_list<Heap*>** _hlist)
+	{
+		if (heap == &top || heap == &paged)
+		{
+			return nullptr;
+		}
+		simple_list<Heap*>* hlist = nullptr;
+		if (_hlist)
+		{
+			hlist = *_hlist;
+		}
 		
+		assert(heap);
+		assert(rlock.owns_lock());
+		alloc_spec_t spec;
 		
-		
-		
-		assert(NOT_IMPLEMENTED);
+		{
+			Utils::unique_unlock<Utils::shared_lock<shared_mutex_type>> unlock(rlock);
+			Utils::unique_lock<shared_mutex_type> wlock(heaps_m);
+			simple_list<Heap*>* it = nullptr;
+			for (auto& kv : heaps)
+			{
+				it = kv.second;
+				kv.second = it = simple_list_remove_nulls(it, list_alloc_type<Heap*>(allocator));
+				while (it)
+				{
+					if (it->entity == heap)
+					{
+						break;
+					}
+					it = it->next;
+				}
+				
+				if (it)
+				{
+					assert(it->entity == heap);
+					spec.size = kv.first;
+					auto first = kv.second;
+					first = simple_list_remove(first, it);
+					if (first)
+					{
+						auto last = simple_list_last(first);
+						assert(last);
+						last->next = it;
+					}
+					kv.second = first;
+					break;
+				}
+			}
+			
+			assert(it);
+			
+			auto new_heap = create_heap_for(spec, 100, wlock);
+			if (_hlist)
+			{
+				*_hlist = heaps.at(spec.size);
+			}
+			return new_heap;
+			
+		}
 	}
 	
 	
@@ -340,9 +502,47 @@ namespace Kernel::Memory
 		else
 		{
 			Utils::shared_lock<shared_mutex_type> slock(heaps_m);
-			auto heap = heap_for(alloc_spec_t(size, alignment));
+			bool tried_once = false;
+			void* ptr = nullptr;
+			simple_list<Heap*>* li = nullptr;
+			auto heap = heap_for(alloc_spec_t(size, alignment), slock, &li);
+			
+			
+			try_use_heap:
+			
+			
 			assert(heap);
-			return heap->alloc(size, alignment);
+			ptr = heap->alloc(size, alignment);
+			if (!ptr)
+			{
+				simple_list<Heap*>* it = li;
+				while (!ptr && it)
+				{
+					if (it->entity && it->entity != heap)
+					{
+						TRACE("li is good...");
+						ptr = it->entity->alloc(size, alignment);
+					}
+					it = it->next;
+				}
+				#ifdef DEBUG
+				if (ptr)
+				{
+					TRACE("Managed to recover!");
+				}
+				#endif
+				
+				
+				if (!ptr && !tried_once)
+				{
+					heap = heap_is_full(heap, slock, &li);
+					tried_once = true;
+					goto try_use_heap;
+				}
+				
+			}
+			assert(ptr);
+			return ptr;
 		}
 		
 		
@@ -406,7 +606,7 @@ namespace Kernel::Memory
 		
 		Utils::shared_lock<shared_mutex_type> slock(heaps_m);
 		
-		auto heap = heap_for(addr);
+		auto heap = heap_for(addr, slock);
 		assert(heap);
 		heap->free(addr);
 		return;
@@ -440,7 +640,7 @@ namespace Kernel::Memory
 	{
 		Utils::shared_lock<shared_mutex_type> slock(heaps_m);
 		
-		auto heap = heap_for(addr);
+		auto heap = heap_for(addr, slock);
 		if (likely(heap != nullptr))
 		{
 			return heap->allocated_size(addr);

@@ -91,6 +91,28 @@ namespace Kernel::Memory
 	}
 	
 	template <class T, class Meta_Alloc>
+	SlabHeap<T, Meta_Alloc>::SlabHeap(const allocator_type& a, void* mem, size_t len, void* bits_mem, size_t bits_mem_len, bool kernel_mem, bool default_read_only, size_t pg_sz) : Heap((addr_t)mem, (addr_t)mem + len, pg_sz, kernel_mem, default_read_only), _slab_count(len / sizeof(slab_type)), bit_count((_slab_count / 32) + ((_slab_count % 32) ? 1 : 0)), _slabs(nullptr), bits_alloc(a), full_set(((uint32_t*)bits_mem), bit_count, _slab_count), empty_set(((uint32_t*)bits_mem) + bit_count, bit_count, _slab_count), partial_set(((uint32_t*)bits_mem) + 2*bit_count, bit_count, _slab_count),
+		sets_m()
+	{
+		assert(bit_count*3*4 <= bits_mem_len);
+		assert(_slab_count > 0);
+		empty_set.setAll(true);
+		
+		for (size_t i = 0; i < _slab_count; ++i)
+		{
+			new (&((slab_type*)mem)[i]) slab_type();
+		}
+		
+		_slabs = (slab_type*)mem;
+	}
+	
+	template <class T, class Meta_Alloc>
+	SlabHeap<T, Meta_Alloc>::SlabHeap(void* mem, size_t len, void* bits_mem, size_t bits_mem_len, bool kernel_mem, bool default_read_only, size_t pg_sz) : SlabHeap(allocator_type(), mem, len, bits_mem, bits_mem_len, kernel_mem, default_read_only, pg_sz)
+	{
+		
+	}
+	
+	template <class T, class Meta_Alloc>
 	SlabHeap<T, Meta_Alloc>::~SlabHeap()
 	{
 		bits_alloc.deallocate(full_set.bits, bit_count);
@@ -193,13 +215,13 @@ namespace Kernel::Memory
 	
 	
 	template <class T, class Meta_Alloc>
-	size_t SlabHeap<T, Meta_Alloc>::Available_Count(size_t len) noexcept
+	constexpr size_t SlabHeap<T, Meta_Alloc>::Available_Count(size_t len) noexcept
 	{
 		return (len / sizeof(slab_type))*16;
 	}
 	
 	template <class T, class Meta_Alloc>
-	size_t SlabHeap<T, Meta_Alloc>::Size_For_Count(size_t count) noexcept
+	constexpr size_t SlabHeap<T, Meta_Alloc>::Size_For_Count(size_t count) noexcept
 	{
 		size_t slab_count = (count / 16) + (count % 16 != 0 ? 1 : 0);
 		assert(Available_Count(slab_count*sizeof(slab_type)) >= count);

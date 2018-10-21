@@ -139,6 +139,7 @@ namespace Kernel::Memory
 		
 		pointer allocate(size_type n, PageRegion_allocator<void>::const_pointer hint = 0)
 		{
+			assert(region());
 			return (pointer)region()->allocate(n*sizeof(T), alignof(T));
 		}
 		

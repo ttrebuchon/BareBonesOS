@@ -178,6 +178,10 @@ namespace Kernel::Memory
 		assert(addr);
 		Utils::lock_guard<mutex_type> lock(mut);
 		auto allocation = page_map[addr];
+		if (!allocation)
+		{
+			return;
+		}
 		assert(allocation);
 		size_t pages = allocation->length / pageSize();
 		if (pages == 0)

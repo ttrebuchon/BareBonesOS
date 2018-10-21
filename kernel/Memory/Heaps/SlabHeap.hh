@@ -69,6 +69,9 @@ namespace Kernel::Memory
 		SlabHeap(void* mem, size_t len, bool kernel_mem, bool default_read_only, size_t pg_sz = 0);
 		SlabHeap(const allocator_type&, void* mem, size_t len, bool kernel_mem, bool default_read_only, size_t pg_sz = 0);
 		
+		SlabHeap(const allocator_type&, void* mem, size_t len, void* bits_mem, size_t bits_mem_len, bool kernel_mem, bool default_read_only, size_t page_sz = 0);
+		SlabHeap(void* mem, size_t len, void* bits_mem, size_t bits_mem_len, bool kernel_mem, bool default_read_only, size_t page_sz = 0);
+		
 		virtual ~SlabHeap();
 		
 		
@@ -81,8 +84,8 @@ namespace Kernel::Memory
 		{ return _slab_count; }
 		
 		
-		static size_t Available_Count(size_t len) noexcept;
-		static size_t Size_For_Count(size_t count) noexcept;
+		constexpr static size_t Available_Count(size_t len) noexcept;
+		constexpr static size_t Size_For_Count(size_t count) noexcept;
 	};
 	
 	template <size_t size, size_t alignment = 0, class Meta_Alloc = Utils::allocator<void>>
